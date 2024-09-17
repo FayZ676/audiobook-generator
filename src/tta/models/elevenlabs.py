@@ -1,9 +1,12 @@
+import os
 import requests
-
+from dotenv import load_dotenv 
+load_dotenv() 
+ 
 class ElevenLabsAPI:
     def __init__(self):
         # Set the API key and the base URL
-        self.api_key = "sk_9fd4a07f29c92669de3b77ece2efeb060f2f7b92f9e052f5" # Your ElevenLabs API Key
+        self.api_key =  os.environ.get("ELEVENLABS_API_KEY")  # Your ElevenLabs API Key
         self.base_url = "https://api.elevenlabs.io/v1/text-to-speech/"
     
     def convert_text_to_speech(self, text, voice_id, output_format="audio/mpeg", stability=0.5, similarity_boost=0.5):
