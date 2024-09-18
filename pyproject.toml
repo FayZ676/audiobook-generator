@@ -19,6 +19,10 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
+[project.dependencies]
+openai = "^0.27.0"  # Or the latest version
+python-dotenv = "^1.0.0"  # For loading environment variables
+
 [project.urls]
 Homepage = "https://github.com/FayZ676/audiobook-generator"
 Issues = "https://github.com/FayZ676/audiobook-generator/issues"
