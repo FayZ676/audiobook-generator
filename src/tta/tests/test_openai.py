@@ -1,12 +1,9 @@
-import unittest
+import pytest
 from unittest.mock import patch
-import openai
 from main import generate_text  # Import the function to be tested
 
-class TestGenerateText(unittest.TestCase):
-
-    @patch("openai.ChatCompletion.create")
-    def test_generate_text(self, mock_create):
+def test_generate_text():
+    with patch("openai.ChatCompletion.create") as mock_create:
         # Define what the mock should return
         mock_create.return_value = {
             "choices": [
@@ -19,7 +16,4 @@ class TestGenerateText(unittest.TestCase):
         result = generate_text(prompt)
 
         # Assert that the result is as expected
-        self.assertEqual(result, "This is a test response.")
-
-if __name__ == "__main__":
-    unittest.main()
+        assert result == "This is a test response."
