@@ -2,6 +2,9 @@ import os
 import openai
 from dotenv import load_dotenv
 
+# Load environment variables from the .env file located in the project root
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '../../.env'))
+
 # Function to generate text using OpenAI's chat model
 def generate_text(prompt: str) -> str:
     """
