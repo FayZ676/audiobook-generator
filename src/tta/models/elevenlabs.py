@@ -1,8 +1,6 @@
 import os
 from elevenlabs import ElevenLabs, VoiceSettings
-
 from dotenv import load_dotenv
-
 load_dotenv()
 
 def convert_text_to_speech_with_client(text, voice_id, api_key):
