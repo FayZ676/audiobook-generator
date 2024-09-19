@@ -18,6 +18,10 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
+dependencies = [
+"python-dotenv == 1.0.1",
+"elevenlabs >= 1.0.0"
+]
 
 [project.urls]
 Homepage = "https://github.com/FayZ676/audiobook-generator"

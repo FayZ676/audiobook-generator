@@ -1,69 +1,44 @@
 import os
-import requests
-from dotenv import load_dotenv 
-load_dotenv() 
- 
-class ElevenLabsAPI:
-    def __init__(self):
-        # Set the API key and the base URL
-        self.api_key =  os.environ.get("ELEVENLABS_API_KEY")  # Your ElevenLabs API Key
-        self.base_url = "https://api.elevenlabs.io/v1/text-to-speech/"
-    
-    def convert_text_to_speech(self, text, voice_id, output_format="audio/mpeg", stability=0.5, similarity_boost=0.5):
-        """
-        Converts the provided text to speech using the ElevenLabs API.
+from elevenlabs import ElevenLabs, VoiceSettings
 
-        :param text: The text to convert to speech.
-        :param voice_id: The voice ID to use for narration.
-        :param output_format: The desired output format.
-        :param stability: Voice stability.
-        :param similarity_boost: Similarity boost for the voice.
-        :return: The path to the saved audio file if successful.
-        """
-        # Set the request URL
-        url = self.base_url + voice_id
+from dotenv import load_dotenv
 
-        # Set up the headers for the request
-        headers = {
-            "Accept": output_format,
-            "Content-Type": "application/json",
-            "xi-api-key": self.api_key
-        }
+load_dotenv()
 
-        # Prepare the data payload for the API request
-        data = {
-            "text": text,
-            "model_id": "eleven_monolingual_v1",  # Use default model or specify another one
-            "voice_settings": {
-                "stability": stability,
-                "similarity_boost": similarity_boost,
-            }
-        }
+def convert_text_to_speech_with_client(text, voice_id, api_key):
+    client = ElevenLabs(api_key=api_key)
 
-        # Make the POST request to ElevenLabs API
-        response = requests.post(url, json=data, headers=headers)
+    voice_settings = VoiceSettings(
+        stability=0.5,
+        similarity_boost=0.5
+    )
 
-        # Process response
-        if response.status_code == 200:
-            # Save the audio to a file
-            output_file_path = "output.mp3"
-            with open(output_file_path, 'wb') as audio_file:
-                audio_file.write(response.content)  # Write received audio file
-            return output_file_path
+    # Correct your output format
+    audio_generator = client.text_to_speech.convert(
+        voice_id=voice_id,
+        text=text,
+        voice_settings=voice_settings,
+        output_format="mp3_22050_32"  # Change to a valid format
+    )
+
+    output_file_path = "output.mp3"
+    with open(output_file_path, 'wb') as audio_file:
+        if hasattr(audio_generator, '__iter__'):
+            for audio_chunk in audio_generator:
+                audio_file.write(audio_chunk)
         else:
-            raise Exception(f"Error {response.status_code}: {response.text}")
+            audio_file.write(audio_generator)
 
-# Example usage
+    return output_file_path
+
+# Usage
 if __name__ == "__main__":
-    eleven_labs_api = ElevenLabsAPI()
-    
-    try:
-        # Sample text and voice ID
-        sample_text = "It sure does, Jackie… My mama always said: “In Carolina, the air's so thick you can wear it!”"
-        voice_id = "pMsXgVXv3BLzUgSXRplE"  # Replace with your desired voice ID
+    api_key = os.getenv('ELEVENLABS_API_KEY')
+    sample_text = "It sure does, Jackie… My mama always said: “In Carolina, the air's so thick you can wear it!”"
+    voice_id = "pMsXgVXv3BLzUgSXRplE"
 
-        # Call the function to convert text to speech
-        audio_output_path = eleven_labs_api.convert_text_to_speech(sample_text, voice_id)
+    try:
+        audio_output_path = convert_text_to_speech_with_client(sample_text, voice_id, api_key)
         print(f"Audio successfully saved to: {audio_output_path}")
     except Exception as e:
         print(f"An error occurred: {e}")
