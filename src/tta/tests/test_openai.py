@@ -1,14 +1,12 @@
-import pytest
 from unittest.mock import patch
-from src.tta.models import generate_text  # Ensure the import path is correct
+from tta.models.text_to_speech import generate_text  # Ensure the import path is correct
+
 
 def test_generate_text():
     with patch("openai.ChatCompletion.create") as mock_create:
         # Define what the mock should return
         mock_create.return_value = {
-            "choices": [
-                {"message": {"content": "This is a test response."}}
-            ]
+            "choices": [{"message": {"content": "This is a test response."}}]
         }
 
         # Call the function with a test prompt
