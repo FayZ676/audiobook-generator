@@ -20,7 +20,7 @@ classifiers = [
 ]
 dependencies = [
 "python-dotenv == 1.0.1",
-"elevenlabs >= 1.0.0"
+"elevenlabs == 1.0.0"
 ]
 
 [project.urls]
