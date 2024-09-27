@@ -1,4 +1,4 @@
-from tta.models.text_to_speech import generate_text
+from tta.models.text import generate_text
 
 
 def test_generate_text():
