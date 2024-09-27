@@ -2,12 +2,9 @@ import os
 from elevenlabs.client import VoiceSettings, ElevenLabs
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
 
-# Initialize the ElevenLabs client once
-api_key = os.getenv("ELEVENLABS_API_KEY")
-client = ElevenLabs(api_key=api_key)
+load_dotenv()
+client = ElevenLabs(api_key=os.getenv("ELEVENLABS_API_KEY"))
 
 
 def generate_speech(text: str, voice_id: str) -> bytes:
