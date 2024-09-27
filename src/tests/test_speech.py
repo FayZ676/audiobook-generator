@@ -1,5 +1,6 @@
 import unittest
-from tta.models.speech import convert_text_to_speech_with_client
+
+from tta.models.speech import generate_speech
 
 
 class TestTextToSpeech(unittest.TestCase):
@@ -10,7 +11,7 @@ class TestTextToSpeech(unittest.TestCase):
 
     def test_convert_text_to_speech_returns_bytes(self):
         """Test that the function returns bytes."""
-        audio_data = convert_text_to_speech_with_client(self.sample_text, self.voice_id)
+        audio_data = generate_speech(self.sample_text, self.voice_id)
         self.assertIsInstance(audio_data, bytes, "The result should be of type bytes.")
 
 
