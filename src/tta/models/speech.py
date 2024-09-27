@@ -10,14 +10,7 @@ api_key = os.getenv("ELEVENLABS_API_KEY")
 client = ElevenLabs(api_key=api_key)
 
 
-def convert_text_to_speech_with_client(text: str, voice_id: str) -> bytes:
-    """
-    Converts text to speech using the ElevenLabs API and returns the audio as bytes.
-
-    :param text: The text to convert to speech.
-    :param voice_id: The voice ID to use for narration.
-    :return: The bytes representation of the generated audio.
-    """
+def generate_speech(text: str, voice_id: str) -> bytes:
     voice_settings = VoiceSettings(stability=0.5, similarity_boost=0.5)
 
     # Call the text-to-speech API and get the audio data
