@@ -1,5 +1,5 @@
 import unittest
-from src.tta.models.elevenlabs import convert_text_to_speech_with_client
+from tta.models.speech import convert_text_to_speech_with_client
 
 
 class TestTextToSpeech(unittest.TestCase):
@@ -13,5 +13,6 @@ class TestTextToSpeech(unittest.TestCase):
         audio_data = convert_text_to_speech_with_client(self.sample_text, self.voice_id)
         self.assertIsInstance(audio_data, bytes, "The result should be of type bytes.")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()
