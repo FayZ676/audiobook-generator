@@ -18,11 +18,11 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
-
 dependencies = [
-    "openai==0.27.0",
-    "python-dotenv==1.0.0",
-    "pytest==8.3.3",
+  "elevenlabs==1.9.0",
+  "openai==0.27.0",
+  "python-dotenv==1.0.0",
+  "pytest==8.3.3",
 ]
 
 [project.urls]
