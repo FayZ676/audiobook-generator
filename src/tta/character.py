@@ -1,29 +1,48 @@
-from openai import OpenAI
-
-client = OpenAI(api_key='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')
+import sys
+import os
 import json
+from dataclasses import dataclass
+from typing import List, Literal
+from dotenv import load_dotenv
 
-# Set your OpenAI API key
+load_dotenv()
 
-def identify_characters(paragraph):
-    # Define the prompt to send to the API
-    prompt = f"Analyze the following paragraph and identify the speaking characters, their age (categorized as young, middle-aged, or old), and gender:\n\n{paragraph}\n\nProvide the information in the format: Character: [Name], Age: [young/middle-aged/old], Gender: [Gender]."
+# Add the src directory to the Python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-    # Make the API call
-    response = client.chat.completions.create(model="gpt-3.5-turbo",  # Use 'gpt-3.5-turbo' or 'gpt-4'
-    messages=[
-        {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": prompt}
-    ],
-    max_tokens=150,
-    temperature=0.5)
+from src.models.text_to_speech import generate_text
 
-    # Extract the response text
-    result = response.choices[0].message.content.strip()
-    return result
+@dataclass
+class Character:
+    name: str
+    age: Literal['child', 'young adult', 'middle-aged', 'elderly']
+    gender: Literal['male', 'female']
+
+def identify_characters(text: str) -> List[Character]:
+    prompt = f"""
+    Analyze the following paragraph and identify the speaking characters, their age (categorized as child, young adult, middle-aged, or elderly), and gender:
+    
+    {text}
+    
+    Provide the information in the format: 
+    [
+        {{ "name": "Character Name", "age": "child/young adult/middle-aged/elderly", "gender": "male/female" }},
+        ...
+    ]
+    """
+
+    result = generate_text(prompt)
+    print("Generated Text Result:", result)  # Debugging line to check the output
+
+    try:
+        characters = json.loads(result)
+        return [Character(**char) for char in characters]
+    except json.JSONDecodeError as e:
+        print("JSONDecodeError:", e)
+        return []
 
 # Example paragraph
-paragraph = """
+text = """
 Our breakfast table was cleared early, and Holmes waited in his dressing-gown for the promised interview. Our clients were punctual to their appointment, for the clock had just struck ten when Dr. Mortimer was shown up, followed by the young baronet. The latter was a small, alert, dark-eyed man about thirty years of age, very sturdily built, with thick black eyebrows and a strong, pugnacious face. He wore a ruddy-tinted tweed suit and had the weather-beaten appearance of one who has spent most of his time in the open air, and yet there was something in his steady eye and the quiet assurance of his bearing which indicated the gentleman.
 
 “This is Sir Henry Baskerville,” said Dr. Mortimer.
@@ -36,11 +55,7 @@ Our breakfast table was cleared early, and Holmes waited in his dressing-gown fo
 """
 
 # Identify characters
-characters_info = identify_characters(paragraph)
+characters_info = identify_characters(text)
 
-# Save the output to a JSON file
-output_file = 'characters_info.json'
-with open(output_file, 'w') as f:
-    json.dump(characters_info, f)
-
-print(f"Character information saved to {output_file}")
+# Save the output to memory
+character_info_memory = characters_info
