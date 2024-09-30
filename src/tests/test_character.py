@@ -1,16 +1,8 @@
-import sys
-import os
-import json
 import unittest
 from typing import List
 
-# Add the src directory to the Python path
-src_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src'))
-
-print(f"Adding {src_path} to sys.path")  # Debugging line to check the path
-sys.path.insert(0, src_path) 
-
 from tta.character import identify_characters, Character
+
 
 class TestIdentifyCharacters(unittest.TestCase):
     def setUp(self):
@@ -40,25 +32,29 @@ class TestIdentifyCharacters(unittest.TestCase):
         Test if the character information can be saved to and loaded from a JSON file correctly.
         """
         characters_info = identify_characters(self.text)
-        output_file = 'characters_info.json'
-        with open(output_file, 'w') as f:
-            json.dump([char.__dict__ for char in characters_info], f)
-        
-        with open(output_file, 'r') as f:
-            loaded_info = json.load(f)
-        
-        self.assertEqual([char.__dict__ for char in characters_info], loaded_info)
+        print(characters_info)
+        expected_characters: list[Character] = [
+            Character(name="Sherlock Holmes", age="middle-aged", gender="male"),
+            Character(name="Dr. Mortimer", age="middle-aged", gender="male"),
+            Character(name="Sir Henry Baskerville", age="young adult", gender="male"),
+        ]
+        self.assertEqual(characters_info, expected_characters)
 
     def test_expected_characters(self):
         """
         Test if all expected characters are found in the text.
         """
-        expected_characters = ["Sherlock Holmes", "Dr. Mortimer", "Sir Henry Baskerville"]
+        expected_characters = [
+            "Sherlock Holmes",
+            "Dr. Mortimer",
+            "Sir Henry Baskerville",
+        ]
         characters_info = identify_characters(self.text)
         found_characters = [char.name for char in characters_info]
-        
+
         for expected_character in expected_characters:
             self.assertIn(expected_character, found_characters)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()
