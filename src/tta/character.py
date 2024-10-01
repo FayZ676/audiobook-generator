@@ -4,6 +4,8 @@ from typing import Literal
 from dotenv import load_dotenv
 from string import Template
 
+from pydantic import BaseModel
+
 from tta.models.text_to_speech import generate_text
 
 
@@ -17,15 +19,18 @@ class Character:
     gender: Literal["male", "female"]
 
 
-class ResponseFormat:
+class ResponseFormat(BaseModel):
     response: list[Character]
 
 
 def identify_characters(text: str) -> list[Character]:
-    result = generate_text(prompt.substitute({"text": text}))
+    result = generate_text(prompt.substitute({"text": text}), ResponseFormat)
     try:
-        characters = json.loads(result)
-        return [Character(**char) for char in characters]
+        characters = json.loads(result)["response"]
+        return [
+            Character(name=char["name"], age=char["age"], gender=char["gender"])
+            for char in characters
+        ]
     except json.JSONDecodeError as e:
         print("JSONDecodeError:", e)
         return []
