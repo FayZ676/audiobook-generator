@@ -8,15 +8,16 @@ load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
-def generate_text(prompt: str) -> str:
+def generate_text(prompt: str, response_format) -> str:
     try:
         return str(
-            client.chat.completions.create(
-                model="gpt-4o",
+            client.beta.chat.completions.parse(
+                model="gpt-4o-2024-08-06",
                 messages=[
                     {"role": "system", "content": ""},
                     {"role": "user", "content": prompt},
                 ],
+                response_format=response_format,
             )
             .choices[0]
             .message.content
