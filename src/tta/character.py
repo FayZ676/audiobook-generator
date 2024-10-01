@@ -6,7 +6,7 @@ from string import Template
 
 from pydantic import BaseModel
 
-from tta.models.text_to_speech import generate_text
+from tta.models.text import generate_text
 
 
 load_dotenv()
