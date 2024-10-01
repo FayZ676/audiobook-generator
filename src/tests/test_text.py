@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from tta.models.text import generate_text
 
 
-def test_generate_text():
+def test_generate_text__greeting():
     class Greeting(BaseModel):
         greeting: str
 
