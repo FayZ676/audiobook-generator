@@ -1,7 +1,8 @@
 import json
 from dataclasses import dataclass
-from typing import List, Literal
+from typing import Literal
 from dotenv import load_dotenv
+from string import Template
 
 from tta.models.text_to_speech import generate_text
 
@@ -16,25 +17,25 @@ class Character:
     gender: Literal["male", "female"]
 
 
-def identify_characters(text: str) -> List[Character]:
-    prompt = f"""
-    Analyze the following paragraph and identify the speaking characters, their age (categorized as child, young adult, middle-aged, or elderly), and gender:
-    
-    {text}
-    
-    Provide the information in the format: 
-    [
-        {{ "name": "Character Name", "age": "child/young adult/middle-aged/elderly", "gender": "male/female" }},
-        ...
-    ]
-    """
+class ResponseFormat:
+    response: list[Character]
 
-    result = generate_text(prompt)
-    print("Generated Text Result:", result)  # Debugging line to check the output
 
+def identify_characters(text: str) -> list[Character]:
+    result = generate_text(prompt.substitute({"text": text}))
     try:
         characters = json.loads(result)
         return [Character(**char) for char in characters]
     except json.JSONDecodeError as e:
         print("JSONDecodeError:", e)
         return []
+
+
+prompt = Template(
+    """
+$text
+
+Analyze the following paragraph and identify the speaking characters, their age (young, middle-aged, or elder), and gender (male, or female):
+
+"""
+)
