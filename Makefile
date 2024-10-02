@@ -17,3 +17,7 @@ setup_git_hook:
 	echo '#!/bin/sh\nmake test_all' > .git/hooks/pre-push
 	chmod +x .git/hooks/pre-push
 	@echo "Pre-push hook has been set up successfully."
+
+setup:
+	make init
+	make setup_git_hook
