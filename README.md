@@ -4,6 +4,8 @@ TTA (Text-to-Audiobook) transforms book text into a multi-speaker audiobook expe
 
 ### Installation and Setup
 
+**Note**: Make sure you have Python 3.10 or later installed on your system, as specified in the project's `pyproject.toml` file.
+
 1. **Install Make**: Make is a build automation tool that is required to setup the project. You can install Make on your system by following the instructions for your operating system:
    - **Ubuntu/Debian**: `sudo apt update && sudo apt install build-essential`
    - **Fedora/CentOS/RHEL**: `sudo dnf install make`
@@ -13,9 +15,10 @@ TTA (Text-to-Audiobook) transforms book text into a multi-speaker audiobook expe
    - `git clone https://github.com/FayZ676/audiobook-generator.git`
 3. **Navigate to the project directory**: Change into the project directory:
    - `cd audiobook-generator`
-4. **Run `make init`**: This command will setup the virtual environment and install the project dependencies:
-   - `make init`
+4. **Run `make setup`**: This command will setup the virtual environment, install the project dependencies, and setup some git hooks:
+   - `make setup`
 
-This will create a virtual environment named `venv` in your project directory, activate it, and install the project dependencies. You can then use the virtual environment to run the project.
+### Testing
 
-**Note**: Make sure you have Python 3.10 or later installed on your system, as specified in the project's `pyproject.toml` file.
+- Run `make test_all` from the project's root directory to lint and run all tests.
+- A pre-push .git hook is configured when you run the `make setup` command that will automatically run the all the tests before pushing. If for some reason you don't have the .git hook set up, you can always run `make setup_git_hook` to automatically create the .git hooks.
