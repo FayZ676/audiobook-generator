@@ -6,10 +6,10 @@ init:
 
 # Runs linting on the entire application
 lint_all:
-	pylint src
+	pylint --rcfile=.pylintrc src
 
 test_all:
-	pylint src
+	make lint_all
 	pytest --cov=src --cov-report=term-missing --cov-fail-under=80 src/tests
 
 # Sets up a pre-push Git hook that runs the test_all command
