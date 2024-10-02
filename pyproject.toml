@@ -31,8 +31,6 @@ dependencies = [
 source = ["src"]
 omit = [
     "*/tests/*",
-    "*/__init__.py*",
-    "setup.py",
 ]
 
 [project.urls]
