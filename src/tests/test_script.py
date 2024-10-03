@@ -1,8 +1,31 @@
-from tta.models.script import generate_script_from_text
+from tta.models.script import convert_text_to_script, Script, Speech
 
-def test_generate_script_returns_str():
-    book_text = "Once upon a time, there was a dragon."
-    script_output = generate_script_from_text(book_text)
+
+BOOK_PARAGRAPH = """
+Sherlock Holmes took a deep breath and began, "It was elementary, my dear Watson."
+Watson replied, "You never fail to amaze me, Holmes."
+"""
+
+
+def test_convert_text_to_script():
+    """
+    Test if the text is correctly converted into a structured Script with speeches.
+    """
+    # Generate the script from the paragraph
+    script_result = convert_text_to_script(BOOK_PARAGRAPH)
     
-    # Check if the output is a string
-    assert isinstance(script_output, str), "The result should be of type string."
+    # Expected structured script with Speech objects
+    expected_script = Script(
+        speeches=[
+            Speech(speaker="Sherlock Holmes", text="It was elementary, my dear Watson."),
+            Speech(speaker="Watson", text="You never fail to amaze me, Holmes.")
+        ]
+    )
+    
+    # Assert the result is the same as expected
+    assert script_result == expected_script
+
+
+if __name__ == "__main__":
+    test_convert_text_to_script()
+    print("Test passed!")
