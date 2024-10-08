@@ -24,7 +24,7 @@ def parse_response(response: str) -> Script:
         speeches = [Speech(speaker=s["speaker"], text=s["text"]) for s in result["script"]]
         return Script(speeches=speeches)
     except json.JSONDecodeError as e:
-        raise RuntimeError(f"Failed to decode JSON response: {e}")
+        raise RuntimeError(f"Failed to decode JSON response: {e}") from e  # Explicitly re-raise
 
 def convert_text_to_script(text: str) -> Script:
     # Create a prompt for OpenAI to convert text into a structured script
@@ -37,3 +37,4 @@ def convert_text_to_script(text: str) -> Script:
 
     # Parse the result into a Script using the parsing function
     return parse_response(result)
+
