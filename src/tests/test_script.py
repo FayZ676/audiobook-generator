@@ -1,31 +1,26 @@
 from tta.models.script import convert_text_to_script, Script, Speech
 
-
+# Example paragraph that includes narration and dialogue
 BOOK_PARAGRAPH = """
-Sherlock Holmes took a deep breath and began, "It was elementary, my dear Watson."
-Watson replied, "You never fail to amaze me, Holmes."
+Our breakfast table was cleared early, and Holmes waited in his dressing-gown for the promised interview. 
+Holmes said, "Pray take a seat, Sir Henry. Do I understand you to say that you have had a remarkable experience?"
+Sir Henry responded, "Yes, I received a strange letter this morning."
+The room fell silent for a moment as Holmes pondered the situation.
 """
 
-
-def test_convert_text_to_script():
+def test_script_conversion():
     """
-    Test if the text is correctly converted into a structured Script with speeches.
+    Test the conversion of text into a structured script with both narration and character dialogue.
     """
-    # Generate the script from the paragraph
-    script_result = convert_text_to_script(BOOK_PARAGRAPH)
-    
-    # Expected structured script with Speech objects
-    expected_script = Script(
-        speeches=[
-            Speech(speaker="Sherlock Holmes", text="It was elementary, my dear Watson."),
-            Speech(speaker="Watson", text="You never fail to amaze me, Holmes.")
-        ]
-    )
-    
-    # Assert the result is the same as expected
-    assert script_result == expected_script
+    script: Script = convert_text_to_script(BOOK_PARAGRAPH)
 
+    # Expected script includes both narration and dialogue
+    expected_script = Script(speeches=[
+        Speech(speaker="Narrator", text="Our breakfast table was cleared early, and Holmes waited in his dressing-gown for the promised interview."),
+        Speech(speaker="Holmes", text="Pray take a seat, Sir Henry. Do I understand you to say that you have had a remarkable experience?"),
+        Speech(speaker="Sir Henry", text="Yes, I received a strange letter this morning."),
+        Speech(speaker="Narrator", text="The room fell silent for a moment as Holmes pondered the situation.")
+    ])
 
-if __name__ == "__main__":
-    test_convert_text_to_script()
-    print("Test passed!")
+    # Check if the script matches the expected output
+    assert script == expected_script, f"Expected {expected_script}, but got {script}"

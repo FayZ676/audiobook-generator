@@ -29,7 +29,7 @@ def parse_response(response: str) -> Script:
 def convert_text_to_script(text: str) -> Script:
     # Create a prompt for OpenAI to convert text into a structured script
     prompt = f"""
-    Convert the following text into a structured script:
+    Convert the following text into a structured script. Include both the parts spoken by characters and the narrator:
     {text}
     """
     # Use generate_text to get structured output
