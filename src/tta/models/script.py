@@ -37,4 +37,3 @@ def convert_text_to_script(text: str) -> Script:
 
     # Parse the result into a Script using the parsing function
     return parse_response(result)
-
