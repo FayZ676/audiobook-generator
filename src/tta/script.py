@@ -1,30 +1,38 @@
 import json
 from dataclasses import dataclass
-from typing import List
 from pydantic import BaseModel
 from tta.models.text import generate_text
+
 
 @dataclass
 class Speech:
     speaker: str
     text: str
 
+
 @dataclass
 class Script:
-    speeches: List[Speech]
+    speeches: list[Speech]
+
 
 # Define a response format that matches your Script structure
 class ResponseFormat(BaseModel):
-    script: List[Speech]
+    script: list[Speech]
+
 
 def parse_response(response: str) -> Script:
     try:
         # Convert the response string to JSON and then parse it into Script format
         result = json.loads(response)
-        speeches = [Speech(speaker=s["speaker"], text=s["text"]) for s in result["script"]]
+        speeches = [
+            Speech(speaker=s["speaker"], text=s["text"]) for s in result["script"]
+        ]
         return Script(speeches=speeches)
     except json.JSONDecodeError as e:
-        raise RuntimeError(f"Failed to decode JSON response: {e}") from e  # Explicitly re-raise
+        raise RuntimeError(
+            f"Failed to decode JSON response: {e}"
+        ) from e  # Explicitly re-raise
+
 
 def convert_text_to_script(text: str) -> Script:
     # Create a prompt for OpenAI to convert text into a structured script
