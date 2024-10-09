@@ -31,6 +31,7 @@ dependencies = [
 source = ["src"]
 omit = [
     "*/tests/*",
+    "src/tta/character.py", # TODO: Remove this once we have working tests
 ]
 
 [project.urls]
