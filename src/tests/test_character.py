@@ -28,10 +28,6 @@ from tta.character import Character, map_characters_to_voices
 #     ]
 #     assert characters_info == expected_characters
 
-import pytest
-from tta.character import Character, map_characters_to_voices
-from tta.voices import Voice, voices_catalogue
-
 # Test the mapping of characters to voices
 def test_map_characters_to_voices():
     character_list = [
