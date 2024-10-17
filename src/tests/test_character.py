@@ -1,5 +1,6 @@
 import pytest
 from tta.character import Character, map_characters_to_voices
+from tta.voices import Voice, voices_catalogue
 
 # SHERLOCK_PARAGRAPH = """
 # Our breakfast table was cleared early, and Holmes waited in his dressing-gown for the promised interview. Our clients were punctual to their appointment, for the clock had just struck ten when Dr. Mortimer was shown up, followed by the young baronet. The latter was a small, alert, dark-eyed man about thirty years of age, very sturdily built, with thick black eyebrows and a strong, pugnacious face. He wore a ruddy-tinted tweed suit and had the weather-beaten appearance of one who has spent most of his time in the open air, and yet there was something in his steady eye and the quiet assurance of his bearing which indicated the gentleman.
@@ -29,22 +30,23 @@ from tta.character import Character, map_characters_to_voices
 #     assert characters_info == expected_characters
 
 @pytest.fixture
-def characters():
+def character_list():
     return [
         Character(name="Alice", age="young-adult", gender="female"),
         Character(name="Bob", age="middle-aged", gender="male"),
         Character(name="Charlie", age="child", gender="male"),
     ]
+
 # Test the mapping of characters to voices
-def test_map_characters_to_voices(characters):
-    voiced_characters = map_characters_to_voices(characters)
+def test_map_characters_to_voices(character_list):
+    voiced_characters = map_characters_to_voices(character_list)
 
     # Check if the length of voiced_characters matches the input characters
-    assert len(voiced_characters) == len(characters)
+    assert len(voiced_characters) == len(character_list)
 
     # Verify the assigned voices
     for voiced in voiced_characters:
-        assert voiced.character in characters
+        assert voiced.character in character_list
         assert voiced.voice.age_group == voiced.character.age
         assert voiced.voice.gender == voiced.character.gender
 
