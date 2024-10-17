@@ -7,7 +7,7 @@ from string import Template
 from pydantic import BaseModel
 
 from tta.models.text import generate_text
-from tta.voices import Voice, voices_catalogue  
+from tta.voices import Voice, voices_catalogue
 
 load_dotenv()
 
@@ -38,8 +38,8 @@ def identify_characters(text: str) -> list[Character]:
         return []
 
 def map_characters_to_voices(characters: List[Character]) -> List[CharacterVoiced]:
-    available_voices = voices_catalogue[:] 
-    voiced_characters = [] 
+    available_voices = voices_catalogue[:]
+    voiced_characters = []
 
     # Iterate over characters
     for character in characters:

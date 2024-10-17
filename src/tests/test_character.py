@@ -1,6 +1,5 @@
 import pytest
 from tta.character import Character, map_characters_to_voices
-from tta.voices import Voice, voices_catalogue
 
 # SHERLOCK_PARAGRAPH = """
 # Our breakfast table was cleared early, and Holmes waited in his dressing-gown for the promised interview. Our clients were punctual to their appointment, for the clock had just struck ten when Dr. Mortimer was shown up, followed by the young baronet. The latter was a small, alert, dark-eyed man about thirty years of age, very sturdily built, with thick black eyebrows and a strong, pugnacious face. He wore a ruddy-tinted tweed suit and had the weather-beaten appearance of one who has spent most of his time in the open air, and yet there was something in his steady eye and the quiet assurance of his bearing which indicated the gentleman.
@@ -52,20 +51,20 @@ def test_map_characters_to_voices(characters):
 # Test case for when there are not enough voices
 def test_no_available_voice_for_character():
     # Create a character that does not match any available voices
-    characters = [Character(name="Unknown", age="elderly", gender="non-binary")]
+    test_characters = [Character(name="Unknown", age="elderly", gender="non-binary")]
 
     with pytest.raises(ValueError, match="No available voices for Unknown with age elderly and gender non-binary"):
-        map_characters_to_voices(characters)
+        map_characters_to_voices(test_characters)
 
 # Test case to ensure that all voices are assigned only once
 def test_voice_uniqueness():
-    characters = [
+    test_characters = [
         Character(name="Alice", age="young-adult", gender="female"),
         Character(name="Bob", age="young-adult", gender="male"),
         Character(name="Charlie", age="middle-aged", gender="male"),
     ]
 
-    voiced_characters = map_characters_to_voices(characters)
+    voiced_characters = map_characters_to_voices(test_characters)
 
     # Collect assigned voices
     assigned_voices = {voiced.voice.id for voiced in voiced_characters}
