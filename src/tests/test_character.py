@@ -35,7 +35,7 @@ def test_map_characters_to_voices():
         Character(name="Bob", age="middle-aged", gender="male"),
         Character(name="Charlie", age="child", gender="male"),
     ]
-    
+
     voiced_characters = map_characters_to_voices(character_list)
 
     # Check if the length of voiced_characters matches the input characters
