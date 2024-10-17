@@ -28,16 +28,18 @@ from tta.character import Character, map_characters_to_voices
 #     ]
 #     assert characters_info == expected_characters
 
-@pytest.fixture
-def character_list():
-    return [
+import pytest
+from tta.character import Character, map_characters_to_voices
+from tta.voices import Voice, voices_catalogue
+
+# Test the mapping of characters to voices
+def test_map_characters_to_voices():
+    character_list = [
         Character(name="Alice", age="young-adult", gender="female"),
         Character(name="Bob", age="middle-aged", gender="male"),
         Character(name="Charlie", age="child", gender="male"),
     ]
-
-# Test the mapping of characters to voices
-def test_map_characters_to_voices(character_list):
+    
     voiced_characters = map_characters_to_voices(character_list)
 
     # Check if the length of voiced_characters matches the input characters
