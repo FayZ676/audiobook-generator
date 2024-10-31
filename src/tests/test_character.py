@@ -28,45 +28,33 @@ from tta.character import Character, map_characters_to_voices
 #     ]
 #     assert characters_info == expected_characters
 
-# Test the mapping of characters to voices
+
 def test_map_characters_to_voices():
-    character_list = [
+    """Test the mapping of characters to voices ensuring all voices are unique"""
+
+    characters = [
         Character(name="Alice", age="young-adult", gender="female"),
         Character(name="Bob", age="middle-aged", gender="male"),
         Character(name="Charlie", age="child", gender="male"),
     ]
 
-    voiced_characters = map_characters_to_voices(character_list)
-
-    # Check if the length of voiced_characters matches the input characters
-    assert len(voiced_characters) == len(character_list)
-
-    # Verify the assigned voices
-    for voiced in voiced_characters:
-        assert voiced.character in character_list
+    voiced = map_characters_to_voices(characters)
+    assert len(voiced) == len(characters)
+    assert len({voiced.voice.id for voiced in voiced}) == len(
+        voiced
+    )  # Ensure all voices are unique
+    for voiced in voiced:
+        assert voiced.character in characters
         assert voiced.voice.age_group == voiced.character.age
         assert voiced.voice.gender == voiced.character.gender
 
-# Test case for when there are not enough voices
+
 def test_no_available_voice_for_character():
-    # Create a character that does not match any available voices
+    """Test case for when there are no voices for a character."""
+
     test_characters = [Character(name="Unknown", age="elderly", gender="non-binary")]
-
-    with pytest.raises(ValueError, match="No available voices for Unknown with age elderly and gender non-binary"):
+    with pytest.raises(
+        ValueError,
+        match="No available voices for Unknown with age elderly and gender non-binary",
+    ):
         map_characters_to_voices(test_characters)
-
-# Test case to ensure that all voices are assigned only once
-def test_voice_uniqueness():
-    test_characters = [
-        Character(name="Alice", age="young-adult", gender="female"),
-        Character(name="Bob", age="young-adult", gender="male"),
-        Character(name="Charlie", age="middle-aged", gender="male"),
-    ]
-
-    voiced_characters = map_characters_to_voices(test_characters)
-
-    # Collect assigned voices
-    assigned_voices = {voiced.voice.id for voiced in voiced_characters}
-
-    # Ensure all voices are unique
-    assert len(assigned_voices) == len(voiced_characters)
