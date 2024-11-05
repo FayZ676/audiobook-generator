@@ -33,16 +33,14 @@ def test_map_characters_to_voices():
     """Test the mapping of characters to voices ensuring all voices are unique"""
 
     characters = [
-        Character(name="Alice", age="young-adult", gender="female"),
-        Character(name="Bob", age="middle-aged", gender="male"),
-        Character(name="Charlie", age="child", gender="male"),
+        Character(name="Alice", age="middle-aged", gender="female"),
+        Character(name="Gwen", age="middle-aged", gender="female"),
+        Character(name="Stacey", age="middle-aged", gender="female"),
     ]
 
     voiced = map_characters_to_voices(characters)
     assert len(voiced) == len(characters)
-    assert len({voiced.voice.id for voiced in voiced}) == len(
-        voiced
-    )  # Ensure all voices are unique
+    assert len({voiced.voice.voice_id for voiced in voiced}) == len(voiced)
     for voiced in voiced:
         assert voiced.character in characters
         assert voiced.voice.age_group == voiced.character.age
