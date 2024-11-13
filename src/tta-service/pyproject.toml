@@ -21,8 +21,6 @@ classifiers = [
 dependencies = [
   "fastapi",
   "uvicorn[standard]",
-  "openai==1.51.0",  # Include if your service uses OpenAI API
-  "python-dotenv==1.0.0"  # Include if using environment variables
 ]
 
 [project.urls]
