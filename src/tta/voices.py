@@ -14,7 +14,6 @@ class Voice:
     name: str
     gender: str
     age_group: str
-    traits: List[str]
     voice_id: str
 
 
@@ -30,7 +29,6 @@ class VoiceCatalogue:
                 voice_id=voice.voice_id,
                 age_group=voice.labels["age"],
                 gender=voice.labels["gender"],
-                traits=voice.labels.get("description"),
             )
             for voice in voices.voices
         ]
