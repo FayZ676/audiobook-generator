@@ -50,6 +50,11 @@ def test_script_conversion():
                 text="Pray take a seat, Sir Henry. Do I understand you to say that you have had a remarkable experience?",
             ),
             Speech(
+                speaker="Narrator",
+                voice_id="",
+                text="Sir Henry responded,",
+            ),
+            Speech(
                 speaker="Sir Henry",
                 voice_id="456",
                 text="Yes, I received a strange letter this morning.",
