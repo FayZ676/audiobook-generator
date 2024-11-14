@@ -1,4 +1,4 @@
-from tta.script import convert_text_to_script, Script, Speech
+from tta.script import convert_text_to_script, Speech
 from tta.character import CharacterVoiced, Character, Voice
 
 
