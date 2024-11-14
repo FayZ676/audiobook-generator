@@ -19,8 +19,8 @@ classifiers = [
     "Operating System :: OS Independent"
 ]
 dependencies = [
-  "fastapi",
-  "uvicorn[standard]",
+  "fastapi==0.115.2",
+  "uvicorn==0.32.0",
 ]
 
 [project.urls]
