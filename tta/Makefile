@@ -6,4 +6,4 @@ lint:
 	pylint --rcfile=../.pylintrc src
 
 test:
-	pytest --cov=src --cov-report=term-missing --cov-fail-under=80 tests
+	pytest --cov=tta --cov-report=term-missing --cov-fail-under=80 tests
