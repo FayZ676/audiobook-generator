@@ -3,26 +3,31 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "tta-service"
-version = "0.1.0"
+name = "ttaservice"
+version = "0.0.1"
 authors = [
   { name="Faizi Fifita", email="author@example.com" },
   { name="Nathan Lane", email="nathanlane510@gmail.com" },
   { name="Derrick Strover", email="dstroverduncan@yahoo.com" },
-  { name="Travis Loukusa", email="dl2625pv@go.minnstate.edu" }
+  { name="Travis Loukusa", email="dl2625pv@go.minnstate.edu" },
 ]
-description = "A FastAPI service for processing text and generating scripts and character data."
+description = "ttaservice (Text-to-Audiobook API service) is the service for interfacing with the tta library."
 readme = "README.md"
 requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Operating System :: OS Independent"
+    "Operating System :: OS Independent",
 ]
 dependencies = [
   "fastapi==0.115.2",
   "uvicorn==0.32.0",
+  "python-multipart==0.0.17",
 ]
 
+[tool.coverage.run]
+source = ["ttaservice"]
+omit = []
+
 [project.urls]
-homepage = "https://github.com/FayZ676/audiobook-generator"
-issues = "https://github.com/FayZ676/audiobook-generator/issues"
+Homepage = "https://github.com/FayZ676/audiobook-generator"
+Issues = "https://github.com/FayZ676/audiobook-generator/issues"
