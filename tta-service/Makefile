@@ -3,7 +3,7 @@ install:
 	pip install -e .
 
 lint:
-	pylint --rcfile=../.pylintrc src
+	pylint --rcfile=../.pylintrc tta-service
 
 # Run the FastAPI application
 run:

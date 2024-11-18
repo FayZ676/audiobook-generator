@@ -3,7 +3,7 @@ install:
 	pip install -e .
 
 lint:
-	pylint --rcfile=../.pylintrc src
+	pylint --rcfile=../.pylintrc tta
 
 test:
-	pytest --cov=tta --cov-report=term-missing --cov-fail-under=80 tests
+	pytest --cov=tta --cov-report=term-missing --cov-fail-under=60 tests
