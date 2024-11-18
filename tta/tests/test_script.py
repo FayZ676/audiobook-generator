@@ -33,7 +33,7 @@ CHARACTERS = [
 ]
 
 
-# TODO: Need to fix this test. Not reliable.
+# TODO: Fix this.
 @pytest.mark.skip(reason="Not reliable")
 def test_script_conversion():
     """

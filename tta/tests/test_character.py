@@ -11,6 +11,7 @@ Our breakfast table was cleared early, and Holmes waited in his dressing-gown fo
 """
 
 
+# TODO: Fix this.
 @pytest.mark.skip(reason="Not reliable")
 def test_save_characters_info():
     """
