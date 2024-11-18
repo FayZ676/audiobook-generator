@@ -71,3 +71,10 @@ For example, in the text "'Hello' said Tom" the response should be:
     )
     result = generate_text(prompt, ResponseFormat)
     return parse_response(result)
+
+
+def convert_text_to_script_by_grammar(
+    text: str, characters: list[CharacterVoiced]
+) -> list[Speech]:
+    speeches = []
+    paragraphs = text.split("\n\n")
