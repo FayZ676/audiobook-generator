@@ -1,6 +1,5 @@
 import os
 from dataclasses import dataclass
-from typing import List
 
 from elevenlabs.client import ElevenLabs
 from dotenv import load_dotenv

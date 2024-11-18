@@ -1,10 +1,11 @@
 # Initialize the virtual environment and install dependencies
-init:
-    pip install -e .
+install:
+	pip install -e .
 
 lint:
 	pylint --rcfile=../.pylintrc src
 
 # Run the FastAPI application
 run:
-    uvicorn main:app --reload --port 8000
+	cd ttaservice && \
+	uvicorn main:app --reload --port 8000

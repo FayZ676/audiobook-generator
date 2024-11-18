@@ -29,20 +29,21 @@ class ResponseFormat(BaseModel):
     response: list[Character]
 
 
-def identify_characters(text: str) -> list[Character]:
+def identify_characters(text: str) -> list[CharacterVoiced]:
     result = generate_text(prompt.substitute({"text": text}), ResponseFormat)
-    try:
-        characters = json.loads(result)["response"]
-        return [
-            Character(name=char["name"], age=char["age"], gender=char["gender"])
-            for char in characters
-        ]
-    except json.JSONDecodeError as e:
-        print("JSONDecodeError:", e)
-        return []
+    characters = json.loads(result)["response"]
+    character_list = [
+        Character(name=char["name"], age=char["age"], gender=char["gender"])
+        for char in characters
+    ]
+    character_list.append(Character(name="Narrator", age="middle-aged", gender="male"))
+    return _map_characters_to_voices(character_list)
 
 
-def map_characters_to_voices(characters: List[Character]) -> List[CharacterVoiced]:
+### private ###
+
+
+def _map_characters_to_voices(characters: List[Character]) -> List[CharacterVoiced]:
     available_voices = VoiceCatalogue().get_all_voices()
     voiced_characters = []
     for character in characters:
