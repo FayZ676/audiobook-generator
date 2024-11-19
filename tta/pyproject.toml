@@ -32,6 +32,9 @@ dependencies = [
 source = ["tta"]
 omit = [
     "*/tests/*",
+    "tta/models/*",
+    "tta/voices.py",
+    "tta/narration.py",
 ]
 
 [project.urls]
