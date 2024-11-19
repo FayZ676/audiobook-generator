@@ -30,21 +30,32 @@ CHARACTERS = [
             age_group="middle-aged",
         ),
     ),
+    CharacterVoiced(
+        character=Character(name="Narrator", age="middle-aged", gender="male"),
+        voice=Voice(
+            voice_id="789",
+            name="Narrator",
+            gender="male",
+            age_group="middle-aged",
+        ),
+    ),
 ]
 
 
 # TODO: Fix this.
-@pytest.mark.skip(reason="Not reliable")
+# @pytest.mark.skip(reason="Not reliable")
 def test_script_conversion():
     """
     Test the conversion of text into a structured script with both narration and character dialogue.
     """
-    script: list[Speech] | None = convert_text_to_script(BOOK_PARAGRAPH, CHARACTERS)
+    script: list[Speech] | None = convert_text_to_script(
+        BOOK_PARAGRAPH.replace("\n", " "), CHARACTERS
+    )
     print(script)
     expected_script = [
         Speech(
             speaker="Narrator",
-            voice_id="",
+            voice_id="789",
             text="Our breakfast table was cleared early, and Holmes waited in his dressing-gown for the promised interview.",
         ),
         Speech(
@@ -59,7 +70,7 @@ def test_script_conversion():
         ),
         Speech(
             speaker="Narrator",
-            voice_id="",
+            voice_id="789",
             text="The room fell silent for a moment as Holmes pondered the situation.",
         ),
     ]
