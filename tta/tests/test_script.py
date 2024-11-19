@@ -1,5 +1,3 @@
-import pytest
-
 from tta.script import convert_text_to_script, Speech
 from tta.character import CharacterVoiced, Character, Voice
 
@@ -42,8 +40,6 @@ CHARACTERS = [
 ]
 
 
-# TODO: Fix this.
-# @pytest.mark.skip(reason="Not reliable")
 def test_script_conversion():
     """
     Test the conversion of text into a structured script with both narration and character dialogue.
