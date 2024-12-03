@@ -30,7 +30,7 @@ class ResponseFormat(BaseModel):
 
 
 def identify_characters(text: str) -> list[CharacterVoiced]:
-    result = generate_text(prompt.substitute({"text": text}), ResponseFormat)
+    result = generate_text("", prompt.substitute({"text": text}), ResponseFormat)
     characters = json.loads(result)["response"]
     character_list = [
         Character(name=char["name"], age=char["age"], gender=char["gender"])
