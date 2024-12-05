@@ -68,7 +68,7 @@ export default function Home() {
             uploading
           </>
         ) : (
-          "Upload"
+          "Generate"
         )}
       </button>
     </main>
