@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from elevenlabs.client import ElevenLabs
 from dotenv import load_dotenv
 
+from tta.character import Character
+
 
 load_dotenv()
 
@@ -14,6 +16,12 @@ class Voice:
     gender: str
     age_group: str
     voice_id: str
+
+
+@dataclass(eq=True, frozen=True)
+class CharacterVoiced:
+    character: Character
+    voice: Voice
 
 
 class VoiceCatalogue:
@@ -31,3 +39,26 @@ class VoiceCatalogue:
             )
             for voice in voices.voices
         ]
+
+
+def map_characters_to_voices(characters: set[Character]) -> set[CharacterVoiced]:
+    available_voices = VoiceCatalogue().get_all_voices()
+    voiced_characters = set()
+    for character in characters:
+        matching_voices = [
+            voice
+            for voice in available_voices
+            if voice.age_group == character.age and voice.gender == character.gender
+        ]
+
+        if matching_voices:
+            selected_voice = matching_voices[0]
+            available_voices.remove(selected_voice)
+            voiced_characters.add(
+                CharacterVoiced(character=character, voice=selected_voice)
+            )
+        else:
+            raise ValueError(
+                f"No available voices for {character.name} with age {character.age} and gender {character.gender}"
+            )
+    return voiced_characters

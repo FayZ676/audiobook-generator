@@ -3,7 +3,7 @@ from string import Template
 from dataclasses import dataclass
 from pydantic import BaseModel
 from tta.models.text import generate_text
-from tta.character import CharacterVoiced
+from tta.voices import CharacterVoiced
 
 
 @dataclass

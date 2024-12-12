@@ -1,16 +1,18 @@
 from io import BytesIO
 
-from tta.character import CharacterVoiced, identify_characters
+from tta.character import identify_characters, Character
 from tta.script import convert_text_to_script
 from tta.models.speech import generate_speech
 from tta.text_handler import get_chunks
+from tta.voices import map_characters_to_voices
 
 from pydub import AudioSegment
 
 
 def get_narration_from_text(text: str) -> bytes:
     characters = identify_characters(text, set())
-    script = convert_text_to_script(text, characters)
+    characters_voiced = map_characters_to_voices(characters)
+    script = convert_text_to_script(text, characters_voiced)
     for item in script:
         print(item)
     narration_audio = [
@@ -30,11 +32,9 @@ def get_narration_from_text(text: str) -> bytes:
 
 
 def get_narration(texts: list[str]):
-    known_characters: set[CharacterVoiced] = set()
+    known_characters: set[Character] = set()
     for text in texts:
-        characters = identify_characters(
-            text, {char.character.name for char in known_characters}
-        )
+        characters = identify_characters(text, {char.name for char in known_characters})
         known_characters.update(characters)
     return known_characters
 
@@ -45,4 +45,4 @@ if __name__ == "__main__":
     chunks = get_chunks(content, 500)
     result = get_narration(chunks)
     for r in result:
-        print(r.character.name)
+        print(r.name)

@@ -7,7 +7,6 @@ from string import Template
 from pydantic import BaseModel
 
 from tta.models.text import generate_text
-from tta.voices import Voice, VoiceCatalogue
 
 load_dotenv()
 
@@ -19,17 +18,11 @@ class Character:
     gender: Literal["male", "female"]
 
 
-@dataclass(eq=True, frozen=True)
-class CharacterVoiced:
-    character: Character
-    voice: Voice
-
-
 class ResponseFormat(BaseModel):
     response: list[Character]
 
 
-def identify_characters(text: str, known_characters: set[str]) -> set[CharacterVoiced]:
+def identify_characters(text: str, known_characters: set[str]) -> set[Character]:
     result = generate_text(
         "",
         prompt.substitute({"text": text, "known_characters": known_characters}),
@@ -40,33 +33,7 @@ def identify_characters(text: str, known_characters: set[str]) -> set[CharacterV
         for char in json.loads(result)["response"]
     }
     characters.add(Character(name="Narrator", age="middle-aged", gender="male"))
-    return _map_characters_to_voices(characters)
-
-
-### private ###
-
-
-def _map_characters_to_voices(characters: set[Character]) -> set[CharacterVoiced]:
-    available_voices = VoiceCatalogue().get_all_voices()
-    voiced_characters = set()
-    for character in characters:
-        matching_voices = [
-            voice
-            for voice in available_voices
-            if voice.age_group == character.age and voice.gender == character.gender
-        ]
-
-        if matching_voices:
-            selected_voice = matching_voices[0]
-            available_voices.remove(selected_voice)
-            voiced_characters.add(
-                CharacterVoiced(character=character, voice=selected_voice)
-            )
-        else:
-            raise ValueError(
-                f"No available voices for {character.name} with age {character.age} and gender {character.gender}"
-            )
-    return voiced_characters
+    return characters
 
 
 prompt = Template(
