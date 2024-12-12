@@ -1,6 +1,7 @@
 from pathlib import Path
 from tta.script import convert_text_to_script, Speech
-from tta.character import CharacterVoiced, Character, Voice
+from tta.character import Character
+from tta.voices import CharacterVoiced, Voice
 
 
 def get_text(filename: str) -> str:
@@ -10,7 +11,7 @@ def get_text(filename: str) -> str:
 
 
 def test_convert_text_to_script__sherlock():
-    SHERLOCK_CHARACTERS = [
+    SHERLOCK_CHARACTERS = {
         CharacterVoiced(
             character=Character(
                 name="Sherlock Holmes", age="middle-aged", gender="male"
@@ -40,7 +41,7 @@ def test_convert_text_to_script__sherlock():
                 age_group="middle-aged",
             ),
         ),
-    ]
+    }
     script: list[Speech] | None = convert_text_to_script(
         get_text("sherlock").replace("\n", " "), SHERLOCK_CHARACTERS
     )
@@ -70,7 +71,7 @@ def test_convert_text_to_script__sherlock():
 
 
 def test_convert_text_to_script__harry_potter():
-    HARRY_POTTER_CHARACTERS = [
+    HARRY_POTTER_CHARACTERS = {
         CharacterVoiced(
             character=Character(name="Dumbledore", age="old", gender="male"),
             voice=Voice(
@@ -100,7 +101,7 @@ def test_convert_text_to_script__harry_potter():
                 age_group="middle-aged",
             ),
         ),
-    ]
+    }
     script: list[Speech] | None = convert_text_to_script(
         get_text("harrypotter").replace("\n", " "), HARRY_POTTER_CHARACTERS
     )
