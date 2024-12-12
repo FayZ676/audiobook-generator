@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-@dataclass
+@dataclass(eq=True, frozen=True)
 class Voice:
     name: str
     gender: str
@@ -24,7 +24,7 @@ class VoiceCatalogue:
         voices = self.client.voices.get_all()
         return [
             Voice(
-                name=voice.name,
+                name=str(voice.name),
                 voice_id=voice.voice_id,
                 age_group=voice.labels["age"],
                 gender=voice.labels["gender"],

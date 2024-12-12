@@ -17,7 +17,7 @@ def test_save_characters_info():
     """
     Test if the character information can be saved to and loaded from a JSON file correctly.
     """
-    characters_info = identify_characters(SHERLOCK_PARAGRAPH)
+    characters_info = identify_characters(SHERLOCK_PARAGRAPH, set())
     print(characters_info)
     expected_characters: list[Character] = [
         Character(name="Sherlock Holmes", age="middle-aged", gender="male"),
@@ -30,11 +30,11 @@ def test_save_characters_info():
 def test_map_characters_to_voices():
     """Test the mapping of characters to voices ensuring all voices are unique"""
 
-    characters = [
+    characters = {
         Character(name="Alice", age="middle-aged", gender="female"),
         Character(name="Gwen", age="middle-aged", gender="female"),
         Character(name="Stacey", age="middle-aged", gender="female"),
-    ]
+    }
 
     voiced = _map_characters_to_voices(characters)
     assert len(voiced) == len(characters)

@@ -30,9 +30,7 @@ def parse_response(response: str) -> list[Speech]:
     return speeches
 
 
-def convert_text_to_script(
-    text: str, characters: list[CharacterVoiced]
-) -> list[Speech]:
+def convert_text_to_script(text: str, characters: set[CharacterVoiced]) -> list[Speech]:
     prompt = PROMPT.substitute(
         text=text,
         characters=", ".join(
