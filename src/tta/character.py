@@ -6,8 +6,8 @@ from string import Template
 
 from pydantic import BaseModel
 
-from tta.models.text import generate_text
-from tta.voices import Voice, VoiceCatalogue
+from models.text import generate_text
+from voices import Voice, VoiceCatalogue
 
 load_dotenv()
 
