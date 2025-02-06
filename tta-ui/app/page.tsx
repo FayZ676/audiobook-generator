@@ -1,37 +1,52 @@
 "use client";
 
 import React, { useState, ChangeEvent } from "react";
-import type { NextPage } from "next";
+import { generate } from "./actions/narration";
 
-const Home: NextPage = () => {
+export default function Home() {
   const [fileName, setFileName] = useState<string>("");
+  const [text, setText] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [uploadResult, setUploadResult] = useState<string>("");
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (file) {
       setFileName(file.name);
-      setUploadResult(""); // Clear previous upload result when new file is selected
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setText(e.target?.result as string);
+      };
+      reader.readAsText(file);
     } else {
       setFileName("");
+      setText("");
     }
-  };
+  }
 
-  const handleUpload = () => {
+  async function handleGenerate() {
     setIsLoading(true);
-    // Simulate an upload process
-    setTimeout(() => {
+    try {
+      const base64String = await generate(text);
+      const binaryString = window.atob(base64String);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: "audio/mpeg" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${fileName}.mp3`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Failed to generate narration:", error);
+    } finally {
       setIsLoading(false);
-      setUploadResult(`File "${fileName}" uploaded successfully!`);
-      setFileName(""); // Reset the file name after upload
-      // Reset the file input
-      const fileInput = document.querySelector(
-        'input[type="file"]'
-      ) as HTMLInputElement;
-      if (fileInput) fileInput.value = "";
-    }, 3000); // 3 seconds delay to simulate upload
-  };
+    }
+  }
 
   return (
     <main className="flex flex-col items-start gap-2 p-4">
@@ -44,7 +59,7 @@ const Home: NextPage = () => {
       {fileName && <p className="mt-2">Selected file: {fileName}</p>}
       <button
         className="btn"
-        onClick={handleUpload}
+        onClick={handleGenerate}
         disabled={!fileName || isLoading}
       >
         {isLoading ? (
@@ -53,12 +68,9 @@ const Home: NextPage = () => {
             uploading
           </>
         ) : (
-          "Upload"
+          "Generate"
         )}
       </button>
-      {uploadResult && <p className="mt-2 text-green-600">{uploadResult}</p>}
     </main>
   );
-};
-
-export default Home;
+}
