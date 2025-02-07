@@ -4,7 +4,7 @@ import re
 import spacy
 
 from tta.models.text import generate_text
-from ..metrics import test_precision_recall
+from tta.metrics import test_precision_recall
 
 nlp = spacy.load("en_core_web_sm")  # install en_core_web_trf
 
