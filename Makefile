@@ -2,7 +2,9 @@ init:
 	python -m venv venv
 	source venv/bin/activate && \
 	cd tta && make install && \
-	cd ../tta-service && make install
+	cd ../tta-service && make install && \
+	python -m spacy download en_core_web_sm
+
 
 # Runs linting on the entire application
 lint_all:
