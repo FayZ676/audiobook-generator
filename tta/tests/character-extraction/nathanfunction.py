@@ -2,9 +2,9 @@ import json
 import re
 
 import spacy
-from sklearn.metrics import precision_score, recall_score
 
 from tta.models.text import generate_text
+from ..metrics import test_precision_recall
 
 nlp = spacy.load("en_core_web_sm")  # install en_core_web_trf
 
@@ -26,11 +26,6 @@ def llm_prompt(entities_list, text):
     return prompt
 
 
-# Normalize names for consistency
-def normalize_names(names):
-    return [name.lower().strip() for name in names]
-
-
 # Clean the LLM response to extract only the list of names
 def clean_llm_response(response):
     match = re.search(r"\[.*\]", response, re.DOTALL)
@@ -39,41 +34,24 @@ def clean_llm_response(response):
     return "[]"
 
 
-# Test extracted results against True Positives list for precision and recall
-def test_precision_recall(predicted, true_positives):
-    predicted = normalize_names(predicted)
-    true_positives = normalize_names(true_positives)
-    all_names = list(set(true_positives + predicted))
-    y_true = [1 if name in predicted else 0 for name in all_names]
-    y_pred = [1 if name in true_positives else 0 for name in all_names]
-
-    precision = precision_score(y_true, y_pred, zero_division=1)
-    recall = recall_score(y_true, y_pred, zero_division=1)
-    return precision, recall
-
-
 if __name__ == "__main__":
     with open("../text/harrypotter-1-3.txt") as f:
         text = f.read()
+
     entities = ner_extraction(text)
-    llm_prompt_text = llm_prompt(entities, text)
-    extracted_speakers = generate_text(
-        "", llm_prompt_text, response_format={"type": "text"}
+
+    extracted = generate_text(
+        "", llm_prompt(entities, text), response_format={"type": "text"}
     )
-    cleaned_response = clean_llm_response(extracted_speakers)
-    try:
-        extracted_speakers_list = json.loads(cleaned_response)
-    except json.JSONDecodeError as e:
-        print("JSON Decode Error:", e)
-        extracted_speakers_list = []
-    true_positives = [
+    extracted_speakers_list = json.loads(clean_llm_response(extracted))
+    expected = [
         "Professor McGonagall",
         "Dumbledore",
         "Mrs. Dursley",
         "Mr. Dursley",
     ]
 
-    precision, recall = test_precision_recall(extracted_speakers_list, true_positives)
+    precision, recall = test_precision_recall(extracted_speakers_list, expected)
 
     print("Extracted Entities:", entities)
     print("Extracted Speakers:", extracted_speakers_list)
