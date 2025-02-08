@@ -1,24 +1,14 @@
 import json
 
-import spacy
 from pydantic import BaseModel
 
 from tta.models.text import generate_text
 from tta.metrics import test_precision_recall
-
-
-nlp = spacy.load("en_core_web_sm")
+from tta.ner import extract_entities
 
 
 class ResponseFormat(BaseModel):
     response: list[str]
-
-
-# TODO: Move out to tta package in new ner module.
-def ner_extraction(text):
-    doc = nlp(text)
-    entities = {ent.text for ent in doc.ents if ent.label_ == "PERSON"}
-    return entities
 
 
 def llm_prompt(entities_list, text):
@@ -53,7 +43,7 @@ if __name__ == "__main__":
     with open("../text/harrypotter-1-3.txt") as f:
         text = f.read()
 
-    entities = ner_extraction(text)
+    entities = extract_entities(text, ["PERSON"])
     speakers = main(text, entities)
     expected = {
         "Professor McGonagall",
