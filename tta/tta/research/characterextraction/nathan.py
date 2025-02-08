@@ -3,7 +3,6 @@ import json
 from pydantic import BaseModel
 
 from tta.models.text import generate_text
-from tta.metrics import test_precision_recall
 from tta.ner import extract_entities
 
 
@@ -32,28 +31,9 @@ def llm_prompt(entities_list, text):
     return prompt
 
 
-def main(text: str, entities: set[str]) -> set[str]:
+def main(text: str) -> set[str]:
+    entities = extract_entities(text, ["PERSON"])
     result = generate_text(
         "", llm_prompt(entities, text), response_format=ResponseFormat
     )
     return {name for name in json.loads(result)["response"]}
-
-
-if __name__ == "__main__":
-    with open("../text/harrypotter-1-3.txt") as f:
-        text = f.read()
-
-    entities = extract_entities(text, ["PERSON"])
-    speakers = main(text, entities)
-    expected = {
-        "Professor McGonagall",
-        "Dumbledore",
-        "Mrs. Dursley",
-        "Mr. Dursley",
-    }
-
-    precision, recall = test_precision_recall(speakers, expected)
-    print("Extracted Entities:", entities)
-    print("Extracted Speakers:", speakers)
-    print("Precision:", precision)
-    print("Recall:", recall)
