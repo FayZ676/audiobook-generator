@@ -3,14 +3,16 @@ import re
 from tta.ner import extract_entities
 
 
-def remove_quoted_text(paragraph):
-    return re.sub(r'["\'].*?["\']', "", paragraph)
-
-
+# TODO: Use a different spacy model.
+# TODO: Test different counts.
+# TODO: Postprocess the found speakers to remove bad results.
 def main(text: str, count: int = 20):
-    quoted_paragraphs = [p for p in text.split("\n\n") if '"' in p or "'" in p]
-    filtered_paragraphs = [remove_quoted_text(p) for p in quoted_paragraphs]
-    processed_text = "\n\n".join(filtered_paragraphs)
-    entities = extract_entities(processed_text, ["PERSON"])
-    speaker_counts = {entity: text.count(entity) for entity in set(entities)}
+    quoted_paragraphs = [p for p in text.split("\n\n") if '"' in p]
+    text_unquoted = "\n\n".join(
+        [re.sub(r'["\'].*?["\']', "", p) for p in quoted_paragraphs]
+    )
+    speaker_counts = {
+        entity: text.count(entity)
+        for entity in extract_entities(text_unquoted, ["PERSON"])
+    }
     return {speaker for speaker, freq in speaker_counts.items() if freq > count}

@@ -10,7 +10,7 @@ class ResponseFormat(BaseModel):
     response: list[str]
 
 
-def llm_prompt(entities_list, text):
+def build_prompt(entities_list, text):
     prompt = f"""
     <text>
     {text}
@@ -34,6 +34,6 @@ def llm_prompt(entities_list, text):
 def main(text: str) -> set[str]:
     entities = extract_entities(text, ["PERSON"])
     result = generate_text(
-        "", llm_prompt(entities, text), response_format=ResponseFormat
+        "", build_prompt(entities, text), response_format=ResponseFormat
     )
     return {name for name in json.loads(result)["response"]}
