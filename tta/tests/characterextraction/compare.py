@@ -8,6 +8,7 @@ EXPECTED = {
     "Dumbledore",
     "Mrs. Dursley",
     "Mr. Dursley",
+    "Hagrid",
 }
 
 
