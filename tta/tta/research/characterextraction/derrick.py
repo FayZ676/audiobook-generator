@@ -3,9 +3,6 @@ import re
 from tta.ner import extract_entities
 
 
-# TODO: Use a different spacy model.
-# TODO: Test different counts.
-# TODO: Postprocess the found speakers to remove bad results.
 def main(text: str, count: int = 20):
     quoted_paragraphs = [p for p in text.split("\n\n") if '"' in p]
     text_unquoted = "\n\n".join(
