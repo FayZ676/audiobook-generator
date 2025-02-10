@@ -60,7 +60,7 @@ export default function Home() {
       <button
         className="btn"
         onClick={handleGenerate}
-        disabled={!fileName || isLoading}
+        disabled={!text || isLoading} // Change fileName to text
       >
         {isLoading ? (
           <>
