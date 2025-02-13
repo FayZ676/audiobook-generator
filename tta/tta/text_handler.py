@@ -28,3 +28,9 @@ def get_chunks(text: str, chunk_size: int) -> list[str]:
         chunks.append("\n\n".join(current_chunk))
 
     return chunks
+
+
+# TODO: Implement
+def remove_dialogue(text: str):
+    # Remove the dialogue
+    return text
