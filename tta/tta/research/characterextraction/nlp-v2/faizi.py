@@ -10,5 +10,8 @@ def main(text: str):
     for paragraph in paragraphs:
         persons = extract_entities(paragraph, ["PERSON"])
         # TODO: Look adjacent to the name for verbs using extract_pos function
-        # TODO: If verbs, add the name to names.
+        # 1. Parse text surrounding each person (2 words before and 2 words after) as a new string.
+        # 2. Call extract_pos on the surrounding string.
+        # 3. Check if any of the results are verbs.
+        # 4. If verbs, add the name to names.
     return names

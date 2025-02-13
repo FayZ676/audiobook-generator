@@ -12,7 +12,6 @@ class EntityInfo:
     text: str
     start: int
     end: int
-    pos: str
     label: str
 
 
@@ -26,7 +25,6 @@ def extract_entities(text: str, entities: list[str]) -> list[EntityInfo]:
                     text=ent.text,
                     start=ent.start_char,
                     end=ent.end_char,
-                    pos=ent.root.pos_,
                     label=ent.label_,
                 )
             )
