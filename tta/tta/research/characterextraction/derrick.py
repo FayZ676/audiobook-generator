@@ -12,7 +12,7 @@ def main(text: str, count: int = 20):
         [re.sub(r'["\'].*?["\']', "", p) for p in quoted_paragraphs]
     )
     speaker_counts = {
-        entity: text.count(entity)
+        entity.text: text.count(entity.text)
         for entity in extract_entities(text_unquoted, ["PERSON"])
     }
     return {speaker for speaker, freq in speaker_counts.items() if freq > count}

@@ -34,6 +34,8 @@ def build_prompt(entities_list, text):
 def main(text: str) -> set[str]:
     entities = extract_entities(text, ["PERSON"])
     result = generate_text(
-        "", build_prompt(entities, text), response_format=ResponseFormat
+        "",
+        build_prompt([e.text for e in entities], text),
+        response_format=ResponseFormat,
     )
     return {name for name in json.loads(result)["response"]}

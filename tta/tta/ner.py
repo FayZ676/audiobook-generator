@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 import spacy
 
 
@@ -5,9 +7,30 @@ import spacy
 nlp = spacy.load("en_core_web_sm")
 
 
-def extract_entities(text: str, entities: list[str]):
+@dataclass(eq=True, frozen=True)
+class EntityInfo:
+    text: str
+    start: int
+    end: int
+    pos: str
+    label: str
+
+
+def extract_entities(text: str, entities: list[str]) -> list[EntityInfo]:
     doc = nlp(text)
-    return {ent.text for ent in doc.ents if ent.label_ in entities}
+    result: list[EntityInfo] = []
+    for ent in doc.ents:
+        if ent.label_ in entities:
+            result.append(
+                EntityInfo(
+                    text=ent.text,
+                    start=ent.start_char,
+                    end=ent.end_char,
+                    pos=ent.root.pos_,
+                    label=ent.label_,
+                )
+            )
+    return result
 
 
 # TODO: Implement

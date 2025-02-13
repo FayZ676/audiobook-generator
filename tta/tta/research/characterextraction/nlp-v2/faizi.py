@@ -7,8 +7,8 @@ def main(text: str):
     paragraphs = [p for p in paragraphs if '"' not in p]
     paragraphs = [remove_dialogue(p) for p in paragraphs]
     names = []
-    for p in paragraphs:
-        persons = extract_entities(p, ["PERSON"])
+    for paragraph in paragraphs:
+        persons = extract_entities(paragraph, ["PERSON"])
         # TODO: Look adjacent to the name for verbs using extract_pos function
         # TODO: If verbs, add the name to names.
     return names
