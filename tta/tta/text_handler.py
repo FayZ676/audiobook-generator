@@ -31,6 +31,7 @@ def get_chunks(text: str, chunk_size: int) -> list[str]:
 
 
 # TODO: Implement
+# NOTE: Check out https://regexr.com/ for building a good regex string.
 def remove_dialogue(text: str):
     # Remove the dialogue
     return text
