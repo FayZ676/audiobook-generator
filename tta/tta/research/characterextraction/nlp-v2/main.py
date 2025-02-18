@@ -1,4 +1,4 @@
-from tta.ner import extract_entities, extract_pos
+from tta.ner import extract_entities, is_pos
 from tta.text_handler import remove_dialogue
 
 
@@ -10,8 +10,11 @@ def main(text: str):
     for paragraph in paragraphs:
         persons = extract_entities(paragraph, ["PERSON"])
         # TODO: Look adjacent to the name for verbs using extract_pos function
-        # 1. Parse text surrounding each person (2 words before and 2 words after) as a new string.
-        # 2. Call extract_pos on the surrounding string.
-        # 3. Check if any of the results are verbs.
-        # 4. If verbs, add the name to names.
+        # 1. Iterate through each person.
+        for person in persons:
+            ...
+            # 1. Parse text surrounding the person (2 words before and 2 words after) as a new string.
+            # 2. Call is_pos on the surrounding words.
+            # 3. Check if any of then are verbs.
+            # 4. If they are, add the name to names.
     return names

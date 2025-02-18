@@ -3,8 +3,7 @@ from dataclasses import dataclass
 import spacy
 
 
-# TODO: Use en_core_web_trf instead
-nlp = spacy.load("en_core_web_sm")
+nlp = spacy.load("en_core_web_trf")
 
 
 @dataclass(eq=True, frozen=True)
@@ -32,6 +31,9 @@ def extract_entities(text: str, entities: list[str]) -> list[EntityInfo]:
 
 
 # TODO: Implement
-def extract_pos(text: str, pos: str):
-    """Refer to https://spacy.io/usage/linguistic-features"""
+def is_pos(text: str, pos: str) -> bool:
+    """
+    Refer to https://spacy.io/usage/linguistic-features
+    This takes some text and a part of speech (i.e. verb, adjective, etc.) and returns whether the word is that part of speech or not using spacy's part of speech tagger.
+    """
     ...
