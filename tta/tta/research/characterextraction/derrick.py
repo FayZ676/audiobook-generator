@@ -1,11 +1,10 @@
 import re
 
 from tta.ner import extract_entities
+from tta.text_handler import remove_dialogue
 
 
-# TODO: Use a different spacy model.
-# TODO: Test different counts.
-# TODO: Postprocess the found speakers to remove bad results.
+# TODO: Use the remove_dialogue function.
 def main(text: str, count: int = 20):
     quoted_paragraphs = [p for p in text.split("\n\n") if '"' in p]
     text_unquoted = "\n\n".join(
