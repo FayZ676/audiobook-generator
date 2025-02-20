@@ -1,3 +1,6 @@
+import re
+
+
 def get_chunks(text: str, chunk_size: int) -> list[str]:
     if not text:
         return [""]
@@ -30,8 +33,7 @@ def get_chunks(text: str, chunk_size: int) -> list[str]:
     return chunks
 
 
-# TODO: Implement
-# NOTE: Check out https://regexr.com/ for building a good regex string.
 def remove_dialogue(text: str) -> str:
-    # Remove the dialogue (text between quotes)
-    return text
+    quote_pattern = r'(["\'])(?:(?=(\\?))\2.)*?\1'
+    text_without_dialogue = re.sub(quote_pattern, "", text)
+    return " ".join(text_without_dialogue.split())
