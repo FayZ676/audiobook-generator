@@ -1,3 +1,5 @@
+import re
+
 def get_chunks(text: str, chunk_size: int) -> list[str]:
     if not text:
         return [""]
@@ -28,3 +30,12 @@ def get_chunks(text: str, chunk_size: int) -> list[str]:
         chunks.append("\n\n".join(current_chunk))
 
     return chunks
+
+
+def remove_dialogue(text: str) -> str:
+    # Pattern to get content inside single/double quotes
+    quote_pattern = r'(["\'])(?:(?=(\\?))\2.)*?\1'
+
+    text_without_dialogue = re.sub(quote_pattern, '', text)
+
+    return ' '.join(text_without_dialogue.split())
