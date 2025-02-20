@@ -8,6 +8,7 @@ EXPECTED = {
     "Dumbledore",
     "Mrs. Dursley",
     "Mr. Dursley",
+    "Hagrid",
 }
 
 
@@ -24,7 +25,7 @@ def derrick(text: str):
 
 
 if __name__ == "__main__":
-    with open("../text/harrypotter-1-3.txt", encoding="utf-8") as f:
+    with open("../text/harrypotter-1.txt", encoding="utf-8") as f:
         text = f.read()
 
     nathan(text)
