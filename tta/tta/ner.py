@@ -1,10 +1,7 @@
 from dataclasses import dataclass
-
 import spacy
 
-
 nlp = spacy.load("en_core_web_trf")
-
 
 @dataclass(eq=True, frozen=True)
 class EntityInfo:
@@ -12,7 +9,6 @@ class EntityInfo:
     start: int
     end: int
     label: str
-
 
 def extract_entities(text: str, entities: list[str]) -> list[EntityInfo]:
     doc = nlp(text)
@@ -29,11 +25,13 @@ def extract_entities(text: str, entities: list[str]) -> list[EntityInfo]:
             )
     return result
 
-
-# TODO: Implement
 def is_pos(text: str, pos: str) -> bool:
     """
     Refer to https://spacy.io/usage/linguistic-features
     This takes some text and a part of speech (i.e. verb, adjective, etc.) and returns whether the word is that part of speech or not using spacy's part of speech tagger.
     """
-    ...
+    doc = nlp(text)
+    for token in doc:
+        if token.pos_ == pos:
+            return True
+    return False
