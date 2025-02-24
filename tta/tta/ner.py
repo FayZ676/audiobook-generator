@@ -3,12 +3,14 @@ import spacy
 
 nlp = spacy.load("en_core_web_trf")
 
+
 @dataclass(eq=True, frozen=True)
 class EntityInfo:
     text: str
-    start: int
-    end: int
+    start_char: int
+    end_char: int
     label: str
+
 
 def extract_entities(text: str, entities: list[str]) -> list[EntityInfo]:
     doc = nlp(text)
@@ -18,12 +20,13 @@ def extract_entities(text: str, entities: list[str]) -> list[EntityInfo]:
             result.append(
                 EntityInfo(
                     text=ent.text,
-                    start=ent.start_char,
-                    end=ent.end_char,
+                    start_char=ent.start_char,
+                    end_char=ent.end_char,
                     label=ent.label_,
                 )
             )
     return result
+
 
 def is_pos(text: str, pos: str) -> bool:
     """
