@@ -1,5 +1,5 @@
 from tta.research.characterextraction import nathan as N
-from tta.research.characterextraction.nlp_v2.main import main as M
+from tta.research.characterextraction.main import main as M
 from tta.metrics import test_precision_recall
 
 
