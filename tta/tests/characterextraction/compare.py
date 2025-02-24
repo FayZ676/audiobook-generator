@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from tta.research.characterextraction import nathan as N
 from tta.research.characterextraction.main import main as M
 from tta.metrics import test_precision_recall
@@ -25,9 +27,8 @@ def main(text: str):
 
 
 if __name__ == "__main__":
-    # CHANGE PATHING FOR TXT FILE
     with open(
-        "c:/Users/Nathan/audiobook-generator-1/tta/tests/text/harrypotter-1.txt",
+        Path.cwd() / "../text/harrypotter-1.txt",
         encoding="utf-8",
     ) as f:
         text = f.read()
