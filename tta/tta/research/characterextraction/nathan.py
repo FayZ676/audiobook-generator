@@ -3,7 +3,7 @@ import json
 from pydantic import BaseModel
 
 from tta.models.text import generate_text
-from tta.ner import extract_entities
+from tta.ner import NER
 
 
 class ResponseFormat(BaseModel):
@@ -32,10 +32,10 @@ def build_prompt(entities_list, text):
 
 
 def main(text: str) -> set[str]:
-    entities = extract_entities(text, ["PERSON"])
+    ner = NER()
     result = generate_text(
         "",
-        build_prompt([e.text for e in entities], text),
+        build_prompt(ner.find_names(text), text),
         response_format=ResponseFormat,
     )
     return {name for name in json.loads(result)["response"]}

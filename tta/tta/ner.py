@@ -1,7 +1,8 @@
 from dataclasses import dataclass
-import spacy
 
-nlp = spacy.load("en_core_web_trf")
+import spacy
+from spacy.language import Language
+from spacy.tokens import Span
 
 
 @dataclass(eq=True, frozen=True)
@@ -12,29 +13,50 @@ class EntityInfo:
     label: str
 
 
-def extract_entities(text: str, entities: list[str]) -> list[EntityInfo]:
-    doc = nlp(text)
-    result: list[EntityInfo] = []
+HONORIFICS = [
+    "Dr",
+    "Dr.",
+    "Mr",
+    "Mr.",
+    "Ms",
+    "Ms.",
+    "Mrs.",
+    "Uncle",
+    "Aunt",
+    "Professor",
+]
+
+
+@Language.component("expand_persons")
+def expand_persons(doc):
+    new_ents = []
     for ent in doc.ents:
-        if ent.label_ in entities:
-            result.append(
-                EntityInfo(
-                    text=ent.text,
-                    start_char=ent.start_char,
-                    end_char=ent.end_char,
-                    label=ent.label_,
-                )
-            )
-    return result
+        if ent.label_ == "PERSON" and ent.start != 0:
+            prev_token = doc[ent.start - 1]
+            if prev_token.text in HONORIFICS:
+                new_ent = Span(doc, ent.start - 1, ent.end, label=ent.label)
+                new_ents.append(new_ent)
+            else:
+                new_ents.append(ent)
+        else:
+            new_ents.append(ent)
+    doc.ents = new_ents
+    return doc
 
 
-def is_pos(text: str, pos: str) -> bool:
-    """
-    Refer to https://spacy.io/usage/linguistic-features
-    This takes some text and a part of speech (i.e. verb, adjective, etc.) and returns whether the word is that part of speech or not using spacy's part of speech tagger.
-    """
-    doc = nlp(text)
-    for token in doc:
-        if token.pos_ == pos:
-            return True
-    return False
+class NER:
+    def __init__(self):
+        self.nlp = spacy.load("en_core_web_trf")
+        self.nlp.add_pipe("expand_persons", after="ner")
+
+    def find_names(self, text: str):
+        doc = self.nlp(text)
+        names = {ent.text for ent in doc.ents if ent.label_ == "PERSON"}
+        return names
+
+    def is_pos(self, text: str, pos: str) -> bool:
+        doc = self.nlp(text)
+        for token in doc:
+            if token.pos_ == pos:
+                return True
+        return False

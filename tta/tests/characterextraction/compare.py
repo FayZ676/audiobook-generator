@@ -14,14 +14,16 @@ EXPECTED = {
 }
 
 
-def nathan(text: str):
-    result = N.main(text)
-    precision, recall = test_precision_recall(result, EXPECTED)
-    print(f"Nathan -> PRECISION: {precision}, RECALL: {recall}")
+# def nathan(text: str):
+#     result = N.main(text)
+#     precision, recall = test_precision_recall(result, EXPECTED)
+#     print(f"Nathan -> PRECISION: {precision}, RECALL: {recall}")
 
 
 def main(text: str):
     result = M(text)
+    for r in result:
+        print(r)
     precision, recall = test_precision_recall(result, EXPECTED)
     print(f"Main -> PRECISION: {precision}, RECALL: {recall}")
 
@@ -33,5 +35,5 @@ if __name__ == "__main__":
     ) as f:
         text = f.read()
 
-    nathan(text)
+    # nathan(text)
     main(text)
