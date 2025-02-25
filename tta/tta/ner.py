@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import spacy
 from spacy.language import Language
-from spacy.tokens import Span
+from spacy.tokens import Span, Doc
 
 
 @dataclass(eq=True, frozen=True)
@@ -28,7 +28,7 @@ HONORIFICS = [
 
 
 @Language.component("expand_persons")
-def expand_persons(doc):
+def expand_persons(doc: Doc):
     new_ents = []
     for ent in doc.ents:
         if ent.label_ == "PERSON" and ent.start != 0:
