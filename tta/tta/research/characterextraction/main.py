@@ -9,7 +9,4 @@ def main(text: str) -> set[str]:
     ]  # TODO: Investigate why we find "Harold" and "Petunia". In a paragrapgh with no quotations
     paragraphs = [remove_dialogue(p) for p in paragraphs]
     ner = NER()
-    names = set()
-    for paragraph in paragraphs:
-        names.update(ner.find_names(paragraph))
-    return names
+    return {name for paragraph in paragraphs for name in ner.find_names(paragraph)}
