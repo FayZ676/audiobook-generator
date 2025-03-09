@@ -27,8 +27,9 @@ HONORIFICS = [
 ]
 
 
-@Language.component("expand_persons")
-def expand_persons(doc: Doc):
+# NOTE: Refer to https://spacy.io/usage/processing-pipelines#custom-components.
+@Language.component("custom_person")
+def custom_person(doc: Doc):
     new_ents = []
     for ent in doc.ents:
         if ent.label_ == "PERSON" and ent.start != 0:
@@ -47,7 +48,7 @@ def expand_persons(doc: Doc):
 class NER:
     def __init__(self):
         self.nlp = spacy.load("en_core_web_trf")
-        self.nlp.add_pipe("expand_persons", after="ner")
+        self.nlp.add_pipe("custom_person", after="ner")
 
     def find_names(self, text: str):
         doc = self.nlp(text)
