@@ -3,7 +3,7 @@ init:
 	source venv/bin/activate && \
 	cd tta && make install && \
 	cd ../tta-service && make install && \
-	python -m spacy download en_core_web_sm
+	python -m spacy download en_core_web_trf
 
 
 # Runs linting on the entire application
