@@ -34,6 +34,4 @@ def get_chunks(text: str, chunk_size: int) -> list[str]:
 
 
 def remove_dialogue(text: str) -> str:
-    quote_pattern = r'(["\'])(?:(?=(\\?))\2.)*?\1'
-    text_without_dialogue = re.sub(quote_pattern, "", text)
-    return " ".join(text_without_dialogue.split())
+    return re.sub(r'"[^"]*"', "<speech>", text)
