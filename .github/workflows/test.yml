@@ -1,27 +1,27 @@
-name: Run Tests and Coverage
+# name: Run Tests and Coverage
 
-on:
-  push:
-    branches: ["*"]
-  pull_request:
-    branches: ["*"]
+# on:
+#   push:
+#     branches: ["*"]
+#   pull_request:
+#     branches: ["*"]
 
-jobs:
-  # test:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v2
-  #       with:
-  #         python-version: "3.x"
-  #     - name: Install dependencies
-  #       run: |
-  #         cd tta && make install
-  #         cd ../tta-service && make install
-  #     - name: Create .env file
-  #       run: |
-  #         echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
-  #         echo "ELEVENLABS_API_KEY=${{ secrets.ELEVENLABS_API_KEY }}" >> .env
-  # - name: Run tests and coverage
-  #   run: make test_all
+# jobs:
+# test:
+#   runs-on: ubuntu-latest
+#   steps:
+#     - uses: actions/checkout@v2
+#     - name: Set up Python
+#       uses: actions/setup-python@v2
+#       with:
+#         python-version: "3.x"
+#     - name: Install dependencies
+#       run: |
+#         cd tta && make install
+#         cd ../tta-service && make install
+#     - name: Create .env file
+#       run: |
+#         echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+#         echo "ELEVENLABS_API_KEY=${{ secrets.ELEVENLABS_API_KEY }}" >> .env
+# - name: Run tests and coverage
+#   run: make test_all
