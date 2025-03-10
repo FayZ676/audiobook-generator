@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import spacy
 from spacy.language import Language
-from spacy.tokens import Span, Doc
+from spacy.tokens import Span, Doc, Token
 
 
 @dataclass(eq=True, frozen=True)
@@ -27,16 +27,19 @@ HONORIFICS = [
 ]
 
 
+def is_name_part(token: Token):
+    if token.text in HONORIFICS or token.pos_ == "PROPN":
+        return True
+
+
 # NOTE: Refer to https://spacy.io/usage/processing-pipelines#custom-components.
 @Language.component("custom_person")
 def custom_person(doc: Doc):
     new_ents = []
     for ent in doc.ents:
-        if ent.label_ == "PERSON" and ent.start != 0:
-            prev_token = doc[ent.start - 1]
-            if prev_token.text in HONORIFICS:
-                new_ent = Span(doc, ent.start - 1, ent.end, label=ent.label)
-                new_ents.append(new_ent)
+        if ent.label == "PERSON" and ent.start != 0:
+            if is_name_part(doc[ent.start - 1]):
+                new_ents.append(Span(doc, ent.start - 1, ent.end, label=ent.label))
             else:
                 new_ents.append(ent)
         else:
