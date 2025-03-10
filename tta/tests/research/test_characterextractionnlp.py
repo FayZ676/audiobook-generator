@@ -14,7 +14,7 @@ EXPECTED = {
 
 
 def main(text: str):
-    result = M(text, 3)
+    result = M(text, 4)
     for r in result:
         print(r)
     precision, recall = test_precision_recall(result, EXPECTED)
