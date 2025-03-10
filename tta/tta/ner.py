@@ -37,9 +37,11 @@ def is_name_part(token: Token):
 def custom_person(doc: Doc):
     new_ents = []
     for ent in doc.ents:
-        if ent.label == "PERSON" and ent.start != 0:
-            if is_name_part(doc[ent.start - 1]):
-                new_ents.append(Span(doc, ent.start - 1, ent.end, label=ent.label))
+        if ent.label_ == "PERSON" and ent.start != 0:
+            prev_token = doc[ent.start - 1]
+            if prev_token.text in HONORIFICS:
+                new_ent = Span(doc, ent.start - 1, ent.end, label=ent.label)
+                new_ents.append(new_ent)
             else:
                 new_ents.append(ent)
         else:
