@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import spacy
 from spacy.language import Language
-from spacy.tokens import Span, Doc, Token
+from spacy.tokens import Span, Doc
 
 
 @dataclass(eq=True, frozen=True)
@@ -27,9 +27,10 @@ HONORIFICS = [
 ]
 
 
-def is_name_part(token: Token):
-    if token.text in HONORIFICS or token.pos_ == "PROPN":
+def is_plural(ent: Span):
+    if any(token.morph.get("Number", []) == ["Plur"] for token in ent):
         return True
+    return False
 
 
 # NOTE: Refer to https://spacy.io/usage/processing-pipelines#custom-components.
@@ -37,13 +38,13 @@ def is_name_part(token: Token):
 def custom_person(doc: Doc):
     new_ents = []
     for ent in doc.ents:
-        if ent.label_ == "PERSON" and ent.start != 0:
-            prev_token = doc[ent.start - 1]
-            if prev_token.text in HONORIFICS:
-                new_ent = Span(doc, ent.start - 1, ent.end, label=ent.label)
-                new_ents.append(new_ent)
-            else:
-                new_ents.append(ent)
+        if ent.label_ != "PERSON":
+            new_ents.append(ent)
+            continue
+        if is_plural(ent):
+            continue
+        if ent.start > 0 and doc[ent.start - 1].text in HONORIFICS:
+            new_ents.append(Span(doc, ent.start - 1, ent.end, label=ent.label))
         else:
             new_ents.append(ent)
     doc.ents = new_ents
