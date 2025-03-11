@@ -33,11 +33,10 @@ def near_quotes(name: str, text: str):
 
 def main(text: str) -> set[tuple[str]]:
     paragraphs = [
-        p.replace("\n", " ")
+        remove_dialogue(p.replace("\n", " "))
         for p in text.split("\n\n")
         if p.count('"') % 2 == 0 and p.count('"') > 0
     ]
-    paragraphs = [remove_dialogue(p) for p in paragraphs]
     ner = NER()
     names = reduce_names(
         {name for paragraph in paragraphs for name in ner.find_names(paragraph)}
