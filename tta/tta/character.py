@@ -52,7 +52,7 @@ def get_speakers(text: str) -> set[tuple[str]]:
     names = reduce_names(
         {name for paragraph in paragraphs for name in ner.find_names(paragraph)}
     )
-    return {(name,) for name in names if near_quotes(name, "\n\n".join(paragraphs))}
+    return {(name,) for p in paragraphs for name in names if near_quotes(name, p)}
 
 
 def resolve_aliases(text: str, names: set[str]) -> set[tuple[str]]:

@@ -1,6 +1,20 @@
 import re
 
 
+HONORIFICS = [
+    "Dr",
+    "Dr.",
+    "Mr",
+    "Mr.",
+    "Ms",
+    "Ms.",
+    "Mrs.",
+    "Uncle",
+    "Aunt",
+    "Professor",
+]
+
+
 def get_chunks(text: str, chunk_size: int) -> list[str]:
     if not text:
         return [""]
@@ -51,16 +65,18 @@ def reduce_names(names: set[str]):
 
 
 def near_quotes(name: str, text: str):
-    start_pos = 0
-    window_size = 20
-    while start_pos < len(text):
-        name_pos = text.find(name, start_pos)
-        if name_pos == -1:
-            return False
-        window_start = max(0, name_pos - window_size)
-        window_end = min(len(text), name_pos + len(name) + window_size)
-        window = text[window_start:window_end]
-        if '"' in window:
-            return True
-        start_pos = name_pos + len(name)
+    name_parts = [part for part in name.split() if part not in HONORIFICS]
+    for part in name_parts:
+        start_pos = 0
+        window_size = 20
+        while start_pos < len(text):
+            name_pos = text.find(part, start_pos)
+            if name_pos == -1:
+                break
+            window_start = max(0, name_pos - window_size)
+            window_end = min(len(text), name_pos + len(part) + window_size)
+            window = text[window_start:window_end]
+            if '"' in window:
+                return True
+            start_pos = name_pos + len(part)
     return False

@@ -4,6 +4,8 @@ import spacy
 from spacy.language import Language
 from spacy.tokens import Span, Doc
 
+from tta.text_utils import HONORIFICS
+
 
 @dataclass(eq=True, frozen=True)
 class EntityInfo:
@@ -11,20 +13,6 @@ class EntityInfo:
     start_char: int
     end_char: int
     label: str
-
-
-HONORIFICS = [
-    "Dr",
-    "Dr.",
-    "Mr",
-    "Mr.",
-    "Ms",
-    "Ms.",
-    "Mrs.",
-    "Uncle",
-    "Aunt",
-    "Professor",
-]
 
 
 def is_plural(ent: Span):

@@ -33,6 +33,7 @@ def test_get_speakers__hp_chapter_1_3():
         ("Uncle Vernon",),
         ("Aunt Petunia",),
         ("Dudley",),
+        ("Harry Potter",),
     }
     result = get_speakers(get_text("harrypotter-1-3.txt"))
     precision, recall = precision_recall(result, expected)
