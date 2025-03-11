@@ -1,5 +1,6 @@
 from tta.ner import NER
 from tta.text_handler import remove_dialogue
+from tta.character import resolve_aliases
 
 
 def reduce_names(names: set[str]):
@@ -19,14 +20,15 @@ def get_key_names(text: str, names: set[str], threshold: int):
     return {name for name in names if text.count(name) >= threshold}
 
 
-def main(text: str, threshold: int = 7) -> set[str]:
+def main(text: str, threshold: int = 7) -> set[tuple[str]]:
     paragraphs = [p for p in text.split("\n\n") if '"' in p]
     paragraphs = [remove_dialogue(p) for p in paragraphs]
     ner = NER()
-    return reduce_names(
+    names = reduce_names(
         get_key_names(
             text,
             {name for paragraph in paragraphs for name in ner.find_names(paragraph)},
             threshold,
         )
     )
+    return resolve_aliases(text, names)
