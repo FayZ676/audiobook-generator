@@ -1,5 +1,3 @@
-from collections import Counter
-
 from tta.ner import NER
 from tta.text_handler import remove_dialogue
 
@@ -17,16 +15,18 @@ def resolve_redundancies(names: set[str]):
     return names_set - to_remove
 
 
-def main(text: str, threshold: int) -> set[str]:
-    paragraphs = [
-        p for p in text.split("\n\n") if '"' in p
-    ]  # TODO: Investigate why we find "Harold" and "Petunia". In a paragrapgh with no quotations
+def get_key_names(text: str, names: set[str], threshold: int):
+    return {name for name in names if text.count(name) >= threshold}
+
+
+def main(text: str, threshold: int = 7) -> set[str]:
+    paragraphs = [p for p in text.split("\n\n") if '"' in p]
     paragraphs = [remove_dialogue(p) for p in paragraphs]
     ner = NER()
-    name_counter = Counter()
-    for paragraph in paragraphs:
-        names = ner.find_names(paragraph)
-        name_counter.update(names)
     return resolve_redundancies(
-        {name for name, count in name_counter.items() if count > threshold}
+        get_key_names(
+            text,
+            {name for paragraph in paragraphs for name in ner.find_names(paragraph)},
+            threshold,
+        )
     )
