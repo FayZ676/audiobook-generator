@@ -7,6 +7,8 @@ from string import Template
 from pydantic import BaseModel
 
 from tta.models.text import generate_text
+from tta.ner import NER
+from tta.text_utils import remove_dialogue, near_quotes, reduce_names
 
 load_dotenv()
 
@@ -38,6 +40,19 @@ def identify_characters(text: str, known_characters: set[str]) -> set[Character]
     }
     characters.add(Character(name="Narrator", age="middle-aged", gender="male"))
     return characters
+
+
+def get_speakers(text: str) -> set[tuple[str]]:
+    paragraphs = [
+        remove_dialogue(p.replace("\n", " "))
+        for p in text.split("\n\n")
+        if p.count('"') % 2 == 0 and p.count('"') > 0
+    ]
+    ner = NER()
+    names = reduce_names(
+        {name for paragraph in paragraphs for name in ner.find_names(paragraph)}
+    )
+    return {(name,) for name in names if near_quotes(name, "\n\n".join(paragraphs))}
 
 
 def resolve_aliases(text: str, names: set[str]) -> set[tuple[str]]:

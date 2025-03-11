@@ -3,7 +3,7 @@ from io import BytesIO
 from tta.character import identify_characters, Character
 from tta.script import convert_text_to_script
 from tta.models.speech import generate_speech
-from tta.text_handler import get_chunks
+from tta.text_utils import get_chunks
 from tta.voices import map_characters_to_voices
 
 from pydub import AudioSegment

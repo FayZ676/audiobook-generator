@@ -1,4 +1,4 @@
-from tta.text_handler import get_chunks, remove_dialogue
+from tta.text_utils import get_chunks, remove_dialogue
 
 
 def test_basic_text_splitting():
