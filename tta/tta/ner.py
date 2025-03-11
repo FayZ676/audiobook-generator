@@ -1,18 +1,8 @@
-from dataclasses import dataclass
-
 import spacy
 from spacy.language import Language
 from spacy.tokens import Span, Doc
 
 from tta.text_utils import HONORIFICS
-
-
-@dataclass(eq=True, frozen=True)
-class EntityInfo:
-    text: str
-    start_char: int
-    end_char: int
-    label: str
 
 
 def is_plural(ent: Span):

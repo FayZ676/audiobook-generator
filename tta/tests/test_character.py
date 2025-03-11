@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from tta.character import get_speakers
+from tta.character import get_speakers, resolve_aliases
 from tta.metrics import precision_recall
 
 
@@ -38,4 +38,29 @@ def test_get_speakers__hp_chapter_1_3():
     result = get_speakers(get_text("harrypotter-1-3.txt"))
     precision, recall = precision_recall(result, expected)
     print(f"Main -> PRECISION: {precision}, RECALL: {recall}")
+    assert result == expected
+
+
+def test_resolve_aliases():
+    expected = {
+        ("Professor McGonagall",),
+        ("Albus Dumbledore",),
+        ("Mrs. Dursley", "Aunt Petunia"),
+        ("Mr. Dursley", "Uncle Vernon"),
+        ("Hagrid",),
+        ("Dudley",),
+        ("Harry Potter",),
+    }
+    names = {
+        "Professor McGonagall",
+        "Albus Dumbledore",
+        "Mrs. Dursley",
+        "Aunt Petunia",
+        "Mr. Dursley",
+        "Uncle Vernon",
+        "Hagrid",
+        "Dudley",
+        "Harry Potter",
+    }
+    result = resolve_aliases(get_text("harrypotter-1-3.txt"), names)
     assert result == expected
