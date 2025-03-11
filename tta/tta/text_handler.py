@@ -34,4 +34,4 @@ def get_chunks(text: str, chunk_size: int) -> list[str]:
 
 
 def remove_dialogue(text: str) -> str:
-    return re.sub(r'"[^"]*"', "<speech>", text)
+    return re.sub(r'"[^"]*"', '"<speech>"', text)

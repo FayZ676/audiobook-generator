@@ -1,6 +1,5 @@
 from tta.ner import NER
 from tta.text_handler import remove_dialogue
-from tta.character import resolve_aliases
 
 
 def reduce_names(names: set[str]):
@@ -16,19 +15,31 @@ def reduce_names(names: set[str]):
     return names_set - to_remove
 
 
-def get_key_names(text: str, names: set[str], threshold: int):
-    return {name for name in names if text.count(name) >= threshold}
+def near_quotes(name: str, text: str):
+    start_pos = 0
+    window_size = 20
+    while start_pos < len(text):
+        name_pos = text.find(name, start_pos)
+        if name_pos == -1:
+            return False
+        window_start = max(0, name_pos - window_size)
+        window_end = min(len(text), name_pos + len(name) + window_size)
+        window = text[window_start:window_end]
+        if '"' in window:
+            return True
+        start_pos = name_pos + len(name)
+    return False
 
 
-def main(text: str, threshold: int = 7) -> set[tuple[str]]:
-    paragraphs = [p for p in text.split("\n\n") if '"' in p]
+def main(text: str) -> set[tuple[str]]:
+    paragraphs = [
+        p.replace("\n", " ")
+        for p in text.split("\n\n")
+        if p.count('"') % 2 == 0 and p.count('"') > 0
+    ]
     paragraphs = [remove_dialogue(p) for p in paragraphs]
     ner = NER()
     names = reduce_names(
-        get_key_names(
-            text,
-            {name for paragraph in paragraphs for name in ner.find_names(paragraph)},
-            threshold,
-        )
+        {name for paragraph in paragraphs for name in ner.find_names(paragraph)}
     )
-    return resolve_aliases(text, names)
+    return {(name,) for name in names if near_quotes(name, "\n\n".join(paragraphs))}
