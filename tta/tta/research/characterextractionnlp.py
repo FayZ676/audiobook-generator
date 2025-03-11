@@ -2,7 +2,7 @@ from tta.ner import NER
 from tta.text_handler import remove_dialogue
 
 
-def resolve_redundancies(names: set[str]):
+def reduce_names(names: set[str]):
     names_set = set(names)
     to_remove = set()
     for name in names_set:
@@ -23,7 +23,7 @@ def main(text: str, threshold: int = 7) -> set[str]:
     paragraphs = [p for p in text.split("\n\n") if '"' in p]
     paragraphs = [remove_dialogue(p) for p in paragraphs]
     ner = NER()
-    return resolve_redundancies(
+    return reduce_names(
         get_key_names(
             text,
             {name for paragraph in paragraphs for name in ner.find_names(paragraph)},
