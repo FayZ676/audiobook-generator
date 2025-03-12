@@ -74,6 +74,23 @@ Your response must conform to the following JSON format:
 
 genders = Template(
     """
+<text>
+$text
+</text>
 
+<characters>
+$characters
+</characters>
+
+## Instructions
+Use the above <text> to identify the gender group that each character in <characters> falls into. The options are either "male", "female".
+
+Return the gender group for the characters in the exact same order that they appear in <characters>.
+
+## Response Format
+Your response must conform to the following JSON format:
+{
+    genders: ["male", "female, ...]
+}
 """
 )

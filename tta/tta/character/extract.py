@@ -3,8 +3,14 @@ import json
 from tta.models.text import generate_text
 from tta.ner import NER
 from tta.text_utils import remove_dialogue, near_quotes, reduce_names
-from tta.character.prompts import speakers, alias, ages
-from tta.character.types import SpeakersResponse, AgesResponse, AliasResponse, Character
+from tta.character.prompts import speakers, alias, ages, genders
+from tta.character.types import (
+    SpeakersResponse,
+    AgesResponse,
+    AliasResponse,
+    GendersResponse,
+    Character,
+)
 
 
 def get_speakers_llm(text: str, known_characters: set[str]) -> set[Character]:
@@ -39,6 +45,13 @@ def get_ages(text: str, names: list[str]):
         "", ages.substitute({"text": text, "characters": names}), AgesResponse
     )
     return [str(age) for age in json.loads(result)["ages"]]
+
+
+def get_genders(text: str, names: list[str]):
+    result = generate_text(
+        "", genders.substitute({"text": text, "characters": names}), GendersResponse
+    )
+    return [str(age) for age in json.loads(result)["genders"]]
 
 
 def get_aliases(text: str, names: set[str]) -> set[tuple[str]]:

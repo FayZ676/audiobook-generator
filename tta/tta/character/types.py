@@ -21,3 +21,7 @@ class AliasResponse(BaseModel):
 
 class AgesResponse(BaseModel):
     ages: list[str]
+
+
+class GendersResponse(BaseModel):
+    genders: list[str]

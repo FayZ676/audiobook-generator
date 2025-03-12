@@ -2,12 +2,12 @@ from pathlib import Path
 
 import pytest
 
-from tta.character.extract import get_speakers, get_ages, get_aliases
+from tta.character.extract import get_speakers, get_ages, get_genders, get_aliases
 from tta.metrics import precision_recall
 
 
 def get_text(name: str):
-    with open(Path.cwd() / f"text/{name}", encoding="utf-8") as f:
+    with open(Path.cwd() / f"../text/{name}", encoding="utf-8") as f:
         return f.read()
 
 
@@ -97,5 +97,37 @@ def test_get_age__hp_chapter_1_3():
         "Harry Potter": "young",
     }
     assert get_ages(
+        get_text("harrypotter-1-3.txt"), [name for name in names_ages]
+    ) == list(names_ages.values())
+
+
+@pytest.mark.integration
+def test_get_genders__hp_chapter_1():
+    names_ages = {
+        "Professor McGonagall": "female",
+        "Albus Dumbledore": "male",
+        "Mrs. Dursley": "female",
+        "Mr. Dursley": "male",
+        "Hagrid": "male",
+    }
+    assert get_genders(
+        get_text("harrypotter-1.txt"), [name for name in names_ages]
+    ) == list(names_ages.values())
+
+
+@pytest.mark.integration
+def test_get_genders__hp_chapter_1_3():
+    names_ages = {
+        "Professor McGonagall": "female",
+        "Albus Dumbledore": "male",
+        "Mrs. Dursley": "female",
+        "Mr. Dursley": "male",
+        "Hagrid": "male",
+        "Uncle Vernon": "male",
+        "Aunt Petunia": "female",
+        "Dudley": "male",
+        "Harry Potter": "male",
+    }
+    assert get_genders(
         get_text("harrypotter-1-3.txt"), [name for name in names_ages]
     ) == list(names_ages.values())
