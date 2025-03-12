@@ -11,20 +11,6 @@ def get_text(name: str):
         return f.read()
 
 
-def test_get_speakers__hp_chapter_1():
-    expected = {
-        ("Professor McGonagall",),
-        ("Albus Dumbledore",),
-        ("Mrs. Dursley",),
-        ("Mr. Dursley",),
-        ("Hagrid",),
-    }
-    result = get_speakers(get_text("harrypotter-1.txt"))
-    precision, recall = precision_recall(result, expected)
-    print(f"Main -> PRECISION: {precision}, RECALL: {recall}")
-    assert result == expected
-
-
 def test_get_speakers__hp_chapter_1_3():
     expected = {
         ("Professor McGonagall",),
@@ -70,20 +56,6 @@ def test_resolve_aliases():
 
 
 @pytest.mark.integration
-def test_get_age__hp_chapter_1():
-    names_ages = {
-        "Professor McGonagall": "middle-aged",
-        "Albus Dumbledore": "old",
-        "Mrs. Dursley": "middle-aged",
-        "Mr. Dursley": "middle-aged",
-        "Hagrid": "middle-aged",
-    }
-    assert get_ages(
-        get_text("harrypotter-1.txt"), [name for name in names_ages]
-    ) == list(names_ages.values())
-
-
-@pytest.mark.integration
 def test_get_age__hp_chapter_1_3():
     names_ages = {
         "Professor McGonagall": "middle-aged",
@@ -98,20 +70,6 @@ def test_get_age__hp_chapter_1_3():
     }
     assert get_ages(
         get_text("harrypotter-1-3.txt"), [name for name in names_ages]
-    ) == list(names_ages.values())
-
-
-@pytest.mark.integration
-def test_get_genders__hp_chapter_1():
-    names_ages = {
-        "Professor McGonagall": "female",
-        "Albus Dumbledore": "male",
-        "Mrs. Dursley": "female",
-        "Mr. Dursley": "male",
-        "Hagrid": "male",
-    }
-    assert get_genders(
-        get_text("harrypotter-1.txt"), [name for name in names_ages]
     ) == list(names_ages.values())
 
 
