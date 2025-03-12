@@ -27,7 +27,7 @@ def get_speakers_llm(text: str, known_characters: set[str]) -> set[Character]:
     return characters
 
 
-def get_speakers(text: str) -> set[tuple[str]]:
+def get_speakers(text: str) -> set[str]:
     paragraphs = [
         remove_dialogue(p.replace("\n", " "))
         for p in text.split("\n\n")
@@ -37,21 +37,29 @@ def get_speakers(text: str) -> set[tuple[str]]:
     names = reduce_names(
         {name for paragraph in paragraphs for name in ner.find_names(paragraph)}
     )
-    return {(name,) for p in paragraphs for name in names if near_quotes(name, p)}
+    return {name for p in paragraphs for name in names if near_quotes(name, p)}
 
 
 def get_ages(text: str, names: list[str]):
     result = generate_text(
         "", ages.substitute({"text": text, "characters": names}), AgesResponse
     )
-    return [str(age) for age in json.loads(result)["ages"]]
+    return {
+        name: age
+        for name, age in zip(names, [str(age) for age in json.loads(result)["ages"]])
+    }
 
 
 def get_genders(text: str, names: list[str]):
     result = generate_text(
         "", genders.substitute({"text": text, "characters": names}), GendersResponse
     )
-    return [str(age) for age in json.loads(result)["genders"]]
+    return {
+        name: gender
+        for name, gender in zip(
+            names, [str(gender) for gender in json.loads(result)["genders"]]
+        )
+    }
 
 
 def get_aliases(text: str, names: set[str]) -> set[tuple[str]]:

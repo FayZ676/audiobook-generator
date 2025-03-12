@@ -13,15 +13,15 @@ def get_text(name: str):
 
 def test_get_speakers__hp_chapter_1_3():
     expected = {
-        ("Professor McGonagall",),
-        ("Albus Dumbledore",),
-        ("Mrs. Dursley",),
-        ("Mr. Dursley",),
-        ("Hagrid",),
-        ("Uncle Vernon",),
-        ("Aunt Petunia",),
-        ("Dudley",),
-        ("Harry Potter",),
+        "Professor McGonagall",
+        "Albus Dumbledore",
+        "Mrs. Dursley",
+        "Mr. Dursley",
+        "Hagrid",
+        "Uncle Vernon",
+        "Aunt Petunia",
+        "Dudley",
+        "Harry Potter",
     }
     result = get_speakers(get_text("harrypotter-1-3.txt"))
     precision, recall = precision_recall(result, expected)
@@ -68,14 +68,15 @@ def test_get_age__hp_chapter_1_3():
         "Dudley": "young",
         "Harry Potter": "young",
     }
-    assert get_ages(
-        get_text("harrypotter-1-3.txt"), [name for name in names_ages]
-    ) == list(names_ages.values())
+    assert (
+        get_ages(get_text("harrypotter-1-3.txt"), [name for name in names_ages])
+        == names_ages
+    )
 
 
 @pytest.mark.integration
 def test_get_genders__hp_chapter_1_3():
-    names_ages = {
+    names_genders = {
         "Professor McGonagall": "female",
         "Albus Dumbledore": "male",
         "Mrs. Dursley": "female",
@@ -86,6 +87,7 @@ def test_get_genders__hp_chapter_1_3():
         "Dudley": "male",
         "Harry Potter": "male",
     }
-    assert get_genders(
-        get_text("harrypotter-1-3.txt"), [name for name in names_ages]
-    ) == list(names_ages.values())
+    assert (
+        get_genders(get_text("harrypotter-1-3.txt"), [name for name in names_genders])
+        == names_genders
+    )

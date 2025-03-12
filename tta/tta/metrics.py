@@ -1,4 +1,4 @@
-def precision_recall(computed: set[tuple[str]], expected: set[tuple[str]]):
+def precision_recall(computed: set, expected: set):
     true_positives = computed.intersection(expected)
     # Calculate precision: TP / (TP + FP)
     precision = len(true_positives) / len(computed) if computed else 0.0
