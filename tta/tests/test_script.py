@@ -1,6 +1,6 @@
 from pathlib import Path
 from tta.script import convert_text_to_script, Speech
-from tta.character import Character
+from tta.character.types import Character
 from tta.voices import CharacterVoiced, Voice
 
 

@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from tta.character import get_speakers, get_ages, resolve_aliases
+from tta.character.extract import get_speakers, get_ages, get_aliases
 from tta.metrics import precision_recall
 
 
@@ -65,7 +65,7 @@ def test_resolve_aliases():
         "Dudley",
         "Harry Potter",
     }
-    result = resolve_aliases(get_text("harrypotter-1-3.txt"), names)
+    result = get_aliases(get_text("harrypotter-1-3.txt"), names)
     assert result == expected
 
 

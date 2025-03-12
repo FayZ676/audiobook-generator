@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from elevenlabs.client import ElevenLabs
 from dotenv import load_dotenv
 
-from tta.character import Character
+from tta.character.types import Character
 
 
 load_dotenv()

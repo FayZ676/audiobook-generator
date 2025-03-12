@@ -1,4 +1,4 @@
-from tta.character import Character
+from tta.character.types import Character
 from tta.voices import map_characters_to_voices
 
 
