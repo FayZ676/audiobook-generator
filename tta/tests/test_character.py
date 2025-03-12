@@ -70,7 +70,7 @@ def test_resolve_aliases():
 
 
 @pytest.mark.integration
-def test_get_age():
+def test_get_age__hp_chapter_1():
     names_ages = {
         "Professor McGonagall": "middle-aged",
         "Albus Dumbledore": "old",
@@ -80,4 +80,22 @@ def test_get_age():
     }
     assert get_ages(
         get_text("harrypotter-1.txt"), [name for name in names_ages]
+    ) == list(names_ages.values())
+
+
+@pytest.mark.integration
+def test_get_age__hp_chapter_1_3():
+    names_ages = {
+        "Professor McGonagall": "middle-aged",
+        "Albus Dumbledore": "old",
+        "Mrs. Dursley": "middle-aged",
+        "Mr. Dursley": "middle-aged",
+        "Hagrid": "middle-aged",
+        "Uncle Vernon": "middle-aged",
+        "Aunt Petunia": "middle-aged",
+        "Dudley": "young",
+        "Harry Potter": "young",
+    }
+    assert get_ages(
+        get_text("harrypotter-1-3.txt"), [name for name in names_ages]
     ) == list(names_ages.values())
