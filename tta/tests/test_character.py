@@ -1,6 +1,8 @@
 from pathlib import Path
 
-from tta.character import get_speakers, resolve_aliases
+import pytest
+
+from tta.character import get_speakers, get_ages, resolve_aliases
 from tta.metrics import precision_recall
 
 
@@ -41,6 +43,7 @@ def test_get_speakers__hp_chapter_1_3():
     assert result == expected
 
 
+@pytest.mark.integration
 def test_resolve_aliases():
     expected = {
         ("Professor McGonagall",),
@@ -64,3 +67,17 @@ def test_resolve_aliases():
     }
     result = resolve_aliases(get_text("harrypotter-1-3.txt"), names)
     assert result == expected
+
+
+@pytest.mark.integration
+def test_get_age():
+    names_ages = {
+        "Professor McGonagall": "middle-aged",
+        "Albus Dumbledore": "old",
+        "Mrs. Dursley": "middle-aged",
+        "Mr. Dursley": "middle-aged",
+        "Hagrid": "middle-aged",
+    }
+    assert get_ages(
+        get_text("harrypotter-1.txt"), [name for name in names_ages]
+    ) == list(names_ages.values())

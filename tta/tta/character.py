@@ -28,6 +28,10 @@ class AliasResponse(BaseModel):
     aliases: list[list[str]]
 
 
+class AgeResponse(BaseModel):
+    ages: list[str]
+
+
 def identify_characters(text: str, known_characters: set[str]) -> set[Character]:
     result = generate_text(
         "",
@@ -53,6 +57,13 @@ def get_speakers(text: str) -> set[tuple[str]]:
         {name for paragraph in paragraphs for name in ner.find_names(paragraph)}
     )
     return {(name,) for p in paragraphs for name in names if near_quotes(name, p)}
+
+
+def get_ages(text: str, names: list[str]):
+    result = generate_text(
+        "", ages_prompt.substitute({"text": text, "characters": names}), AgeResponse
+    )
+    return [str(age) for age in json.loads(result)["ages"]]
 
 
 def resolve_aliases(text: str, names: set[str]) -> set[tuple[str]]:
@@ -102,5 +113,34 @@ Your response must conform to the following format:
     ["Name 1"],  # Name with no aliases.
     ...
 ]
+"""
+)
+
+
+ages_prompt = Template(
+    """
+<text>
+$text
+</text>
+
+<characters>
+$characters
+</characters>
+
+## Instructions
+Use the above <text> to identify the age group that each character in <characters> falls into. The options are "young", "middle-aged", or "old".
+
+## Age Group Definitions
+"young" is anyone considered a child to teenager.
+"middle-aged" is anyone between older than a teenager but younger than an elderly person.
+"old" is anyone clearly or explicitly an elderly person.
+
+Return the age group for the characters in the same order that they appear in <characters>.
+
+## Response Format
+Your response must conform to the following JSON format:
+{
+    ages: ["young", "middle-aged", "old", ...]
+}
 """
 )
