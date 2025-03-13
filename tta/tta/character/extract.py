@@ -11,6 +11,8 @@ from tta.character.types import (
     GendersResponse,
     Character,
     SpeakerDetails,
+    Age,
+    Gender
 )
 
 
@@ -60,7 +62,7 @@ def get_speakers(text: str) -> set[str]:
     return {name for p in paragraphs for name in names if near_quotes(name, p)}
 
 
-def get_ages(text: str, names: list[str]):
+def get_ages(text: str, names: list[str]) -> dict[str, Age]:
     result = generate_text(
         "", ages.substitute({"text": text, "characters": names}), AgesResponse
     )
@@ -70,7 +72,7 @@ def get_ages(text: str, names: list[str]):
     }
 
 
-def get_genders(text: str, names: list[str]):
+def get_genders(text: str, names: list[str]) -> dict[str, Gender]:
     result = generate_text(
         "", genders.substitute({"text": text, "characters": names}), GendersResponse
     )
