@@ -4,18 +4,22 @@ from typing import Literal
 from pydantic import BaseModel
 
 
+type Age = Literal["young", "middle-aged", "old"]
+type Gender = Literal["male", "female"]
+
+
 @dataclass(eq=True, frozen=True)
 class Character:
     name: str
-    age: Literal["young", "middle-aged", "old"]
-    gender: Literal["male", "female"]
+    age: Age
+    gender: Gender
 
 
 @dataclass(eq=True, frozen=True)
 class SpeakerDetails:
     names: frozenset[str]
-    age: Literal["young", "middle-aged", "old"]
-    gender: Literal["male", "female"]
+    age: Age
+    gender: Gender
 
 
 class SpeakersResponse(BaseModel):
