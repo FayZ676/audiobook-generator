@@ -10,6 +10,7 @@ from tta.character.types import (
     AliasResponse,
     GendersResponse,
     Character,
+    SpeakerDetails,
 )
 
 
@@ -30,12 +31,12 @@ def get_speakers_llm(text: str, known_characters: set[str]) -> set[Character]:
 def get_speaker_details(text: str):
     details = set()
     for chunk in get_chunks(text, 100000):
-        names = list(get_speakers(chunk))
-        ages = get_ages(chunk, names)
-        genders = get_genders(chunk, names)
+        names = list(get_aliases(chunk, get_speakers(chunk)))
+        ages = get_ages(chunk, [name[0] for name in names])
+        genders = get_genders(chunk, [name[0] for name in names])
         details.update(
             {
-                Character(name, age, gender)
+                SpeakerDetails(frozenset(name), age, gender)
                 for name, age, gender in zip(
                     names, list(ages.values()), list(genders.values())
                 )

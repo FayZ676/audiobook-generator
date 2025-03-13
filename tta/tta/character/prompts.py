@@ -28,9 +28,10 @@ $names
 </names>
 
 ## Instructions
-Analyze the above <text> and <names> and determine whether any names are aliases for one another. Aliases are different names that refer to the same character.
-All names in <names> must be accounted for. Either categorize aliases together or keep individual names as distinct names.
-Include any other aliases mentioned in the text that aren't included in <names>.
+Analyze the above <text> and <names> and determine whether any names are aliases for one another. Aliases are different names that refer to the same character. Either categorize aliased names together or keep individual names as distinct names.
+
+## Restrictions
+All names in <names> must be accounted for and only those names. You are forbidden from including any other names.
 
 ## Response Format
 Your response must conform to the following format:
