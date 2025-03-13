@@ -2,7 +2,7 @@ import json
 
 from tta.models.text import generate_text
 from tta.ner import NER
-from tta.text_utils import remove_dialogue, near_quotes, reduce_names
+from tta.text_utils import remove_dialogue, near_quotes, reduce_names, get_chunks
 from tta.character.prompts import speakers, alias, ages, genders
 from tta.character.types import (
     SpeakersResponse,
@@ -27,6 +27,25 @@ def get_speakers_llm(text: str, known_characters: set[str]) -> set[Character]:
     return characters
 
 
+def get_speaker_details(text: str):
+    details = set()
+    for chunk in get_chunks(text, 100000):
+        names = list(get_speakers(chunk))
+        ages = get_ages(chunk, names)
+        genders = get_genders(chunk, names)
+        details.update(
+            {
+                Character(name, age, gender)
+                for name, age, gender in zip(
+                    names, list(ages.values()), list(genders.values())
+                )
+                if name and age and gender
+            }
+        )
+    return details
+
+
+# TODO: Rename to get_speaker_names
 def get_speakers(text: str) -> set[str]:
     paragraphs = [
         remove_dialogue(p.replace("\n", " "))

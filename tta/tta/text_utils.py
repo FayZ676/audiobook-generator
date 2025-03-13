@@ -15,7 +15,9 @@ HONORIFICS = [
 ]
 
 
-def get_chunks(text: str, chunk_size: int) -> list[str]:
+def get_chunks(text: str, max_words: int) -> list[str]:
+    """Split the text into a list chunks each with up to max_words number of words."""
+
     if not text:
         return [""]
 
@@ -28,7 +30,7 @@ def get_chunks(text: str, chunk_size: int) -> list[str]:
         words = paragraph.split()
         paragraph_word_count = len(words)
 
-        if current_word_count + paragraph_word_count <= chunk_size:
+        if current_word_count + paragraph_word_count <= max_words:
             if current_chunk:
                 current_chunk.append(paragraph)
                 current_word_count += paragraph_word_count
