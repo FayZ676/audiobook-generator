@@ -31,9 +31,10 @@ def get_speakers_llm(text: str, known_characters: set[str]) -> set[Character]:
 
 
 def get_speaker_details(text: str):
-    details = set()
+    details: set[SpeakerDetails] = set()
     for chunk in get_chunks(text, 100000):
         names = list(get_aliases(chunk, get_speakers(chunk)))
+        # TODO: Get ages and genders in parallel
         ages = get_ages(chunk, [name[0] for name in names])
         genders = get_genders(chunk, [name[0] for name in names])
         details.update(
