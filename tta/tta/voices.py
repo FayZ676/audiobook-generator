@@ -41,7 +41,7 @@ class VoiceCatalogue:
         ]
 
 
-def map_characters_to_voices(characters: set[Character]) -> set[CharacterVoiced]:
+def get_voices(characters: set[Character]) -> set[CharacterVoiced]:
     available_voices = VoiceCatalogue().get_all_voices()
     voiced_characters = set()
     for character in characters:

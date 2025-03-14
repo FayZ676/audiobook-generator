@@ -1,5 +1,5 @@
 from tta.character.types import Character
-from tta.voices import map_characters_to_voices
+from tta.voices import get_voices
 
 
 def test_map_characters_to_voices():
@@ -11,7 +11,7 @@ def test_map_characters_to_voices():
         Character(name="Stacey", age="middle-aged", gender="female"),
     }
 
-    voiced = map_characters_to_voices(characters)
+    voiced = get_voices(characters)
     assert len(voiced) == len(characters)
     assert len({voiced.voice.voice_id for voiced in voiced}) == len(voiced)
     for voiced in voiced:

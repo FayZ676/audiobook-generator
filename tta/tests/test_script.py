@@ -1,5 +1,5 @@
 from pathlib import Path
-from tta.script import convert_text_to_script, Speech
+from tta.script import get_script, Speech
 from tta.character.types import Character
 from tta.voices import CharacterVoiced, Voice
 
@@ -42,7 +42,7 @@ def test_convert_text_to_script__sherlock():
             ),
         ),
     }
-    script: list[Speech] | None = convert_text_to_script(
+    script: list[Speech] | None = get_script(
         get_text("sherlock").replace("\n", " "), SHERLOCK_CHARACTERS
     )
     expected_script = [
@@ -102,7 +102,7 @@ def test_convert_text_to_script__harry_potter():
             ),
         ),
     }
-    script: list[Speech] | None = convert_text_to_script(
+    script: list[Speech] | None = get_script(
         get_text("harrypotter").replace("\n", " "), HARRY_POTTER_CHARACTERS
     )
     expected_script = [

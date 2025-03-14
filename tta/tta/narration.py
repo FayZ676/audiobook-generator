@@ -1,30 +1,28 @@
 from io import BytesIO
 
 from tta.character.extract import get_speakers_llm
-from tta.script import convert_text_to_script
-from tta.models.speech import generate_speech
-from tta.voices import map_characters_to_voices
+from tta.script import get_script
+from tta.models.speech import get_speech
+from tta.voices import get_voices
 
 from pydub import AudioSegment
 
 
 def get_narration_from_text(text: str) -> bytes:
-    characters = get_speakers_llm(text, set())
-    characters_voiced = map_characters_to_voices(characters)
-    script = convert_text_to_script(text, characters_voiced)
-    for item in script:
-        print(item)
-    narration_audio = [
-        generate_speech(text=item.text, voice_id=item.voice_id) for item in script
+    characters = get_voices(get_speakers_llm(text, set()))
+    script = get_script(text, characters)
+    audio_segments = [
+        get_speech(text=item.text, voice_id=item.voice_id) for item in script
     ]
+    return build_audio(audio_segments)
 
-    # Combine audio segments
+
+def build_audio(audio_segments: list) -> bytes:
     combined = AudioSegment.empty()
-    for audio_bytes in narration_audio:
+    for audio_bytes in audio_segments:
         segment = AudioSegment.from_file(BytesIO(audio_bytes))
         combined += segment
 
-    # Export to bytes
     output = BytesIO()
     combined.export(output, format="mp3")
     return output.getvalue()
