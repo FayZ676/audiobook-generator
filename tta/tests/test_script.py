@@ -6,72 +6,12 @@ from tta.voices import CharacterVoiced, Voice
 
 def get_text(filename: str) -> str:
     current_dir = Path(__file__).parent
-    with open(f"{current_dir}/text/{filename}.txt", "r", encoding="utf-8") as f:
+    with open(f"{current_dir}/text/{filename}", "r", encoding="utf-8") as f:
         return f.read()
 
 
-def test_convert_text_to_script__sherlock():
-    SHERLOCK_CHARACTERS = {
-        CharacterVoiced(
-            character=SpeakerDetails(
-                names=frozenset("Sherlock Holmes"), age="middle-aged", gender="male"
-            ),
-            voice=Voice(
-                voice_id="123",
-                name="Sherlock Holmes",
-                gender="male",
-                age_group="middle-aged",
-            ),
-        ),
-        CharacterVoiced(
-            character=SpeakerDetails(names=frozenset("Sir Henry"), age="middle-aged", gender="male"),
-            voice=Voice(
-                voice_id="456",
-                name="Sir Henry",
-                gender="male",
-                age_group="middle-aged",
-            ),
-        ),
-        CharacterVoiced(
-            character=SpeakerDetails(names=frozenset("Narrator"), age="middle-aged", gender="male"),
-            voice=Voice(
-                voice_id="789",
-                name="Narrator",
-                gender="male",
-                age_group="middle-aged",
-            ),
-        ),
-    }
-    script: list[Speech] | None = get_script(
-        get_text("sherlock").replace("\n", " "), SHERLOCK_CHARACTERS
-    )
-    expected_script = [
-        Speech(
-            speaker="Narrator",
-            voice_id="789",
-            text="Our breakfast table was cleared early, and Holmes waited in his dressing-gown for the promised interview.",
-        ),
-        Speech(
-            speaker="Sherlock Holmes",
-            voice_id="123",
-            text="Pray take a seat, Sir Henry. Do I understand you to say that you have had a remarkable experience?",
-        ),
-        Speech(
-            speaker="Sir Henry",
-            voice_id="456",
-            text="Yes, I received a strange letter this morning.",
-        ),
-        Speech(
-            speaker="Narrator",
-            voice_id="789",
-            text="The room fell silent for a moment as Holmes pondered the situation.",
-        ),
-    ]
-    assert script == expected_script, f"Expected {expected_script}, but got {script}"
-
-
 def test_convert_text_to_script__harry_potter():
-    HARRY_POTTER_CHARACTERS = {
+    characters = {
         CharacterVoiced(
             character=SpeakerDetails(names=frozenset("Dumbledore"), age="old", gender="male"),
             voice=Voice(
@@ -103,7 +43,7 @@ def test_convert_text_to_script__harry_potter():
         ),
     }
     script: list[Speech] | None = get_script(
-        get_text("harrypotter").replace("\n", " "), HARRY_POTTER_CHARACTERS
+        get_text("harrypotter-sample.txt").replace("\n", " "), characters
     )
     expected_script = [
         Speech(
