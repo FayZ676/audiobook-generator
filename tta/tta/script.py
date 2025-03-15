@@ -35,7 +35,7 @@ def get_script(text: str, characters: set[CharacterVoiced]) -> list[Speech]:
         text=text,
         characters=", ".join(
             [
-                f"{character.character.name} ({character.voice.voice_id})"
+                f"{character.character.first_alias()} ({character.voice.voice_id})"
                 for character in characters
             ]
         ),

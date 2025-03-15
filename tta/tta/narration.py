@@ -1,6 +1,6 @@
 from io import BytesIO
 
-from tta.character.extract import get_speakers_llm
+from tta.character.extract import get_speaker_details
 from tta.script import get_script
 from tta.models.speech import get_speech
 from tta.voices import get_voices
@@ -9,7 +9,7 @@ from pydub import AudioSegment
 
 
 def get_narration_from_text(text: str) -> bytes:
-    characters = get_voices(get_speakers_llm(text, set()))
+    characters = get_voices(get_speaker_details(text))
     script = get_script(text, characters)
     audio_segments = [
         get_speech(text=item.text, voice_id=item.voice_id) for item in script

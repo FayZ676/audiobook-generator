@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from elevenlabs.client import ElevenLabs
 from dotenv import load_dotenv
 
-from tta.character.types import Character
+from tta.character.types import SpeakerDetails
 
 
 load_dotenv()
@@ -20,7 +20,7 @@ class Voice:
 
 @dataclass(eq=True, frozen=True)
 class CharacterVoiced:
-    character: Character
+    character: SpeakerDetails
     voice: Voice
 
 
@@ -41,7 +41,7 @@ class VoiceCatalogue:
         ]
 
 
-def get_voices(characters: set[Character]) -> set[CharacterVoiced]:
+def get_voices(characters: set[SpeakerDetails]) -> set[CharacterVoiced]:
     available_voices = VoiceCatalogue().get_all_voices()
     voiced_characters = set()
     for character in characters:
@@ -59,6 +59,6 @@ def get_voices(characters: set[Character]) -> set[CharacterVoiced]:
             )
         else:
             raise ValueError(
-                f"No available voices for {character.name} with age {character.age} and gender {character.gender}"
+                f"No available voices for {character.first_alias()} with age {character.age} and gender {character.gender}"
             )
     return voiced_characters

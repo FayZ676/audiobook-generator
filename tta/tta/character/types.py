@@ -21,6 +21,9 @@ class SpeakerDetails:
     age: Age
     gender: Gender
 
+    def first_alias(self) -> str:
+        return list(self.names)[0]
+
 
 class SpeakersResponse(BaseModel):
     response: list[Character]

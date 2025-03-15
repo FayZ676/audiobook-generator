@@ -1,6 +1,6 @@
 from pathlib import Path
 from tta.script import get_script, Speech
-from tta.character.types import Character
+from tta.character.types import SpeakerDetails
 from tta.voices import CharacterVoiced, Voice
 
 
@@ -13,8 +13,8 @@ def get_text(filename: str) -> str:
 def test_convert_text_to_script__sherlock():
     SHERLOCK_CHARACTERS = {
         CharacterVoiced(
-            character=Character(
-                name="Sherlock Holmes", age="middle-aged", gender="male"
+            character=SpeakerDetails(
+                names=frozenset("Sherlock Holmes"), age="middle-aged", gender="male"
             ),
             voice=Voice(
                 voice_id="123",
@@ -24,7 +24,7 @@ def test_convert_text_to_script__sherlock():
             ),
         ),
         CharacterVoiced(
-            character=Character(name="Sir Henry", age="middle-aged", gender="male"),
+            character=SpeakerDetails(names=frozenset("Sir Henry"), age="middle-aged", gender="male"),
             voice=Voice(
                 voice_id="456",
                 name="Sir Henry",
@@ -33,7 +33,7 @@ def test_convert_text_to_script__sherlock():
             ),
         ),
         CharacterVoiced(
-            character=Character(name="Narrator", age="middle-aged", gender="male"),
+            character=SpeakerDetails(names=frozenset("Narrator"), age="middle-aged", gender="male"),
             voice=Voice(
                 voice_id="789",
                 name="Narrator",
@@ -73,7 +73,7 @@ def test_convert_text_to_script__sherlock():
 def test_convert_text_to_script__harry_potter():
     HARRY_POTTER_CHARACTERS = {
         CharacterVoiced(
-            character=Character(name="Dumbledore", age="old", gender="male"),
+            character=SpeakerDetails(names=frozenset("Dumbledore"), age="old", gender="male"),
             voice=Voice(
                 voice_id="123",
                 name="Dumbledore",
@@ -82,8 +82,8 @@ def test_convert_text_to_script__harry_potter():
             ),
         ),
         CharacterVoiced(
-            character=Character(
-                name="Professor McGonagall", age="middle-aged", gender="female"
+            character=SpeakerDetails(
+                names=frozenset("Professor McGonagall"), age="middle-aged", gender="female"
             ),
             voice=Voice(
                 voice_id="456",
@@ -93,7 +93,7 @@ def test_convert_text_to_script__harry_potter():
             ),
         ),
         CharacterVoiced(
-            character=Character(name="Narrator", age="middle-aged", gender="male"),
+            character=SpeakerDetails(names=frozenset("Narrator"), age="middle-aged", gender="male"),
             voice=Voice(
                 voice_id="789",
                 name="Narrator",

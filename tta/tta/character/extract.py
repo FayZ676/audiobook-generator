@@ -3,31 +3,13 @@ import json
 from tta.models.text import generate_text
 from tta.ner import NER
 from tta.text_utils import remove_dialogue, near_quotes, reduce_names, get_chunks
-from tta.character.prompts import speakers, alias, ages, genders
+from tta.character.prompts import alias, ages, genders
 from tta.character.types import (
-    SpeakersResponse,
     AgesResponse,
     AliasResponse,
     GendersResponse,
-    Character,
     SpeakerDetails,
-    Age,
-    Gender
 )
-
-
-def get_speakers_llm(text: str, known_characters: set[str]) -> set[Character]:
-    result = generate_text(
-        "",
-        speakers.substitute({"text": text, "known_characters": known_characters}),
-        SpeakersResponse,
-    )
-    characters = {
-        Character(name=char["name"], age=char["age"], gender=char["gender"])
-        for char in json.loads(result)["response"]
-    }
-    characters.add(Character(name="Narrator", age="middle-aged", gender="male"))
-    return characters
 
 
 def get_speaker_details(text: str):
@@ -39,6 +21,7 @@ def get_speaker_details(text: str):
         genders = get_genders(chunk, [name[0] for name in names])
         details.update(
             {
+                # TODO: Parse age and gender
                 SpeakerDetails(frozenset(name), age, gender)
                 for name, age, gender in zip(
                     names, list(ages.values()), list(genders.values())
@@ -63,7 +46,7 @@ def get_speakers(text: str) -> set[str]:
     return {name for p in paragraphs for name in names if near_quotes(name, p)}
 
 
-def get_ages(text: str, names: list[str]) -> dict[str, Age]:
+def get_ages(text: str, names: list[str]) -> dict[str, str]:
     result = generate_text(
         "", ages.substitute({"text": text, "characters": names}), AgesResponse
     )
@@ -73,7 +56,7 @@ def get_ages(text: str, names: list[str]) -> dict[str, Age]:
     }
 
 
-def get_genders(text: str, names: list[str]) -> dict[str, Gender]:
+def get_genders(text: str, names: list[str]) -> dict[str, str]:
     result = generate_text(
         "", genders.substitute({"text": text, "characters": names}), GendersResponse
     )
