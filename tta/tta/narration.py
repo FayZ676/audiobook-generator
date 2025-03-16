@@ -1,7 +1,7 @@
 from io import BytesIO
 
 from tta.character.extract import get_speaker_details
-from tta.dialogue import get_dialogue
+from tta.dialogue.extract import get_dialogue, get_dialogue_details
 from tta.models.speech import get_speech
 from tta.voices import get_voices
 
@@ -9,12 +9,15 @@ from pydub import AudioSegment
 
 
 def get_narration_from_text(text: str) -> bytes:
-    names = get_speaker_details(text)
-    script = get_dialogue(text, {name.first_alias() for name in names})
-    voices = get_voices(names)
-    # TODO: Implement voice selection logic
+    speakers = get_speaker_details(text)
+    dialogue = get_dialogue(text, speakers)
+    speaker_voices = get_voices(speakers)
+    dialogue_details = get_dialogue_details(
+        dialogue, {v.character.first_alias(): v.voice.voice_id for v in speaker_voices}
+    )
     audio_segments = [
-        get_speech(text=item.text, voice_id=item.voice_id) for item in script
+        get_speech(text=detail.text, voice_id=detail.voice_id)
+        for detail in dialogue_details
     ]
     return build_audio(audio_segments)
 
@@ -28,3 +31,10 @@ def build_audio(audio_segments: list) -> bytes:
     output = BytesIO()
     combined.export(output, format="mp3")
     return output.getvalue()
+
+
+if __name__ == "__main__":
+    text = "'Hello, how are you?' asked Alice. 'I'm doing well, thank you.' replied Bob."
+    audio = get_narration_from_text(text)
+    with open("output.mp3", "wb") as f:
+        f.write(audio)

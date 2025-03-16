@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from tta.dialogue import get_dialogue
+from tta.dialogue.extract import get_dialogue
 
 
 def get_text(filename: str) -> str:

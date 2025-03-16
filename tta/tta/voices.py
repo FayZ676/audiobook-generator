@@ -14,51 +14,48 @@ load_dotenv()
 class Voice:
     name: str
     gender: str
-    age_group: str
+    age: str
     voice_id: str
 
 
 @dataclass(eq=True, frozen=True)
-class CharacterVoiced:
+class SpeakerVoice:
     character: SpeakerDetails
     voice: Voice
 
 
-class VoiceCatalogue:
-    def __init__(self) -> None:
-        self.client = ElevenLabs(api_key=os.getenv("ELEVENLABS_API_KEY"))
-
-    def get_all_voices(self) -> list[Voice]:
-        voices = self.client.voices.get_all()
-        return [
-            Voice(
-                name=str(voice.name),
-                voice_id=voice.voice_id,
-                age_group=voice.labels["age"],
-                gender=voice.labels["gender"],
-            )
-            for voice in voices.voices
-        ]
+def get_all_voices() -> list[Voice]:
+    client = ElevenLabs(api_key=os.getenv("ELEVENLABS_API_KEY"))
+    voices = client.voices.get_all()
+    return [
+        Voice(
+            name=str(voice.name),
+            voice_id=voice.voice_id,
+            age=voice.labels["age"],
+            gender=voice.labels["gender"],
+        )
+        for voice in voices.voices
+    ]
 
 
-def get_voices(characters: set[SpeakerDetails]) -> set[CharacterVoiced]:
-    available_voices = VoiceCatalogue().get_all_voices()
+def get_voices(speakers: set[SpeakerDetails]) -> set[SpeakerVoice]:
+    available_voices = get_all_voices()
     voiced_characters = set()
-    for character in characters:
+    for speaker in speakers:
         matching_voices = [
             voice
             for voice in available_voices
-            if voice.age_group == character.age and voice.gender == character.gender
+            if voice.age == speaker.age and voice.gender == speaker.gender
         ]
 
         if matching_voices:
             selected_voice = matching_voices[0]
             available_voices.remove(selected_voice)
             voiced_characters.add(
-                CharacterVoiced(character=character, voice=selected_voice)
+                SpeakerVoice(character=speaker, voice=selected_voice)
             )
         else:
             raise ValueError(
-                f"No available voices for {character.first_alias()} with age {character.age} and gender {character.gender}"
+                f"No available voices for {speaker.first_alias()} with age {speaker.age} and gender {speaker.gender}"
             )
     return voiced_characters

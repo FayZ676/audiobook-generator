@@ -1,41 +1,7 @@
-import json
 from string import Template
-from dataclasses import dataclass
-from pydantic import BaseModel
-from tta.models.text import generate_text
 
 
-@dataclass
-class Dialogue:
-    speaker: str
-    text: str
-
-
-class ResponseFormat(BaseModel):
-    script: list[Dialogue]
-
-
-def parse_response(response: str) -> list[Dialogue]:
-    result = json.loads(response)
-    speeches = [
-        Dialogue(
-            speaker=s["speaker"],
-            text=str(s["text"]).strip(),
-        )
-        for s in result["script"]
-    ]
-    return speeches
-
-
-def get_dialogue(text: str, names: set[str]) -> list[Dialogue]:
-    prompt = PROMPT.substitute(
-        text=text, characters=", ".join([name for name in names])
-    )
-    result = generate_text(str(SYS_PROMPT), prompt, ResponseFormat)
-    return parse_response(result)
-
-
-SYS_PROMPT = """
+sys_prompt = """
 Split a book's text into dialogue segments, categorizing each chunk as either narration or character dialogue, while preserving the original content. A list of character names corresponding with individuals in the text will be provided. Use it to attribute the text to the appropriate character accordingly.
 
 Ensure each segment is properly attributed, capturing who is speaking and differentiating when the narrator is providing descriptive context versus when characters are engaging in dialogue. Maintain all detailed content from the source throughout the segmentation process.
@@ -66,7 +32,7 @@ Ensure each segment is properly attributed, capturing who is speaking and differ
 - Ensure to verify ambiguous dialogue by matching context with the names provided.
 """
 
-PROMPT = Template(
+prompt = Template(
     """
 <characters>
 $characters
