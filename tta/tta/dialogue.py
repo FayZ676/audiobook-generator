@@ -3,26 +3,23 @@ from string import Template
 from dataclasses import dataclass
 from pydantic import BaseModel
 from tta.models.text import generate_text
-from tta.voices import CharacterVoiced
 
 
 @dataclass
-class Speech:
+class Dialogue:
     speaker: str
-    voice_id: str
     text: str
 
 
 class ResponseFormat(BaseModel):
-    script: list[Speech]
+    script: list[Dialogue]
 
 
-def parse_response(response: str) -> list[Speech]:
+def parse_response(response: str) -> list[Dialogue]:
     result = json.loads(response)
     speeches = [
-        Speech(
+        Dialogue(
             speaker=s["speaker"],
-            voice_id=str(s["voice_id"]).strip(),
             text=str(s["text"]).strip(),
         )
         for s in result["script"]
@@ -30,15 +27,9 @@ def parse_response(response: str) -> list[Speech]:
     return speeches
 
 
-def get_script(text: str, characters: set[CharacterVoiced]) -> list[Speech]:
+def get_dialogue(text: str, names: set[str]) -> list[Dialogue]:
     prompt = PROMPT.substitute(
-        text=text,
-        characters=", ".join(
-            [
-                f"{character.character.first_alias()} ({character.voice.voice_id})"
-                for character in characters
-            ]
-        ),
+        text=text, characters=", ".join([name for name in names])
     )
     result = generate_text(str(SYS_PROMPT), prompt, ResponseFormat)
     return parse_response(result)
@@ -70,7 +61,7 @@ Ensure each segment is properly attributed, capturing who is speaking and differ
 # Notes
 
 - Ensure the segmentation respects punctuation and the logical flow of the story.
-- Use the provided character name list to accurately attribute dialogue. If a character's name isn't explicitly mentioned, cross-check the context with the list of names.
+- Use the provided list of character names to accurately attribute dialogue. If a character's name isn't explicitly mentioned, cross-check the context with the list of names.
 - Maintain chronology and readability of the original narrative to ensure no confusion arises between character dialogue and narration.
 - Ensure to verify ambiguous dialogue by matching context with the names provided.
 """
