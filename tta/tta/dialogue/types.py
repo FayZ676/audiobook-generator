@@ -19,6 +19,9 @@ class Dialogue:
     speaker: SpeakerDetails
     text: str
 
+    def __str__(self) -> str:
+        return f"{self.speaker.first_alias()}: {self.text}"
+
 
 @dataclass(eq=True, frozen=True)
 class DialogueDetails:

@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from tta.dialogue.extract import get_dialogue
+from tta.character.types import SpeakerDetails
 
 
 def get_text(filename: str) -> str:
@@ -10,9 +11,11 @@ def get_text(filename: str) -> str:
 
 
 def test_get_dialogue__hp_sample():
-    names = {"Dumbledore", "Professor Mcgonagall"}
-    script = get_dialogue(
-        get_text("harrypotter-sample.txt").replace("\n", " "), names
-    )
+    speakers = {
+        SpeakerDetails(frozenset({"Narrator"}), "middle-aged", "male"),
+        SpeakerDetails(frozenset({"Dumbledore"}), "old", "male"),
+        SpeakerDetails(frozenset({"Professor McGonagall"}), "middle-aged", "female"),
+    }
+    script = get_dialogue(get_text("harrypotter-sample.txt").replace("\n", " "), speakers)
     for s in script:
         print(s)
