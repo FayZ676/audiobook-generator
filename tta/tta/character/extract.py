@@ -36,6 +36,7 @@ def get_speaker_details(text: str):
                 if name and age and gender
             }
         )
+    details.add(SpeakerDetails(frozenset(["Narrator"]), "middle-aged", "male"))
     return details
 
 
