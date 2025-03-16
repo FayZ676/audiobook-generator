@@ -16,8 +16,7 @@ def get_narration_from_text(text: str) -> bytes:
         dialogue, {v.character.first_alias(): v.voice.voice_id for v in speaker_voices}
     )
     audio_segments = [
-        get_speech(text=detail.text, voice_id=detail.voice_id)
-        for detail in dialogue_details
+        get_speech(dialogue.text, dialogue.voice_id) for dialogue in dialogue_details
     ]
     return build_audio(audio_segments)
 
@@ -34,7 +33,9 @@ def build_audio(audio_segments: list) -> bytes:
 
 
 if __name__ == "__main__":
-    text = "'Hello, how are you?' asked Alice. 'I'm doing well, thank you.' replied Bob."
+    text = (
+        "'Hello, how are you?' asked Alice. 'I'm doing well, thank you.' replied Bob."
+    )
     audio = get_narration_from_text(text)
     with open("output.mp3", "wb") as f:
         f.write(audio)
