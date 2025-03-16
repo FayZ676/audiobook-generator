@@ -1,4 +1,5 @@
 import json
+from concurrent.futures import ThreadPoolExecutor
 
 from tta.models.text import generate_text
 from tta.ner import NER
@@ -12,16 +13,22 @@ from tta.character.types import (
 )
 
 
+def get_traits(chunk: str, names: list[str]) -> tuple[dict[str, str], dict[str, str]]:
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        ages_future = executor.submit(get_ages, chunk, names)
+        genders_future = executor.submit(get_genders, chunk, names)
+        ages = ages_future.result()
+        genders = genders_future.result()
+    return ages, genders
+
+
 def get_speaker_details(text: str):
     details: set[SpeakerDetails] = set()
     for chunk in get_chunks(text, 100000):
-        names = list(get_aliases(chunk, get_speakers(chunk)))
-        # TODO: Get ages and genders in parallel
-        ages = get_ages(chunk, [name[0] for name in names])
-        genders = get_genders(chunk, [name[0] for name in names])
+        names = list(get_aliases(chunk, get_speaker_names(chunk)))
+        ages, genders = get_traits(chunk, [name[0] for name in names])
         details.update(
             {
-                # TODO: Parse age and gender
                 SpeakerDetails(frozenset(name), age, gender)
                 for name, age, gender in zip(
                     names, list(ages.values()), list(genders.values())
@@ -32,8 +39,7 @@ def get_speaker_details(text: str):
     return details
 
 
-# TODO: Rename to get_speaker_names
-def get_speakers(text: str) -> set[str]:
+def get_speaker_names(text: str) -> set[str]:
     paragraphs = [
         remove_dialogue(p.replace("\n", " "))
         for p in text.split("\n\n")

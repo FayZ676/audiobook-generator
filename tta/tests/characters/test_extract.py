@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from tta.character.extract import (
-    get_speakers,
+    get_speaker_names,
     get_ages,
     get_genders,
     get_aliases,
@@ -29,7 +29,7 @@ def test_get_speakers__hp_chapter_1_3():
         "Dudley",
         "Harry Potter",
     }
-    result = get_speakers(get_text("harrypotter-1-3.txt"))
+    result = get_speaker_names(get_text("harrypotter-1-3.txt"))
     precision, recall = precision_recall(result, expected)
     print(f"Main -> PRECISION: {precision}, RECALL: {recall}")
     assert result == expected
