@@ -1,7 +1,7 @@
 from io import BytesIO
 
 from tta.character.extract import get_speaker_details
-from tta.dialogue.extract import get_dialogue, get_dialogue_details
+from tta.dialogue.extract import get_dialogue_details
 from tta.models.speech import get_speech
 from tta.voices import get_voices
 
@@ -9,12 +9,8 @@ from pydub import AudioSegment
 
 
 def get_narration_from_text(text: str) -> bytes:
-    speakers = get_speaker_details(text)
-    dialogue = get_dialogue(text, speakers)
-    speaker_voices = get_voices(speakers)
-    dialogue_details = get_dialogue_details(
-        dialogue, {v.character.first_alias(): v.voice.voice_id for v in speaker_voices}
-    )
+    speaker_voices = get_voices(get_speaker_details(text))
+    dialogue_details = get_dialogue_details(text, speaker_voices)
     audio_segments = [
         get_speech(dialogue.text, dialogue.voice_id) for dialogue in dialogue_details
     ]
@@ -33,9 +29,14 @@ def build_audio(audio_segments: list) -> bytes:
 
 
 if __name__ == "__main__":
-    text = (
-        "'Hello, how are you?' asked Alice. 'I'm doing well, thank you.' replied Bob."
-    )
-    audio = get_narration_from_text(text)
+    from pathlib import Path
+
+    def get_text(filename: str) -> str:
+        with open(
+            f"{Path(__file__).parent}/../tests/text/{filename}", "r", encoding="utf-8"
+        ) as f:
+            return f.read()
+
+    audio = get_narration_from_text(get_text("harrypotter-sample.txt"))
     with open("output.mp3", "wb") as f:
         f.write(audio)

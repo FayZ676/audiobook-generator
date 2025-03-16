@@ -3,6 +3,7 @@ import json
 from tta.dialogue.prompts import sys_prompt, prompt
 from tta.dialogue.types import Dialogue, DialogueDetails, ResponseFormat
 from tta.character.types import SpeakerDetails
+from tta.voices import SpeakerVoice
 from tta.models.text import generate_text
 
 
@@ -24,23 +25,25 @@ def parse_response(response: str, speakers: set[SpeakerDetails]) -> list[Dialogu
     return speeches
 
 
+def get_dialogue_details(
+    text: str, speakers_voices: set[SpeakerVoice]
+) -> list[DialogueDetails]:
+    dialogue = get_dialogue(text, {v.character for v in speakers_voices})
+    voices = {s.character.first_alias(): s.voice.voice_id for s in speakers_voices}
+    return [
+        DialogueDetails(
+            text=d.text,
+            speaker=d.speaker,
+            voice_id=voices[d.speaker.first_alias()],
+        )
+        for d in dialogue
+        if d.speaker.first_alias() in voices
+    ]
+
+
 def get_dialogue(text: str, speakers: set[SpeakerDetails]) -> list[Dialogue]:
     llm_prompt = prompt.substitute(
         text=text, characters=", ".join([s.first_alias() for s in speakers])
     )
     result = generate_text(str(sys_prompt), llm_prompt, ResponseFormat)
     return parse_response(result, speakers)
-
-
-def get_dialogue_details(
-    script: list[Dialogue], voices: dict[str, str]
-) -> list[DialogueDetails]:
-    return [
-        DialogueDetails(
-            text=dialogue.text,
-            speaker=dialogue.speaker,
-            voice_id=voices[dialogue.speaker.first_alias()],
-        )
-        for dialogue in script
-        if dialogue.speaker.first_alias() in voices
-    ]
