@@ -28,3 +28,9 @@ class DialogueDetails:
     text: str
     speaker: SpeakerDetails
     voice_id: str
+
+
+@dataclass(frozen=True, eq=True)
+class TextSegment:
+    text: str
+    speech: bool

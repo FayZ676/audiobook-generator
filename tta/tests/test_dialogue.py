@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from tta.dialogue.extract import get_dialogue
+from tta.dialogue.extract import get_dialogue, split_by_dialogue
 from tta.character.types import SpeakerDetails
 
 
@@ -18,4 +18,10 @@ def test_get_dialogue__hp_sample():
     }
     script = get_dialogue(get_text("harrypotter-sample.txt").replace("\n", " "), speakers)
     for s in script:
+        print(s)
+
+
+def test_split_by_speech__hp_sample():
+    speeches = split_by_dialogue(get_text("harrypotter-1.txt"))
+    for s in speeches:
         print(s)
