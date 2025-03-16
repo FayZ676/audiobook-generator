@@ -4,8 +4,8 @@ from typing import Literal
 from pydantic import BaseModel
 
 
-type Age = Literal["young", "middle-aged", "old"]
-type Gender = Literal["male", "female"]
+Age = Literal["young", "middle-aged", "old"]
+Gender = Literal["male", "female"]
 
 
 @dataclass(eq=True, frozen=True)

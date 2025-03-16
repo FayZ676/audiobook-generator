@@ -50,22 +50,14 @@ def get_ages(text: str, names: list[str]) -> dict[str, str]:
     result = generate_text(
         "", ages.substitute({"text": text, "characters": names}), AgesResponse
     )
-    return {
-        name: age
-        for name, age in zip(names, [str(age) for age in json.loads(result)["ages"]])
-    }
+    return dict(zip(names, [str(age) for age in json.loads(result)["ages"]]))
 
 
 def get_genders(text: str, names: list[str]) -> dict[str, str]:
     result = generate_text(
         "", genders.substitute({"text": text, "characters": names}), GendersResponse
     )
-    return {
-        name: gender
-        for name, gender in zip(
-            names, [str(gender) for gender in json.loads(result)["genders"]]
-        )
-    }
+    return dict(zip(names, [str(gender) for gender in json.loads(result)["genders"]]))
 
 
 def get_aliases(text: str, names: set[str]) -> set[tuple[str]]:
