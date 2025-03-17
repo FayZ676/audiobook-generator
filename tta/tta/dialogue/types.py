@@ -15,6 +15,16 @@ class ResponseFormat(BaseModel):
 
 
 @dataclass(frozen=True, eq=True)
+class DialogueLabel:
+    index: int
+    speaker: str
+
+
+class DialogueLabelResponse(BaseModel):
+    dialogue: list[DialogueLabel]
+
+
+@dataclass(frozen=True, eq=True)
 class Dialogue:
     speaker: SpeakerDetails
     text: str
@@ -33,4 +43,7 @@ class DialogueDetails:
 @dataclass(frozen=True, eq=True)
 class TextSegment:
     text: str
-    speech: bool
+    dialogue: bool
+
+    def __str__(self) -> str:
+        return f"{'D' if self.dialogue else 'N'}: {self.text}"

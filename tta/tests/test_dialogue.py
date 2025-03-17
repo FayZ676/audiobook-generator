@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from tta.dialogue.extract import get_dialogue, split_by_dialogue
+from tta.dialogue.extract import get_dialogue, get_dialogue_nlp
 from tta.character.types import SpeakerDetails
 
 
@@ -16,12 +16,26 @@ def test_get_dialogue__hp_sample():
         SpeakerDetails(frozenset({"Dumbledore"}), "old", "male"),
         SpeakerDetails(frozenset({"Professor McGonagall"}), "middle-aged", "female"),
     }
-    script = get_dialogue(get_text("harrypotter-sample.txt").replace("\n", " "), speakers)
+    script = get_dialogue(
+        get_text("harrypotter-sample.txt").replace("\n", " "), speakers
+    )
     for s in script:
         print(s)
 
 
-def test_split_by_speech__hp_sample():
-    speeches = split_by_dialogue(get_text("harrypotter-1.txt"))
-    for s in speeches:
-        print(s)
+def test_get_dialogue_nlp__hp_sample():
+    speakers = {
+        SpeakerDetails(frozenset({"Professor McGonagall"}), "middle-aged", "male"),
+        SpeakerDetails(frozenset({"Albus Dumbledore"}), "middle-aged", "male"),
+        SpeakerDetails(frozenset({"Mrs. Dursley", "Aunt Petunia"}), "middle-aged", "male"),
+        SpeakerDetails(frozenset({"Mr. Dursley", "Uncle Vernon"}), "middle-aged", "male"),
+        SpeakerDetails(frozenset({"Hagrid"}), "middle-aged", "male"),
+        SpeakerDetails(frozenset({"Dudley"}), "middle-aged", "male"),
+        SpeakerDetails(frozenset({"Harry Potter"}), "middle-aged", "male"),
+    }
+    result = get_dialogue_nlp(
+        get_text("harrypotter-1-3.txt"), speakers
+    )
+    with open("output.txt", "wt") as f:
+        for r in result:
+            f.write(f"{r}\n")
