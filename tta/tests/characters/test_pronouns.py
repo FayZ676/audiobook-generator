@@ -27,7 +27,7 @@ def test_get_pronouns():
 
     result_pronouns = get_pronouns(text, list(character_names))
     print("Extracted Pronouns:")
-    for name, pronoun in result_pronouns.items():
+    for name, pronoun in result_pronouns.items(): 
         print(f"  {name}: {pronoun}")
 
     assert result_pronouns == expected_pronouns, f"Expected {expected_pronouns}, but got {result_pronouns}"

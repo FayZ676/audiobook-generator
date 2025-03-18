@@ -34,16 +34,14 @@ def get_pronouns(text: str, names: list[str]) -> dict[str, str]:
     female_pronouns = {"she", "her", "hers"}
     neutral_pronouns = {"they", "them", "their", "theirs"}
 
-    # Analyze context around each name
+    
     for name in names:
         for ent in doc.ents:
             if ent.text == name and ent.label_ == "PERSON":
-                # Check surrounding tokens for pronouns
                 start = max(0, ent.start - 5)
                 end = min(len(doc), ent.end + 5)
                 context = doc[start:end]
-
-                # Infer pronouns based on keywords in the context
+                
                 if any(token.text.lower() in male_pronouns for token in context):
                     pronoun_map[name] = "he/him"
                 elif any(token.text.lower() in female_pronouns for token in context):
