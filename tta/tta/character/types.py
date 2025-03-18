@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel # type: ignore
 
 
 Age = Literal["young", "middle-aged", "old"]

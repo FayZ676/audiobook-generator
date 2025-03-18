@@ -1,3 +1,4 @@
+from collections import defaultdict
 import json
 from concurrent.futures import ThreadPoolExecutor
 
@@ -20,6 +21,37 @@ def get_traits(chunk: str, names: list[str]) -> tuple[dict[str, str], dict[str, 
         ages = ages_future.result()
         genders = genders_future.result()
     return ages, genders
+
+
+def get_pronouns(text: str, names: list[str]) -> dict[str, str]:
+   # NATHAN'S ADDITIONS
+    ner = NER()
+    doc = ner.nlp(text)
+    pronoun_map = defaultdict(lambda: "unknown")  # Default to "unknown" if no match
+
+    # Default pronouns (can we add more?)
+    male_pronouns = {"he", "him", "his"}
+    female_pronouns = {"she", "her", "hers"}
+    neutral_pronouns = {"they", "them", "their", "theirs"}
+
+    # Analyze context around each name
+    for name in names:
+        for ent in doc.ents:
+            if ent.text == name and ent.label_ == "PERSON":
+                # Check surrounding tokens for pronouns
+                start = max(0, ent.start - 5)
+                end = min(len(doc), ent.end + 5)
+                context = doc[start:end]
+
+                # Infer pronouns based on keywords in the context
+                if any(token.text.lower() in male_pronouns for token in context):
+                    pronoun_map[name] = "he/him"
+                elif any(token.text.lower() in female_pronouns for token in context):
+                    pronoun_map[name] = "she/her"
+                elif any(token.text.lower() in neutral_pronouns for token in context):
+                    pronoun_map[name] = "they/them"
+
+    return dict(pronoun_map)
 
 
 def get_speaker_details(text: str):
