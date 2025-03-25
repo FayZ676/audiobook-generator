@@ -49,6 +49,9 @@ def get_dialogue_details(text: str, speakers_voices: set[SpeakerVoice]):
     ]
 
 
+# NOTE: Generate labels for ALL the lines. This maintains a pattern that can reduce hallucinations.
+# NOTE: Chunk the dialogues. Smaller requests seem to work.
+# NOTE: Combine the top two approaches.
 def label_dialogue(dialogues: list[TextSegment], speakers: set[SpeakerDetails]):
     llm_prompt = label_prompt.substitute(
         text="\n".join([f"{i}\t{d}" for i, d in enumerate(dialogues)]),
