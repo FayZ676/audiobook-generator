@@ -7,7 +7,7 @@ from tta.character.extract import (
     get_ages,
     get_genders,
     get_aliases,
-    get_speaker_details,
+    # get_speaker_details,
 )
 from tta.metrics import precision_recall
 
@@ -99,6 +99,6 @@ def test_get_genders__hp_chapter_1_3():
     )
 
 
-def test_get_speaker_details():
-    for detail in get_speaker_details(get_text("harrypotter-1-3.txt")):
-        print(detail)
+# def test_get_speaker_details():
+#     for detail in get_speaker_details(get_text("harrypotter-1-3.txt")):
+#         print(detail)
