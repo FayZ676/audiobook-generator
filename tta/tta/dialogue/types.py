@@ -10,10 +10,6 @@ class LLMDialogue(BaseModel):
     text: str
 
 
-class ResponseFormat(BaseModel):
-    script: list[LLMDialogue]
-
-
 @dataclass(frozen=True, eq=True)
 class DialogueLabel:
     index: int

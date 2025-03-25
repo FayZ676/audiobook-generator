@@ -1,11 +1,10 @@
 import json
 
-from tta.dialogue.prompts import sys_prompt, prompt, label_prompt
+from tta.dialogue.prompts import label_prompt
 from tta.dialogue.types import (
     Dialogue,
     DialogueDetails,
     TextSegment,
-    ResponseFormat,
     DialogueLabel,
     DialogueLabelResponse,
 )
@@ -14,10 +13,30 @@ from tta.voices import SpeakerVoice
 from tta.models.text import generate_text
 
 
-def get_dialogue_details(
-    text: str, speakers_voices: set[SpeakerVoice]
-) -> list[DialogueDetails]:
-    dialogue = get_dialogue(text, {v.character for v in speakers_voices})
+def get_dialogue_details(text: str, speakers_voices: set[SpeakerVoice]):
+    segments = split_by_dialogue(text)
+    speakers = {s.character for s in speakers_voices}
+    labels = label_dialogue(segments, speakers)
+    narrator = SpeakerDetails(frozenset({"Narrator"}), "middle-aged", "male")
+    dialogue: list[Dialogue] = []
+    label_index = 0
+    for seg in segments:
+        if seg.dialogue:
+            speaker = (
+                next(
+                    (
+                        s
+                        for s in speakers
+                        if s.first_alias() == labels[label_index].speaker
+                    ),
+                    None,
+                )
+                or narrator
+            )
+            label_index += 1
+        else:
+            speaker = narrator
+        dialogue.append(Dialogue(speaker, seg.text))
     voices = {s.character.first_alias(): s.voice.voice_id for s in speakers_voices}
     return [
         DialogueDetails(
@@ -28,53 +47,6 @@ def get_dialogue_details(
         for d in dialogue
         if d.speaker.first_alias() in voices
     ]
-
-
-# TODO: Remove this.
-def get_dialogue(text: str, speakers: set[SpeakerDetails]) -> list[Dialogue]:
-    def parse_response(response: str, speakers: set[SpeakerDetails]) -> list[Dialogue]:
-        def assign_speaker(speaker: str):
-            found = next((s for s in speakers if speaker in s.names), None)
-            if not found:
-                raise ValueError(
-                    f"Speaker '{speaker}' not found in list of provided speakers."
-                )
-            return found
-
-        result = json.loads(response)
-        speeches = [
-            Dialogue(
-                speaker=assign_speaker(s["speaker"]),
-                text=str(s["text"]).strip(),
-            )
-            for s in result["script"]
-        ]
-        return speeches
-    
-    llm_prompt = prompt.substitute(
-        text=text, characters=", ".join([s.first_alias() for s in speakers])
-    )
-    result = generate_text(str(sys_prompt), llm_prompt, ResponseFormat)
-    return parse_response(result, speakers)
-
-
-def get_dialogue_nlp(text: str, speakers: set[SpeakerDetails]):
-    segments = split_by_dialogue(text)
-    labels = label_dialogue(segments, speakers)
-    narrator = SpeakerDetails(frozenset({"Narrator"}), "middle-aged", "male")
-    dialogue: list[Dialogue] = []
-    label_index = 0
-    for seg in segments:
-        if seg.dialogue:
-            speaker = (
-                next((s for s in speakers if s.first_alias() == labels[label_index].speaker), None)
-                or narrator
-            )
-            label_index += 1
-        else:
-            speaker = narrator
-        dialogue.append(Dialogue(speaker, seg.text))
-    return dialogue
 
 
 def label_dialogue(dialogues: list[TextSegment], speakers: set[SpeakerDetails]):

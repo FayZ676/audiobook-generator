@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from tta.dialogue.extract import get_dialogue_nlp
+from tta.dialogue.extract import get_dialogue_details
 from tta.character.types import SpeakerDetails
 
 
@@ -24,7 +24,7 @@ def test_get_dialogue_nlp__hp_sample():
         SpeakerDetails(frozenset({"Dudley"}), "middle-aged", "male"),
         SpeakerDetails(frozenset({"Harry Potter"}), "middle-aged", "male"),
     }
-    result = get_dialogue_nlp(get_text("harrypotter-1-3.txt"), speakers)
+    result = get_dialogue_details(get_text("harrypotter-1-3.txt"), speakers)
     with open("output.txt", "wt") as f:
         for r in result:
             f.write(f"{r}\n")
