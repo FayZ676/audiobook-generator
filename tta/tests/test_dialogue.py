@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from tta.dialogue.extract import get_dialogue_details, create_dialogue_batches, label
+from tta.dialogue.extract import get_dialogue_details, create_text_batches, label
 from tta.dialogue.types import TextSegment, DialogueLabel
 from tta.character.types import SpeakerDetails
 from tta.voices import SpeakerVoice, Voice
@@ -29,7 +29,7 @@ def test_create_dialogue_batches():
             3: TextSegment("replied Mary.", False),
         },
     ]
-    assert create_dialogue_batches(dialogues, 2) == expected_batches
+    assert create_text_batches(dialogues, 2) == expected_batches
 
 
 def test_label():

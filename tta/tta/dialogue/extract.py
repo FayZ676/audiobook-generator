@@ -54,20 +54,16 @@ def get_dialogue_details(text: str, speakers_voices: set[SpeakerVoice]):
 
 
 def label_dialogue(
-    dialogues: list[TextSegment], speakers: set[SpeakerDetails], batch_size: int = 100
+    texts: list[TextSegment], speakers: set[SpeakerDetails], batch_size: int = 100
 ):
     labels: list[DialogueLabel] = []
-    for batch in create_dialogue_batches(dialogues, batch_size):
+    for batch in create_text_batches(texts, batch_size):
         labels.extend(label(batch, speakers))
-    if max(labels, key=lambda x: x.index).index > len(dialogues):
-        raise ValueError(
-            "LLM returned labels with index greater than the number of dialogues."
-        )
     return labels
 
 
-def create_dialogue_batches(dialogues: list[TextSegment], batch_size: int):
-    enumerated = dict(enumerate(dialogues))
+def create_text_batches(texts: list[TextSegment], batch_size: int):
+    enumerated = dict(enumerate(texts))
     batches = [
         {
             i: enumerated[i]
@@ -78,16 +74,22 @@ def create_dialogue_batches(dialogues: list[TextSegment], batch_size: int):
     return batches
 
 
-def label(dialogues: dict[int, TextSegment], speakers: set[SpeakerDetails]):
+def label(texts: dict[int, TextSegment], speakers: set[SpeakerDetails]):
     llm_prompt = label_prompt.substitute(
-        text="\n".join([f"{i}\t{d}" for i, d in dialogues.items()]),
+        text="\n".join([f"{i}\t{d}" for i, d in texts.items()]),
         speakers=", ".join([s.first_alias() for s in speakers]),
     )
     response = generate_text("", llm_prompt, DialogueLabelResponse)
-    return [
+    result = [
         DialogueLabel(r["index"], r["speaker"])
         for r in json.loads(response)["dialogue"]
     ]
+    dialogue = [t for t in texts.values() if t.dialogue]
+    if len(result) != len(dialogue):
+        raise ValueError(
+            f"Invalid number of labels returned: Expected {len(dialogue)} got {len(result)}"
+        )
+    return result
 
 
 def split_by_dialogue(text: str) -> list[TextSegment]:
