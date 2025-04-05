@@ -66,18 +66,6 @@ def label_dialogue(
     return labels
 
 
-def label(dialogues: dict[int, TextSegment], speakers: set[SpeakerDetails]):
-    llm_prompt = label_prompt.substitute(
-        text="\n".join([f"{i}\t{d}" for i, d in dialogues.items()]),
-        speakers=", ".join([s.first_alias() for s in speakers]),
-    )
-    response = generate_text("", llm_prompt, DialogueLabelResponse)
-    return [
-        DialogueLabel(r["index"], r["speaker"])
-        for r in json.loads(response)["dialogue"]
-    ]
-
-
 def create_dialogue_batches(dialogues: list[TextSegment], batch_size: int):
     enumerated = dict(enumerate(dialogues))
     batches = [
@@ -88,6 +76,18 @@ def create_dialogue_batches(dialogues: list[TextSegment], batch_size: int):
         for start in range(0, len(enumerated), batch_size)
     ]
     return batches
+
+
+def label(dialogues: dict[int, TextSegment], speakers: set[SpeakerDetails]):
+    llm_prompt = label_prompt.substitute(
+        text="\n".join([f"{i}\t{d}" for i, d in dialogues.items()]),
+        speakers=", ".join([s.first_alias() for s in speakers]),
+    )
+    response = generate_text("", llm_prompt, DialogueLabelResponse)
+    return [
+        DialogueLabel(r["index"], r["speaker"])
+        for r in json.loads(response)["dialogue"]
+    ]
 
 
 def split_by_dialogue(text: str) -> list[TextSegment]:
