@@ -9,7 +9,7 @@ from tta.dialogue.types import (
     DialogueLabelResponse,
 )
 from tta.character.types import SpeakerDetails
-from tta.voices import SpeakerVoice
+from tta.voices import SpeakerVoice, Voice
 from tta.models.text import generate_text
 
 
@@ -17,7 +17,11 @@ def get_dialogue_details(text: str, speakers_voices: set[SpeakerVoice]):
     segments = split_by_dialogue(text)
     speakers = {s.character for s in speakers_voices}
     labels = label_dialogue(segments, speakers)
-    narrator = SpeakerDetails(frozenset({"Narrator"}), "middle-aged", "male")
+    narrator_voice = SpeakerVoice(
+        SpeakerDetails(frozenset({"Narrator"}), "middle-aged", "male"),
+        Voice("Narrator", "male", "middle-aged", "abc123"),
+    )
+    speakers_voices.add(narrator_voice)
     dialogue: list[Dialogue] = []
     label_index = 0
     for seg in segments:
@@ -31,11 +35,11 @@ def get_dialogue_details(text: str, speakers_voices: set[SpeakerVoice]):
                     ),
                     None,
                 )
-                or narrator
+                or narrator_voice.character
             )
             label_index += 1
         else:
-            speaker = narrator
+            speaker = narrator_voice.character
         dialogue.append(Dialogue(speaker, seg.text))
     voices = {s.character.first_alias(): s.voice.voice_id for s in speakers_voices}
     return [
@@ -49,12 +53,22 @@ def get_dialogue_details(text: str, speakers_voices: set[SpeakerVoice]):
     ]
 
 
-# NOTE: Generate labels for ALL the lines. This maintains a pattern that can reduce hallucinations.
-# NOTE: Chunk the dialogues. Smaller requests seem to work.
-# NOTE: Combine the top two approaches.
-def label_dialogue(dialogues: list[TextSegment], speakers: set[SpeakerDetails]):
+def label_dialogue(
+    dialogues: list[TextSegment], speakers: set[SpeakerDetails], batch_size: int = 100
+):
+    labels: list[DialogueLabel] = []
+    for batch in create_dialogue_batches(dialogues, batch_size):
+        labels.extend(label(batch, speakers))
+    if max(labels, key=lambda x: x.index).index > len(dialogues):
+        raise ValueError(
+            "LLM returned labels with index greater than the number of dialogues."
+        )
+    return labels
+
+
+def label(dialogues: dict[int, TextSegment], speakers: set[SpeakerDetails]):
     llm_prompt = label_prompt.substitute(
-        text="\n".join([f"{i}\t{d}" for i, d in enumerate(dialogues)]),
+        text="\n".join([f"{i}\t{d}" for i, d in dialogues.items()]),
         speakers=", ".join([s.first_alias() for s in speakers]),
     )
     response = generate_text("", llm_prompt, DialogueLabelResponse)
@@ -62,6 +76,18 @@ def label_dialogue(dialogues: list[TextSegment], speakers: set[SpeakerDetails]):
         DialogueLabel(r["index"], r["speaker"])
         for r in json.loads(response)["dialogue"]
     ]
+
+
+def create_dialogue_batches(dialogues: list[TextSegment], batch_size: int):
+    enumerated = dict(enumerate(dialogues))
+    batches = [
+        {
+            i: enumerated[i]
+            for i in range(start, min(start + batch_size, len(enumerated)))
+        }
+        for start in range(0, len(enumerated), batch_size)
+    ]
+    return batches
 
 
 def split_by_dialogue(text: str) -> list[TextSegment]:
