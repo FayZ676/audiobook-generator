@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from tta.dialogue.extract import get_dialogue_details, create_dialogue_batches
-from tta.dialogue.types import TextSegment
+from tta.dialogue.extract import get_dialogue_details, create_dialogue_batches, label
+from tta.dialogue.types import TextSegment, DialogueLabel
 from tta.character.types import SpeakerDetails
 from tta.voices import SpeakerVoice, Voice
 
@@ -30,6 +30,23 @@ def test_create_dialogue_batches():
         },
     ]
     assert create_dialogue_batches(dialogues, 2) == expected_batches
+
+
+def test_label():
+    dialogues = {
+        0: TextSegment("Hello, how are you?", True),
+        1: TextSegment("asked Bob.", False),
+        2: TextSegment("Great! How about you?", True),
+        3: TextSegment("replied Mary.", False),
+    }
+    speakers = {
+        SpeakerDetails(frozenset({"Bob"}), "middle-aged", "male"),
+        SpeakerDetails(frozenset({"Mary"}), "middle-aged", "female"),
+    }
+    assert label(dialogues, speakers) == [
+        DialogueLabel(index=0, speaker="Bob"),
+        DialogueLabel(index=2, speaker="Mary"),
+    ]
 
 
 if __name__ == "__main__":
