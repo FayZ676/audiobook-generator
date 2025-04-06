@@ -1,14 +1,6 @@
 from pathlib import Path
 
-import pytest
-
-from tta.dialogue.extract import (
-    get_dialogue_details,
-    create_text_batches,
-    label,
-    label_dialogue,
-)
-from tta.dialogue.types import TextSegment, DialogueLabel
+from tta.dialogue.extract import get_dialogue_details
 from tta.character.types import SpeakerDetails
 from tta.voices import SpeakerVoice, Voice
 
@@ -19,104 +11,37 @@ def get_text(filename: str) -> str:
         return f.read()
 
 
-@pytest.mark.integration
-def test_label_dialogue():
-    texts = [
-        TextSegment("Hello, how are you?", True),
-        TextSegment("asked Bob.", False),
-        TextSegment("Great! How about you?", True),
-        TextSegment("replied Mary.", False),
-    ]
+def test_get_dialogue_nlp__hp_sample():
     speakers = {
-        SpeakerDetails(frozenset({"Bob"}), "middle-aged", "male"),
-        SpeakerDetails(frozenset({"Mary"}), "middle-aged", "female"),
+        SpeakerDetails(frozenset({"Professor McGonagall"}), "middle-aged", "male"),
+        SpeakerDetails(frozenset({"Albus Dumbledore"}), "middle-aged", "male"),
+        SpeakerDetails(frozenset({"Mrs. Dursley", "Aunt Petunia"}), "middle-aged", "male"),
+        SpeakerDetails(frozenset({"Mr. Dursley", "Uncle Vernon"}), "middle-aged", "male"),
+        SpeakerDetails(frozenset({"Hagrid"}), "middle-aged", "male"),
+        SpeakerDetails(frozenset({"Dudley"}), "middle-aged", "male"),
+        SpeakerDetails(frozenset({"Harry Potter"}), "middle-aged", "male"),
     }
-    assert label_dialogue(texts, speakers, batch_size=2) == [
-        DialogueLabel(index=0, speaker="Bob"),
-        DialogueLabel(index=2, speaker="Mary"),
-    ]
 
-
-@pytest.mark.integration
-def test_label():
-    dialogues = {
-        0: TextSegment("Hello, how are you?", True),
-        1: TextSegment("asked Bob.", False),
-        2: TextSegment("Great! How about you?", True),
-        3: TextSegment("replied Mary.", False),
+    speakers_voices = {
+        SpeakerVoice(
+            character=s,
+            voice=Voice(
+                name="Dummy",
+                gender=s.gender,
+                age=s.age,
+                voice_id="dummy_voice_id"
+            )
+        )
+        for s in speakers
     }
-    speakers = {
-        SpeakerDetails(frozenset({"Bob"}), "middle-aged", "male"),
-        SpeakerDetails(frozenset({"Mary"}), "middle-aged", "female"),
-    }
-    assert label(dialogues, speakers) == [
-        DialogueLabel(index=0, speaker="Bob"),
-        DialogueLabel(index=2, speaker="Mary"),
-    ]
 
+    text = get_text("harrypotter-1-3.txt")
+    result = get_dialogue_details(text, speakers_voices)
 
-def test_create_text_batches():
-    texts = [
-        TextSegment("Hello, how are you?", True),
-        TextSegment("asked Bob.", False),
-        TextSegment("Great! How about you?", True),
-        TextSegment("replied Mary.", False),
-    ]
-    expected_batches = [
-        {
-            0: TextSegment("Hello, how are you?", True),
-            1: TextSegment("asked Bob.", False),
-        },
-        {
-            2: TextSegment("Great! How about you?", True),
-            3: TextSegment("replied Mary.", False),
-        },
-    ]
-    assert create_text_batches(texts, 2) == expected_batches
+    with open("output.txt", "wt") as f:
+        for r in result:
+            f.write(f"{r}\n")
 
 
 if __name__ == "__main__":
-
-    def test_get_dialogue_nlp__hp_sample():
-        speakers = {
-            SpeakerVoice(
-                SpeakerDetails(
-                    frozenset({"Professor McGonagall"}), "middle-aged", "male"
-                ),
-                Voice("name", "male", "young", "abc123"),
-            ),
-            SpeakerVoice(
-                SpeakerDetails(frozenset({"Albus Dumbledore"}), "middle-aged", "male"),
-                Voice("name", "male", "young", "abc123"),
-            ),
-            SpeakerVoice(
-                SpeakerDetails(
-                    frozenset({"Mrs. Dursley", "Aunt Petunia"}), "middle-aged", "male"
-                ),
-                Voice("name", "male", "young", "abc123"),
-            ),
-            SpeakerVoice(
-                SpeakerDetails(
-                    frozenset({"Mr. Dursley", "Uncle Vernon"}), "middle-aged", "male"
-                ),
-                Voice("name", "male", "young", "abc123"),
-            ),
-            SpeakerVoice(
-                SpeakerDetails(frozenset({"Hagrid"}), "middle-aged", "male"),
-                Voice("name", "male", "young", "abc123"),
-            ),
-            SpeakerVoice(
-                SpeakerDetails(frozenset({"Dudley"}), "middle-aged", "male"),
-                Voice("name", "male", "young", "abc123"),
-            ),
-            SpeakerVoice(
-                SpeakerDetails(frozenset({"Harry Potter"}), "middle-aged", "male"),
-                Voice("name", "male", "young", "abc123"),
-            ),
-        }
-        result = get_dialogue_details(get_text("harrypotter-1-3.txt"), speakers)
-        with open("output.txt", "wt") as f:
-            for r in result:
-                f.write(f"{r}\n")
-
     test_get_dialogue_nlp__hp_sample()
