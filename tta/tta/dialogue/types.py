@@ -42,4 +42,4 @@ class TextSegment:
     dialogue: bool
 
     def __str__(self) -> str:
-        return f"{'D' if self.dialogue else 'N'}: {self.text}"
+        return f"({'D' if self.dialogue else 'N'}) {self.text}"

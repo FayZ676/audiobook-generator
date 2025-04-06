@@ -16,28 +16,25 @@ from tta.models.text import generate_text
 def get_dialogue_details(text: str, speakers_voices: set[SpeakerVoice]):
     segments = split_by_dialogue(text)
     speakers = {s.character for s in speakers_voices}
-    labels = label_dialogue(segments, speakers)
+    label_dict = {
+        label.index: label.speaker for label in label_dialogue(segments, speakers)
+    }
     narrator_voice = SpeakerVoice(
         SpeakerDetails(frozenset({"Narrator"}), "middle-aged", "male"),
         Voice("Narrator", "male", "middle-aged", "abc123"),
     )
     speakers_voices.add(narrator_voice)
     dialogue: list[Dialogue] = []
-    label_index = 0
-    for seg in segments:
+    for i, seg in enumerate(segments):
         if seg.dialogue:
+            label_speaker = label_dict.get(i)
             speaker = (
                 next(
-                    (
-                        s
-                        for s in speakers
-                        if s.first_alias() == labels[label_index].speaker
-                    ),
+                    (s for s in speakers if s.first_alias() == label_speaker),
                     None,
                 )
                 or narrator_voice.character
             )
-            label_index += 1
         else:
             speaker = narrator_voice.character
         dialogue.append(Dialogue(speaker, seg.text))
@@ -49,7 +46,7 @@ def get_dialogue_details(text: str, speakers_voices: set[SpeakerVoice]):
             voice_id=voices[d.speaker.first_alias()],
         )
         for d in dialogue
-        if d.speaker.first_alias() in voices
+        if d.speaker.first_alias() in voices  # TODO: Is this necessary?
     ]
 
 
@@ -57,8 +54,10 @@ def label_dialogue(
     texts: list[TextSegment], speakers: set[SpeakerDetails], batch_size: int = 100
 ):
     labels: list[DialogueLabel] = []
-    for batch in create_text_batches(texts, batch_size):
-        labels.extend(label(batch, speakers))
+    batches = create_text_batches(texts, batch_size)
+    for batch in batches:
+        result = label(batch, speakers)
+        labels.extend(result)
     return labels
 
 
@@ -74,22 +73,29 @@ def create_text_batches(texts: list[TextSegment], batch_size: int):
     return batches
 
 
-def label(texts: dict[int, TextSegment], speakers: set[SpeakerDetails]):
-    llm_prompt = label_prompt.substitute(
-        text="\n".join([f"{i}\t{d}" for i, d in texts.items()]),
-        speakers=", ".join([s.first_alias() for s in speakers]),
-    )
-    response = generate_text("", llm_prompt, DialogueLabelResponse)
-    result = [
-        DialogueLabel(r["index"], r["speaker"])
-        for r in json.loads(response)["dialogue"]
-    ]
+def label(
+    texts: dict[int, TextSegment], speakers: set[SpeakerDetails], max_retries: int = 3
+):
     dialogue = [t for t in texts.values() if t.dialogue]
-    if len(result) != len(dialogue):
-        raise ValueError(
-            f"Invalid number of labels returned: Expected {len(dialogue)} got {len(result)}"
-        )
-    return result
+    prompt = label_prompt.substitute(
+        text="\n".join([f"{i}. {d}" for i, d in texts.items()]),
+        speakers="\n".join([f"- {s.first_alias()}" for s in speakers]),
+        num_dialogue=len(dialogue),
+    )
+    print(prompt)
+    for _ in range(max_retries):
+        response = generate_text("", prompt, DialogueLabelResponse)
+        print(response)
+        result = [
+            DialogueLabel(r["index"], r["speaker"])
+            for r in json.loads(response)["dialogue"]
+        ]
+        if len(result) <= len(dialogue):
+            return result
+    raise ValueError(
+        f"Invalid number of labels returned after {max_retries} retries: "
+        f"Expected {len(dialogue)} (at most), but got more."
+    )
 
 
 def split_by_dialogue(text: str) -> list[TextSegment]:

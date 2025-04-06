@@ -1,6 +1,13 @@
 from pathlib import Path
 
-from tta.dialogue.extract import get_dialogue_details, create_text_batches, label
+import pytest
+
+from tta.dialogue.extract import (
+    get_dialogue_details,
+    create_text_batches,
+    label,
+    label_dialogue,
+)
 from tta.dialogue.types import TextSegment, DialogueLabel
 from tta.character.types import SpeakerDetails
 from tta.voices import SpeakerVoice, Voice
@@ -12,26 +19,25 @@ def get_text(filename: str) -> str:
         return f.read()
 
 
-def test_create_dialogue_batches():
-    dialogues = [
+@pytest.mark.integration
+def test_label_dialogue():
+    texts = [
         TextSegment("Hello, how are you?", True),
         TextSegment("asked Bob.", False),
         TextSegment("Great! How about you?", True),
         TextSegment("replied Mary.", False),
     ]
-    expected_batches = [
-        {
-            0: TextSegment("Hello, how are you?", True),
-            1: TextSegment("asked Bob.", False),
-        },
-        {
-            2: TextSegment("Great! How about you?", True),
-            3: TextSegment("replied Mary.", False),
-        },
+    speakers = {
+        SpeakerDetails(frozenset({"Bob"}), "middle-aged", "male"),
+        SpeakerDetails(frozenset({"Mary"}), "middle-aged", "female"),
+    }
+    assert label_dialogue(texts, speakers, batch_size=2) == [
+        DialogueLabel(index=0, speaker="Bob"),
+        DialogueLabel(index=2, speaker="Mary"),
     ]
-    assert create_text_batches(dialogues, 2) == expected_batches
 
 
+@pytest.mark.integration
 def test_label():
     dialogues = {
         0: TextSegment("Hello, how are you?", True),
@@ -47,6 +53,26 @@ def test_label():
         DialogueLabel(index=0, speaker="Bob"),
         DialogueLabel(index=2, speaker="Mary"),
     ]
+
+
+def test_create_text_batches():
+    texts = [
+        TextSegment("Hello, how are you?", True),
+        TextSegment("asked Bob.", False),
+        TextSegment("Great! How about you?", True),
+        TextSegment("replied Mary.", False),
+    ]
+    expected_batches = [
+        {
+            0: TextSegment("Hello, how are you?", True),
+            1: TextSegment("asked Bob.", False),
+        },
+        {
+            2: TextSegment("Great! How about you?", True),
+            3: TextSegment("replied Mary.", False),
+        },
+    ]
+    assert create_text_batches(texts, 2) == expected_batches
 
 
 if __name__ == "__main__":
