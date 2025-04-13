@@ -82,10 +82,8 @@ def label(
         speakers="\n".join([f"- {s.first_alias()}" for s in speakers]),
         num_dialogue=len(dialogue),
     )
-    print(prompt)
     for _ in range(max_retries):
         response = generate_text("", prompt, DialogueLabelResponse)
-        print(response)
         result = [
             DialogueLabel(r["index"], r["speaker"])
             for r in json.loads(response)["dialogue"]
