@@ -3,7 +3,7 @@ from pathlib import Path
 from dataclasses import dataclass
 
 
-@dataclass
+@dataclass(frozen=True, eq=True)
 class Voice:
     name: str
     age: str
@@ -23,7 +23,7 @@ voices = [
     Voice(
         "Jim Dale",
         "middle-aged",
-        "young",
+        "male",
         f"{Path(__file__).parent}/audios/jim_dale.mp3",
         "Standing on a golden perch behind the door was a decrepit looking bird that resembled a half plucked turkey. Harry stared at it and the bird looked balefully back, making it's gagging noise again.",
     ),

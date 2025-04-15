@@ -9,7 +9,7 @@ from tta.dialogue.types import (
     DialogueLabelResponse,
 )
 from tta.character.types import SpeakerDetails
-from tta.voices import SpeakerVoice, Voice
+from tta.voices import SpeakerVoice, NarratorVoice
 from tta.models.text import generate_text
 
 
@@ -21,7 +21,7 @@ def get_dialogue_details(text: str, speakers_voices: set[SpeakerVoice]):
     }
     narrator_voice = SpeakerVoice(
         SpeakerDetails(frozenset({"Narrator"}), "middle-aged", "male"),
-        Voice("Narrator", "male", "middle-aged", "abc123"),
+        NarratorVoice,
     )
     speakers_voices.add(narrator_voice)
     dialogue: list[Dialogue] = []
@@ -38,7 +38,7 @@ def get_dialogue_details(text: str, speakers_voices: set[SpeakerVoice]):
         else:
             speaker = narrator_voice.character
         dialogue.append(Dialogue(speaker, seg.text))
-    voices = {s.character.first_alias(): s.voice.voice_id for s in speakers_voices}
+    voices = {s.character.first_alias(): s.voice.name for s in speakers_voices}
     return [
         DialogueDetails(
             text=d.text,

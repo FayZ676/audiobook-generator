@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from tta_tts.voices.labels import voices
 from tta_tts.infer import infer
 
@@ -11,16 +13,14 @@ def generate(text: str, voice: str):
         ref_text=voice_value.audio_transcript,  # type: ignore
         gen_text=text,
         output_path="data/output.wav",
-        vocab_file="vocab.txt",
+        vocab_file=f"{Path(__file__).parent}/vocab.txt",
         device="mps",
     )
-
-    with open("output.wav", "wb") as f:
-        f.write(audio)
+    return audio
 
 
-if __name__ == "__main__":
-    generate(
-        "Although this may sound like Faizi, this is in fact a computer generated voice made to sound like him. Don't freak out, I'll still make your story sound fantastic.",
-        "Faizi",
-    )
+# if __name__ == "__main__":
+#     generate(
+#         "Although this may sound like Faizi, this is in fact a computer generated voice made to sound like him. Don't freak out, I'll still make your story sound fantastic.",
+#         "Faizi",
+#     )
