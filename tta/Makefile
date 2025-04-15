@@ -1,6 +1,6 @@
 # Installs the project dependencies
 install:
-	pip install -e .
+	pip install -e ../tta-tts -e .
 
 lint:
 	pylint --rcfile=../.pylintrc tta tests
