@@ -1,5 +1,5 @@
-from voices.labels import voices
-from infer import infer
+from tta_tts.voices.labels import voices
+from tta_tts.infer import infer
 
 
 def generate(text: str, voice: str):
@@ -10,8 +10,8 @@ def generate(text: str, voice: str):
         ref_audio=voice_value.audio_path,  # type: ignore
         ref_text=voice_value.audio_transcript,  # type: ignore
         gen_text=text,
-        output_path="output.wav",
-        vocab_file="F5-TTS/src/f5_tts/infer/examples/vocab.txt",
+        output_path="data/output.wav",
+        vocab_file="vocab.txt",
         device="mps",
     )
 
