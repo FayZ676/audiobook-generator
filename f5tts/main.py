@@ -21,6 +21,6 @@ def generate(text: str, voice: str):
 
 if __name__ == "__main__":
     generate(
-        "Although this may sound like Jim, this is in fact a computer generated voice made to sound like him. Don't freak out, I'll still make your story sound fantastic.",
-        "Jim Dale",
+        "Although this may sound like Faizi, this is in fact a computer generated voice made to sound like him. Don't freak out, I'll still make your story sound fantastic.",
+        "Faizi",
     )
