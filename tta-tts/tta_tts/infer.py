@@ -52,7 +52,7 @@ def infer(
     voices: Optional[Dict[str, Dict[str, str]]] = None,
     save_chunk: bool = False,
     silence_top_db: int = 60,
-):
+) -> tuple[bytes, int | None]:
     output_dir = Path(output_path).parent
     output_file_name = Path(output_path).name
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -249,7 +249,7 @@ def infer(
 
     if not generated_audio_segments or final_sample_rate is None:
         print("No audio segments were generated.")
-        return b""
+        return b"", final_sample_rate
 
     final_wave = np.concatenate(generated_audio_segments)
     if remove_silence:
@@ -269,7 +269,7 @@ def infer(
         )
         wav_data = bytes_wav.getvalue()
         print("Encoding complete.")
-        return wav_data
+        return wav_data, final_sample_rate
     except Exception as e:
         print(f"Error encoding audio to bytes: {e}")
-        return b""
+        return b"", final_sample_rate

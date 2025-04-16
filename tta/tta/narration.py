@@ -18,10 +18,12 @@ def get_narration_from_text(text: str) -> bytes:
     return build_audio(audio_segments)
 
 
-def build_audio(audio_segments: list) -> bytes:
+def build_audio(audio_segments: list[tuple[bytes, int | None]]) -> bytes:
     combined = AudioSegment.empty()
-    for audio_bytes in audio_segments:
-        segment = AudioSegment.from_file(BytesIO(audio_bytes))
+    for audio_bytes, sample_rate in audio_segments:
+        segment = AudioSegment.from_file(
+            BytesIO(audio_bytes), format="mp3", frame_rate=sample_rate
+        )
         combined += segment
 
     output = BytesIO()
