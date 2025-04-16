@@ -1,7 +1,21 @@
 from pathlib import Path
+from pydub import AudioSegment
+from pydub.effects import normalize
 
 from tta_tts.voices.labels import voices
 from tta_tts.infer import infer
+
+
+def normalize_audio_volume(audio_path: str, headroom: float = 0.1) -> str:
+    try:
+        audio = AudioSegment.from_file(audio_path)
+        normalized_audio = normalize(audio, headroom=headroom)
+        file_format = Path(audio_path).suffix.lstrip(".")
+        normalized_audio.export(audio_path, format=file_format)
+        return audio_path
+    except Exception as e:
+        print(f"Error normalizing audio file {audio_path}: {e}")
+        return audio_path
 
 
 def generate(text: str, voice: str):

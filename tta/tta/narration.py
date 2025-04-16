@@ -22,7 +22,7 @@ def build_audio(audio_segments: list[tuple[bytes, int | None]]) -> bytes:
     combined = AudioSegment.empty()
     for audio_bytes, sample_rate in audio_segments:
         segment = AudioSegment.from_file(
-            BytesIO(audio_bytes), format="mp3", frame_rate=sample_rate
+            BytesIO(audio_bytes), format="wav", frame_rate=sample_rate
         )
         combined += segment
 
@@ -40,6 +40,6 @@ if __name__ == "__main__":
         ) as f:
             return f.read()
 
-    audio = get_narration_from_text(get_text("harrypotter-sample.txt"))
+    audio = get_narration_from_text(get_text("harrypotter-sample-tiny.txt"))
     with open("output.mp3", "wb") as f:
         f.write(audio)
