@@ -25,7 +25,7 @@ voices = [
         "middle-aged",
         "male",
         f"{Path(__file__).parent}/audios/jim_dale.mp3",
-        "Standing on a golden perch behind the door was a decrepit looking bird that resembled a half plucked turkey. Harry stared at it and the bird looked balefully back, making it's gagging noise again.",
+        "Mr. Vernon Dursley had been woken in the early hours of the morning by a loud hooting noise from his nephew Harry's room.",
     ),
     Voice(
         "Elizabeth Gaskell",
