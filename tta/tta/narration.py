@@ -40,6 +40,6 @@ if __name__ == "__main__":
         ) as f:
             return f.read()
 
-    audio = get_narration_from_text(get_text("harrypotter-sample-tiny.txt"))
+    audio = get_narration_from_text(get_text("harrypotter-sample.txt"))
     with open("output.mp3", "wb") as f:
         f.write(audio)
