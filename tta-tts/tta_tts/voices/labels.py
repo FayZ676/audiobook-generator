@@ -14,13 +14,6 @@ class Voice:
 
 voices = [
     Voice(
-        "Faizi",
-        "young",
-        "male",
-        f"{Path(__file__).parent}/audios/faizi.mp3",
-        "The little red fox jumped over the white picket fence and onto the crocodile that was sitting on the roof of the house. He didn't realize that there was a flamingo sitting up there with him.",
-    ),
-    Voice(
         "Jim Dale",
         "middle-aged",
         "male",
@@ -35,10 +28,10 @@ voices = [
         "When she wakened of herself, as sure as clockwork, and left the household very little peace afterwards.",
     ),
     Voice(
-        "Michael Gambon",
+        "Simon Vance",
         "old",
         "male",
-        f"{Path(__file__).parent}/audios/michael_gambon.mp3",
-        "I will never speak to you again and I said okay I'll do it, I'll do it. She's wrapped up in it, you know and I love the book, I love the script. I'ts beautifully written, beautiful dialogue in it.",
+        f"{Path(__file__).parent}/audios/simon_vance.mp3",
+        "It was a traditional cape house, but on a larger scale than usual. A bold architect's airy enlargement.",
     ),
 ]
