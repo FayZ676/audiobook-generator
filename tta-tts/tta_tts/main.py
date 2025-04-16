@@ -16,10 +16,3 @@ def generate(text: str, voice: str):
         vocab_file=f"{Path(__file__).parent}/vocab.txt",
         device="mps",
     )
-
-
-# if __name__ == "__main__":
-#     generate(
-#         "Although this may sound like Faizi, this is in fact a computer generated voice made to sound like him. Don't freak out, I'll still make your story sound fantastic.",
-#         "Faizi",
-#     )
