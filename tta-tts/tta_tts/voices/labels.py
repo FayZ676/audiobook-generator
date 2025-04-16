@@ -32,7 +32,7 @@ voices = [
         "middle-aged",
         "female",
         f"{Path(__file__).parent}/audios/elizabeth_gaskell.mp3",
-        "Still there was a neat little quilling inside, every plat of which Molly knew. For had she not made it herself the evening before, with infinite pains? And was there not a little blue bow in this quilling, the very first bit of such finery Molly had ever had the prospect of wearing?",
+        "When she wakened of herself, as sure as clockwork, and left the household very little peace afterwards.",
     ),
     Voice(
         "Michael Gambon",
