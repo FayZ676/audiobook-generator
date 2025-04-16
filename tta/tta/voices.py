@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from tta.character.types import SpeakerDetails
 
-from tta_tts.voices.labels import voices, Voice
+from tta_speech.voices.labels import voices, Voice
 
 
 @dataclass(eq=True, frozen=True)

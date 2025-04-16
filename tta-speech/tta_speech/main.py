@@ -2,8 +2,8 @@ from pathlib import Path
 from pydub import AudioSegment
 from pydub.effects import normalize
 
-from tta_tts.voices.labels import voices
-from tta_tts.infer import infer
+from tta_speech.voices.labels import voices
+from tta_speech.infer import infer
 
 
 def normalize_audio_volume(audio_path: str, headroom: float = 0.1) -> str:

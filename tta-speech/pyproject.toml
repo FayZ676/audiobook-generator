@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "tta_tts"
+name = "tta_speech"
 version = "0.0.1"
 authors = [
   { name="Faizi Fifita", email="author@example.com" },
@@ -19,6 +19,7 @@ classifiers = [
 ]
 dependencies = [
     "f5-tts==1.1.0",
+    "pydub==0.25.1",
     "torch==2.6.0",
     "torchaudio==2.6.0",
 ]

@@ -27,7 +27,7 @@ dependencies = [
   "pytest-cov==5.0.0",
   "scikit-learn==1.6.1",
   "spacy==3.8.4",
-  "tta_tts==0.0.1",
+  "tta_speech==0.0.1",
 ]
 
 [tool.coverage.run]

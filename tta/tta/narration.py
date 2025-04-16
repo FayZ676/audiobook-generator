@@ -4,7 +4,7 @@ from tta.character.extract import get_speaker_details
 from tta.dialogue.extract import get_dialogue_details
 from tta.voices import get_voices
 
-from tta_tts.main import generate
+from tta_speech.main import generate
 
 from pydub import AudioSegment
 
