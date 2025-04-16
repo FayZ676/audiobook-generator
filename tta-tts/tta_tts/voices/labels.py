@@ -28,11 +28,11 @@ voices = [
         "Standing on a golden perch behind the door was a decrepit looking bird that resembled a half plucked turkey. Harry stared at it and the bird looked balefully back, making it's gagging noise again.",
     ),
     Voice(
-        "Maggie Smith",
+        "Elizabeth Gaskell",
         "middle-aged",
         "female",
-        f"{Path(__file__).parent}/audios/maggie_smith.mp3",
-        "It was very funny, it was a changing point in my life as well and it was just like starting with a completely fresh, a whole new notebook. Not a clean new page or anything. It was just like having a wonderful new beginning.",
+        f"{Path(__file__).parent}/audios/elizabeth_gaskell.mp3",
+        "Still there was a neat little quilling inside, every plat of which Molly knew. For had she not made it herself the evening before, with infinite pains? And was there not a little blue bow in this quilling, the very first bit of such finery Molly had ever had the prospect of wearing?",
     ),
     Voice(
         "Michael Gambon",

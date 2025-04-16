@@ -30,3 +30,9 @@ def generate(text: str, voice: str):
         vocab_file=f"{Path(__file__).parent}/vocab.txt",
         device="mps",
     )
+
+
+if __name__ == "__main__":
+    normalize_audio_volume(
+        f"{Path(__file__).parent}/voices/audios/elizabeth_gaskell.mp3", headroom=0.1
+    )
