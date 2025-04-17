@@ -28,10 +28,17 @@ voices = [
         "When she wakened of herself, as sure as clockwork, and left the household very little peace afterwards.",
     ),
     Voice(
-        "Simon Vance",
+        "Arthur Lane",
+        "middle-aged",
+        "male",
+        f"{Path(__file__).parent}/audios/arthur_lane.mp3",
+        "Carter Wetherby threw up his snug clarkship, turned the half of his savings over to his wife, and with the remainder bought an outfit.",
+    ),
+    Voice(
+        "Stephen Fry",
         "old",
         "male",
-        f"{Path(__file__).parent}/audios/simon_vance.mp3",
-        "It was a traditional cape house, but on a larger scale than usual. A bold architect's airy enlargement.",
+        f"{Path(__file__).parent}/audios/stephen_fry.mp3",
+        "At the moment, cosmos is chaos and only chaos because chaos is the only thing that is the case.",
     ),
 ]
