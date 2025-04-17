@@ -49,9 +49,6 @@ def _initialize_inference(
         elif vocoder_name == "bigvgan":
             vocoder_local_path = "../checkpoints/bigvgan_v2_24khz_100band_256x"
         else:
-            print(
-                f"Warning: Unknown vocoder '{vocoder_name}' specified for local loading without a path. Defaulting to non-local."
-            )
             load_vocoder_from_local = False
 
     vocoder = load_vocoder(
@@ -65,9 +62,6 @@ def _initialize_inference(
         try:
             model_cfg_path = str(files("f5_tts").joinpath(f"configs/{model_name}.yaml"))
         except ModuleNotFoundError as e:
-            print(
-                "Warning: Could not find default config via package resources. Trying relative path."
-            )
             _base_path = Path(__file__).parent.parent
             model_cfg_path_rel = _base_path / f"configs/{model_name}.yaml"
             if not model_cfg_path_rel.exists():
@@ -89,9 +83,6 @@ def _initialize_inference(
                 ckpt_step = 1200000
             elif vocoder_name == "bigvgan":
                 ckpt_type = "pt"
-                print(
-                    "Warning: Using F5TTS_Base with bigvgan requires specific checkpoint type (.pt)."
-                )
         elif model_name == "E2TTS_Base":
             repo_name = "E2-TTS"
             ckpt_step = 1200000
@@ -127,7 +118,6 @@ def _prepare_voices(
 
     all_voices["main"] = {"ref_audio": ref_audio, "ref_text": ref_text}
 
-    print("Preprocessing reference audio(s)...")
     processed_voices = {}
     for voice_name, voice_data in all_voices.items():
         try:
@@ -138,10 +128,7 @@ def _prepare_voices(
                 "ref_audio": processed_audio,
                 "ref_text": processed_text,
             }
-            print(f"  - Voice '{voice_name}': Processed.")
         except Exception as e:
-            print(f"Error processing reference for voice '{voice_name}': {e}")
-            print(f"    Skipping voice '{voice_name}'.")
 
     if "main" not in processed_voices:
         raise ValueError("Main reference audio could not be processed or was invalid.")
@@ -214,7 +201,6 @@ def infer(
             if extracted_voice in prepared_voices:
                 current_voice_name = extracted_voice
             else:
-                print(
                     f"Warning: Voice tag '[{extracted_voice}]' not found in provided voices. Using 'main'."
                 )
             text_to_synthesize = re.sub(reg_extract, "", text_chunk).strip()
@@ -251,7 +237,6 @@ def infer(
                 chunk_filename = f"{i}_{text_to_synthesize[:30].replace(' ', '_')}.wav"
                 chunk_path = output_chunk_dir / chunk_filename
                 sf.write(str(chunk_path), audio_segment, sr)
-                print(f"    Saved chunk: {chunk_path}")
 
         except Exception as e:
             raise RuntimeError(
@@ -259,7 +244,6 @@ def infer(
             ) from e
 
     if not generated_audio_segments or final_sample_rate is None:
-        print("No audio segments were generated.")
         return b"", final_sample_rate
 
     final_wave = np.concatenate(generated_audio_segments)
@@ -269,7 +253,6 @@ def infer(
             if len(trimmed_wave) < len(final_wave):
                 final_wave = trimmed_wave
         except Exception as e:
-            print(f"Error during silence removal: {e}")
     bytes_wav = io.BytesIO()
     try:
         sf.write(
@@ -278,5 +261,4 @@ def infer(
         wav_data = bytes_wav.getvalue()
         return wav_data, final_sample_rate
     except Exception as e:
-        print(f"Error encoding audio to bytes: {e}")
         return b"", final_sample_rate
