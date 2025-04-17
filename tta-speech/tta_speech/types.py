@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import Optional
 
 from f5_tts.infer.utils_infer import (
-    mel_spec_type as default_mel_spec_type,
     target_rms as default_target_rms,
     cross_fade_duration as default_cross_fade_duration,
     nfe_step as default_nfe_step,
