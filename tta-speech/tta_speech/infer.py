@@ -2,14 +2,14 @@ import io
 import re
 from importlib.resources import files
 from pathlib import Path
-from typing import Optional, Dict
+from typing import Optional, Dict, Tuple, Any
 
 import librosa
 import numpy as np
 import soundfile as sf
 from cached_path import cached_path
 from hydra.utils import get_class
-from omegaconf import OmegaConf
+from omegaconf import OmegaConf, DictConfig
 
 from f5_tts.infer.utils_infer import (
     mel_spec_type as default_mel_spec_type,
@@ -26,6 +26,95 @@ from f5_tts.infer.utils_infer import (
     load_vocoder,
     preprocess_ref_audio_text,
 )
+
+
+def _initialize_inference(
+    output_path: str,
+    model_name: str,
+    model_cfg_path: Optional[str],
+    ckpt_file: Optional[str],
+    vocab_file: Optional[str],
+    vocoder_name: str,
+    load_vocoder_from_local: bool,
+    vocoder_local_path: Optional[str],
+    device: str,
+) -> Tuple[Any, Any, DictConfig, Path, str]:
+    """Initializes paths, loads vocoder and TTS model."""
+    output_dir = Path(output_path).parent
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    if load_vocoder_from_local and not vocoder_local_path:
+        if vocoder_name == "vocos":
+            vocoder_local_path = "../checkpoints/vocos-mel-24khz"
+        elif vocoder_name == "bigvgan":
+            vocoder_local_path = "../checkpoints/bigvgan_v2_24khz_100band_256x"
+        else:
+            print(
+                f"Warning: Unknown vocoder '{vocoder_name}' specified for local loading without a path. Defaulting to non-local."
+            )
+            load_vocoder_from_local = False
+
+    vocoder = load_vocoder(
+        vocoder_name=vocoder_name,
+        is_local=load_vocoder_from_local,
+        local_path=vocoder_local_path,
+        device=device,
+    )
+
+    if not model_cfg_path:
+        try:
+            model_cfg_path = str(files("f5_tts").joinpath(f"configs/{model_name}.yaml"))
+        except ModuleNotFoundError as e:
+            print(
+                "Warning: Could not find default config via package resources. Trying relative path."
+            )
+            _base_path = Path(__file__).parent.parent
+            model_cfg_path_rel = _base_path / f"configs/{model_name}.yaml"
+            if not model_cfg_path_rel.exists():
+                model_cfg_path_rel = _base_path.parent / f"configs/{model_name}.yaml"
+                if not model_cfg_path_rel.exists():
+                    raise FileNotFoundError(
+                        f"Default config for {model_name} not found via package resources or relative paths."
+                    ) from e
+            model_cfg_path = str(model_cfg_path_rel)
+
+    model_cfg = OmegaConf.load(model_cfg_path)
+    model_cls = get_class(f"f5_tts.model.{model_cfg.model.backbone}")
+    model_arc = model_cfg.model.arch
+
+    if not ckpt_file:
+        repo_name, ckpt_step, ckpt_type = "F5-TTS", 1250000, "safetensors"
+        if model_name == "F5TTS_Base":
+            if vocoder_name == "vocos":
+                ckpt_step = 1200000
+            elif vocoder_name == "bigvgan":
+                ckpt_type = "pt"
+                print(
+                    "Warning: Using F5TTS_Base with bigvgan requires specific checkpoint type (.pt)."
+                )
+        elif model_name == "E2TTS_Base":
+            repo_name = "E2-TTS"
+            ckpt_step = 1200000
+
+        ckpt_file_url = (
+            f"hf://SWivid/{repo_name}/{model_name}/model_{ckpt_step}.{ckpt_type}"
+        )
+        try:
+            ckpt_file = str(cached_path(ckpt_file_url))
+        except Exception as e:
+            raise ConnectionError(
+                f"Failed to download checkpoint from {ckpt_file_url}. Please check the URL or provide a local path."
+            ) from e
+
+    ema_model = load_model(
+        model_cls,
+        model_arc,
+        ckpt_file,
+        mel_spec_type=vocoder_name,
+        vocab_file=vocab_file,
+        device=device,
+    )
+    return ema_model, vocoder, model_cfg, output_dir, device
 
 
 def infer(
@@ -53,105 +142,29 @@ def infer(
     save_chunk: bool = False,
     silence_top_db: int = 60,
 ) -> tuple[bytes, int | None]:
-    output_dir = Path(output_path).parent
-    output_file_name = Path(output_path).name
-    output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Determine default vocoder path if local loading is requested but path isn't specified
-    if load_vocoder_from_local and not vocoder_local_path:
-        if vocoder_name == "vocos":
-            # Assuming a standard relative path structure
-            vocoder_local_path = "../checkpoints/vocos-mel-24khz"
-        elif vocoder_name == "bigvgan":
-            vocoder_local_path = "../checkpoints/bigvgan_v2_24khz_100band_256x"
-        else:
-            # Fallback or raise error if vocoder name is unknown and path is needed
-            print(
-                f"Warning: Unknown vocoder '{vocoder_name}' specified for local loading without a path."
-            )
-            # Decide how to handle this: maybe default to non-local or raise an error
-            load_vocoder_from_local = False  # Example: fallback to non-local
-
-    # Load Vocoder
-    vocoder = load_vocoder(
-        vocoder_name=vocoder_name,
-        is_local=load_vocoder_from_local,
-        local_path=vocoder_local_path,
-        device=device,
-    )
-
-    # Load TTS Model Config
-    if not model_cfg_path:
-        try:
-            model_cfg_path = str(files("f5_tts").joinpath(f"configs/{model_name}.yaml"))
-        except ModuleNotFoundError as e:
-            # Handle case where package resources aren't available (e.g., running directly from repo)
-            # This might require adjusting the path based on your project structure
-            print(
-                "Warning: Could not find default config via package resources. Trying relative path."
-            )
-            # Adjust this path as needed relative to where infer.py is located
-            model_cfg_path = Path(__file__).parent.parent / f"configs/{model_name}.yaml"
-            if not model_cfg_path.exists():
-                raise FileNotFoundError(
-                    f"Default config for {model_name} not found at {model_cfg_path}"
-                ) from e
-            model_cfg_path = str(model_cfg_path)
-
-    model_cfg = OmegaConf.load(model_cfg_path)
-    model_cls = get_class(f"f5_tts.model.{model_cfg.model.backbone}")
-    model_arc = model_cfg.model.arch
-
-    # Determine Checkpoint File
-    if not ckpt_file:
-        repo_name, ckpt_step, ckpt_type = "F5-TTS", 1250000, "safetensors"
-        # Adjust defaults based on model name as in CLI
-        if model_name == "F5TTS_Base":
-            if vocoder_name == "vocos":
-                ckpt_step = 1200000
-            elif vocoder_name == "bigvgan":
-                # Note: CLI logic changes model name here, which might be confusing.
-                # Consider if the user should explicitly pass "F5TTS_Base_bigvgan" instead.
-                # For now, mirroring CLI logic:
-                # model_name = "F5TTS_Base_bigvgan" # This changes the input arg, maybe not ideal
-                ckpt_type = "pt"
-                print(
-                    "Warning: Using F5TTS_Base with bigvgan requires specific checkpoint type (.pt)."
-                )
-        elif model_name == "E2TTS_Base":
-            repo_name = "E2-TTS"
-            ckpt_step = 1200000
-
-        ckpt_file = str(
-            cached_path(
-                f"hf://SWivid/{repo_name}/{model_name}/model_{ckpt_step}.{ckpt_type}"
-            )
-        )
-        print(f"Using default checkpoint: {ckpt_file}")
-
-    # Load TTS Model
-    print(f"Loading model {model_name} from {ckpt_file}...")
-    ema_model = load_model(
-        model_cls,
-        model_arc,
-        ckpt_file,
-        mel_spec_type=vocoder_name,
+    ema_model, vocoder, model_cfg, output_dir, device = _initialize_inference(
+        output_path=output_path,
+        model_name=model_name,
+        model_cfg_path=model_cfg_path,
+        ckpt_file=ckpt_file,
         vocab_file=vocab_file,
+        vocoder_name=vocoder_name,
+        load_vocoder_from_local=load_vocoder_from_local,
+        vocoder_local_path=vocoder_local_path,
         device=device,
     )
-    print("Model loaded.")
 
-    # Prepare voices dictionary
+    output_file_name = Path(output_path).name
+
     all_voices = {}
     if voices:
         all_voices.update(voices)
 
-    # Add the main voice provided via arguments
     all_voices["main"] = {"ref_audio": ref_audio, "ref_text": ref_text}
 
-    # Preprocess all reference audios and texts
     print("Preprocessing reference audio(s)...")
-    for voice_name, voice_data in all_voices.items():
+    for voice_name, voice_data in list(all_voices.items()):
         try:
             processed_audio, processed_text = preprocess_ref_audio_text(
                 voice_data["ref_audio"], voice_data["ref_text"]
@@ -161,19 +174,15 @@ def infer(
             print(f"  - Voice '{voice_name}': Processed.")
         except Exception as e:
             print(f"Error processing reference for voice '{voice_name}': {e}")
-            # Decide how to handle errors: skip voice, raise error?
-            # For now, let's remove the problematic voice
             del all_voices[voice_name]
             print(f"    Skipping voice '{voice_name}'.")
 
     if "main" not in all_voices:
-        raise ValueError("Main reference audio could not be processed.")
+        raise ValueError("Main reference audio could not be processed or was invalid.")
 
-    # Inference Process
     generated_audio_segments = []
-    final_sample_rate = None  # Will be set by infer_process
+    final_sample_rate = None
 
-    # Regex for splitting text by voice tags like [voice_name]
     reg_split = r"(?=\[\w+\])"
     reg_extract = r"\[(\w+)\]"
 
@@ -184,13 +193,12 @@ def infer(
         output_chunk_dir = output_dir / f"{Path(output_file_name).stem}_chunks"
         output_chunk_dir.mkdir(parents=True, exist_ok=True)
 
-    print("Starting inference...")
     for i, text_chunk in enumerate(chunks):
         if not text_chunk.strip():
             continue
 
         match = re.match(reg_extract, text_chunk)
-        current_voice_name = "main"  # Default voice
+        current_voice_name = "main"
         if match:
             extracted_voice = match.group(1)
             if extracted_voice in all_voices:
@@ -199,22 +207,15 @@ def infer(
                 print(
                     f"Warning: Voice tag '[{extracted_voice}]' not found in provided voices. Using 'main'."
                 )
-            # Remove the tag from the text to be synthesized
             text_to_synthesize = re.sub(reg_extract, "", text_chunk).strip()
         else:
             text_to_synthesize = text_chunk.strip()
-            # If no tag, assume it continues with the 'main' voice unless logic dictates otherwise
 
         if not text_to_synthesize:
             continue
 
-        print(
-            f"  - Synthesizing chunk {i+1} using voice '{current_voice_name}': '{text_to_synthesize[:50]}...'"
-        )
-
         current_ref_audio = all_voices[current_voice_name]["ref_audio"]
         current_ref_text = all_voices[current_voice_name]["ref_text"]
-
         try:
             audio_segment, sr, _ = infer_process(
                 current_ref_audio,
@@ -243,9 +244,9 @@ def infer(
                 print(f"    Saved chunk: {chunk_path}")
 
         except Exception as e:
-            print(f"Error during inference for chunk {i+1}: {e}")
-            # Decide how to handle: skip chunk, stop entirely?
-            print(f"    Skipping chunk: '{text_to_synthesize[:50]}...'")
+            raise RuntimeError(
+                f"Error during inference for voice '{current_voice_name}' with text '{text_to_synthesize}': {e}"
+            ) from e
 
     if not generated_audio_segments or final_sample_rate is None:
         print("No audio segments were generated.")
@@ -253,13 +254,10 @@ def infer(
 
     final_wave = np.concatenate(generated_audio_segments)
     if remove_silence:
-        print(f"Removing silence (top_db={silence_top_db})...")
         try:
             trimmed_wave, _ = librosa.effects.trim(final_wave, top_db=silence_top_db)
             if len(trimmed_wave) < len(final_wave):
                 final_wave = trimmed_wave
-            else:
-                print("No silence detected or removed.")
         except Exception as e:
             print(f"Error during silence removal: {e}")
     bytes_wav = io.BytesIO()
@@ -268,7 +266,6 @@ def infer(
             bytes_wav, final_wave, final_sample_rate, format="WAV", subtype="PCM_16"
         )
         wav_data = bytes_wav.getvalue()
-        print("Encoding complete.")
         return wav_data, final_sample_rate
     except Exception as e:
         print(f"Error encoding audio to bytes: {e}")
