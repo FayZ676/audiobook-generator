@@ -22,38 +22,34 @@ from tta_speech.types import InferenceParams
 
 
 def _initialize_inference(
-    output_path: str,
-    model_name: str,
-    model_cfg_path: Optional[str],
-    ckpt_file: Optional[str],
-    vocab_file: str,
-    vocoder_name: str,
-    load_vocoder_from_local: bool,
-    vocoder_local_path: str,
-    device: str,
-) -> Tuple[Any, Any, DictConfig, Path, str]:
+    params: InferenceParams,
+) -> Tuple[Any, Any, DictConfig, Path]:
     """Initializes paths, loads vocoder and TTS model."""
-    output_dir = Path(output_path).parent
+    output_dir = Path(params.output_path).parent
     output_dir.mkdir(parents=True, exist_ok=True)
 
     vocoder = load_vocoder(
-        vocoder_name=vocoder_name,
-        is_local=load_vocoder_from_local,
-        local_path=vocoder_local_path,
-        device=device,
+        vocoder_name=params.vocoder_name,
+        is_local=params.load_vocoder_from_local,
+        local_path=params.vocoder_local_path,
+        device=params.device,
     )
 
-    if not model_cfg_path:
+    if not params.model_cfg_path:
         try:
-            model_cfg_path = str(files("f5_tts").joinpath(f"configs/{model_name}.yaml"))
+            model_cfg_path = str(
+                files("f5_tts").joinpath(f"configs/{params.model_name}.yaml")
+            )
         except ModuleNotFoundError as e:
             _base_path = Path(__file__).parent.parent
-            model_cfg_path_rel = _base_path / f"configs/{model_name}.yaml"
+            model_cfg_path_rel = _base_path / f"configs/{params.model_name}.yaml"
             if not model_cfg_path_rel.exists():
-                model_cfg_path_rel = _base_path.parent / f"configs/{model_name}.yaml"
+                model_cfg_path_rel = (
+                    _base_path.parent / f"configs/{params.model_name}.yaml"
+                )
                 if not model_cfg_path_rel.exists():
                     raise FileNotFoundError(
-                        f"Default config for {model_name} not found via package resources or relative paths."
+                        f"Default config for {params.model_name} not found via package resources or relative paths."
                     ) from e
             model_cfg_path = str(model_cfg_path_rel)
 
@@ -61,10 +57,11 @@ def _initialize_inference(
     model_cls = get_class(f"f5_tts.model.{model_cfg.model.backbone}")
     model_arc = model_cfg.model.arch
 
-    if not ckpt_file:
+    ckpt_file = params.ckpt_file
+    if not params.ckpt_file:
         repo_name, ckpt_step, ckpt_type = "F5-TTS", 1250000, "safetensors"
         ckpt_file_url = (
-            f"hf://SWivid/{repo_name}/{model_name}/model_{ckpt_step}.{ckpt_type}"
+            f"hf://SWivid/{repo_name}/{params.model_name}/model_{ckpt_step}.{ckpt_type}"
         )
         try:
             ckpt_file = str(cached_path(ckpt_file_url))
@@ -77,11 +74,11 @@ def _initialize_inference(
         model_cls,
         model_arc,
         ckpt_file,
-        mel_spec_type=vocoder_name,
-        vocab_file=vocab_file,
-        device=device,
+        mel_spec_type=params.vocoder_name,
+        vocab_file=params.vocab_file,
+        device=params.device,
     )
-    return ema_model, vocoder, model_cfg, output_dir, device
+    return ema_model, vocoder, model_cfg, output_dir
 
 
 def _prepare_voices(
@@ -229,17 +226,7 @@ def _postprocess_and_encode(
 
 
 def infer(params: InferenceParams) -> tuple[bytes, int | None]:
-    ema_model, vocoder, model_cfg, output_dir, device = _initialize_inference(
-        output_path=params.output_path,
-        model_name=params.model_name,
-        model_cfg_path=params.model_cfg_path,
-        ckpt_file=params.ckpt_file,
-        vocab_file=params.vocab_file,
-        vocoder_name=params.vocoder_name,
-        load_vocoder_from_local=params.load_vocoder_from_local,
-        vocoder_local_path=params.vocoder_local_path,
-        device=params.device,
-    )
+    ema_model, vocoder, model_cfg, output_dir = _initialize_inference(params)
 
     prepared_voices = _prepare_voices(params.ref_audio, params.ref_text, params.voices)
     output_file_name = Path(params.output_path).name
@@ -251,7 +238,7 @@ def infer(params: InferenceParams) -> tuple[bytes, int | None]:
         vocoder=vocoder,
         vocoder_name=params.vocoder_name,
         infer_params=params,
-        device=device,
+        device=params.device,
         save_chunk=params.save_chunk,
         output_dir=output_dir,
         output_file_name=output_file_name,

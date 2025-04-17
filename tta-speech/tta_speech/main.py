@@ -4,6 +4,7 @@ from pydub.effects import normalize
 
 from tta_speech.voices.labels import voices
 from tta_speech.infer import infer
+from tta_speech.types import InferenceParams
 
 
 def normalize_audio_volume(audio_path: str, headroom: float = 0.1) -> str:
@@ -23,15 +24,17 @@ def generate(text: str, voice: str):
     if not voice:
         raise ValueError(f"Voice '{voice}' not found.")
     return infer(
-        ref_audio=voice_value.audio_path,  # type: ignore
-        ref_text=voice_value.audio_transcript,  # type: ignore
-        gen_text=text,
-        output_path="data/output.wav",
-        vocab_file=f"{Path(__file__).parent}/vocab.txt",
-        vocoder_name="vocos",
-        vocoder_local_path=f"{Path(__file__).parent}/vocos",
-        load_vocoder_from_local=True,
-        device="mps",
+        InferenceParams(
+            ref_audio=voice_value.audio_path,  # type: ignore
+            ref_text=voice_value.audio_transcript,  # type: ignore
+            gen_text=text,
+            output_path="data/output.wav",
+            vocab_file=f"{Path(__file__).parent}/vocab.txt",
+            vocoder_name="vocos",
+            vocoder_local_path=f"{Path(__file__).parent}/vocos",
+            load_vocoder_from_local=True,
+            device="mps",
+        )
     )
 
 

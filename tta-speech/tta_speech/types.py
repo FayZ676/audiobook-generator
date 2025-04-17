@@ -20,13 +20,13 @@ class InferenceParams:
     ref_text: str
     gen_text: str
     output_path: str
+    vocoder_name: str
+    vocoder_local_path: str
+    load_vocoder_from_local: bool
+    vocab_file: str
     model_name: str = "F5TTS_v1_Base"
     model_cfg_path: Optional[str] = None
     ckpt_file: Optional[str] = None
-    vocab_file: Optional[str] = None
-    vocoder_name: str = default_mel_spec_type
-    load_vocoder_from_local: bool = False
-    vocoder_local_path: Optional[str] = None
     target_rms: float = default_target_rms
     cross_fade_duration: float = default_cross_fade_duration
     nfe_step: int = default_nfe_step
