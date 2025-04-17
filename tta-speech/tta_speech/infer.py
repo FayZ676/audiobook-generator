@@ -117,6 +117,38 @@ def _initialize_inference(
     return ema_model, vocoder, model_cfg, output_dir, device
 
 
+def _prepare_voices(
+    ref_audio: str, ref_text: str, voices: Optional[Dict[str, Dict[str, str]]]
+) -> Dict[str, Dict[str, Any]]:
+    """Prepares and preprocesses the main and additional voices."""
+    all_voices = {}
+    if voices:
+        all_voices.update(voices)
+
+    all_voices["main"] = {"ref_audio": ref_audio, "ref_text": ref_text}
+
+    print("Preprocessing reference audio(s)...")
+    processed_voices = {}
+    for voice_name, voice_data in all_voices.items():
+        try:
+            processed_audio, processed_text = preprocess_ref_audio_text(
+                voice_data["ref_audio"], voice_data["ref_text"]
+            )
+            processed_voices[voice_name] = {
+                "ref_audio": processed_audio,
+                "ref_text": processed_text,
+            }
+            print(f"  - Voice '{voice_name}': Processed.")
+        except Exception as e:
+            print(f"Error processing reference for voice '{voice_name}': {e}")
+            print(f"    Skipping voice '{voice_name}'.")
+
+    if "main" not in processed_voices:
+        raise ValueError("Main reference audio could not be processed or was invalid.")
+
+    return processed_voices
+
+
 def infer(
     ref_audio: str,
     ref_text: str,
@@ -155,30 +187,8 @@ def infer(
         device=device,
     )
 
+    prepared_voices = _prepare_voices(ref_audio, ref_text, voices)
     output_file_name = Path(output_path).name
-
-    all_voices = {}
-    if voices:
-        all_voices.update(voices)
-
-    all_voices["main"] = {"ref_audio": ref_audio, "ref_text": ref_text}
-
-    print("Preprocessing reference audio(s)...")
-    for voice_name, voice_data in list(all_voices.items()):
-        try:
-            processed_audio, processed_text = preprocess_ref_audio_text(
-                voice_data["ref_audio"], voice_data["ref_text"]
-            )
-            all_voices[voice_name]["ref_audio"] = processed_audio
-            all_voices[voice_name]["ref_text"] = processed_text
-            print(f"  - Voice '{voice_name}': Processed.")
-        except Exception as e:
-            print(f"Error processing reference for voice '{voice_name}': {e}")
-            del all_voices[voice_name]
-            print(f"    Skipping voice '{voice_name}'.")
-
-    if "main" not in all_voices:
-        raise ValueError("Main reference audio could not be processed or was invalid.")
 
     generated_audio_segments = []
     final_sample_rate = None
@@ -201,7 +211,7 @@ def infer(
         current_voice_name = "main"
         if match:
             extracted_voice = match.group(1)
-            if extracted_voice in all_voices:
+            if extracted_voice in prepared_voices:
                 current_voice_name = extracted_voice
             else:
                 print(
@@ -214,8 +224,8 @@ def infer(
         if not text_to_synthesize:
             continue
 
-        current_ref_audio = all_voices[current_voice_name]["ref_audio"]
-        current_ref_text = all_voices[current_voice_name]["ref_text"]
+        current_ref_audio = prepared_voices[current_voice_name]["ref_audio"]
+        current_ref_text = prepared_voices[current_voice_name]["ref_text"]
         try:
             audio_segment, sr, _ = infer_process(
                 current_ref_audio,
