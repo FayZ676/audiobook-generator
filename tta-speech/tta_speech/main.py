@@ -28,6 +28,9 @@ def generate(text: str, voice: str):
         gen_text=text,
         output_path="data/output.wav",
         vocab_file=f"{Path(__file__).parent}/vocab.txt",
+        vocoder_name="vocos",
+        vocoder_local_path=f"{Path(__file__).parent}/vocos",
+        load_vocoder_from_local=True,
         device="mps",
     )
 

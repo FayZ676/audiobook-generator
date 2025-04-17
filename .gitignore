@@ -5,3 +5,6 @@ __pycache__
 .pytest_cache
 .vscode
 .venv
+
+pytorch_model.bin
+*.pt
