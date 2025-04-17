@@ -129,11 +129,127 @@ def _prepare_voices(
                 "ref_text": processed_text,
             }
         except Exception as e:
+            print(f"Error processing reference for voice '{voice_name}': {e}")
+            print(f"    Skipping voice '{voice_name}'.")
 
     if "main" not in processed_voices:
         raise ValueError("Main reference audio could not be processed or was invalid.")
 
     return processed_voices
+
+
+def _synthesize_text_chunks(
+    gen_text: str,
+    prepared_voices: Dict[str, Dict[str, Any]],
+    ema_model: Any,
+    vocoder: Any,
+    vocoder_name: str,
+    infer_params: Dict[str, Any],
+    device: str,
+    save_chunk: bool,
+    output_dir: Path,
+    output_file_name: str,
+) -> Tuple[list[np.ndarray], Optional[int]]:
+    """Synthesizes audio chunk by chunk based on voice tags."""
+    generated_audio_segments = []
+    final_sample_rate = None
+
+    reg_split = r"(?=\[\w+\])"
+    reg_extract = r"\[(\w+)\]"
+
+    chunks = re.split(reg_split, gen_text)
+
+    output_chunk_dir = None
+    if save_chunk:
+        output_chunk_dir = output_dir / f"{Path(output_file_name).stem}_chunks"
+        output_chunk_dir.mkdir(parents=True, exist_ok=True)
+
+    for i, text_chunk in enumerate(chunks):
+        if not text_chunk.strip():
+            continue
+
+        match = re.match(reg_extract, text_chunk)
+        current_voice_name = "main"
+        if match:
+            extracted_voice = match.group(1)
+            if extracted_voice in prepared_voices:
+                current_voice_name = extracted_voice
+            else:
+                # Consider adding logging here instead of print
+                print(
+                    f"Warning: Voice tag '[{extracted_voice}]' not found in provided voices. Using 'main'."
+                )
+            text_to_synthesize = re.sub(reg_extract, "", text_chunk).strip()
+        else:
+            text_to_synthesize = text_chunk.strip()
+
+        if not text_to_synthesize:
+            continue
+
+        current_ref_audio = prepared_voices[current_voice_name]["ref_audio"]
+        current_ref_text = prepared_voices[current_voice_name]["ref_text"]
+        try:
+            audio_segment, sr, _ = infer_process(
+                current_ref_audio,
+                current_ref_text,
+                text_to_synthesize,
+                ema_model,
+                vocoder,
+                mel_spec_type=vocoder_name,
+                target_rms=infer_params["target_rms"],
+                cross_fade_duration=infer_params["cross_fade_duration"],
+                nfe_step=infer_params["nfe_step"],
+                cfg_strength=infer_params["cfg_strength"],
+                sway_sampling_coef=infer_params["sway_sampling_coef"],
+                speed=infer_params["speed"],
+                fix_duration=infer_params["fix_duration"],
+                device=device,
+            )
+            generated_audio_segments.append(audio_segment)
+            if final_sample_rate is None:
+                final_sample_rate = sr
+
+            if save_chunk and output_chunk_dir:
+                chunk_filename = f"{i}_{text_to_synthesize[:30].replace(' ', '_')}.wav"
+                chunk_path = output_chunk_dir / chunk_filename
+                sf.write(str(chunk_path), audio_segment, sr)
+
+        except Exception as e:
+            raise RuntimeError(
+                f"Error during inference for voice '{current_voice_name}' with text '{text_to_synthesize}': {e}"
+            ) from e
+
+    return generated_audio_segments, final_sample_rate
+
+
+def _postprocess_and_encode(
+    audio_segments: list[np.ndarray],
+    sample_rate: int,
+    remove_silence: bool,
+    silence_top_db: int,
+) -> bytes:
+    """Concatenates audio segments, optionally removes silence, and encodes to WAV bytes."""
+    if not audio_segments:
+        return b""
+
+    final_wave = np.concatenate(audio_segments)
+    if remove_silence:
+        try:
+            trimmed_wave, _ = librosa.effects.trim(final_wave, top_db=silence_top_db)
+            if len(trimmed_wave) < len(final_wave):
+                final_wave = trimmed_wave
+        except Exception as e:
+            # Consider logging the error instead of printing
+            print(f"Warning: Failed to remove silence: {e}")
+
+    bytes_wav = io.BytesIO()
+    try:
+        sf.write(bytes_wav, final_wave, sample_rate, format="WAV", subtype="PCM_16")
+        return bytes_wav.getvalue()
+    except Exception as e:
+        # Consider logging the error instead of printing
+        print(f"Error writing final WAV: {e}")
+        return b""
 
 
 def infer(
@@ -177,88 +293,37 @@ def infer(
     prepared_voices = _prepare_voices(ref_audio, ref_text, voices)
     output_file_name = Path(output_path).name
 
-    generated_audio_segments = []
-    final_sample_rate = None
+    infer_params = {
+        "target_rms": target_rms,
+        "cross_fade_duration": cross_fade_duration,
+        "nfe_step": nfe_step,
+        "cfg_strength": cfg_strength,
+        "sway_sampling_coef": sway_sampling_coef,
+        "speed": speed,
+        "fix_duration": fix_duration,
+    }
 
-    reg_split = r"(?=\[\w+\])"
-    reg_extract = r"\[(\w+)\]"
-
-    chunks = re.split(reg_split, gen_text)
-
-    output_chunk_dir = None
-    if save_chunk:
-        output_chunk_dir = output_dir / f"{Path(output_file_name).stem}_chunks"
-        output_chunk_dir.mkdir(parents=True, exist_ok=True)
-
-    for i, text_chunk in enumerate(chunks):
-        if not text_chunk.strip():
-            continue
-
-        match = re.match(reg_extract, text_chunk)
-        current_voice_name = "main"
-        if match:
-            extracted_voice = match.group(1)
-            if extracted_voice in prepared_voices:
-                current_voice_name = extracted_voice
-            else:
-                    f"Warning: Voice tag '[{extracted_voice}]' not found in provided voices. Using 'main'."
-                )
-            text_to_synthesize = re.sub(reg_extract, "", text_chunk).strip()
-        else:
-            text_to_synthesize = text_chunk.strip()
-
-        if not text_to_synthesize:
-            continue
-
-        current_ref_audio = prepared_voices[current_voice_name]["ref_audio"]
-        current_ref_text = prepared_voices[current_voice_name]["ref_text"]
-        try:
-            audio_segment, sr, _ = infer_process(
-                current_ref_audio,
-                current_ref_text,
-                text_to_synthesize,
-                ema_model,
-                vocoder,
-                mel_spec_type=vocoder_name,
-                target_rms=target_rms,
-                cross_fade_duration=cross_fade_duration,
-                nfe_step=nfe_step,
-                cfg_strength=cfg_strength,
-                sway_sampling_coef=sway_sampling_coef,
-                speed=speed,
-                fix_duration=fix_duration,
-                device=device,
-            )
-            generated_audio_segments.append(audio_segment)
-            if final_sample_rate is None:
-                final_sample_rate = sr
-
-            if save_chunk and output_chunk_dir:
-                chunk_filename = f"{i}_{text_to_synthesize[:30].replace(' ', '_')}.wav"
-                chunk_path = output_chunk_dir / chunk_filename
-                sf.write(str(chunk_path), audio_segment, sr)
-
-        except Exception as e:
-            raise RuntimeError(
-                f"Error during inference for voice '{current_voice_name}' with text '{text_to_synthesize}': {e}"
-            ) from e
+    generated_audio_segments, final_sample_rate = _synthesize_text_chunks(
+        gen_text=gen_text,
+        prepared_voices=prepared_voices,
+        ema_model=ema_model,
+        vocoder=vocoder,
+        vocoder_name=vocoder_name,
+        infer_params=infer_params,
+        device=device,
+        save_chunk=save_chunk,
+        output_dir=output_dir,
+        output_file_name=output_file_name,
+    )
 
     if not generated_audio_segments or final_sample_rate is None:
         return b"", final_sample_rate
 
-    final_wave = np.concatenate(generated_audio_segments)
-    if remove_silence:
-        try:
-            trimmed_wave, _ = librosa.effects.trim(final_wave, top_db=silence_top_db)
-            if len(trimmed_wave) < len(final_wave):
-                final_wave = trimmed_wave
-        except Exception as e:
-    bytes_wav = io.BytesIO()
-    try:
-        sf.write(
-            bytes_wav, final_wave, final_sample_rate, format="WAV", subtype="PCM_16"
-        )
-        wav_data = bytes_wav.getvalue()
-        return wav_data, final_sample_rate
-    except Exception as e:
-        return b"", final_sample_rate
+    wav_data = _postprocess_and_encode(
+        audio_segments=generated_audio_segments,
+        sample_rate=final_sample_rate,
+        remove_silence=remove_silence,
+        silence_top_db=silence_top_db,
+    )
+
+    return wav_data, final_sample_rate
