@@ -120,7 +120,7 @@ def _synthesize_text_chunks(
     ema_model: Any,
     vocoder: Any,
     vocoder_name: str,
-    infer_params: Dict[str, Any],
+    infer_params: InferenceParams,
     device: str,
     save_chunk: bool,
     output_dir: Path,
@@ -172,13 +172,13 @@ def _synthesize_text_chunks(
                 ema_model,
                 vocoder,
                 mel_spec_type=vocoder_name,
-                target_rms=infer_params["target_rms"],
-                cross_fade_duration=infer_params["cross_fade_duration"],
-                nfe_step=infer_params["nfe_step"],
-                cfg_strength=infer_params["cfg_strength"],
-                sway_sampling_coef=infer_params["sway_sampling_coef"],
-                speed=infer_params["speed"],
-                fix_duration=infer_params["fix_duration"],
+                target_rms=infer_params.target_rms,
+                cross_fade_duration=infer_params.cross_fade_duration,
+                nfe_step=infer_params.nfe_step,
+                cfg_strength=infer_params.cfg_strength,
+                sway_sampling_coef=infer_params.sway_sampling_coef,
+                speed=infer_params.speed,
+                fix_duration=infer_params.fix_duration,
                 device=device,
             )
             generated_audio_segments.append(audio_segment)
@@ -229,7 +229,6 @@ def _postprocess_and_encode(
 
 
 def infer(params: InferenceParams) -> tuple[bytes, int | None]:
-
     ema_model, vocoder, model_cfg, output_dir, device = _initialize_inference(
         output_path=params.output_path,
         model_name=params.model_name,
@@ -245,23 +244,13 @@ def infer(params: InferenceParams) -> tuple[bytes, int | None]:
     prepared_voices = _prepare_voices(params.ref_audio, params.ref_text, params.voices)
     output_file_name = Path(params.output_path).name
 
-    infer_params = {
-        "target_rms": params.target_rms,
-        "cross_fade_duration": params.cross_fade_duration,
-        "nfe_step": params.nfe_step,
-        "cfg_strength": params.cfg_strength,
-        "sway_sampling_coef": params.sway_sampling_coef,
-        "speed": params.speed,
-        "fix_duration": params.fix_duration,
-    }
-
     generated_audio_segments, final_sample_rate = _synthesize_text_chunks(
         gen_text=params.gen_text,
         prepared_voices=prepared_voices,
         ema_model=ema_model,
         vocoder=vocoder,
         vocoder_name=params.vocoder_name,
-        infer_params=infer_params,
+        infer_params=params,
         device=device,
         save_chunk=params.save_chunk,
         output_dir=output_dir,
