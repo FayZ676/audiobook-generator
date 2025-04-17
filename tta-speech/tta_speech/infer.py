@@ -35,6 +35,7 @@ def _initialize_inference(
         device=params.device,
     )
 
+    model_cfg_path = params.model_cfg_path
     if not params.model_cfg_path:
         try:
             model_cfg_path = str(
