@@ -41,4 +41,18 @@ voices = [
         f"{Path(__file__).parent}/audios/stephen_fry.mp3",
         "At the moment, cosmos is chaos and only chaos because chaos is the only thing that is the case.",
     ),
+    Voice(
+        "Richard Armitage",
+        "middle-aged",
+        "male",
+        f"{Path(__file__).parent}/audios/richard_armitage.mp3",
+        "The first of our three golden rules; One, send a message to let us know where you are, closely followed by two, stick to your curfew.",
+    ),
+    Voice(
+        "Cathleen McCarron",
+        "middle-aged",
+        "female",
+        f"{Path(__file__).parent}/audios/cathleen_mccarron.mp3",
+        "Bessy Brunson took a deep breath and prepared to climb a flight of stairs for what seemed like the hundredth time since sunrise. It was not yet noon.",
+    ),
 ]
