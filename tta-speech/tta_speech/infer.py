@@ -9,7 +9,7 @@ import numpy as np
 import soundfile as sf
 from cached_path import cached_path
 from hydra.utils import get_class
-from omegaconf import OmegaConf, DictConfig
+from omegaconf import OmegaConf
 
 from f5_tts.infer.utils_infer import (
     infer_process,
