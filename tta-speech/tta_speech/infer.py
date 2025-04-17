@@ -12,20 +12,13 @@ from hydra.utils import get_class
 from omegaconf import OmegaConf, DictConfig
 
 from f5_tts.infer.utils_infer import (
-    mel_spec_type as default_mel_spec_type,
-    target_rms as default_target_rms,
-    cross_fade_duration as default_cross_fade_duration,
-    nfe_step as default_nfe_step,
-    cfg_strength as default_cfg_strength,
-    sway_sampling_coef as default_sway_sampling_coef,
-    speed as default_speed,
-    fix_duration as default_fix_duration,
-    device as default_device,
     infer_process,
     load_model,
     load_vocoder,
     preprocess_ref_audio_text,
 )
+
+from tta_speech.types import InferenceParams
 
 
 def _initialize_inference(
@@ -235,66 +228,42 @@ def _postprocess_and_encode(
         return b""
 
 
-def infer(
-    ref_audio: str,
-    ref_text: str,
-    gen_text: str,
-    output_path: str,
-    model_name: str = "F5TTS_v1_Base",
-    model_cfg_path: Optional[str] = None,
-    ckpt_file: Optional[str] = None,
-    vocab_file: Optional[str] = None,
-    vocoder_name: str = default_mel_spec_type,
-    load_vocoder_from_local: bool = False,
-    vocoder_local_path: Optional[str] = None,
-    target_rms: float = default_target_rms,
-    cross_fade_duration: float = default_cross_fade_duration,
-    nfe_step: int = default_nfe_step,
-    cfg_strength: float = default_cfg_strength,
-    sway_sampling_coef: float = default_sway_sampling_coef,
-    speed: float = default_speed,
-    fix_duration: float = default_fix_duration,
-    device: str = default_device,
-    remove_silence: bool = False,
-    voices: Optional[Dict[str, Dict[str, str]]] = None,
-    save_chunk: bool = False,
-    silence_top_db: int = 60,
-) -> tuple[bytes, int | None]:
+def infer(params: InferenceParams) -> tuple[bytes, int | None]:
 
     ema_model, vocoder, model_cfg, output_dir, device = _initialize_inference(
-        output_path=output_path,
-        model_name=model_name,
-        model_cfg_path=model_cfg_path,
-        ckpt_file=ckpt_file,
-        vocab_file=vocab_file,
-        vocoder_name=vocoder_name,
-        load_vocoder_from_local=load_vocoder_from_local,
-        vocoder_local_path=vocoder_local_path,
-        device=device,
+        output_path=params.output_path,
+        model_name=params.model_name,
+        model_cfg_path=params.model_cfg_path,
+        ckpt_file=params.ckpt_file,
+        vocab_file=params.vocab_file,
+        vocoder_name=params.vocoder_name,
+        load_vocoder_from_local=params.load_vocoder_from_local,
+        vocoder_local_path=params.vocoder_local_path,
+        device=params.device,
     )
 
-    prepared_voices = _prepare_voices(ref_audio, ref_text, voices)
-    output_file_name = Path(output_path).name
+    prepared_voices = _prepare_voices(params.ref_audio, params.ref_text, params.voices)
+    output_file_name = Path(params.output_path).name
 
     infer_params = {
-        "target_rms": target_rms,
-        "cross_fade_duration": cross_fade_duration,
-        "nfe_step": nfe_step,
-        "cfg_strength": cfg_strength,
-        "sway_sampling_coef": sway_sampling_coef,
-        "speed": speed,
-        "fix_duration": fix_duration,
+        "target_rms": params.target_rms,
+        "cross_fade_duration": params.cross_fade_duration,
+        "nfe_step": params.nfe_step,
+        "cfg_strength": params.cfg_strength,
+        "sway_sampling_coef": params.sway_sampling_coef,
+        "speed": params.speed,
+        "fix_duration": params.fix_duration,
     }
 
     generated_audio_segments, final_sample_rate = _synthesize_text_chunks(
-        gen_text=gen_text,
+        gen_text=params.gen_text,
         prepared_voices=prepared_voices,
         ema_model=ema_model,
         vocoder=vocoder,
-        vocoder_name=vocoder_name,
+        vocoder_name=params.vocoder_name,
         infer_params=infer_params,
         device=device,
-        save_chunk=save_chunk,
+        save_chunk=params.save_chunk,
         output_dir=output_dir,
         output_file_name=output_file_name,
     )
@@ -305,8 +274,8 @@ def infer(
     wav_data = _postprocess_and_encode(
         audio_segments=generated_audio_segments,
         sample_rate=final_sample_rate,
-        remove_silence=remove_silence,
-        silence_top_db=silence_top_db,
+        remove_silence=params.remove_silence,
+        silence_top_db=params.silence_top_db,
     )
 
     return wav_data, final_sample_rate
