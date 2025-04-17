@@ -33,23 +33,15 @@ def _initialize_inference(
     model_name: str,
     model_cfg_path: Optional[str],
     ckpt_file: Optional[str],
-    vocab_file: Optional[str],
+    vocab_file: str,
     vocoder_name: str,
     load_vocoder_from_local: bool,
-    vocoder_local_path: Optional[str],
+    vocoder_local_path: str,
     device: str,
 ) -> Tuple[Any, Any, DictConfig, Path, str]:
     """Initializes paths, loads vocoder and TTS model."""
     output_dir = Path(output_path).parent
     output_dir.mkdir(parents=True, exist_ok=True)
-
-    if load_vocoder_from_local and not vocoder_local_path:
-        if vocoder_name == "vocos":
-            vocoder_local_path = "../checkpoints/vocos-mel-24khz"
-        elif vocoder_name == "bigvgan":
-            vocoder_local_path = "../checkpoints/bigvgan_v2_24khz_100band_256x"
-        else:
-            load_vocoder_from_local = False
 
     vocoder = load_vocoder(
         vocoder_name=vocoder_name,
@@ -78,15 +70,6 @@ def _initialize_inference(
 
     if not ckpt_file:
         repo_name, ckpt_step, ckpt_type = "F5-TTS", 1250000, "safetensors"
-        if model_name == "F5TTS_Base":
-            if vocoder_name == "vocos":
-                ckpt_step = 1200000
-            elif vocoder_name == "bigvgan":
-                ckpt_type = "pt"
-        elif model_name == "E2TTS_Base":
-            repo_name = "E2-TTS"
-            ckpt_step = 1200000
-
         ckpt_file_url = (
             f"hf://SWivid/{repo_name}/{model_name}/model_{ckpt_step}.{ckpt_type}"
         )
