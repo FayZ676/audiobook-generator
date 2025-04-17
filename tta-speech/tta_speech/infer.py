@@ -23,7 +23,7 @@ from tta_speech.types import InferenceParams
 
 def _initialize_inference(
     params: InferenceParams,
-) -> Tuple[Any, Any, DictConfig, Path]:
+) -> Tuple[Any, Any, Path]:
     """Initializes paths, loads vocoder and TTS model."""
     output_dir = Path(params.output_path).parent
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -78,7 +78,7 @@ def _initialize_inference(
         vocab_file=params.vocab_file,
         device=params.device,
     )
-    return ema_model, vocoder, model_cfg, output_dir
+    return ema_model, vocoder, output_dir
 
 
 def _prepare_voices(
@@ -226,20 +226,20 @@ def _postprocess_and_encode(
 
 
 def infer(params: InferenceParams) -> tuple[bytes, int | None]:
-    ema_model, vocoder, model_cfg, output_dir = _initialize_inference(params)
+    ema_model, vocoder, output_dir = _initialize_inference(params)
 
     prepared_voices = _prepare_voices(params.ref_audio, params.ref_text, params.voices)
     output_file_name = Path(params.output_path).name
 
     generated_audio_segments, final_sample_rate = _synthesize_text_chunks(
         gen_text=params.gen_text,
-        prepared_voices=prepared_voices,
-        ema_model=ema_model,
-        vocoder=vocoder,
         vocoder_name=params.vocoder_name,
         infer_params=params,
         device=params.device,
         save_chunk=params.save_chunk,
+        ema_model=ema_model,
+        prepared_voices=prepared_voices,
+        vocoder=vocoder,
         output_dir=output_dir,
         output_file_name=output_file_name,
     )
