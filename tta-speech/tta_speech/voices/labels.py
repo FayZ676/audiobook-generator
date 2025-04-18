@@ -11,6 +11,8 @@ class Voice:
     audio_path: str
     audio_transcript: str
 
+    # TODO: Add a method to return the voice in the format created by infer._prepare_voices.
+
 
 voices = [
     Voice(

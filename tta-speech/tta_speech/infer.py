@@ -78,6 +78,7 @@ def _initialize_inference(
     return ema_model, vocoder
 
 
+# TODO: We shouldn't need this function. The Voice type should be able to return the prepared format.
 def _prepare_voices(
     ref_audio: str, ref_text: str, voices: Optional[Dict[str, Dict[str, str]]]
 ) -> Dict[str, Dict[str, Any]]:
@@ -108,8 +109,8 @@ def _prepare_voices(
     return processed_voices
 
 
-# TODO: Much of this function assumes that we are using multiple voices. It also assumes a certain structure for the voices and text. We can simplify this by using types.
-# TODO: Does this return multiple segments for multiple speaker audio? Or single segment?
+# NOTE: Much of this function assumes that we are using multiple voices. It also assumes a certain structure for the voices and text. We can simplify this by using types.
+# NOTE: Does this return multiple segments for multiple speaker audio? Or single segment?
 def _synthesize_text_chunks(
     gen_text: str,
     prepared_voices: Dict[str, Dict[str, Any]],
@@ -118,9 +119,9 @@ def _synthesize_text_chunks(
     vocoder_name: str,
     infer_params: InferenceParams,
     device: str,
-) -> Tuple[list[np.ndarray], Optional[int]]:
+):
     """Synthesizes audio chunk by chunk based on voice tags."""
-    generated_audio_segments = []
+    generated_audio_segments: list[np.ndarray] = []
     final_sample_rate = None
 
     # TODO: I don't like using regex here. Typing would be better for this.
@@ -154,7 +155,7 @@ def _synthesize_text_chunks(
         current_ref_audio = prepared_voices[current_voice_name]["ref_audio"]
         current_ref_text = prepared_voices[current_voice_name]["ref_text"]
         try:
-            audio_segment, sample_rate, _ = infer_process(
+            audio_segment, sample_rate, _ = infer_process(  # type: ignore
                 current_ref_audio,
                 current_ref_text,
                 text_to_synthesize,
@@ -170,9 +171,10 @@ def _synthesize_text_chunks(
                 fix_duration=infer_params.fix_duration,
                 device=device,
             )
+            if not isinstance(audio_segment, np.ndarray):
+                raise ValueError("Invalid audio segment generated.")
             generated_audio_segments.append(audio_segment)
-            if final_sample_rate is None:
-                final_sample_rate = sample_rate
+            final_sample_rate = final_sample_rate or sample_rate
 
         except Exception as e:
             raise RuntimeError(
