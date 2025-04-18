@@ -27,9 +27,7 @@ class Dialogue:
 
 
 @dataclass(eq=True, frozen=True)
-class DialogueDetails:
-    text: str
-    speaker: SpeakerDetails
+class DialogueDetails(Dialogue):
     voice_id: str
 
     def __str__(self) -> str:
