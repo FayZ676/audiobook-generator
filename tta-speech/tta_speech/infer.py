@@ -129,7 +129,7 @@ def _synthesize_text_chunks(
 
     chunks = re.split(reg_split, gen_text)
 
-    for i, text_chunk in enumerate(chunks):
+    for text_chunk in chunks:
         if not text_chunk.strip():
             continue
 
