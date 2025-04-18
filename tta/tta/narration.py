@@ -9,21 +9,13 @@ from tta_speech.main import generate
 from pydub import AudioSegment
 
 
-def preprocess_text(text: str) -> str:
-    text = text.strip()
-    if text.endswith(","):
-        text = text[:-1] + "."
-    return text[0].upper() + text[1:] + " "
-
-
 def get_narration_from_text(text: str) -> bytes:
     speaker_voices = get_voices(get_speaker_details(text))
     dialogue_details = get_dialogue_details(text, speaker_voices)
-    audio_segments = [
-        generate(preprocess_text(dialogue.text), dialogue.voice_id)
-        for dialogue in dialogue_details
-    ]
-    return build_audio(audio_segments)
+    audio_segments = generate(
+        [(dialogue.text, dialogue.voice_id) for dialogue in dialogue_details]
+    )
+    return build_audio([audio_segments])
 
 
 def build_audio(audio_segments: list[tuple[bytes, int | None]]) -> bytes:

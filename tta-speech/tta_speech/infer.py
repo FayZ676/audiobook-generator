@@ -2,7 +2,7 @@ import io
 import re
 from importlib.resources import files
 from pathlib import Path
-from typing import Optional, Dict, Tuple, Any
+from typing import Dict, Tuple, Any
 
 import librosa
 import numpy as np
@@ -79,18 +79,9 @@ def _initialize_inference(
 
 
 # TODO: We shouldn't need this function. The Voice type should be able to return the prepared format.
-def _prepare_voices(
-    ref_audio: str, ref_text: str, voices: Optional[Dict[str, Dict[str, str]]]
-) -> Dict[str, Dict[str, Any]]:
-    """Prepares and preprocesses the main and additional voices."""
-    all_voices = {}
-    if voices:
-        all_voices.update(voices)
-
-    all_voices["main"] = {"ref_audio": ref_audio, "ref_text": ref_text}
-
+def _prepare_voices(voices: Dict[str, Dict[str, str]]) -> Dict[str, Dict[str, Any]]:
     processed_voices = {}
-    for voice_name, voice_data in all_voices.items():
+    for voice_name, voice_data in voices.items():
         try:
             processed_audio, processed_text = preprocess_ref_audio_text(
                 voice_data["ref_audio"], voice_data["ref_text"]
@@ -102,15 +93,10 @@ def _prepare_voices(
         except Exception as e:
             print(f"Error processing reference for voice '{voice_name}': {e}")
             print(f"    Skipping voice '{voice_name}'.")
-
-    if "main" not in processed_voices:
-        raise ValueError("Main reference audio could not be processed or was invalid.")
-
     return processed_voices
 
 
 # NOTE: Much of this function assumes that we are using multiple voices. It also assumes a certain structure for the voices and text. We can simplify this by using types.
-# NOTE: Does this return multiple segments for multiple speaker audio? Or single segment?
 def _synthesize_text_chunks(
     gen_text: str,
     prepared_voices: Dict[str, Dict[str, Any]],
@@ -125,8 +111,8 @@ def _synthesize_text_chunks(
     final_sample_rate = None
 
     # TODO: I don't like using regex here. Typing would be better for this.
-    reg_split = r"(?=\[\w+\])"
-    reg_extract = r"\[(\w+)\]"
+    reg_split = r"(?=\[[^\]]+\])"
+    reg_extract = r"\[([\w\s]+)\]"
 
     chunks = re.split(reg_split, gen_text)
 
@@ -135,19 +121,20 @@ def _synthesize_text_chunks(
             continue
 
         match = re.match(reg_extract, text_chunk)
-        current_voice_name = "main"
+        current_voice_name: str | None = None
         if match:
             extracted_voice = match.group(1)
-            if extracted_voice in prepared_voices:
-                current_voice_name = extracted_voice
-            else:
-                # Consider adding logging here instead of print
-                print(
-                    f"Warning: Voice tag '[{extracted_voice}]' not found in provided voices. Using 'main'."
-                )
+            current_voice_name = (
+                extracted_voice if extracted_voice in prepared_voices else None
+            )
             text_to_synthesize = re.sub(reg_extract, "", text_chunk).strip()
         else:
             text_to_synthesize = text_chunk.strip()
+
+        if not current_voice_name:
+            raise ValueError(
+                f"All text chunks must be tagged with a voice name. Missing tag in '{text_chunk}'."
+            )
 
         if not text_to_synthesize:
             continue
@@ -214,10 +201,11 @@ def _postprocess_and_encode(
         return b""
 
 
+# TODO: This should return a list of tuples (audio, sample_rate) instead of a single tuple since we are doing multi speaker audio.
 def infer(params: InferenceParams) -> tuple[bytes, int | None]:
     ema_model, vocoder = _initialize_inference(params)
 
-    prepared_voices = _prepare_voices(params.ref_audio, params.ref_text, params.voices)
+    prepared_voices = _prepare_voices(params.voices)
 
     generated_audio_segments, final_sample_rate = _synthesize_text_chunks(
         gen_text=params.gen_text,
