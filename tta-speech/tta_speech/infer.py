@@ -23,11 +23,7 @@ from tta_speech.types import InferenceParams
 
 def _initialize_inference(
     params: InferenceParams,
-) -> Tuple[Any, Any, Path]:
-    """Initializes paths, loads vocoder and TTS model."""
-    output_dir = Path(params.output_path).parent
-    output_dir.mkdir(parents=True, exist_ok=True)
-
+) -> Tuple[Any, Any]:
     vocoder = load_vocoder(
         vocoder_name=params.vocoder_name,
         is_local=params.load_vocoder_from_local,
@@ -79,7 +75,7 @@ def _initialize_inference(
         vocab_file=params.vocab_file,
         device=params.device,
     )
-    return ema_model, vocoder, output_dir
+    return ema_model, vocoder
 
 
 def _prepare_voices(
@@ -112,6 +108,8 @@ def _prepare_voices(
     return processed_voices
 
 
+# TODO: Much of this function assumes that we are using multiple voices. It also assumes a certain structure for the voices and text. We can simplify this by using types.
+# TODO: Does this return multiple segments for multiple speaker audio? Or single segment?
 def _synthesize_text_chunks(
     gen_text: str,
     prepared_voices: Dict[str, Dict[str, Any]],
@@ -120,23 +118,16 @@ def _synthesize_text_chunks(
     vocoder_name: str,
     infer_params: InferenceParams,
     device: str,
-    save_chunk: bool,
-    output_dir: Path,
-    output_file_name: str,
 ) -> Tuple[list[np.ndarray], Optional[int]]:
     """Synthesizes audio chunk by chunk based on voice tags."""
     generated_audio_segments = []
     final_sample_rate = None
 
+    # TODO: I don't like using regex here. Typing would be better for this.
     reg_split = r"(?=\[\w+\])"
     reg_extract = r"\[(\w+)\]"
 
     chunks = re.split(reg_split, gen_text)
-
-    output_chunk_dir = None
-    if save_chunk:
-        output_chunk_dir = output_dir / f"{Path(output_file_name).stem}_chunks"
-        output_chunk_dir.mkdir(parents=True, exist_ok=True)
 
     for i, text_chunk in enumerate(chunks):
         if not text_chunk.strip():
@@ -163,7 +154,7 @@ def _synthesize_text_chunks(
         current_ref_audio = prepared_voices[current_voice_name]["ref_audio"]
         current_ref_text = prepared_voices[current_voice_name]["ref_text"]
         try:
-            audio_segment, sr, _ = infer_process(
+            audio_segment, sample_rate, _ = infer_process(
                 current_ref_audio,
                 current_ref_text,
                 text_to_synthesize,
@@ -181,12 +172,7 @@ def _synthesize_text_chunks(
             )
             generated_audio_segments.append(audio_segment)
             if final_sample_rate is None:
-                final_sample_rate = sr
-
-            if save_chunk and output_chunk_dir:
-                chunk_filename = f"{i}_{text_to_synthesize[:30].replace(' ', '_')}.wav"
-                chunk_path = output_chunk_dir / chunk_filename
-                sf.write(str(chunk_path), audio_segment, sr)
+                final_sample_rate = sample_rate
 
         except Exception as e:
             raise RuntimeError(
@@ -227,22 +213,18 @@ def _postprocess_and_encode(
 
 
 def infer(params: InferenceParams) -> tuple[bytes, int | None]:
-    ema_model, vocoder, output_dir = _initialize_inference(params)
+    ema_model, vocoder = _initialize_inference(params)
 
     prepared_voices = _prepare_voices(params.ref_audio, params.ref_text, params.voices)
-    output_file_name = Path(params.output_path).name
 
     generated_audio_segments, final_sample_rate = _synthesize_text_chunks(
         gen_text=params.gen_text,
         vocoder_name=params.vocoder_name,
         infer_params=params,
         device=params.device,
-        save_chunk=params.save_chunk,
         ema_model=ema_model,
         prepared_voices=prepared_voices,
         vocoder=vocoder,
-        output_dir=output_dir,
-        output_file_name=output_file_name,
     )
 
     if not generated_audio_segments or final_sample_rate is None:
