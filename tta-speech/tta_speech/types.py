@@ -13,6 +13,10 @@ from f5_tts.infer.utils_infer import (
 )
 
 
+VoiceName = str
+Text = str
+
+
 @dataclass
 class InferenceParams:
     ref_audio: str
@@ -38,3 +42,14 @@ class InferenceParams:
     voices: Optional[dict[str, dict[str, str]]] = None
     save_chunk: bool = False
     silence_top_db: int = 60
+
+
+@dataclass(frozen=True, eq=True)
+class Voice:
+    name: str
+    age: str
+    gender: str
+    audio_path: str
+    audio_transcript: str
+
+    # TODO: Add a method to return the voice in the format created by infer._prepare_voices.

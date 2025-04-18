@@ -1,17 +1,6 @@
 from pathlib import Path
 
-from dataclasses import dataclass
-
-
-@dataclass(frozen=True, eq=True)
-class Voice:
-    name: str
-    age: str
-    gender: str
-    audio_path: str
-    audio_transcript: str
-
-    # TODO: Add a method to return the voice in the format created by infer._prepare_voices.
+from tta_speech.types import Voice
 
 
 voices = [
