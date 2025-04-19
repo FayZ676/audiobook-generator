@@ -8,7 +8,7 @@ from tta.dialogue.extract import (
     label,
     label_dialogue,
 )
-from tta.dialogue.types import TextSegment, DialogueLabel
+from tta.dialogue.types import TextSegment, DialogueLabel, DialogueDetails
 from tta.character.types import SpeakerDetails
 from tta.voices import SpeakerVoice, Voice
 
@@ -17,6 +17,21 @@ def get_text(filename: str) -> str:
     current_dir = Path(__file__).parent
     with open(f"{current_dir}/text/{filename}", "r", encoding="utf-8") as f:
         return f.read()
+
+
+def get_dialogue_expectation(filename: str):
+    details: list[DialogueDetails] = []
+    text = get_text(filename)
+    for segment in text.split("\n"):
+        split = segment.split(":")
+        details.append(
+            DialogueDetails(
+                SpeakerDetails(frozenset({split[0].strip()}), "middle-aged", "female"),
+                split[1].strip(),
+                "foo",
+            )
+        )
+    return details
 
 
 @pytest.mark.integration
@@ -75,48 +90,42 @@ def test_create_text_batches():
     assert create_text_batches(texts, 2) == expected_batches
 
 
-if __name__ == "__main__":
-
-    def test_get_dialogue_nlp__hp_sample():
-        speakers = {
-            SpeakerVoice(
-                SpeakerDetails(
-                    frozenset({"Professor McGonagall"}), "middle-aged", "male"
-                ),
-                Voice("name", "male", "young", "foo", "bar"),
+@pytest.mark.integration
+def test_get_dialogue_details():
+    speakers = {
+        SpeakerVoice(
+            SpeakerDetails(frozenset({"Professor McGonagall"}), "middle-aged", "male"),
+            Voice("name", "male", "young", "foo", "bar"),
+        ),
+        SpeakerVoice(
+            SpeakerDetails(frozenset({"Albus Dumbledore"}), "middle-aged", "male"),
+            Voice("name", "male", "young", "foo", "bar"),
+        ),
+        SpeakerVoice(
+            SpeakerDetails(
+                frozenset({"Mrs. Dursley", "Aunt Petunia"}), "middle-aged", "male"
             ),
-            SpeakerVoice(
-                SpeakerDetails(frozenset({"Albus Dumbledore"}), "middle-aged", "male"),
-                Voice("name", "male", "young", "foo", "bar"),
+            Voice("name", "male", "young", "foo", "bar"),
+        ),
+        SpeakerVoice(
+            SpeakerDetails(
+                frozenset({"Mr. Dursley", "Uncle Vernon"}), "middle-aged", "male"
             ),
-            SpeakerVoice(
-                SpeakerDetails(
-                    frozenset({"Mrs. Dursley", "Aunt Petunia"}), "middle-aged", "male"
-                ),
-                Voice("name", "male", "young", "foo", "bar"),
-            ),
-            SpeakerVoice(
-                SpeakerDetails(
-                    frozenset({"Mr. Dursley", "Uncle Vernon"}), "middle-aged", "male"
-                ),
-                Voice("name", "male", "young", "foo", "bar"),
-            ),
-            SpeakerVoice(
-                SpeakerDetails(frozenset({"Hagrid"}), "middle-aged", "male"),
-                Voice("name", "male", "young", "foo", "bar"),
-            ),
-            SpeakerVoice(
-                SpeakerDetails(frozenset({"Dudley"}), "middle-aged", "male"),
-                Voice("name", "male", "young", "foo", "bar"),
-            ),
-            SpeakerVoice(
-                SpeakerDetails(frozenset({"Harry Potter"}), "middle-aged", "male"),
-                Voice("name", "male", "young", "foo", "bar"),
-            ),
-        }
-        result = get_dialogue_details(get_text("harrypotter-1.txt"), speakers)
-        with open("output.txt", "wt") as f:
-            for r in result:
-                f.write(f"{r}\n")
-
-    test_get_dialogue_nlp__hp_sample()
+            Voice("name", "male", "young", "foo", "bar"),
+        ),
+        SpeakerVoice(
+            SpeakerDetails(frozenset({"Hagrid"}), "middle-aged", "male"),
+            Voice("name", "male", "young", "foo", "bar"),
+        ),
+        SpeakerVoice(
+            SpeakerDetails(frozenset({"Dudley"}), "middle-aged", "male"),
+            Voice("name", "male", "young", "foo", "bar"),
+        ),
+        SpeakerVoice(
+            SpeakerDetails(frozenset({"Harry Potter"}), "middle-aged", "male"),
+            Voice("name", "male", "young", "foo", "bar"),
+        ),
+    }
+    expectation = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
+    result = get_dialogue_details(get_text("harrypotter-1.txt"), speakers)
+    assert get_dialogue_expectation("harrypotter-1.txt") == result
