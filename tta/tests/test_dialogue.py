@@ -83,35 +83,35 @@ if __name__ == "__main__":
                 SpeakerDetails(
                     frozenset({"Professor McGonagall"}), "middle-aged", "male"
                 ),
-                Voice("name", "male", "young", "abc123"),
+                Voice("name", "male", "young", "foo", "bar"),
             ),
             SpeakerVoice(
                 SpeakerDetails(frozenset({"Albus Dumbledore"}), "middle-aged", "male"),
-                Voice("name", "male", "young", "abc123"),
+                Voice("name", "male", "young", "foo", "bar"),
             ),
             SpeakerVoice(
                 SpeakerDetails(
                     frozenset({"Mrs. Dursley", "Aunt Petunia"}), "middle-aged", "male"
                 ),
-                Voice("name", "male", "young", "abc123"),
+                Voice("name", "male", "young", "foo", "bar"),
             ),
             SpeakerVoice(
                 SpeakerDetails(
                     frozenset({"Mr. Dursley", "Uncle Vernon"}), "middle-aged", "male"
                 ),
-                Voice("name", "male", "young", "abc123"),
+                Voice("name", "male", "young", "foo", "bar"),
             ),
             SpeakerVoice(
                 SpeakerDetails(frozenset({"Hagrid"}), "middle-aged", "male"),
-                Voice("name", "male", "young", "abc123"),
+                Voice("name", "male", "young", "foo", "bar"),
             ),
             SpeakerVoice(
                 SpeakerDetails(frozenset({"Dudley"}), "middle-aged", "male"),
-                Voice("name", "male", "young", "abc123"),
+                Voice("name", "male", "young", "foo", "bar"),
             ),
             SpeakerVoice(
                 SpeakerDetails(frozenset({"Harry Potter"}), "middle-aged", "male"),
-                Voice("name", "male", "young", "abc123"),
+                Voice("name", "male", "young", "foo", "bar"),
             ),
         }
         result = get_dialogue_details(get_text("harrypotter-1-3.txt"), speakers)
