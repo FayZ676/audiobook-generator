@@ -114,7 +114,7 @@ if __name__ == "__main__":
                 Voice("name", "male", "young", "foo", "bar"),
             ),
         }
-        result = get_dialogue_details(get_text("harrypotter-1-3.txt"), speakers)
+        result = get_dialogue_details(get_text("harrypotter-1.txt"), speakers)
         with open("output.txt", "wt") as f:
             for r in result:
                 f.write(f"{r}\n")
