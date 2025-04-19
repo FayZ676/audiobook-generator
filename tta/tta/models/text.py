@@ -12,6 +12,7 @@ def generate_text(system_prompt: str, prompt: str, response_format) -> str:
     try:
         return str(
             client.beta.chat.completions.parse(
+                # TODO: Try with gpt-4.1
                 model="gpt-4o-2024-08-06",
                 messages=[
                     {"role": "system", "content": system_prompt},
