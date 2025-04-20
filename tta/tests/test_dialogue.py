@@ -6,6 +6,7 @@ from tta.dialogue.extract import (
     get_dialogue_details,
     create_text_batches,
     label,
+    label_nlp,
     label_dialogue,
     split_by_dialogue,
 )
@@ -68,6 +69,25 @@ def test_label():
     assert label(dialogues, speakers) == [
         DialogueLabel(index=0, speaker="Bob"),
         DialogueLabel(index=2, speaker="Mary"),
+    ]
+
+
+def test_label_nlp():
+    dialogues = {
+        0: TextSegment("Hello, how are you?", True),
+        1: TextSegment("asked Bob.", False),
+        2: TextSegment("Great! How about you?", True),
+        3: TextSegment("replied Mary.", False),
+    }
+    speakers = {
+        SpeakerDetails(frozenset({"Bob"}), "middle-aged", "male"),
+        SpeakerDetails(frozenset({"Mary"}), "middle-aged", "female"),
+    }
+    assert label_nlp(dialogues, speakers) == [
+        DialogueLabel(index=0, speaker="Bob"),
+        DialogueLabel(index=1, speaker="Narrator"),
+        DialogueLabel(index=2, speaker="Mary"),
+        DialogueLabel(index=3, speaker="Narrator"),
     ]
 
 

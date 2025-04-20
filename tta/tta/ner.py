@@ -3,6 +3,7 @@ from spacy.language import Language
 from spacy.tokens import Span, Doc
 
 from tta.text_utils import HONORIFICS
+from tta.character.types import SpeakerDetails
 
 
 def is_plural(ent: Span):
@@ -45,3 +46,43 @@ class NER:
             if token.pos_ == pos:
                 return True
         return False
+
+    def find_speaker(
+        self, preceeding_text: str, following_text: str, speakers: set[SpeakerDetails]
+    ) -> str | None:
+        names: set[str] = {
+            name for names in {s.names for s in speakers} for name in names
+        }
+        doc_following = self.nlp(following_text.strip())
+        if len(doc_following) > 1 and doc_following[0].pos_ == "VERB":
+            for ent in doc_following.ents:
+                if ent.label_ == "PERSON" and ent.start == 1 and ent.text in names:
+                    return ent.text
+            if doc_following[1].text in names:
+                return doc_following[1].text
+
+        doc_preceeding = self.nlp(preceeding_text.strip())
+        if len(doc_preceeding) > 1:
+            last_verb_token = None
+            for i in range(len(doc_preceeding) - 1, -1, -1):
+                token = doc_preceeding[i]
+                if token.pos_ == "PUNCT":
+                    continue
+                if token.pos_ == "VERB":
+                    last_verb_token = token
+                break
+            if last_verb_token:
+                for ent in doc_preceeding.ents:
+                    if (
+                        ent.label_ == "PERSON"
+                        and ent.end == last_verb_token.i
+                        and ent.text in names
+                    ):
+                        return ent.text
+                if (
+                    last_verb_token.i > 0
+                    and doc_preceeding[last_verb_token.i - 1].text in names
+                ):
+                    return doc_preceeding[last_verb_token.i - 1].text
+
+        return None
