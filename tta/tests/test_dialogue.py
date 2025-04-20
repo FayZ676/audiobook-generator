@@ -92,40 +92,27 @@ def test_create_text_batches():
 
 @pytest.mark.integration
 def test_get_dialogue_details():
+    def build_speaker_voice(names: set[str]) -> SpeakerVoice:
+        return SpeakerVoice(
+            SpeakerDetails(frozenset(names), "middle-aged", "male"),
+            Voice("name", "male", "young", "foo", "bar"),
+        )
+
     speakers = {
-        SpeakerVoice(
-            SpeakerDetails(frozenset({"Professor McGonagall"}), "middle-aged", "male"),
-            Voice("name", "male", "young", "foo", "bar"),
-        ),
-        SpeakerVoice(
-            SpeakerDetails(frozenset({"Albus Dumbledore"}), "middle-aged", "male"),
-            Voice("name", "male", "young", "foo", "bar"),
-        ),
-        SpeakerVoice(
-            SpeakerDetails(
-                frozenset({"Mrs. Dursley", "Aunt Petunia"}), "middle-aged", "male"
-            ),
-            Voice("name", "male", "young", "foo", "bar"),
-        ),
-        SpeakerVoice(
-            SpeakerDetails(
-                frozenset({"Mr. Dursley", "Uncle Vernon"}), "middle-aged", "male"
-            ),
-            Voice("name", "male", "young", "foo", "bar"),
-        ),
-        SpeakerVoice(
-            SpeakerDetails(frozenset({"Hagrid"}), "middle-aged", "male"),
-            Voice("name", "male", "young", "foo", "bar"),
-        ),
-        SpeakerVoice(
-            SpeakerDetails(frozenset({"Dudley"}), "middle-aged", "male"),
-            Voice("name", "male", "young", "foo", "bar"),
-        ),
-        SpeakerVoice(
-            SpeakerDetails(frozenset({"Harry Potter"}), "middle-aged", "male"),
-            Voice("name", "male", "young", "foo", "bar"),
-        ),
+        build_speaker_voice({"Professor McGonagall"}),
+        build_speaker_voice({"Albus Dumbledore"}),
+        build_speaker_voice({"Mrs. Dursley", "Aunt Petunia"}),
+        build_speaker_voice({"Mr. Dursley", "Uncle Vernon"}),
+        build_speaker_voice({"Hagrid"}),
+        build_speaker_voice({"Dudley"}),
+        build_speaker_voice({"Harry Potter"}),
     }
-    expectation = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
-    result = get_dialogue_details(get_text("harrypotter-1.txt"), speakers)
-    assert get_dialogue_expectation("harrypotter-1.txt") == result
+    result = {
+        d.speaker.names: d.text
+        for d in get_dialogue_details(get_text("harrypotter-1.txt"), speakers)
+    }
+    expectation = {
+        d.speaker.names: d.text
+        for d in get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
+    }
+    assert result == expectation
