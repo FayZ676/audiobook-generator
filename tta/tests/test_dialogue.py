@@ -7,6 +7,7 @@ from tta.dialogue.extract import (
     create_text_batches,
     label,
     label_dialogue,
+    split_by_dialogue,
 )
 from tta.dialogue.types import TextSegment, DialogueLabel, DialogueDetails
 from tta.character.types import SpeakerDetails
@@ -107,12 +108,12 @@ def test_get_dialogue_details():
         build_speaker_voice({"Dudley"}),
         build_speaker_voice({"Harry Potter"}),
     }
-    result = {
-        d.speaker.names: d.text
-        for d in get_dialogue_details(get_text("harrypotter-1.txt"), speakers)
-    }
-    expectation = {
-        d.speaker.names: d.text
-        for d in get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
-    }
-    assert result == expectation
+    result = get_dialogue_details(get_text("harrypotter-1.txt"), speakers)
+    expectation = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
+    assert [r.text for r in result] == [e.text for e in expectation]
+
+
+def test_split_by_dialogue():
+    result = split_by_dialogue(get_text("harrypotter-1.txt"))
+    expectation = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
+    assert [r.text for r in result] == [e.text for e in expectation]
