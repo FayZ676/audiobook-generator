@@ -72,25 +72,6 @@ def test_label():
     ]
 
 
-def test_label_nlp():
-    dialogues = {
-        0: TextSegment("Hello, how are you?", True),
-        1: TextSegment("asked Bob.", False),
-        2: TextSegment("Great! How about you?", True),
-        3: TextSegment("replied Mary.", False),
-    }
-    speakers = {
-        SpeakerDetails(frozenset({"Bob"}), "middle-aged", "male"),
-        SpeakerDetails(frozenset({"Mary"}), "middle-aged", "female"),
-    }
-    assert label_nlp(dialogues, speakers) == [
-        DialogueLabel(index=0, speaker="Bob"),
-        DialogueLabel(index=1, speaker="Narrator"),
-        DialogueLabel(index=2, speaker="Mary"),
-        DialogueLabel(index=3, speaker="Narrator"),
-    ]
-
-
 def test_create_text_batches():
     texts = [
         TextSegment("Hello, how are you?", True),
@@ -137,3 +118,26 @@ def test_split_by_dialogue():
     result = split_by_dialogue(get_text("harrypotter-1.txt"))
     expectation = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
     assert [r.text for r in result] == [e.text for e in expectation]
+
+
+def test_label_nlp():
+    def build_speaker_details(names: set[str]) -> SpeakerDetails:
+        return SpeakerDetails(frozenset(names), "middle-aged", "female")
+
+    dialogues: dict[int, TextSegment] = {}
+    expectation = [
+        DialogueLabel(i, e.speaker.first_alias())
+        for i, e in enumerate(
+            get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
+        )
+    ]
+    speakers = {
+        build_speaker_details({"Professor McGonagall"}),
+        build_speaker_details({"Albus Dumbledore"}),
+        build_speaker_details({"Mrs. Dursley", "Aunt Petunia"}),
+        build_speaker_details({"Mr. Dursley", "Uncle Vernon"}),
+        build_speaker_details({"Hagrid"}),
+        build_speaker_details({"Dudley"}),
+        build_speaker_details({"Harry Potter"}),
+    }
+    assert label_nlp(dialogues, speakers) == expectation
