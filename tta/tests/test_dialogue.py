@@ -124,8 +124,12 @@ def test_label_nlp():
     def build_speaker_details(names: set[str]) -> SpeakerDetails:
         return SpeakerDetails(frozenset(names), "middle-aged", "female")
 
-    dialogues: dict[int, TextSegment] = {}
-    expectation = [
+    expectation = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
+    dialogues: dict[int, TextSegment] = {
+        i: TextSegment(e.text, False if e.speaker == "Narrator" else True)
+        for i, e in enumerate(expectation)
+    }
+    expectated_dialogues = [
         DialogueLabel(i, e.speaker.first_alias())
         for i, e in enumerate(
             get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
@@ -140,4 +144,4 @@ def test_label_nlp():
         build_speaker_details({"Dudley"}),
         build_speaker_details({"Harry Potter"}),
     }
-    assert label_nlp(dialogues, speakers) == expectation
+    assert label_nlp(dialogues, speakers) == expectated_dialogues
