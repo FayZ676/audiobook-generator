@@ -104,8 +104,12 @@ def label_nlp(texts: dict[int, TextSegment], speakers: set[SpeakerDetails]):
     for i, text in texts.items():
         if text.dialogue:
             found = ner.find_speaker(
-                texts[i - 1].text if i > 0 else "",
-                texts[i + 1].text if i + 1 < len(texts) else "",
+                texts[i - 1].text if i > 0 and not texts[i - 1].dialogue else "",
+                (
+                    texts[i + 1].text
+                    if i + 1 < len(texts) and not texts[i - 1].dialogue
+                    else ""
+                ),
                 speakers=speakers,
             )
             speaker = found if found else "Narrator"
