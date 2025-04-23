@@ -86,6 +86,6 @@ class NER:
 
         if preceeding := analyze_preceeding(preceeding_text):
             return preceeding
-        elif following := analyze_following(following_text):
+        if following := analyze_following(following_text):
             return following
         return None
