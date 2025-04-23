@@ -48,11 +48,8 @@ class NER:
         return False
 
     def find_speaker(
-        self, preceeding_text: str, following_text: str, speakers: set[SpeakerDetails]
+        self, preceeding_text: str, following_text: str, names: set[str]
     ) -> str | None:
-        names: set[str] = {
-            name for names in {s.names for s in speakers} for name in names
-        }
         doc_following = self.nlp(following_text.strip())
         if len(doc_following) > 1 and doc_following[0].pos_ == "VERB":
             for ent in doc_following.ents:
