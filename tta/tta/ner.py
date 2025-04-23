@@ -51,27 +51,27 @@ class NER:
         self, preceeding_text: str, following_text: str, names: set[str]
     ) -> str | None:
         def analyze_following(text: str):
-            doc_following = self.nlp(text.strip())
-            if len(doc_following) > 1 and doc_following[0].pos_ == "VERB":
-                for ent in doc_following.ents:
+            doc = self.nlp(text.strip())
+            if len(doc) > 1 and doc[0].pos_ == "VERB":
+                for ent in doc.ents:
                     if ent.label_ == "PERSON" and ent.start == 1 and ent.text in names:
                         return ent.text
-                if doc_following[1].text in names:
-                    return doc_following[1].text
+                if doc[1].text in names:
+                    return doc[1].text
 
         def analyze_preceeding(text: str):
-            doc_preceeding = self.nlp(text.strip())
-            if len(doc_preceeding) > 1:
+            doc = self.nlp(text.strip())
+            if len(doc) > 1:
                 last_verb_token = None
-                for i in range(len(doc_preceeding) - 1, -1, -1):
-                    token = doc_preceeding[i]
+                for i in range(len(doc) - 1, -1, -1):
+                    token = doc[i]
                     if token.pos_ == "PUNCT":
                         continue
                     if token.pos_ == "VERB":
                         last_verb_token = token
                     break
                 if last_verb_token:
-                    for ent in doc_preceeding.ents:
+                    for ent in doc.ents:
                         if (
                             ent.label_ == "PERSON"
                             and ent.end == last_verb_token.i
@@ -80,9 +80,9 @@ class NER:
                             return ent.text
                     if (
                         last_verb_token.i > 0
-                        and doc_preceeding[last_verb_token.i - 1].text in names
+                        and doc[last_verb_token.i - 1].text in names
                     ):
-                        return doc_preceeding[last_verb_token.i - 1].text
+                        return doc[last_verb_token.i - 1].text
 
         if preceeding := analyze_preceeding(preceeding_text):
             return preceeding
