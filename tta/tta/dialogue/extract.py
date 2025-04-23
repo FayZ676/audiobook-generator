@@ -100,12 +100,12 @@ def label(
 
 def label_nlp(texts: dict[int, TextSegment], speakers: set[SpeakerDetails]):
     def validate_preceeding_text(i: int) -> str:
-        if i > 0 and not texts[i - 1].dialogue:
+        if i > 0:
             return texts[i - 1].text
         return ""
 
     def validate_following_text(i: int) -> str:
-        if i + 1 < len(texts) and not texts[i + 1].dialogue:
+        if i + 1 < len(texts):
             return texts[i + 1].text
         return ""
 
