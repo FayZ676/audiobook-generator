@@ -3,7 +3,6 @@ from spacy.language import Language
 from spacy.tokens import Span, Doc
 
 from tta.text_utils import HONORIFICS
-from tta.character.types import SpeakerDetails
 
 
 def is_plural(ent: Span):
