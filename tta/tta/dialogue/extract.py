@@ -11,7 +11,6 @@ from tta.dialogue.types import (
 from tta.character.types import SpeakerDetails
 from tta.voices import SpeakerVoice, NarratorVoice
 from tta.models.text import generate_text
-from tta.ner import NER
 
 
 def get_dialogue_details(text: str, speakers_voices: set[SpeakerVoice]):
@@ -96,34 +95,6 @@ def label(
         f"Invalid number of labels returned after {max_retries} retries: "
         f"Expected {len(dialogue)} (at most), but got more."
     )
-
-
-def label_nlp(texts: dict[int, TextSegment], speakers: set[SpeakerDetails]):
-    def validate_preceeding_text(i: int) -> str:
-        if i > 0:
-            return texts[i - 1].text
-        return ""
-
-    def validate_following_text(i: int) -> str:
-        if i + 1 < len(texts):
-            return texts[i + 1].text
-        return ""
-
-    names = {s.first_alias() for s in speakers}
-    ner = NER()
-    result: list[DialogueLabel] = []
-    for i, text in texts.items():
-        if text.dialogue:
-            found = ner.find_speaker(
-                validate_preceeding_text(i),
-                validate_following_text(i),
-                names,
-            )
-            speaker = found if found else "Narrator"
-        else:
-            speaker = "Narrator"
-        result.append(DialogueLabel(i, speaker))
-    return result
 
 
 def split_by_dialogue(text: str) -> list[TextSegment]:
