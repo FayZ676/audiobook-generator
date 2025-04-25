@@ -16,7 +16,6 @@ def generate_text(system_prompt: str, prompt: str, response_format) -> str:
                 model="gpt-4o-2024-08-06",
                 messages=[
                     {"role": "system", "content": system_prompt},
-                    {"role": "system", "content": ""},
                     {"role": "user", "content": prompt},
                 ],
                 response_format=response_format,
