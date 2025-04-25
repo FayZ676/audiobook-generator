@@ -54,6 +54,47 @@ def test_label_dialogue():
 
 
 @pytest.mark.integration
+def test_label_dialogue__large():
+    def build_speaker_details(names: set[str]) -> SpeakerDetails:
+        return SpeakerDetails(frozenset(names), "middle-aged", "female")
+
+    def get_expectation(filename: str, speakers: set[SpeakerDetails]):
+        return [
+            DialogueDetails(s, e.text, "foo")
+            for e in get_dialogue_expectation(filename)
+            for s in speakers
+            if e.speaker.names.issubset(s.names)
+        ]
+
+    speakers = {
+        build_speaker_details({"Narrator"}),
+        build_speaker_details({"Professor McGonagall"}),
+        build_speaker_details({"Albus Dumbledore"}),
+        build_speaker_details({"Mrs. Dursley", "Aunt Petunia"}),
+        build_speaker_details({"Mr. Dursley", "Uncle Vernon"}),
+        build_speaker_details({"Hagrid"}),
+        build_speaker_details({"Dudley"}),
+        build_speaker_details({"Harry Potter"}),
+    }
+    expectation = get_expectation("harrypotter-1-expected-dialogue.txt", speakers)
+    dialogues = [
+        TextSegment(e.text, False if e.speaker == "Narrator" else True)
+        for e in expectation
+    ]
+    result = label_dialogue(dialogues, speakers)
+    expectated_dialogues = [
+        DialogueLabel(i, ", ".join(e.speaker.names)) for i, e in enumerate(expectation)
+    ]
+
+    failures = []
+    for r, e in zip(result, expectated_dialogues):
+        if r.index == e.index and r.speaker in e.speaker:
+            continue
+        failures.append(f"({r.index}) Expected any of {e.speaker} but got {r.speaker}")
+    assert len(failures) == 0, "\n".join(failures)
+
+
+@pytest.mark.integration
 def test_label():
     dialogues = {
         0: TextSegment("Hello, how are you?", True),
@@ -117,43 +158,3 @@ def test_split_by_dialogue():
     result = split_by_dialogue(get_text("harrypotter-1.txt"))
     expectation = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
     assert [r.text for r in result] == [e.text for e in expectation]
-
-
-def test_label_nlp():
-    def build_speaker_details(names: set[str]) -> SpeakerDetails:
-        return SpeakerDetails(frozenset(names), "middle-aged", "female")
-
-    def get_expectation(filename: str, speakers: set[SpeakerDetails]):
-        return [
-            DialogueDetails(s, e.text, "foo")
-            for e in get_dialogue_expectation(filename)
-            for s in speakers
-            if e.speaker.names.issubset(s.names)
-        ]
-
-    speakers = {
-        build_speaker_details({"Narrator"}),
-        build_speaker_details({"Professor McGonagall"}),
-        build_speaker_details({"Albus Dumbledore"}),
-        build_speaker_details({"Mrs. Dursley", "Aunt Petunia"}),
-        build_speaker_details({"Mr. Dursley", "Uncle Vernon"}),
-        build_speaker_details({"Hagrid"}),
-        build_speaker_details({"Dudley"}),
-        build_speaker_details({"Harry Potter"}),
-    }
-    expectation = get_expectation("harrypotter-1-expected-dialogue.txt", speakers)
-    dialogues = [
-        TextSegment(e.text, False if e.speaker == "Narrator" else True)
-        for e in expectation
-    ]
-    result = label_dialogue(dialogues, speakers)
-    expectated_dialogues = [
-        DialogueLabel(i, ", ".join(e.speaker.names)) for i, e in enumerate(expectation)
-    ]
-
-    failures = []
-    for r, e in zip(result, expectated_dialogues):
-        if r.index == e.index and r.speaker in e.speaker:
-            continue
-        failures.append(f"({r.index}) Expected any of {e.speaker} but got {r.speaker}")
-    assert len(failures) == 0, "\n".join(failures)
