@@ -123,6 +123,14 @@ def test_label_nlp():
     def build_speaker_details(names: set[str]) -> SpeakerDetails:
         return SpeakerDetails(frozenset(names), "middle-aged", "female")
 
+    def get_expectation(filename: str, speakers: set[SpeakerDetails]):
+        return [
+            DialogueDetails(s, e.text, "foo")
+            for e in get_dialogue_expectation(filename)
+            for s in speakers
+            if e.speaker.names.issubset(s.names)
+        ]
+
     speakers = {
         build_speaker_details({"Narrator"}),
         build_speaker_details({"Professor McGonagall"}),
@@ -133,12 +141,7 @@ def test_label_nlp():
         build_speaker_details({"Dudley"}),
         build_speaker_details({"Harry Potter"}),
     }
-    expectation = [
-        DialogueDetails(s, e.text, "foo")
-        for e in get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
-        for s in speakers
-        if e.speaker.names.issubset(s.names)
-    ]
+    expectation = get_expectation("harrypotter-1-expected-dialogue.txt", speakers)
     dialogues = [
         TextSegment(e.text, False if e.speaker == "Narrator" else True)
         for e in expectation
@@ -147,6 +150,7 @@ def test_label_nlp():
     expectated_dialogues = [
         DialogueLabel(i, ", ".join(e.speaker.names)) for i, e in enumerate(expectation)
     ]
+
     failures = []
     for r, e in zip(result, expectated_dialogues):
         if r.index == e.index and r.speaker in e.speaker:
