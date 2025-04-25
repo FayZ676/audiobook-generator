@@ -129,10 +129,7 @@ def test_label_nlp():
         for e in expectation
     ]
     expectated_dialogues = [
-        DialogueLabel(i, e.speaker.first_alias())
-        for i, e in enumerate(
-            get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
-        )
+        DialogueLabel(i, e.speaker.first_alias()) for i, e in enumerate(expectation)
     ]
     speakers = {
         build_speaker_details({"Professor McGonagall"}),
@@ -144,5 +141,4 @@ def test_label_nlp():
         build_speaker_details({"Harry Potter"}),
     }
     result = label_dialogue(dialogues, speakers)
-    assert len(result) == len(expectated_dialogues)
     assert result == expectated_dialogues
