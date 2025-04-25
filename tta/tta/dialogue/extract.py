@@ -25,7 +25,6 @@ def get_dialogue_details(text: str, speakers_voices: set[SpeakerVoice]):
     )
     speakers_voices.add(narrator_voice)
     dialogue: list[Dialogue] = []
-    # TODO: We won't need this if we use label_nlp.
     for i, seg in enumerate(segments):
         if seg.dialogue:
             label_speaker = label_dict.get(i)
