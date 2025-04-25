@@ -1,6 +1,6 @@
 # Installs the project dependencies
 install:
-	pip install -e ../tta-speech -e .
+	pip install -e ../speech -e .
 
 lint:
 	pylint --rcfile=../.pylintrc tta tests
