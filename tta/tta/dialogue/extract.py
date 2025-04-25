@@ -76,23 +76,19 @@ def create_text_batches(texts: list[TextSegment], batch_size: int):
 def label(
     texts: dict[int, TextSegment], speakers: set[SpeakerDetails], max_retries: int = 3
 ):
-    dialogue = [t for t in texts.values() if t.dialogue]
     prompt = label_prompt.substitute(
         text="\n".join([f"{i}. {d}" for i, d in texts.items()]),
         speakers="\n".join([f"- {s.first_alias()}" for s in speakers]),
-        num_dialogue=len(dialogue),
+        num_segments=len(texts),
     )
     for _ in range(max_retries):
         response = generate_text("", prompt, DialogueLabelResponse)
-        result = [
-            DialogueLabel(r["index"], r["speaker"])
-            for r in json.loads(response)["dialogue"]
-        ]
-        if len(result) <= len(dialogue):
+        result = [DialogueLabel(**d) for d in json.loads(response)["dialogue"]]
+        if len(result) <= len(texts):
             return result
-    raise ValueError(
+    raise RuntimeError(
         f"Invalid number of labels returned after {max_retries} retries: "
-        f"Expected {len(dialogue)} (at most), but got more."
+        f"Expected {len(texts)} (at most), but got more."
     )
 
 

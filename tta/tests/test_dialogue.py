@@ -5,9 +5,8 @@ import pytest
 from tta.dialogue.extract import (
     get_dialogue_details,
     create_text_batches,
-    label,
-    label_nlp,
     label_dialogue,
+    label,
     split_by_dialogue,
 )
 from tta.dialogue.types import TextSegment, DialogueLabel, DialogueDetails
@@ -125,10 +124,10 @@ def test_label_nlp():
         return SpeakerDetails(frozenset(names), "middle-aged", "female")
 
     expectation = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
-    dialogues: dict[int, TextSegment] = {
-        i: TextSegment(e.text, False if e.speaker == "Narrator" else True)
-        for i, e in enumerate(expectation)
-    }
+    dialogues = [
+        TextSegment(e.text, False if e.speaker == "Narrator" else True)
+        for e in expectation
+    ]
     expectated_dialogues = [
         DialogueLabel(i, e.speaker.first_alias())
         for i, e in enumerate(
@@ -144,4 +143,6 @@ def test_label_nlp():
         build_speaker_details({"Dudley"}),
         build_speaker_details({"Harry Potter"}),
     }
-    assert label_nlp(dialogues, speakers) == expectated_dialogues
+    result = label_dialogue(dialogues, speakers)
+    assert len(result) == len(expectated_dialogues)
+    assert result == expectated_dialogues
