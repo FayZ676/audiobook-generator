@@ -1,11 +1,16 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
 
-from tta.models.text import generate_text
-from tta.ner import NER
-from tta.text_utils import remove_dialogue, near_quotes, reduce_names, get_chunks
-from tta.character.prompts import alias, ages, genders
-from tta.character.types import (
+from tta_generator.models.text import generate_text
+from tta_generator.ner import NER
+from tta_generator.text_utils import (
+    remove_dialogue,
+    near_quotes,
+    reduce_names,
+    get_chunks,
+)
+from tta_generator.character.prompts import alias, ages, genders
+from tta_generator.character.types import (
     AgesResponse,
     AliasResponse,
     GendersResponse,

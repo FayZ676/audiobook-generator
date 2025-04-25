@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel
 
-from tta.character.types import SpeakerDetails
+from tta_generator.character.types import SpeakerDetails
 
 
 class LLMDialogue(BaseModel):

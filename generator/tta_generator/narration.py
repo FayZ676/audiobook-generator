@@ -1,8 +1,8 @@
 from io import BytesIO
 
-from tta.character.extract import get_speaker_details
-from tta.dialogue.extract import get_dialogue_details
-from tta.voices import get_voices
+from tta_generator.character.extract import get_speaker_details
+from tta_generator.dialogue.extract import get_dialogue_details
+from tta_generator.voices import get_voices
 
 from tta_speech.main import generate
 

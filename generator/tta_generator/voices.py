@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from tta.character.types import SpeakerDetails
+from tta_generator.character.types import SpeakerDetails
 
 from tta_speech.voices.labels import voices, Voice
 

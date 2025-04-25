@@ -1,5 +1,5 @@
-from tta.character.types import Character
-from tta.voices import get_voices
+from tta_generator.character.types import Character
+from tta_generator.voices import get_voices
 
 
 def test_map_characters_to_voices():

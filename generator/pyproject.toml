@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "tta"
+name = "tta_generator"
 version = "0.0.1"
 authors = [
   { name="Faizi Fifita", email="author@example.com" },

@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Response, UploadFile, File
 
-from tta.narration import get_narration_from_text
+from tta_generator.narration import get_narration_from_text
 
 app = FastAPI()
 
