@@ -1,0 +1,32 @@
+sequence-diagram
+
+React App [icon: react, color: gray]
+API Gateway [icon: aws-api-gateway, color: blue]
+ECS Task [icon: aws-fargate, color: green]
+S3 [icon: aws-s3, color: yellow]
+
+React App > API Gateway: Request new Job\n(Text File & Webhook URL)
+activate API Gateway
+loop [label: Assign Job ID] {
+  API Gateway > API Gateway: Assign Job ID
+}
+API Gateway > S3: Create Job\n(Text File & Job ID)
+API Gateway > ECS Task: Request process Job\n(Webhook URL & Job ID)
+
+activate ECS Task
+ECS Task <> S3: Retrieve Job details
+loop [label: Process Job] {
+  ECS Task > ECS Task: Process
+}
+ECS Task > S3: Store Job results
+ECS Task > API Gateway: POST to webhook\n(Job complete)
+deactivate ECS Task
+
+API Gateway > React App: POST to webhook\n(Job complete)
+
+React App > API Gateway: Request result
+API Gateway <> S3: Retrieve result
+API Gateway > React App: Return result
+
+deactivate API Gateway
+
