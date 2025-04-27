@@ -43,7 +43,6 @@ def generate(dialogues: list[tuple[Text, VoiceName]]):
             vocoder_name="vocos",
             vocoder_local_path=f"{Path(__file__).parent}/vocos",
             load_vocoder_from_local=True,
-            device="mps",
             remove_silence=True,
         )
     )
