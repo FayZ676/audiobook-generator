@@ -41,7 +41,7 @@ voices = [
     ),
     Voice(
         "Cathleen McCarron",
-        "middle-aged",
+        "old",
         "female",
         f"{Path(__file__).parent}/audios/cathleen_mccarron.mp3",
         "Bessy Brunson took a deep breath and prepared to climb a flight of stairs for what seemed like the hundredth time since sunrise. It was not yet noon.",
