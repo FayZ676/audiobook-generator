@@ -19,3 +19,9 @@ setup_git_hook:
 setup:
 	make init
 	make setup_git_hook
+
+docker_build:
+	docker build --platform linux/amd64 -t audiobook_generator -f generator/Dockerfile .
+
+docker_run:
+	docker run --platform linux/amd64 --env-file .env audiobook_generator
