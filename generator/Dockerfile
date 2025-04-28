@@ -3,6 +3,9 @@ FROM pytorch/pytorch:2.7.0-cuda11.8-cudnn9-runtime
 
 WORKDIR /app
 
+# Set up system packages
+RUN apt-get update && apt-get install wget ffmpeg
+
 # Set up speech package
 COPY speech ./speech
 RUN cd speech && \
