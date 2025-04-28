@@ -2,7 +2,9 @@ from pathlib import Path
 from pydub import AudioSegment
 from pydub.effects import normalize
 
+# TODO: Refactor to fetch from voices API.
 from tta_speech.voices.labels import voices as Voices
+
 from tta_speech.infer import infer
 from tta_speech.types import InferenceParams, VoiceName, Text, InputData
 
