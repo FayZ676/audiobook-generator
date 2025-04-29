@@ -15,8 +15,9 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "fastapi==0.115.2",
-    "tta_types==0.0.1",
+  "boto3==1.38.3",
+  "fastapi==0.115.2",
+  "tta_types==0.0.1",
 ]
 
 [project.urls]
