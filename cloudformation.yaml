@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Resources:
+  VoicesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: VoicesTable
+      AttributeDefinitions:
+        - AttributeName: name
+          AttributeType: S
+      KeySchema:
+        - AttributeName: name
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+Outputs:
+  VoicesTableName:
+    Description: Name of the Voices DynamoDB table
+    Value: !Ref VoicesTable
+  VoicesTableArn:
+    Description: ARN of the Voices DynamoDB table
+    Value: !GetAtt VoicesTable.Arn

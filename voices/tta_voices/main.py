@@ -15,3 +15,9 @@ def get_voices():
 def get_voice(voice_id: str):
     # TODO: Find voice
     return Voice("Bob", "middle-aged", "male", "foo", "bar")
+
+
+@app.post("/voices")
+def add_voice(voice: Voice):
+    # TODO: Check that voice exists first.
+    return

@@ -20,6 +20,12 @@ setup:
 	make init
 	make setup_git_hook
 
+aws_stack_create:
+	aws cloudformation create-stack --stack-name audiobook-generator --template-body file://cloudformation.yaml --capabilities CAPABILITY_NAMED_IAM
+
+aws_stack_delete:
+	aws cloudformation delete-stack --stack-name audiobook-generator
+
 docker_build:
 	docker build --platform linux/amd64 -t audiobook_generator -f generator/Dockerfile .
 
