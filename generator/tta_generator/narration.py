@@ -10,6 +10,7 @@ from pydub import AudioSegment
 
 
 def get_narration_from_text(text: str) -> bytes:
+    # TODO: Get voices from API.
     speaker_voices = get_voices(get_speaker_details(text))
     dialogue_details = get_dialogue_details(text, speaker_voices)
     audio_segments = generate(
