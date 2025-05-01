@@ -2,7 +2,7 @@ from io import BytesIO
 
 from tta_generator.character.extract import get_speaker_details
 from tta_generator.dialogue.extract import get_dialogue_details
-from tta_generator.voices import get_voices, get_narrator_voice
+from tta_generator.voices import get_voices
 from tta_generator.character.types import SpeakerDetails
 from tta_generator.voices import SpeakerVoice
 
@@ -16,7 +16,7 @@ def get_narration_from_text(text: str, voices: list[Voice]) -> bytes:
     speaker_voices = get_voices(get_speaker_details(text), voices=voices)
     narrator_voice = SpeakerVoice(
         SpeakerDetails(frozenset({"Narrator"}), "middle-aged", "male"),
-        get_narrator_voice(voices, "Jim Dale"),
+        next(voice for voice in voices if voice.name == "Jim Dale"),
     )
     dialogue_details = get_dialogue_details(text, speaker_voices, narrator_voice)
     audio_segments = generate(

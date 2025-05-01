@@ -11,10 +11,6 @@ class SpeakerVoice:
     voice: Voice
 
 
-def get_narrator_voice(voices: list[Voice], name: str) -> Voice:
-    return next(voice for voice in voices if voice.name == name)
-
-
 def get_voices(speakers: set[SpeakerDetails], voices: list[Voice]) -> set[SpeakerVoice]:
     available_voices = voices
     voiced_characters = set()
