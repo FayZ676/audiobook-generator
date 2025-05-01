@@ -1,7 +1,4 @@
-import json
-import io
-from dataclasses import dataclass, asdict
-from typing import BinaryIO
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True, eq=True)
@@ -11,9 +8,3 @@ class Voice:
     gender: str
     audio_path: str
     audio_transcript: str
-
-    def to_json_fileobject(self) -> BinaryIO:
-        json_bytes = json.dumps(asdict(self), indent=4).encode("utf-8")
-        file_obj = io.BytesIO(json_bytes)
-        file_obj.name = f"{self.name}.json"
-        return file_obj

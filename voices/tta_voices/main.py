@@ -1,4 +1,7 @@
+import io
 import json
+from dataclasses import asdict
+from typing import BinaryIO
 
 from fastapi import FastAPI, UploadFile
 
@@ -39,6 +42,12 @@ def get_voice(voice_name: str):
 def add_voice(
     name: str, age: str, gender: str, audio_transcript: str, audio_file: UploadFile
 ):
+    def to_json_fileobject(voice: Voice) -> BinaryIO:
+        json_bytes = json.dumps(asdict(voice), indent=4).encode("utf-8")
+        file_obj = io.BytesIO(json_bytes)
+        file_obj.name = f"{voice.name}.json"
+        return file_obj
+
     if not audio_file.filename:
         raise ValueError("Audio file with name is required")
 
@@ -48,12 +57,14 @@ def add_voice(
     s3_client.upload_fileobj(
         "voices-metadata-bucket",
         f"{name}.json",
-        Voice(
-            name=name,
-            age=age,
-            gender=gender,
-            audio_path=path,
-            audio_transcript=audio_transcript,
-        ).to_json_fileobject(),
+        to_json_fileobject(
+            Voice(
+                name=name,
+                age=age,
+                gender=gender,
+                audio_path=path,
+                audio_transcript=audio_transcript,
+            )
+        ),
     )
     return
