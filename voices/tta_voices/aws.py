@@ -13,3 +13,7 @@ class S3Client:
     def get_files(self, bucket_name: str):
         response = self.client.list_objects_v2(Bucket=bucket_name)
         return [obj["Key"] for obj in response.get("Contents", [])]
+
+    def get_file(self, bucket_name: str, file_name: str):
+        response = self.client.get_object(Bucket=bucket_name, Key=file_name)
+        return response["Body"].read()

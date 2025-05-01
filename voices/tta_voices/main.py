@@ -1,3 +1,5 @@
+import json
+
 from fastapi import FastAPI, UploadFile
 
 from tta_types.types import Voice
@@ -11,16 +13,26 @@ app = FastAPI()
 s3_client = S3Client()
 
 
-# @app.get("/voices")
-# def get_voices():
-#     voices = s3_client.get_items("VoicesTable")
-#     return [Voice(**voice) for voice in voices]
+@app.get("/voices")
+def get_voices():
+    voices_metadata = s3_client.get_files("voices-metadata-bucket")
+    voices: list[Voice] = []
+    for voice_metadata_key in voices_metadata:
+        file_content_bytes = s3_client.get_file(
+            "voices-metadata-bucket", str(voice_metadata_key)
+        )
+        voice_data = json.loads(file_content_bytes.decode("utf-8"))
+        voices.append(Voice(**voice_data))
+    return voices
 
 
-# @app.get("/voices/{voice_id}")
-# def get_voice(voice_id: str):
-#     voice = s3_client.get_item("VoicesTable", {"voice_id": voice_id})
-#     return Voice(**voice)
+@app.get("/voices/{voice_id}")
+def get_voice(voice_name: str):
+    file_content_bytes = s3_client.get_file(
+        "voices-metadata-bucket", f"{voice_name}.json"
+    )
+    voice = json.loads(file_content_bytes.decode("utf-8"))
+    return Voice(**voice)
 
 
 @app.post("/voices")
