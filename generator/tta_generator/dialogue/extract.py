@@ -9,21 +9,18 @@ from tta_generator.dialogue.types import (
     DialogueLabelResponse,
 )
 from tta_generator.character.types import SpeakerDetails
-from tta_generator.voices import SpeakerVoice, NarratorVoice
+from tta_generator.voices import SpeakerVoice
 from tta_generator.models.text import generate_text
 
 
-def get_dialogue_details(text: str, speakers_voices: set[SpeakerVoice]):
+def get_dialogue_details(
+    text: str, speakers_voices: set[SpeakerVoice], narrator_voice: SpeakerVoice
+):
     segments = split_by_dialogue(text)
     speakers = {s.character for s in speakers_voices}
     label_dict = {
         label.index: label.speaker for label in label_dialogue(segments, speakers)
     }
-    narrator_voice = SpeakerVoice(
-        SpeakerDetails(frozenset({"Narrator"}), "middle-aged", "male"),
-        NarratorVoice,
-    )
-    speakers_voices.add(narrator_voice)
     dialogue: list[Dialogue] = []
     for i, seg in enumerate(segments):
         if seg.dialogue:
