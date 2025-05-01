@@ -1,0 +1,12 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Resources:
+  VoicesAudiosBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: voices-audios-bucket
+
+  VoicesMetadataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: voices-metadata-bucket

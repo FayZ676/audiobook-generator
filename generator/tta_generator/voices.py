@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from tta_generator.character.types import SpeakerDetails
 
-from tta_speech.voices.labels import voices, Voice
+from tta_types.types import Voice
 
 
 @dataclass(eq=True, frozen=True)
@@ -11,11 +11,8 @@ class SpeakerVoice:
     voice: Voice
 
 
-NarratorVoice = next(voice for voice in voices if voice.name == "Jim Dale")
-
-
-def get_voices(speakers: set[SpeakerDetails]) -> set[SpeakerVoice]:
-    available_voices = list(voices)
+def get_voices(speakers: set[SpeakerDetails], voices: list[Voice]) -> set[SpeakerVoice]:
+    available_voices = voices
     voiced_characters = set()
     for speaker in speakers:
         matching_voices = [

@@ -3,17 +3,25 @@ from io import BytesIO
 from tta_generator.character.extract import get_speaker_details
 from tta_generator.dialogue.extract import get_dialogue_details
 from tta_generator.voices import get_voices
+from tta_generator.character.types import SpeakerDetails
+from tta_generator.voices import SpeakerVoice
 
 from tta_speech.main import generate
+from tta_types.types import Voice
 
 from pydub import AudioSegment
 
 
-def get_narration_from_text(text: str) -> bytes:
-    speaker_voices = get_voices(get_speaker_details(text))
-    dialogue_details = get_dialogue_details(text, speaker_voices)
+def get_narration_from_text(text: str, voices: list[Voice]) -> bytes:
+    speaker_voices = get_voices(get_speaker_details(text), voices=voices)
+    narrator_voice = SpeakerVoice(
+        SpeakerDetails(frozenset({"Narrator"}), "middle-aged", "male"),
+        next(voice for voice in voices if voice.name == "Jim Dale"),
+    )
+    dialogue_details = get_dialogue_details(text, speaker_voices, narrator_voice)
     audio_segments = generate(
-        [(dialogue.text, dialogue.voice_id) for dialogue in dialogue_details]
+        dialogues=[(dialogue.text, dialogue.voice_id) for dialogue in dialogue_details],
+        voices=voices,
     )
     return build_audio([audio_segments])
 
@@ -32,6 +40,7 @@ def build_audio(audio_segments: list[tuple[bytes, int | None]]) -> bytes:
 
 
 if __name__ == "__main__":
+    import requests
     from pathlib import Path
 
     def get_text(filename: str) -> str:
@@ -40,6 +49,13 @@ if __name__ == "__main__":
         ) as f:
             return f.read()
 
-    audio = get_narration_from_text(get_text("harrypotter-1.txt"))
+    def get_voices_from_api() -> list[Voice]:
+        response = requests.get("http://localhost:8000/voices")
+        return [Voice(**voice) for voice in response.json()]
+
+    voices: list[Voice] = get_voices_from_api()
+    audio = get_narration_from_text(
+        text=get_text("harrypotter-sample-tiny.txt"), voices=voices
+    )
     with open("output.mp3", "wb") as f:
         f.write(audio)

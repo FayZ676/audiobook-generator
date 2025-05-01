@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from tta_speech.types import Voice
+from tta_types.types import Voice
 
 
 voices = [

@@ -2,9 +2,10 @@ from pathlib import Path
 from pydub import AudioSegment
 from pydub.effects import normalize
 
-from tta_speech.voices.labels import voices as Voices
 from tta_speech.infer import infer
 from tta_speech.types import InferenceParams, VoiceName, Text, InputData
+
+from tta_types.types import Voice
 
 
 def normalize_audio_volume(audio_path: str, headroom: float = 0.1) -> str:
@@ -19,21 +20,30 @@ def normalize_audio_volume(audio_path: str, headroom: float = 0.1) -> str:
         return audio_path
 
 
-def prepare_input(dialogues: list[tuple[Text, VoiceName]]) -> InputData:
+def prepare_input(
+    dialogues: list[tuple[Text, VoiceName]],
+    voices: list[Voice],
+) -> InputData:
+    def voice_to_dict(voice: Voice):
+        return {
+            "ref_audio": voice.audio_path,
+            "ref_text": voice.audio_transcript,
+        }
+
     def voices_from_names(voice_names: list[VoiceName]):
         return {
-            voice.name: voice.audio_to_dict()
-            for voice in Voices
+            voice.name: voice_to_dict(voice)
+            for voice in voices
             if voice.name in voice_names
         }
 
     text = " ".join([f"[{voice_name}] {text}" for text, voice_name in dialogues])
-    voices = voices_from_names([voice_name for _, voice_name in dialogues])
-    return InputData(text, voices)
+    voices_dict = voices_from_names([voice_name for _, voice_name in dialogues])
+    return InputData(text, voices_dict)
 
 
-def generate(dialogues: list[tuple[Text, VoiceName]]):
-    input = prepare_input(dialogues)
+def generate(dialogues: list[tuple[Text, VoiceName]], voices: list[Voice]):
+    input = prepare_input(dialogues, voices)
     return infer(
         InferenceParams(
             gen_text=input.text,
