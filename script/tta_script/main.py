@@ -1,5 +1,6 @@
 import io
 import json
+import argparse
 from dataclasses import asdict
 from typing import BinaryIO
 
@@ -31,10 +32,51 @@ def _to_json_fileobject(
 
 def generate_script(title: str, text: str, voices: list[Voice], narrator_name: str):
     speaker_voices = assign_voices(get_speaker_details(text), voices=voices)
+    narrator_voice_obj = next(voice for voice in voices if voice.name == narrator_name)
     narrator_voice = SpeakerVoice(
         SpeakerDetails(frozenset({"Narrator"}), "middle-aged", "male"),
-        next(voice for voice in voices if voice.name == narrator_name),
+        narrator_voice_obj,
     )
     dialogue_details = get_dialogue_details(text, speaker_voices, narrator_voice)
     file = _to_json_fileobject(title, dialogue_details)
     S3Client().upload_fileobj(SCRIPT_RESULTS_BUCKET, file.name, file)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Generate an audiobook script from text."
+    )
+    parser.add_argument("--title", required=True, help="The title of the audiobook.")
+    parser.add_argument(
+        "--text-file", required=True, help="Path to the input text file."
+    )
+    parser.add_argument(
+        "--voices-file",
+        required=True,
+        help="Path to the JSON file containing available voices.",
+    )
+    parser.add_argument(
+        "--narrator-name",
+        required=True,
+        help="The name of the voice to use for the narrator.",
+    )
+
+    args = parser.parse_args()
+
+    with open(args.text_file, "r", encoding="utf-8") as f:
+        text_content = f.read()
+
+    with open(args.voices_file, "r", encoding="utf-8") as f:
+        voices_data = json.load(f)
+        voices_list = [Voice(**voice_info) for voice_info in voices_data]
+
+    generate_script(
+        title=args.title,
+        text=text_content,
+        voices=voices_list,
+        narrator_name=args.narrator_name,
+    )
+
+
+if __name__ == "__main__":
+    main()
