@@ -4,9 +4,14 @@ Resources:
   VoicesAudiosBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: voices-audios-bucket
+      BucketName: tta-voices-audios
 
   VoicesMetadataBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: voices-metadata-bucket
+      BucketName: tta-voices-metadata
+
+  ScriptResultsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: tta-script-results
