@@ -21,16 +21,15 @@ SCRIPT_RESULTS_BUCKET = "tta-script-results"
 
 @app.post("/script")
 def build_script(file: UploadFile, voices: list[Voice], narrator_voice_name: str):
-    filename = file.filename
-    if not filename:
-        raise ValueError("Invalid filename")
     script = generate_script(
-        title=str(filename),
         text=file.file.read().decode("utf-8"),
         voices=voices,
         narrator_name=narrator_voice_name,
     )
-    script_file = _to_json_fileobject(filename, script)
+    filename = file.filename
+    if not filename:
+        raise ValueError("Invalid filename")
+    script_file = _to_json_fileobject(filename.rstrip(".txt"), script)
     S3Client().upload_fileobj(SCRIPT_RESULTS_BUCKET, script_file.name, script_file)
 
 
