@@ -11,7 +11,9 @@ class SpeakerVoice:
     voice: Voice
 
 
-def get_voices(speakers: set[SpeakerDetails], voices: list[Voice]) -> set[SpeakerVoice]:
+def assign_voices(
+    speakers: set[SpeakerDetails], voices: list[Voice]
+) -> set[SpeakerVoice]:
     available_voices = voices
     voiced_characters = set()
     for speaker in speakers:

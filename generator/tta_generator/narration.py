@@ -2,7 +2,7 @@ from io import BytesIO
 
 from tta_generator.character.extract import get_speaker_details
 from tta_generator.dialogue.extract import get_dialogue_details
-from tta_generator.voices import get_voices
+from tta_generator.voices import assign_voices
 from tta_generator.character.types import SpeakerDetails
 from tta_generator.voices import SpeakerVoice
 
@@ -12,11 +12,13 @@ from tta_types.types import Voice
 from pydub import AudioSegment
 
 
-def get_narration_from_text(text: str, voices: list[Voice]) -> bytes:
-    speaker_voices = get_voices(get_speaker_details(text), voices=voices)
+def get_narration_from_text(
+    text: str, voices: list[Voice], narrator_name: str
+) -> bytes:
+    speaker_voices = assign_voices(get_speaker_details(text), voices=voices)
     narrator_voice = SpeakerVoice(
         SpeakerDetails(frozenset({"Narrator"}), "middle-aged", "male"),
-        next(voice for voice in voices if voice.name == "Jim Dale"),
+        next(voice for voice in voices if voice.name == narrator_name),
     )
     dialogue_details = get_dialogue_details(text, speaker_voices, narrator_voice)
     audio_segments = generate(
@@ -55,7 +57,9 @@ if __name__ == "__main__":
 
     voices: list[Voice] = get_voices_from_api()
     audio = get_narration_from_text(
-        text=get_text("harrypotter-sample-tiny.txt"), voices=voices
+        text=get_text("harrypotter-sample-tiny.txt"),
+        voices=voices,
+        narrator_name="Jim Dale",
     )
     with open("output.mp3", "wb") as f:
         f.write(audio)
