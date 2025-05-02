@@ -1,6 +1,5 @@
-# Installs the project dependencies
 install:
-	pip install -e ../types -e .
+	pip install -e ../types -e ../aws -e .
 
 lint:
 	pylint --rcfile=../.pylintrc tta_script tests
