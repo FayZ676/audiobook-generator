@@ -7,7 +7,7 @@ from fastapi import FastAPI, UploadFile
 
 from tta_types.types import Voice
 
-from tta_voices.aws import S3Client
+from tta_aws.s3 import S3Client
 
 
 app = FastAPI()

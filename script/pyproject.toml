@@ -17,14 +17,12 @@ classifiers = [
 ]
 dependencies = [
   "openai==1.61.1",
-  "pydub==0.25.1",
   "pylint==3.3.1",
   "python-dotenv==1.0.0",
   "pytest==8.3.3",
   "pytest-cov==5.0.0",
   "scikit-learn==1.6.1",
   "spacy==3.8.4",
-  "tta_speech==0.0.1",
 ]
 
 [tool.coverage.run]

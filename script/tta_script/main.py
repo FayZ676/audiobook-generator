@@ -1,44 +1,20 @@
-from io import BytesIO
-
 from tta_script.character.extract import get_speaker_details
 from tta_script.dialogue.extract import get_dialogue_details
 from tta_script.voices import assign_voices
 from tta_script.character.types import SpeakerDetails
 from tta_script.voices import SpeakerVoice
 
-from tta_speech.main import generate
 from tta_types.types import Voice
 
-from pydub import AudioSegment
 
-
-def get_narration_from_text(
-    text: str, voices: list[Voice], narrator_name: str
-) -> bytes:
+def generate_script(text: str, voices: list[Voice], narrator_name: str):
     speaker_voices = assign_voices(get_speaker_details(text), voices=voices)
     narrator_voice = SpeakerVoice(
         SpeakerDetails(frozenset({"Narrator"}), "middle-aged", "male"),
         next(voice for voice in voices if voice.name == narrator_name),
     )
     dialogue_details = get_dialogue_details(text, speaker_voices, narrator_voice)
-    audio_segments = generate(
-        dialogues=[(dialogue.text, dialogue.voice_id) for dialogue in dialogue_details],
-        voices=voices,
-    )
-    return build_audio([audio_segments])
-
-
-def build_audio(audio_segments: list[tuple[bytes, int | None]]) -> bytes:
-    combined = AudioSegment.empty()
-    for audio_bytes, sample_rate in audio_segments:
-        segment = AudioSegment.from_file(
-            BytesIO(audio_bytes), format="wav", frame_rate=sample_rate
-        )
-        combined += segment
-
-    output = BytesIO()
-    combined.export(output, format="mp3")
-    return output.getvalue()
+    # TODO: Save script to S3.
 
 
 if __name__ == "__main__":
@@ -56,10 +32,8 @@ if __name__ == "__main__":
         return [Voice(**voice) for voice in response.json()]
 
     voices: list[Voice] = get_voices_from_api()
-    audio = get_narration_from_text(
+    generate_script(
         text=get_text("harrypotter-sample-tiny.txt"),
         voices=voices,
         narrator_name="Jim Dale",
     )
-    with open("output.mp3", "wb") as f:
-        f.write(audio)

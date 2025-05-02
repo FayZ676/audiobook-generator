@@ -1,7 +1,7 @@
 init:
 	python -m venv .venv
 	source .venv/bin/activate && \
-	cd generator && make install && \
+	cd script && make install && \
 	cd ../service && make install && \
 	python -m spacy download en_core_web_trf
 

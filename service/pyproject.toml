@@ -7,9 +7,6 @@ name = "ttaservice"
 version = "0.0.1"
 authors = [
   { name="Faizi Fifita", email="author@example.com" },
-  { name="Nathan Lane", email="nathanlane510@gmail.com" },
-  { name="Derrick Strover", email="dstroverduncan@yahoo.com" },
-  { name="Travis Loukusa", email="dl2625pv@go.minnstate.edu" },
 ]
 description = "ttaservice (Text-to-Audiobook API service) is the service for interfacing with the tta library."
 readme = "README.md"
