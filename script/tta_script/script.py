@@ -7,7 +7,7 @@ from tta_script.voices import SpeakerVoice
 from tta_types.types import Voice
 
 
-def generate_script(title: str, text: str, voices: list[Voice], narrator_name: str):
+def generate_script(text: str, voices: list[Voice], narrator_name: str):
     speaker_voices = assign_voices(get_speaker_details(text), voices=voices)
     narrator_voice_obj = next(voice for voice in voices if voice.name == narrator_name)
     narrator_voice = SpeakerVoice(
