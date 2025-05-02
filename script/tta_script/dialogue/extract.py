@@ -1,16 +1,16 @@
 import json
 
-from tta_generator.dialogue.prompts import label_prompt
-from tta_generator.dialogue.types import (
+from tta_script.dialogue.prompts import label_prompt
+from tta_script.dialogue.types import (
     Dialogue,
     DialogueDetails,
     TextSegment,
     DialogueLabel,
     DialogueLabelResponse,
 )
-from tta_generator.character.types import SpeakerDetails
-from tta_generator.voices import SpeakerVoice
-from tta_generator.models.text import generate_text
+from tta_script.character.types import SpeakerDetails
+from tta_script.voices import SpeakerVoice
+from tta_script.models.text import generate_text
 
 
 def get_dialogue_details(

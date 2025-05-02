@@ -2,7 +2,7 @@ from io import StringIO
 
 import streamlit as st
 
-from tta_generator.narration import get_narration_from_text
+from tta_script.narration import get_narration_from_text
 
 
 st.title("Audiobook Generator")

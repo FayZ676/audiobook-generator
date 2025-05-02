@@ -3,13 +3,10 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "tta_generator"
+name = "tta_script"
 version = "0.0.1"
 authors = [
   { name="Faizi Fifita", email="author@example.com" },
-  { name="Nathan Lane", email="nathanlane510@gmail.com" },
-  { name="Derrick Strover", email="dstroverduncan@yahoo.com" },
-  { name="Travis Loukusa", email="dl2625pv@go.minnstate.edu" },
 ]
 description = "tta (Text-to-Audiobook), as the name suggests, transforms book text in a multi-speaker audiobook experience."
 readme = "README.md"

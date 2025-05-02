@@ -1,10 +1,10 @@
 from io import BytesIO
 
-from tta_generator.character.extract import get_speaker_details
-from tta_generator.dialogue.extract import get_dialogue_details
-from tta_generator.voices import assign_voices
-from tta_generator.character.types import SpeakerDetails
-from tta_generator.voices import SpeakerVoice
+from tta_script.character.extract import get_speaker_details
+from tta_script.dialogue.extract import get_dialogue_details
+from tta_script.voices import assign_voices
+from tta_script.character.types import SpeakerDetails
+from tta_script.voices import SpeakerVoice
 
 from tta_speech.main import generate
 from tta_types.types import Voice

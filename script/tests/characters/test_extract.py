@@ -2,14 +2,14 @@ from pathlib import Path
 
 import pytest
 
-from tta_generator.character.extract import (
+from tta_script.character.extract import (
     get_speaker_names,
     get_ages,
     get_genders,
     get_aliases,
     # get_speaker_details,
 )
-from tta_generator.metrics import precision_recall
+from tta_script.metrics import precision_recall
 
 
 def get_text(name: str):

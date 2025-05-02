@@ -2,16 +2,16 @@ from pathlib import Path
 
 import pytest
 
-from tta_generator.dialogue.extract import (
+from tta_script.dialogue.extract import (
     get_dialogue_details,
     create_text_batches,
     label_dialogue,
     label,
     split_by_dialogue,
 )
-from tta_generator.dialogue.types import TextSegment, DialogueLabel, DialogueDetails
-from tta_generator.character.types import SpeakerDetails
-from tta_generator.voices import SpeakerVoice, Voice
+from tta_script.dialogue.types import TextSegment, DialogueLabel, DialogueDetails
+from tta_script.character.types import SpeakerDetails
+from tta_script.voices import SpeakerVoice, Voice
 
 
 def get_text(filename: str) -> str:
