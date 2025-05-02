@@ -26,6 +26,7 @@ dependencies = [
   "spacy==3.8.4",
   "tta_aws==0.0.1",
   "tta_types==0.0.1",
+  "uvicorn==0.32.0",
 ]
 
 [tool.coverage.run]
