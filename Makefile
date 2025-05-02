@@ -31,9 +31,3 @@ aws_stack_update:
 
 aws_stack_describe:
 	aws cloudformation describe-stacks --stack-name audiobook-generator
-
-docker_build:
-	docker build --platform linux/amd64 -t audiobook_generator -f generator/Dockerfile .
-
-docker_run:
-	docker run --platform linux/amd64 --env-file .env audiobook_generator

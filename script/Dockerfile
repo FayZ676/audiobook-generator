@@ -1,20 +1,15 @@
-# Can we make the image smaller?
-FROM pytorch/pytorch:2.7.0-cuda11.8-cudnn9-runtime
+FROM python:3.12-slim
 
 WORKDIR /app
 
-# Set up system packages
 RUN apt-get update && apt-get install wget ffmpeg
 
-# Set up speech package
-COPY speech ./speech
-RUN cd speech && \
-wget -P tta_speech/vocos https://huggingface.co/charactr/vocos-mel-24khz/resolve/main/pytorch_model.bin
-RUN pip install . && cd ..
+COPY types/ /app/types
+COPY aws/ /app/aws
+RUN cd /app/types && pip install -e . && cd /app/aws && pip install -e .
 
-# Set up generator package
-COPY generator ./generator
+COPY script/ /app/script
+RUN pip install /app/script
 RUN python -m spacy download en_core_web_trf
-RUN pip install ./generator
 
-CMD ["python", "-m", "generator"]
+CMD ["python", "tta_script/main.py"]
