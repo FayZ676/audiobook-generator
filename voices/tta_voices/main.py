@@ -16,13 +16,17 @@ app = FastAPI()
 s3_client = S3Client()
 
 
+METADATA_BUCKET = "tta-voices-metadata"
+AUDIOS_BUCKET = "tta-voices-audios"
+
+
 @app.get("/voices")
 def get_voices():
-    voices_metadata = s3_client.get_files("voices-metadata-bucket")
+    voices_metadata = s3_client.get_files(METADATA_BUCKET)
     voices: list[Voice] = []
     for voice_metadata_key in voices_metadata:
         file_content_bytes = s3_client.get_file(
-            "voices-metadata-bucket", str(voice_metadata_key)
+            METADATA_BUCKET, str(voice_metadata_key)
         )
         voice_data = json.loads(file_content_bytes.decode("utf-8"))
         voices.append(Voice(**voice_data))
@@ -31,9 +35,7 @@ def get_voices():
 
 @app.get("/voices/{voice_id}")
 def get_voice(voice_name: str):
-    file_content_bytes = s3_client.get_file(
-        "voices-metadata-bucket", f"{voice_name}.json"
-    )
+    file_content_bytes = s3_client.get_file(METADATA_BUCKET, f"{voice_name}.json")
     voice = json.loads(file_content_bytes.decode("utf-8"))
     return Voice(**voice)
 
@@ -51,11 +53,9 @@ def add_voice(
     if not audio_file.filename:
         raise ValueError("Audio file with name is required")
 
-    path = s3_client.upload_fileobj(
-        "voices-audios-bucket", audio_file.filename, audio_file.file
-    )
+    path = s3_client.upload_fileobj(AUDIOS_BUCKET, audio_file.filename, audio_file.file)
     s3_client.upload_fileobj(
-        "voices-metadata-bucket",
+        METADATA_BUCKET,
         f"{name}.json",
         to_json_fileobject(
             Voice(
