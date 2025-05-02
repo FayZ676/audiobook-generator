@@ -2,10 +2,15 @@ from pathlib import Path
 from pydub import AudioSegment
 from pydub.effects import normalize
 
+from fastapi import FastAPI
+
 from tta_speech.infer import infer
 from tta_speech.types import InferenceParams, VoiceName, Text, InputData
 
 from tta_types.types import Voice
+
+
+app = FastAPI()
 
 
 def normalize_audio_volume(audio_path: str, headroom: float = 0.1) -> str:
@@ -20,7 +25,7 @@ def normalize_audio_volume(audio_path: str, headroom: float = 0.1) -> str:
         return audio_path
 
 
-def prepare_input(
+def _prepare_input(
     dialogues: list[tuple[Text, VoiceName]],
     voices: list[Voice],
 ) -> InputData:
@@ -42,12 +47,13 @@ def prepare_input(
     return InputData(text, voices_dict)
 
 
+@app.post("/speech")
 def generate(dialogues: list[tuple[Text, VoiceName]], voices: list[Voice]):
-    input = prepare_input(dialogues, voices)
+    text_input = _prepare_input(dialogues, voices)
     return infer(
         InferenceParams(
-            gen_text=input.text,
-            voices=input.voices,
+            gen_text=text_input.text,
+            voices=text_input.voices,
             output_path="data/output.wav",
             vocab_file=f"{Path(__file__).parent}/vocab.txt",
             vocoder_name="vocos",
@@ -55,10 +61,4 @@ def generate(dialogues: list[tuple[Text, VoiceName]], voices: list[Voice]):
             load_vocoder_from_local=True,
             remove_silence=True,
         )
-    )
-
-
-if __name__ == "__main__":
-    normalize_audio_volume(
-        f"{Path(__file__).parent}/voices/audios/stephen_fry.mp3", headroom=0.1
     )
