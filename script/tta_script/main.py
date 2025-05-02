@@ -19,6 +19,9 @@ app = FastAPI()
 SCRIPT_RESULTS_BUCKET = "tta-script-results"
 
 
+s3_client = S3Client()
+
+
 @app.post("/script")
 def build_script(file: UploadFile, voices: list[Voice], narrator_voice_name: str):
     script = generate_script(
@@ -30,7 +33,13 @@ def build_script(file: UploadFile, voices: list[Voice], narrator_voice_name: str
     if not filename:
         raise ValueError("Invalid filename")
     script_file = _to_json_fileobject(filename.rstrip(".txt"), script)
-    S3Client().upload_fileobj(SCRIPT_RESULTS_BUCKET, script_file.name, script_file)
+    s3_client.upload_fileobj(SCRIPT_RESULTS_BUCKET, script_file.name, script_file)
+
+
+@app.post("/narration")
+def build_narration(script_path: str):
+    data = s3_client.get_file(SCRIPT_RESULTS_BUCKET, script_path)
+    dialogue_details = [DialogueDetails(**d) for d in json.loads(data)]
 
 
 def _to_json_fileobject(
