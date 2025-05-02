@@ -29,6 +29,9 @@ aws_stack_delete:
 aws_stack_update:
 	aws cloudformation update-stack --stack-name audiobook-generator --template-body file://cloudformation.yaml --capabilities CAPABILITY_NAMED_IAM
 
+aws_stack_describe:
+	aws cloudformation describe-stacks --stack-name audiobook-generator
+
 docker_build:
 	docker build --platform linux/amd64 -t audiobook_generator -f generator/Dockerfile .
 
