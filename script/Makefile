@@ -11,7 +11,7 @@ test:
 	pytest --cov=tta --cov-report=term-missing --cov-fail-under=80 tests
 
 docker_build:
-	docker build --platform linux/amd64 -t audiobook_generator -f generator/Dockerfile ..
+	docker build --platform linux/amd64 -t script_generator -f Dockerfile ..
 
 docker_run:
-	docker run --platform linux/amd64 --env-file .env audiobook_generator
+	docker run -it -p 8001:8000 --platform linux/amd64 --env-file ../.env script_generator
