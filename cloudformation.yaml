@@ -15,3 +15,8 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: tta-script-results
+
+  SpeechResultsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: tta-speech-results
