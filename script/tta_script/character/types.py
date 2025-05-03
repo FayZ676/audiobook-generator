@@ -24,6 +24,13 @@ class SpeakerDetails:
     def first_alias(self) -> str:
         return list(self.names)[0]
 
+    def to_dict(self) -> dict:
+        return {
+            "names": list(self.names),
+            "age": self.age,
+            "gender": self.gender,
+        }
+
 
 class SpeakersResponse(BaseModel):
     response: list[Character]

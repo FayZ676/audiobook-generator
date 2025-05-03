@@ -33,6 +33,13 @@ class DialogueDetails(Dialogue):
     def __str__(self) -> str:
         return f"{self.speaker.first_alias()}: {self.text}"
 
+    def to_dict(self) -> dict:
+        return {
+            "speaker": self.speaker.to_dict(),
+            "text": self.text,
+            "voice_id": self.voice_id,
+        }
+
 
 @dataclass(frozen=True, eq=True)
 class TextSegment:

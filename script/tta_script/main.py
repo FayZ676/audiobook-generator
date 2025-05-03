@@ -27,7 +27,7 @@ s3_client = S3Client()
 def _to_json_fileobject(
     filename: str, dialogue_details: list[DialogueDetails]
 ) -> BinaryIO:
-    json_bytes = json.dumps([asdict(d) for d in dialogue_details], indent=4).encode(
+    json_bytes = json.dumps([d.to_dict() for d in dialogue_details], indent=4).encode(
         "utf-8"
     )
     file_obj = io.BytesIO(json_bytes)
@@ -35,11 +35,18 @@ def _to_json_fileobject(
     return file_obj
 
 
+def _get_voices() -> list[Voice]:
+    data = requests.get(VOICES_API_URL + "/voices", timeout=5)
+    if data.status_code != 200:
+        raise ValueError("Failed to fetch voices from the API")
+    return [Voice(**v) for v in data.json()]
+
+
 @app.post("/script")
-def build_script(file: UploadFile, voices: list[Voice], narrator_voice_name: str):
+def build_script(file: UploadFile, narrator_voice_name: str):
     script = generate_script(
         text=file.file.read().decode("utf-8"),
-        voices=voices,
+        voices=_get_voices(),
         narrator_name=narrator_voice_name,
     )
     filename = file.filename
@@ -51,19 +58,15 @@ def build_script(file: UploadFile, voices: list[Voice], narrator_voice_name: str
 
 @app.post("/narration")
 def build_narration(script_path: str):
-    data = s3_client.get_file(SCRIPT_RESULTS_BUCKET, script_path)
-    dialogue_details = [DialogueDetails(**d) for d in json.loads(data)]
-    voices = []
-    for d in dialogue_details:
-        data = requests.get(VOICES_API_URL + f"/voices/{d.voice_id}", timeout=5)
-        voices.append(Voice(**data.json()))
+    script_data = s3_client.get_file(SCRIPT_RESULTS_BUCKET, script_path)
+    dialogue_details = [DialogueDetails(**d) for d in json.loads(script_data)]
     payload = {
         "request": [
             {"text": d.text, "voice_name": d.voice_id} for d in dialogue_details
         ],
-        "voices": voices,
+        "voices": [asdict(v) for v in _get_voices()],
     }
-    data = requests.post(
+    narration_data = requests.post(
         SPEECH_API_URL + "/speech",
         json=payload,
         timeout=5,
