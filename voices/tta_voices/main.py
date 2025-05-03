@@ -68,3 +68,8 @@ def add_voice(
         ),
     )
     return
+
+
+# TODO: Implement the update_voice function
+@app.patch("/voices/{voice_id}")
+def update_voice(name: str | None = None, age: str | None = None): ...
