@@ -61,13 +61,21 @@ def build_narration(script_path: str):
     script_data = s3_client.get_file(SCRIPT_RESULTS_BUCKET, script_path)
     dialogue_details = [DialogueDetails(**d) for d in json.loads(script_data)]
     payload = {
-        "request": [
-            {"text": d.text, "voice_name": d.voice_id} for d in dialogue_details
-        ],
+        "request": {
+            "title": script_path.rstrip(".json"),
+            "text": [
+                {
+                    "text": d.text,
+                    "voice_name": d.voice_id,
+                }
+                for d in dialogue_details
+            ],
+        },
         "voices": [asdict(v) for v in _get_voices()],
     }
-    narration_data = requests.post(
+    result = requests.post(
         SPEECH_API_URL + "/speech",
         json=payload,
         timeout=5,
     )
+    result.raise_for_status()
