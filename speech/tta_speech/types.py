@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Optional
 
+from pydantic import BaseModel
+
 from f5_tts.infer.utils_infer import (
     target_rms as default_target_rms,
     cross_fade_duration as default_cross_fade_duration,
@@ -11,10 +13,6 @@ from f5_tts.infer.utils_infer import (
     fix_duration as default_fix_duration,
     device as default_device,
 )
-
-
-VoiceName = str
-Text = str
 
 
 @dataclass
@@ -48,3 +46,8 @@ class InferenceParams:
 class InputData:
     text: str
     voices: dict[str, dict[str, str]]
+
+
+class SpeechRequest(BaseModel):
+    text: str
+    voice_name: str
