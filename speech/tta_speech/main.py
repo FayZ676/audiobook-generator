@@ -17,6 +17,7 @@ app = FastAPI()
 
 s3 = S3Client()
 SPEECH_BUCKET = "tta-speech-results"
+VOICES_AUDIOS_BUCKET = "tta-voices-audios"
 
 
 def normalize_audio_volume(audio_path: str, headroom: float = 0.1) -> str:
@@ -31,19 +32,31 @@ def normalize_audio_volume(audio_path: str, headroom: float = 0.1) -> str:
         return audio_path
 
 
+# NOTE: I hate that we need to download the audio.
 def _prepare_input(
-    request: list[TextSegment],
-    voices: list[Voice],
+    request: list[TextSegment], voices: list[Voice], voice_save_path: str
 ) -> InputData:
-    def voice_to_dict(voice: Voice):
+    def download_audio(audio_name: str):
+        print(f"Downloading audio {audio_name}")
+        audio = s3.get_file(VOICES_AUDIOS_BUCKET, f"{audio_name}.mp3")
+        audio_file = BytesIO(audio)
+        temp_audio_path = f"{voice_save_path}/{audio_name}"
+        with open(temp_audio_path, "wb") as f:
+            f.write(audio_file.read())
+        return temp_audio_path
+
+    def voice_to_dict(path, transcript):
         return {
-            "ref_audio": voice.audio_path,
-            "ref_text": voice.audio_transcript,
+            "ref_audio": path,
+            "ref_text": transcript,
         }
 
     def voices_from_names(voice_names: list[str]):
         return {
-            voice.name: voice_to_dict(voice)
+            voice.name: voice_to_dict(
+                path=download_audio(voice.name.lower().replace(" ", "_")),
+                transcript=voice.audio_transcript,
+            )
             for voice in voices
             if voice.name in voice_names
         }
@@ -68,7 +81,8 @@ def _build_audio(audio_segments: list[tuple[bytes, int | None]]) -> bytes:
 
 @app.post("/speech")
 def generate(request: SpeechRequest, voices: list[Voice]):
-    text_input = _prepare_input(request.text, voices)
+    voice_save_path = "/tmp"
+    text_input = _prepare_input(request.text, voices, voice_save_path)
     result = infer(
         InferenceParams(
             gen_text=text_input.text,
