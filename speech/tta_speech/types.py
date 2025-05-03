@@ -19,7 +19,6 @@ from f5_tts.infer.utils_infer import (
 class InferenceParams:
     gen_text: str
     voices: dict[str, dict[str, str]]
-    output_path: str
     vocoder_name: str
     vocoder_local_path: str
     load_vocoder_from_local: bool
@@ -48,6 +47,11 @@ class InputData:
     voices: dict[str, dict[str, str]]
 
 
-class SpeechRequest(BaseModel):
+class TextSegment(BaseModel):
     text: str
     voice_name: str
+
+
+class SpeechRequest(BaseModel):
+    title: str
+    text: list[TextSegment]
