@@ -6,10 +6,7 @@ build-backend = "hatchling.build"
 name = "tta_speech"
 version = "0.0.1"
 authors = [
-  { name="Faizi Fifita", email="author@example.com" },
-  { name="Nathan Lane", email="nathanlane510@gmail.com" },
-  { name="Derrick Strover", email="dstroverduncan@yahoo.com" },
-  { name="Travis Loukusa", email="dl2625pv@go.minnstate.edu" },
+  { name="Faizi Fifita", email="author@example.com" }
 ]
 description = ""
 requires-python = ">=3.10"
@@ -23,6 +20,7 @@ dependencies = [
     "pydub==0.25.1",
     "torch==2.6.0",
     "torchaudio==2.6.0",
+    "tta_aws==0.0.1",
     "uvicorn==0.32.0",
 ]
 
