@@ -106,7 +106,7 @@ def generate(request: WebhookRequest):
     audio = _build_audio([result])
     s3.upload_fileobj(SPEECH_BUCKET, f"{data.title}.mp3", BytesIO(audio))
     requests.post(
-        url=request.url,
+        url=request.internal_callback,
         json=WebhookResponse(
             job_id=request.job_id,
             type="speech",

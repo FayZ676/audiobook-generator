@@ -68,9 +68,11 @@ def build_script(file: UploadFile, narrator_voice_name: str):
 
 
 @app.post("/narration", status_code=status.HTTP_202_ACCEPTED)
-async def build_narration(script_path: str, bg_tasks: BackgroundTasks):
+async def build_narration(
+    script_path: str, callback_url: str, bg_tasks: BackgroundTasks
+):
     job_id = str(uuid.uuid4())
-    bg_tasks.add_task(send_narration_request, script_path, job_id)
+    bg_tasks.add_task(send_narration_request, script_path, callback_url, job_id)
     return job_id
 
 
@@ -95,11 +97,12 @@ def webhook(response: WebhookResponse):
             pass
 
 
-def send_narration_request(script_path: str, job_id: str):
+def send_narration_request(script_path: str, callback_url, job_id: str):
     script_data = s3_client.get_file(SCRIPT_RESULTS_BUCKET, script_path)
     dialogue_details = [DialogueDetails(**d) for d in json.loads(script_data)]
     request = WebhookRequest(
-        url=f"{SCRIPT_API_URL}/webhook",
+        internal_callback=f"{SCRIPT_API_URL}/webhook",
+        external_callback=callback_url,
         job_id=job_id,
         data=SpeechRequest(
             title=script_path.rstrip(".json"),

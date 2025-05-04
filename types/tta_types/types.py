@@ -27,7 +27,8 @@ class SpeechResponse(BaseModel):
 
 
 class WebhookRequest(BaseModel):
-    url: str
+    internal_callback: str
+    external_callback: str
     job_id: str
     data: dict
 
@@ -38,3 +39,4 @@ class WebhookResponse(BaseModel):
     status: str
     message: str
     data: dict
+    callback_url: str | None = None
