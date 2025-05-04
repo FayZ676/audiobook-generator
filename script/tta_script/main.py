@@ -13,6 +13,7 @@ from tta_types.types import (
     SpeechRequestSegment,
     WebhookResponse,
     SpeechResponse,
+    ScriptResponse,
 )
 from tta_aws.s3 import S3Client
 
@@ -54,17 +55,17 @@ def _get_voices() -> list[Voice]:
 
 
 @app.post("/script")
-def build_script(file: UploadFile, narrator_voice_name: str):
-    script = generate_script(
-        text=file.file.read().decode("utf-8"),
-        voices=_get_voices(),
-        narrator_name=narrator_voice_name,
+async def build_script(
+    file: UploadFile,
+    narrator_voice_name: str,
+    callback_url: str,
+    bg_tasks: BackgroundTasks,
+):
+    job_id = str(uuid.uuid4())
+    bg_tasks.add_task(
+        send_script_request, file, narrator_voice_name, callback_url, job_id
     )
-    filename = file.filename
-    if not filename:
-        raise ValueError("Invalid filename")
-    script_file = _to_json_fileobject(filename.rstrip(".txt"), script)
-    s3_client.upload_fileobj(SCRIPT_RESULTS_BUCKET, script_file.name, script_file)
+    return job_id
 
 
 @app.post("/narration", status_code=status.HTTP_202_ACCEPTED)
@@ -81,7 +82,7 @@ def webhook(response: WebhookResponse):
     response_type = response.type
     match response_type:
         case "speech":
-            speech_data = SpeechResponse(**response.data)
+            speech_data = SpeechResponse.model_validate(response.data)
             narration = s3_client.get_file(SPEECH_RESULTS_BUCKET, speech_data.filename)
             # return StreamingResponse(
             #     io.BytesIO(narration),
@@ -93,11 +94,44 @@ def webhook(response: WebhookResponse):
             # TODO: Send audio file to the client.
             with open(speech_data.filename, "wb") as f:
                 f.write(narration)
+        case "script":
+            script_data = ScriptResponse.model_validate(response.data)
+            script_file = s3_client.get_file(
+                SCRIPT_RESULTS_BUCKET, script_data.filename
+            )
+            # TODO: Send audio file to the client.
         case _:
             pass
 
 
-def send_narration_request(script_path: str, callback_url, job_id: str):
+def send_script_request(
+    file: UploadFile, narrator_voice_name: str, callback_url: str, job_id: str
+):
+    script = generate_script(
+        text=file.file.read().decode("utf-8"),
+        voices=_get_voices(),
+        narrator_name=narrator_voice_name,
+    )
+    filename = file.filename
+    if not filename:
+        raise ValueError("Invalid filename")
+    script_file = _to_json_fileobject(filename.rstrip(".txt"), script)
+    s3_client.upload_fileobj(SCRIPT_RESULTS_BUCKET, script_file.name, script_file)
+    requests.post(
+        SCRIPT_API_URL + "/webhook",
+        json=WebhookResponse(
+            job_id=job_id,
+            type="script",
+            status="success",
+            message="",
+            data=ScriptResponse(filename=script_file.name).model_dump(),
+            callback_url=callback_url,
+        ).model_dump(),
+        timeout=5,
+    )
+
+
+def send_narration_request(script_path: str, callback_url: str, job_id: str):
     script_data = s3_client.get_file(SCRIPT_RESULTS_BUCKET, script_path)
     dialogue_details = [DialogueDetails(**d) for d in json.loads(script_data)]
     request = WebhookRequest(

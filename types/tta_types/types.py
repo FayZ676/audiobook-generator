@@ -26,6 +26,10 @@ class SpeechResponse(BaseModel):
     filename: str
 
 
+class ScriptResponse(BaseModel):
+    filename: str
+
+
 class WebhookRequest(BaseModel):
     internal_callback: str
     external_callback: str
@@ -35,7 +39,7 @@ class WebhookRequest(BaseModel):
 
 class WebhookResponse(BaseModel):
     job_id: str
-    type: Literal["speech", "narration"]
+    type: Literal["speech", "script"]
     status: str
     message: str
     data: dict
