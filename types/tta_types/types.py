@@ -11,6 +11,13 @@ class Voice:
 
 
 @dataclass
+class SpeechRequest:
+    title: str
+    text: list[dict[str, str]]
+    voices: list[Voice]
+
+
+@dataclass
 class WebhookRequest:
     url: str
     job_id: str

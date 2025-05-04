@@ -7,7 +7,7 @@ from typing import BinaryIO
 from tta_script.dialogue.types import DialogueDetails
 from tta_script.script import generate_script
 
-from tta_types.types import Voice, WebhookRequest
+from tta_types.types import Voice, WebhookRequest, SpeechRequest
 from tta_aws.s3 import S3Client
 
 import requests
@@ -70,17 +70,19 @@ def send_narration_request(script_path: str, job_id: str):
     request = WebhookRequest(
         url="foo",
         job_id=job_id,
-        data={
-            "title": script_path.rstrip(".json"),
-            "text": [
-                {
-                    "text": d.text,
-                    "voice_name": d.voice_id,
-                }
-                for d in dialogue_details
-            ],
-            "voices": [asdict(v) for v in _get_voices()],
-        },
+        data=asdict(
+            SpeechRequest(
+                title=script_path.rstrip(".json"),
+                text=[
+                    {
+                        "text": d.text,
+                        "voice_name": d.voice_id,
+                    }
+                    for d in dialogue_details
+                ],
+                voices=_get_voices(),
+            )
+        ),
     )
     requests.post(
         SPEECH_API_URL + "/speech",
