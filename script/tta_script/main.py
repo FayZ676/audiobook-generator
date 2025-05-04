@@ -88,6 +88,7 @@ def webhook(response: WebhookResponse):
             #         "Content-Disposition": f'attachment; filename="{speech_data.filename}"',
             #     },
             # )
+            # TODO: Send audio file to the client.
             with open(speech_data.filename, "wb") as f:
                 f.write(narration)
         case _:
