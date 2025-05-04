@@ -43,4 +43,4 @@ class WebhookResponse(BaseModel):
     status: str
     message: str
     data: dict
-    callback_url: str | None = None
+    callback_url: str

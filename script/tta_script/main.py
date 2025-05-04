@@ -84,22 +84,20 @@ def webhook(response: WebhookResponse):
         case "speech":
             speech_data = SpeechResponse.model_validate(response.data)
             narration = s3_client.get_file(SPEECH_RESULTS_BUCKET, speech_data.filename)
-            # return StreamingResponse(
-            #     io.BytesIO(narration),
-            #     media_type="audio/mpeg",
-            #     headers={
-            #         "Content-Disposition": f'attachment; filename="{speech_data.filename}"',
-            #     },
-            # )
-            # TODO: Send audio file to the client.
-            with open(speech_data.filename, "wb") as f:
-                f.write(narration)
+            narration_file = StreamingResponse(
+                io.BytesIO(narration),
+                media_type="audio/mpeg",
+                headers={
+                    "Content-Disposition": f'attachment; filename="{speech_data.filename}"',
+                },
+            )
+            # TODO: Send narration file to the client.
         case "script":
             script_data = ScriptResponse.model_validate(response.data)
             script_file = s3_client.get_file(
                 SCRIPT_RESULTS_BUCKET, script_data.filename
             )
-            # TODO: Send audio file to the client.
+            # TODO: Send script file to the client.
         case _:
             pass
 
