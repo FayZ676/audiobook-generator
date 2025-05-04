@@ -11,9 +11,15 @@ class Voice:
 
 
 @dataclass
+class SpeechRequestSegment:
+    text: str
+    voice_name: str
+
+
+@dataclass
 class SpeechRequest:
     title: str
-    text: list[dict[str, str]]
+    text: list[SpeechRequestSegment]
     voices: list[Voice]
 
 

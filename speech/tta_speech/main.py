@@ -6,9 +6,9 @@ from pydub.effects import normalize
 from fastapi import FastAPI
 
 from tta_speech.infer import infer
-from tta_speech.types import InferenceParams, InputData, SpeechRequest, TextSegment
+from tta_speech.types import InferenceParams, InputData
 
-from tta_types.types import Voice
+from tta_types.types import Voice, WebhookRequest, SpeechRequest, SpeechRequestSegment
 from tta_aws.s3 import S3Client
 
 
@@ -34,7 +34,7 @@ def normalize_audio_volume(audio_path: str, headroom: float = 0.1) -> str:
 
 # NOTE: I hate that we need to download the audio.
 def _prepare_input(
-    request: list[TextSegment], voices: list[Voice], voice_save_path: str
+    request: list[SpeechRequestSegment], voices: list[Voice], voice_save_path: str
 ) -> InputData:
     def download_audio(audio_name: str):
         print(f"Downloading audio {audio_name}")
@@ -80,9 +80,10 @@ def _build_audio(audio_segments: list[tuple[bytes, int | None]]) -> bytes:
 
 
 @app.post("/speech")
-def generate(request: SpeechRequest, voices: list[Voice]):
+def generate(request: WebhookRequest, voices: list[Voice]):
     voice_save_path = "/tmp"
-    text_input = _prepare_input(request.text, voices, voice_save_path)
+    data = SpeechRequest(**request.data)
+    text_input = _prepare_input(data.text, voices, voice_save_path)
     result = infer(
         InferenceParams(
             gen_text=text_input.text,
@@ -95,5 +96,5 @@ def generate(request: SpeechRequest, voices: list[Voice]):
         )
     )
     audio = _build_audio([result])
-    s3.upload_fileobj(SPEECH_BUCKET, f"{request.title}.mp3", BytesIO(audio))
+    s3.upload_fileobj(SPEECH_BUCKET, f"{data.title}.mp3", BytesIO(audio))
     # TODO: Send notification to webhook.
