@@ -1,16 +1,17 @@
 import io
 import json
+import uuid
 from dataclasses import asdict
 from typing import BinaryIO
 
 from tta_script.dialogue.types import DialogueDetails
 from tta_script.script import generate_script
 
-from tta_types.types import Voice
+from tta_types.types import Voice, WebhookRequest
 from tta_aws.s3 import S3Client
 
 import requests
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, UploadFile, BackgroundTasks, status
 
 
 app = FastAPI()
@@ -56,12 +57,20 @@ def build_script(file: UploadFile, narrator_voice_name: str):
     s3_client.upload_fileobj(SCRIPT_RESULTS_BUCKET, script_file.name, script_file)
 
 
-@app.post("/narration")
-def build_narration(script_path: str):
+@app.post("/narration", status_code=status.HTTP_202_ACCEPTED)
+async def build_narration(script_path: str, bg_tasks: BackgroundTasks):
+    job_id = str(uuid.uuid4())
+    bg_tasks.add_task(send_narration_request, script_path, job_id)
+    return job_id
+
+
+def send_narration_request(script_path: str, job_id: str):
     script_data = s3_client.get_file(SCRIPT_RESULTS_BUCKET, script_path)
     dialogue_details = [DialogueDetails(**d) for d in json.loads(script_data)]
-    payload = {
-        "request": {
+    request = WebhookRequest(
+        url="foo",
+        job_id=job_id,
+        data={
             "title": script_path.rstrip(".json"),
             "text": [
                 {
@@ -70,12 +79,11 @@ def build_narration(script_path: str):
                 }
                 for d in dialogue_details
             ],
+            "voices": [asdict(v) for v in _get_voices()],
         },
-        "voices": [asdict(v) for v in _get_voices()],
-    }
-    result = requests.post(
+    )
+    requests.post(
         SPEECH_API_URL + "/speech",
-        json=payload,
+        json=request,
         timeout=5,
     )
-    result.raise_for_status()

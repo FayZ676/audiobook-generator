@@ -8,3 +8,10 @@ class Voice:
     gender: str
     audio_path: str
     audio_transcript: str
+
+
+@dataclass
+class WebhookRequest:
+    url: str
+    job_id: str
+    data: dict
