@@ -2,7 +2,6 @@ from io import BytesIO
 from pathlib import Path
 from pydub import AudioSegment
 from pydub.effects import normalize
-from dataclasses import asdict
 
 import requests
 from fastapi import FastAPI
@@ -89,10 +88,10 @@ def _build_audio(audio_segments: list[tuple[bytes, int | None]]) -> bytes:
 
 
 @app.post("/speech")
-def generate(request: WebhookRequest, voices: list[Voice]):
+def generate(request: WebhookRequest):
     voice_save_path = "/tmp"
-    data = SpeechRequest(**request.data)
-    text_input = _prepare_input(data.text, voices, voice_save_path)
+    data = SpeechRequest.model_validate(request.data)
+    text_input = _prepare_input(data.text, data.voices, voice_save_path)
     result = infer(
         InferenceParams(
             gen_text=text_input.text,
@@ -113,7 +112,7 @@ def generate(request: WebhookRequest, voices: list[Voice]):
             type="speech",
             status="complete",
             message="",
-            data=asdict(SpeechResponse(filename=data.title)),
-        ),
+            data=SpeechResponse(filename=f"{data.title}.mp3").model_dump(),
+        ).model_dump(),
         timeout=5,
     )

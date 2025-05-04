@@ -1,7 +1,6 @@
 import io
 import json
 import uuid
-from dataclasses import asdict
 from typing import BinaryIO
 
 from tta_script.dialogue.types import DialogueDetails
@@ -27,6 +26,8 @@ app = FastAPI()
 
 SCRIPT_RESULTS_BUCKET = "tta-script-results"
 SPEECH_RESULTS_BUCKET = "tta-speech-results"
+
+SCRIPT_API_URL = "http://localhost:8000"
 SPEECH_API_URL = "http://localhost:8001"
 VOICES_API_URL = "http://localhost:8002"
 
@@ -79,7 +80,7 @@ def webhook(response: WebhookResponse):
     match response_type:
         case "speech":
             speech_data = SpeechResponse(**response.data)
-            narration = s3_client.get_file(SCRIPT_RESULTS_BUCKET, speech_data.filename)
+            narration = s3_client.get_file(SPEECH_RESULTS_BUCKET, speech_data.filename)
             # return StreamingResponse(
             #     io.BytesIO(narration),
             #     media_type="audio/mpeg",
@@ -97,21 +98,19 @@ def send_narration_request(script_path: str, job_id: str):
     script_data = s3_client.get_file(SCRIPT_RESULTS_BUCKET, script_path)
     dialogue_details = [DialogueDetails(**d) for d in json.loads(script_data)]
     request = WebhookRequest(
-        url="foo",
+        url=f"{SCRIPT_API_URL}/webhook",
         job_id=job_id,
-        data=asdict(
-            SpeechRequest(
-                title=script_path.rstrip(".json"),
-                text=[
-                    SpeechRequestSegment(text=d.text, voice_name=d.voice_id)
-                    for d in dialogue_details
-                ],
-                voices=_get_voices(),
-            )
-        ),
+        data=SpeechRequest(
+            title=script_path.rstrip(".json"),
+            text=[
+                SpeechRequestSegment(text=d.text, voice_name=d.voice_id)
+                for d in dialogue_details
+            ],
+            voices=_get_voices(),
+        ).model_dump(),
     )
     requests.post(
         SPEECH_API_URL + "/speech",
-        json=asdict(request),
+        json=request.model_dump(),
         timeout=5,
     )

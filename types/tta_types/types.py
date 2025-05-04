@@ -1,9 +1,9 @@
-from dataclasses import dataclass
 from typing import Literal
 
+from pydantic import BaseModel
 
-@dataclass(frozen=True, eq=True)
-class Voice:
+
+class Voice(BaseModel):
     name: str
     age: str
     gender: str
@@ -11,33 +11,28 @@ class Voice:
     audio_transcript: str
 
 
-@dataclass
-class SpeechRequestSegment:
+class SpeechRequestSegment(BaseModel):
     text: str
     voice_name: str
 
 
-@dataclass
-class SpeechRequest:
+class SpeechRequest(BaseModel):
     title: str
     text: list[SpeechRequestSegment]
     voices: list[Voice]
 
 
-@dataclass
-class SpeechResponse:
+class SpeechResponse(BaseModel):
     filename: str
 
 
-@dataclass
-class WebhookRequest:
+class WebhookRequest(BaseModel):
     url: str
     job_id: str
     data: dict
 
 
-@dataclass
-class WebhookResponse:
+class WebhookResponse(BaseModel):
     job_id: str
     type: Literal["speech", "narration"]
     status: str
