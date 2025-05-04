@@ -7,17 +7,26 @@ from typing import BinaryIO
 from tta_script.dialogue.types import DialogueDetails
 from tta_script.script import generate_script
 
-from tta_types.types import Voice, WebhookRequest, SpeechRequest, SpeechRequestSegment
+from tta_types.types import (
+    Voice,
+    WebhookRequest,
+    SpeechRequest,
+    SpeechRequestSegment,
+    WebhookResponse,
+    SpeechResponse,
+)
 from tta_aws.s3 import S3Client
 
 import requests
 from fastapi import FastAPI, UploadFile, BackgroundTasks, status
+from fastapi.responses import StreamingResponse
 
 
 app = FastAPI()
 
 
 SCRIPT_RESULTS_BUCKET = "tta-script-results"
+SPEECH_RESULTS_BUCKET = "tta-speech-results"
 SPEECH_API_URL = "http://localhost:8001"
 VOICES_API_URL = "http://localhost:8002"
 
@@ -64,6 +73,26 @@ async def build_narration(script_path: str, bg_tasks: BackgroundTasks):
     return job_id
 
 
+@app.post("/webhook")
+def webhook(response: WebhookResponse):
+    response_type = response.type
+    match response_type:
+        case "speech":
+            speech_data = SpeechResponse(**response.data)
+            narration = s3_client.get_file(SCRIPT_RESULTS_BUCKET, speech_data.filename)
+            # return StreamingResponse(
+            #     io.BytesIO(narration),
+            #     media_type="audio/mpeg",
+            #     headers={
+            #         "Content-Disposition": f'attachment; filename="{speech_data.filename}"',
+            #     },
+            # )
+            with open(speech_data.filename, "wb") as f:
+                f.write(narration)
+        case _:
+            pass
+
+
 def send_narration_request(script_path: str, job_id: str):
     script_data = s3_client.get_file(SCRIPT_RESULTS_BUCKET, script_path)
     dialogue_details = [DialogueDetails(**d) for d in json.loads(script_data)]
@@ -83,6 +112,6 @@ def send_narration_request(script_path: str, job_id: str):
     )
     requests.post(
         SPEECH_API_URL + "/speech",
-        json=request,
+        json=asdict(request),
         timeout=5,
     )

@@ -2,13 +2,22 @@ from io import BytesIO
 from pathlib import Path
 from pydub import AudioSegment
 from pydub.effects import normalize
+from dataclasses import asdict
 
+import requests
 from fastapi import FastAPI
 
 from tta_speech.infer import infer
 from tta_speech.types import InferenceParams, InputData
 
-from tta_types.types import Voice, WebhookRequest, SpeechRequest, SpeechRequestSegment
+from tta_types.types import (
+    Voice,
+    WebhookRequest,
+    SpeechRequest,
+    SpeechRequestSegment,
+    WebhookResponse,
+    SpeechResponse,
+)
 from tta_aws.s3 import S3Client
 
 
@@ -97,4 +106,14 @@ def generate(request: WebhookRequest, voices: list[Voice]):
     )
     audio = _build_audio([result])
     s3.upload_fileobj(SPEECH_BUCKET, f"{data.title}.mp3", BytesIO(audio))
-    # TODO: Send notification to webhook.
+    requests.post(
+        url=request.url,
+        json=WebhookResponse(
+            job_id=request.job_id,
+            type="speech",
+            status="complete",
+            message="",
+            data=asdict(SpeechResponse(filename=data.title)),
+        ),
+        timeout=5,
+    )

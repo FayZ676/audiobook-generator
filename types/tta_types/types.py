@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Literal
 
 
 @dataclass(frozen=True, eq=True)
@@ -24,7 +25,21 @@ class SpeechRequest:
 
 
 @dataclass
+class SpeechResponse:
+    filename: str
+
+
+@dataclass
 class WebhookRequest:
     url: str
     job_id: str
+    data: dict
+
+
+@dataclass
+class WebhookResponse:
+    job_id: str
+    type: Literal["speech", "narration"]
+    status: str
+    message: str
     data: dict
