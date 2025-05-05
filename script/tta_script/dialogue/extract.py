@@ -40,7 +40,7 @@ def get_dialogue_details(
         DialogueDetails(
             text=d.text,
             speaker=d.speaker,
-            voice_id=voices[d.speaker.first_alias()],
+            voice_name=voices[d.speaker.first_alias()],
         )
         for d in dialogue
         if d.speaker.first_alias() in voices  # TODO: Is this necessary?

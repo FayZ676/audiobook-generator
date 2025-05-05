@@ -113,8 +113,6 @@ def send_script_request(
 
 def send_narration_request(script_path: str, callback_url: str, job_id: str):
     script_data = s3_client.get_file(SCRIPT_RESULTS_BUCKET, script_path)
-    # We shouldn't need to read the Dialogue details here.
-    dialogue_details = [DialogueDetails(**d) for d in json.loads(script_data)]
     request = WebhookRequest(
         internal_callback=f"{SCRIPT_API_URL}/webhook",
         external_callback=callback_url,
@@ -122,8 +120,7 @@ def send_narration_request(script_path: str, callback_url: str, job_id: str):
         data=SpeechRequest(
             title=script_path.rstrip(".json"),
             text=[
-                SpeechRequestSegment(text=d.text, voice_name=d.voice_id)
-                for d in dialogue_details
+                SpeechRequestSegment.model_validate(d) for d in json.loads(script_data)
             ],
             voices=_get_voices(),
         ).model_dump(),

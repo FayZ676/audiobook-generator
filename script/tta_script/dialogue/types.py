@@ -28,7 +28,7 @@ class Dialogue:
 
 @dataclass(eq=True, frozen=True)
 class DialogueDetails(Dialogue):
-    voice_id: str
+    voice_name: str
 
     def __str__(self) -> str:
         return f"{self.speaker.first_alias()}: {self.text}"
@@ -37,7 +37,7 @@ class DialogueDetails(Dialogue):
         return {
             "speaker": self.speaker.to_dict(),
             "text": self.text,
-            "voice_id": self.voice_id,
+            "voice_name": self.voice_name,
         }
 
 

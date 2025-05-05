@@ -137,7 +137,13 @@ def test_get_dialogue_details():
     def build_speaker_voice(names: set[str]) -> SpeakerVoice:
         return SpeakerVoice(
             SpeakerDetails(frozenset(names), "middle-aged", "male"),
-            Voice("name", "male", "young", "foo", "bar"),
+            Voice(
+                name="name",
+                gender="male",
+                age="young",
+                audio_path="foo",
+                audio_transcript="bar",
+            ),
         )
 
     speakers = {
@@ -149,7 +155,11 @@ def test_get_dialogue_details():
         build_speaker_voice({"Dudley"}),
         build_speaker_voice({"Harry Potter"}),
     }
-    result = get_dialogue_details(get_text("harrypotter-1.txt"), speakers)
+    result = get_dialogue_details(
+        text=get_text("harrypotter-1.txt"),
+        speakers_voices=speakers,
+        narrator_voice=build_speaker_voice({"Narrator"}),
+    )
     expectation = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
     assert [r.text for r in result] == [e.text for e in expectation]
 
