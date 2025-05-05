@@ -9,4 +9,4 @@ RUN pip install /app/types
 RUN pip install /app/aws
 RUN pip install /app/speech
 
-CMD ["uvicorn", "tta_speech.main:app"]
+CMD ["python", "-u", "tta_speech/rp_handler.py"]

@@ -4,7 +4,7 @@ from pydub import AudioSegment
 from pydub.effects import normalize
 
 import requests
-from fastapi import FastAPI
+import runpod
 
 from tta_speech.infer import infer
 from tta_speech.types import InferenceParams, InputData
@@ -18,9 +18,6 @@ from tta_types.types import (
     SpeechResponse,
 )
 from tta_aws.s3 import S3Client
-
-
-app = FastAPI()
 
 
 s3 = S3Client()
@@ -87,8 +84,8 @@ def _build_audio(audio_segments: list[tuple[bytes, int | None]]) -> bytes:
     return output.getvalue()
 
 
-@app.post("/speech")
-def generate(request: WebhookRequest):
+def handler(event: dict):
+    request = WebhookRequest.model_validate(event)
     voice_save_path = "/tmp"
     data = SpeechRequest.model_validate(request.data)
     text_input = _prepare_input(data.text, data.voices, voice_save_path)
@@ -117,3 +114,7 @@ def generate(request: WebhookRequest):
         ).model_dump(),
         timeout=5,
     )
+
+
+if __name__ == "__main__":
+    runpod.serverless.start({"handler": handler})
