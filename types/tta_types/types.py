@@ -10,6 +10,8 @@ class Voice(BaseModel):
     audio_path: str
     audio_transcript: str
 
+    model_config = {"frozen": True}
+
 
 class SpeechRequestSegment(BaseModel):
     text: str
