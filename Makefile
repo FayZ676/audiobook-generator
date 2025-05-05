@@ -2,8 +2,9 @@ init:
 	python -m venv .venv
 	source .venv/bin/activate && \
 	cd speech && make install && \
-	cd ../voices && make install && \
 	cd ../script && make install && \
+	cd ../voices && make install && \
+	cd ../service && make install && \
 	python -m spacy download en_core_web_trf
 
 lint_all:
