@@ -50,10 +50,10 @@ def _get_voices() -> list[Voice]:
 
 
 def _get_textfile_content(textfile_name: str) -> str:
-    file: BinaryIO = s3_client.get_file(TEXT_FILES_BUCKET, textfile_name)
+    file: bytes = s3_client.get_file(TEXT_FILES_BUCKET, textfile_name)
     if not file:
         raise ValueError("File not found")
-    return file.read().decode("utf-8")
+    return file.decode("utf-8")
 
 
 @app.post("/script")

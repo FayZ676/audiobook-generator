@@ -1,6 +1,7 @@
 import io
 import json
 import uuid
+from typing import BinaryIO
 
 from tta_types.types import (
     Voice,
@@ -49,8 +50,17 @@ async def build_script(
     bg_tasks: BackgroundTasks,
 ):
     job_id = str(uuid.uuid4())
+    file_content = await file.read()
+    filename = file.filename
+    if not filename:
+        raise ValueError("Invalid File. Name is required.")
     bg_tasks.add_task(
-        send_script_request, file, narrator_voice_name, callback_url, job_id
+        send_script_request,
+        io.BytesIO(file_content),
+        filename,
+        narrator_voice_name,
+        callback_url,
+        job_id,
     )
     return job_id
 
@@ -90,17 +100,19 @@ def webhook(response: WebhookResponse):
 
 
 def send_script_request(
-    file: UploadFile, narrator_voice_name: str, callback_url: str, job_id: str
+    file: BinaryIO,
+    filename: str,
+    narrator_voice_name: str,
+    callback_url: str,
+    job_id: str,
 ):
-    if not file.filename:
-        raise ValueError("Invalid File. Name is required.")
-    s3_client.upload_fileobj(TEXT_FILES_BUCKET, file.filename, file.file)
+    s3_client.upload_fileobj(TEXT_FILES_BUCKET, filename, file)
     request = WebhookRequest(
         internal_callback=f"{SCRIPT_API_URL}/webhook",
         external_callback=callback_url,
         job_id=job_id,
         data=ScriptRequest(
-            textfile_name=file.filename,
+            textfile_name=filename,
             narrator_voice_name=narrator_voice_name,
         ).model_dump(),
     )
