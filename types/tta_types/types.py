@@ -26,6 +26,11 @@ class SpeechResponse(BaseModel):
     filename: str
 
 
+class ScriptRequest(BaseModel):
+    textfile_name: str
+    narrator_voice_name: str
+
+
 class ScriptResponse(BaseModel):
     filename: str
 
