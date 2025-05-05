@@ -11,4 +11,4 @@ RUN pip install /app/types
 RUN pip install /app/aws
 RUN pip install /app/script
 
-CMD ["uvicorn", "tta_script.main:app"]
+CMD ["uvicorn", "script.main:app"]
