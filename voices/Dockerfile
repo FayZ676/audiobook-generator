@@ -9,4 +9,4 @@ RUN pip install /app/types
 RUN pip install /app/aws
 RUN pip install /app/voices
 
-CMD ["uvicorn", "voices.main:app"]
+CMD ["uvicorn", "tta_voices.main:app"]
