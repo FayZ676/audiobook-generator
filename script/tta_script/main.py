@@ -24,7 +24,7 @@ app = FastAPI()
 SCRIPT_RESULTS_BUCKET = "tta-script-results"
 TEXT_FILES_BUCKET = "tta-text-files"
 
-SCRIPT_API_URL = "http://localhost:8000"
+SERVICE_API_URL = "http://localhost:8000"
 VOICES_API_URL = "http://localhost:8002"
 
 
@@ -67,7 +67,7 @@ async def build_script(request: WebhookRequest):
     script_file = _to_json_fileobject(data.textfile_name.rstrip(".txt"), script)
     s3_client.upload_fileobj(SCRIPT_RESULTS_BUCKET, script_file.name, script_file)
     requests.post(
-        SCRIPT_API_URL + "/webhook",
+        SERVICE_API_URL + "/webhook",
         json=WebhookResponse(
             job_id=request.job_id,
             type="script",
