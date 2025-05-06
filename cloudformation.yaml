@@ -25,3 +25,33 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: tta-text-files
+
+  # Need to manually create access keys for the user.
+  SpeechServiceUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: SpeechServiceUser
+
+  SpeechServiceIAMPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: SpeechServiceS3ReadWritePolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+            Resource:
+              - !Sub "arn:aws:s3:::${SpeechResultsBucket}/*"
+              - !Sub "arn:aws:s3:::${VoicesAudiosBucket}/*"
+          - Effect: Allow
+            Action:
+              - s3:ListBucket
+            Resource:
+              - !GetAtt SpeechResultsBucket.Arn
+              - !GetAtt VoicesAudiosBucket.Arn
+      Users:
+        - !Ref SpeechServiceUser
