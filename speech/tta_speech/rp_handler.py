@@ -1,3 +1,4 @@
+import os
 from io import BytesIO
 from pathlib import Path
 from pydub import AudioSegment
@@ -21,8 +22,8 @@ from tta_aws.s3 import S3Client
 
 
 s3 = S3Client()
-SPEECH_BUCKET = "tta-speech-results"
-VOICES_AUDIOS_BUCKET = "tta-voices-audios"
+SPEECH_RESULTS_BUCKET = os.environ.get("SPEECH_RESULT_BUCKET") or ""
+VOICES_AUDIOS_BUCKET = os.environ.get("VOICES_AUDIOS_BUCKET") or ""
 
 
 def normalize_audio_volume(audio_path: str, headroom: float = 0.1) -> str:
@@ -101,7 +102,7 @@ def handler(event: dict):
         )
     )
     audio = _build_audio([result])
-    s3.upload_fileobj(SPEECH_BUCKET, f"{data.title}.mp3", BytesIO(audio))
+    s3.upload_fileobj(SPEECH_RESULTS_BUCKET, f"{data.title}.mp3", BytesIO(audio))
     requests.post(
         url=request.internal_callback,
         json=WebhookResponse(
