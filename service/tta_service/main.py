@@ -1,3 +1,4 @@
+import os
 import io
 import json
 import uuid
@@ -27,7 +28,8 @@ SCRIPT_RESULTS_BUCKET = "tta-script-results"
 SPEECH_RESULTS_BUCKET = "tta-speech-results"
 TEXT_FILES_BUCKET = "tta-text-files"
 
-SPEECH_API_URL = "http://localhost:8001"
+SPEECH_SERVICE_API_KEY = os.environ.get("SPEECH_SERVICE_API_KEY")
+SPEECH_API_URL = "https://api.runpod.ai/v2/c8kreaii0ep89v/run"
 VOICES_API_URL = "http://localhost:8002"
 SCRIPT_API_URL = "http://localhost:8003"
 
@@ -138,7 +140,11 @@ def send_narration_request(script_path: str, callback_url: str, job_id: str):
         ).model_dump(),
     )
     requests.post(
-        SPEECH_API_URL + "/speech",
+        SPEECH_API_URL,
         json=request.model_dump(),
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {SPEECH_SERVICE_API_KEY}",
+        },
         timeout=5,
     )
