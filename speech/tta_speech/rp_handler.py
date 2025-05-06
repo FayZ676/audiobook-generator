@@ -22,7 +22,7 @@ from tta_aws.s3 import S3Client
 
 
 s3 = S3Client()
-SPEECH_RESULTS_BUCKET = os.environ.get("SPEECH_RESULT_BUCKET") or ""
+SPEECH_RESULTS_BUCKET = os.environ.get("SPEECH_RESULTS_BUCKET") or ""
 VOICES_AUDIOS_BUCKET = os.environ.get("VOICES_AUDIOS_BUCKET") or ""
 
 
