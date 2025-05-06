@@ -6,5 +6,8 @@ init: download_vocos_model
 install:
 	pip install -e ../aws -e ../types -e .
 
+test:
+	cd tta_speech && python rp_handler.py
+
 run:
 	uvicorn tta_speech.main:app --reload --port 8001
