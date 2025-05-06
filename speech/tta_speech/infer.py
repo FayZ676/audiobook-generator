@@ -18,7 +18,7 @@ from f5_tts.infer.utils_infer import (
     preprocess_ref_audio_text,
 )
 
-from tta_speech.types import InferenceParams
+from tta_speech.inference_types import InferenceParams
 
 
 def _initialize_inference(

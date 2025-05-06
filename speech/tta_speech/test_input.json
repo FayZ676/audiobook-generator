@@ -1,0 +1,61 @@
+{
+  "input": {
+    "internal_callback": "http://localhost:8003/webhook",
+    "external_callback": "foo",
+    "job_id": "ab1c1ea6-9878-4185-8ef8-6156ef9f57f4",
+    "data": {
+      "title": "harrypotter-sample-tiny",
+      "text": [
+        {
+          "text": "You'd be stiff if you'd been sitting on a brick wall all day,",
+          "voice_name": "Cathleen McCarron"
+        },
+        { "text": "said Professor McGonagall.", "voice_name": "Arthur Lane" }
+      ],
+      "voices": [
+        {
+          "name": "Arthur Lane",
+          "age": "middle-aged",
+          "gender": "male",
+          "audio_path": "s3://tta-voices-audios/arthur_lane.mp3",
+          "audio_transcript": "Carter Wetherby threw up his snug clarkship, turned the half of his savings over to his wife, and with the remainder bought an outfit."
+        },
+        {
+          "name": "Cathleen McCarron",
+          "age": "old",
+          "gender": "female",
+          "audio_path": "s3://tta-voices-audios/cathleen_mccarron.mp3",
+          "audio_transcript": "Bessy Brunson took a deep breath and prepared to climb a flight of stairs for what seemed like the hundredth time since sunrise. It was not yet noon."
+        },
+        {
+          "name": "Elizabeth Gaskell",
+          "age": "middle-aged",
+          "gender": "female",
+          "audio_path": "s3://tta-voices-audios/elizabeth_gaskell.mp3",
+          "audio_transcript": "When she wakened of herself, as sure as clockwork, and left the household very little peace afterwards."
+        },
+        {
+          "name": "Jim Dale",
+          "age": "middle-aged",
+          "gender": "male",
+          "audio_path": "s3://tta-voices-audios/jim_dale.mp3",
+          "audio_transcript": "Mr. Vernon Dursley had been woken in the early hours of the morning by a loud hooting noise from his nephew Harry's room."
+        },
+        {
+          "name": "Richard Armitage",
+          "age": "middle-aged",
+          "gender": "male",
+          "audio_path": "s3://tta-voices-audios/richard_armitage.mp3",
+          "audio_transcript": "The first of our three golden rules; One, send a message to let us know where you are, closely followed by two, stick to your curfew."
+        },
+        {
+          "name": "Stephen Fry",
+          "age": "old",
+          "gender": "male",
+          "audio_path": "s3://tta-voices-audios/stephen_fry.mp3",
+          "audio_transcript": "At the moment, cosmos is chaos and only chaos because chaos is the only thing that is the case."
+        }
+      ]
+    }
+  }
+}

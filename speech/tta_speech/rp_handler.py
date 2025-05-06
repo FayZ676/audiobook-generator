@@ -7,7 +7,7 @@ import requests
 import runpod
 
 from tta_speech.infer import infer
-from tta_speech.types import InferenceParams, InputData
+from tta_speech.inference_types import InferenceParams, InputData
 
 from tta_types.types import (
     Voice,
@@ -85,7 +85,7 @@ def _build_audio(audio_segments: list[tuple[bytes, int | None]]) -> bytes:
 
 
 def handler(event: dict):
-    request = WebhookRequest.model_validate(event)
+    request = WebhookRequest.model_validate(event["input"])
     voice_save_path = "/tmp"
     data = SpeechRequest.model_validate(request.data)
     text_input = _prepare_input(data.text, data.voices, voice_save_path)

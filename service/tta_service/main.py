@@ -141,7 +141,7 @@ def send_narration_request(script_path: str, callback_url: str, job_id: str):
     )
     requests.post(
         SPEECH_API_URL,
-        json=request.model_dump(),
+        json={"input": request.model_dump()},
         headers={
             "Content-Type": "application/json",
             "Authorization": f"Bearer {SPEECH_SERVICE_API_KEY}",
