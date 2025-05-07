@@ -18,6 +18,8 @@ from tta_types.types import (
 )
 from tta_aws.s3 import S3Client
 
+from tta_service.types import BuildScriptRequest
+
 import requests
 from fastapi import FastAPI, UploadFile, BackgroundTasks, status, HTTPException
 from fastapi.responses import StreamingResponse
@@ -44,8 +46,7 @@ s3_client = S3Client()
 @app.post("/script", status_code=status.HTTP_202_ACCEPTED)
 async def build_script(
     file: UploadFile,
-    narrator_voice_name: str,
-    callback_url: str,
+    request: BuildScriptRequest,
     bg_tasks: BackgroundTasks,
 ):
     job_id = str(uuid.uuid4())
@@ -57,8 +58,8 @@ async def build_script(
         send_script_request,
         io.BytesIO(file_content),
         filename,
-        narrator_voice_name,
-        callback_url,
+        request.narrator_voice_name,
+        request.callback_url,
         job_id,
     )
     return job_id
