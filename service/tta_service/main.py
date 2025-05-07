@@ -33,9 +33,9 @@ SPEECH_RESULTS_BUCKET = "tta-speech-results"
 TEXT_FILES_BUCKET = "tta-text-files"
 
 SPEECH_SERVICE_API_KEY = os.environ.get("SPEECH_SERVICE_API_KEY")
-SPEECH_API_URL = "https://api.runpod.ai/v2/c8kreaii0ep89v/run"
+SPEECH_API_URL = os.environ.get("SPEECH_API_URL")
 SCRIPT_SERVICE_API_KEY = os.environ.get("SCRIPT_SERVICE_API_KEY")
-SCRIPT_API_URL = "https://api.runpod.ai/v2/p5mfx4rszbavv0/run"
+SCRIPT_API_URL = os.environ.get("SCRIPT_API_URL")
 
 
 s3_client = S3Client()
