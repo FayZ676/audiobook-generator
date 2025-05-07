@@ -92,13 +92,35 @@ def webhook(response: WebhookResponse):
                     "Content-Disposition": f'attachment; filename="{speech_data.filename}"',
                 },
             )
-            # TODO: Send narration file to the client.
+            requests.post(
+                response.callback_url,
+                json={
+                    "job_id": response.job_id,
+                    "status": "completed",
+                    "data": {
+                        "filename": speech_data.filename,
+                        "narration_file": narration_file,
+                    },
+                },
+                timeout=5,
+            )
         case "script":
             script_data = ScriptResponse.model_validate(response.data)
             script_file = s3_client.get_file(
                 SCRIPT_RESULTS_BUCKET, script_data.filename
             )
-            # TODO: Send script file to the client.
+            requests.post(
+                response.callback_url,
+                json={
+                    "job_id": response.job_id,
+                    "status": "completed",
+                    "data": {
+                        "filename": script_data.filename,
+                        "script_file": script_file.decode("utf-8"),
+                    },
+                },
+                timeout=5,
+            )
         case _:
             pass
 
