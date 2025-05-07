@@ -69,6 +69,19 @@ async def build_script(
     return job_id
 
 
+@app.get("/script/{filename}")
+def get_script(filename: str):
+    script = s3_client.get_file(SCRIPT_RESULTS_BUCKET, filename)
+    script_file = StreamingResponse(
+        io.BytesIO(script),
+        media_type="application/json",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+        },
+    )
+    return script_file
+
+
 @app.post("/narration", status_code=status.HTTP_202_ACCEPTED)
 async def build_narration(
     script_path: str, callback_url: str, bg_tasks: BackgroundTasks
@@ -78,46 +91,44 @@ async def build_narration(
     return job_id
 
 
+@app.get("/narration/{filename}")
+def get_narration(filename: str):
+    narration = s3_client.get_file(SPEECH_RESULTS_BUCKET, filename)
+    narration_file = StreamingResponse(
+        io.BytesIO(narration),
+        media_type="audio/mpeg",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+        },
+    )
+    return narration_file
+
+
 @app.post("/webhook")
 def webhook(response: WebhookResponse):
     response_type = response.type
     match response_type:
         case "speech":
             speech_data = SpeechResponse.model_validate(response.data)
-            narration = s3_client.get_file(SPEECH_RESULTS_BUCKET, speech_data.filename)
-            narration_file = StreamingResponse(
-                io.BytesIO(narration),
-                media_type="audio/mpeg",
-                headers={
-                    "Content-Disposition": f'attachment; filename="{speech_data.filename}"',
-                },
-            )
             requests.post(
                 response.callback_url,
                 json={
+                    "event": "speech",
                     "job_id": response.job_id,
                     "status": "completed",
-                    "data": {
-                        "filename": speech_data.filename,
-                        "narration_file": narration_file,
-                    },
+                    "data": {"filename": speech_data.filename},
                 },
                 timeout=5,
             )
         case "script":
             script_data = ScriptResponse.model_validate(response.data)
-            script_file = s3_client.get_file(
-                SCRIPT_RESULTS_BUCKET, script_data.filename
-            )
             requests.post(
                 response.callback_url,
                 json={
+                    "event": "script",
                     "job_id": response.job_id,
                     "status": "completed",
-                    "data": {
-                        "filename": script_data.filename,
-                        "script_file": script_file.decode("utf-8"),
-                    },
+                    "data": {"filename": script_data.filename},
                 },
                 timeout=5,
             )
