@@ -64,6 +64,12 @@ async def build_script(
     return job_id
 
 
+@app.get("/script")
+def get_scripts():
+    scripts_metadata = s3_client.get_files(SCRIPT_RESULTS_BUCKET)
+    return [ScriptResponse(filename=s) for s in scripts_metadata]
+
+
 @app.get("/script/{filename}")
 def get_script(filename: str):
     script = s3_client.get_file(SCRIPT_RESULTS_BUCKET, filename)
@@ -140,7 +146,7 @@ def get_voices():
             VOICES_METADATA_BUCKET, str(voice_metadata_key)
         )
         voice_data = json.loads(file_content_bytes.decode("utf-8"))
-        voices.append(Voice(**voice_data))
+        voices.append(Voice.model_validate(voice_data))
     return voices
 
 
@@ -150,7 +156,7 @@ def get_voice(voice_name: str):
         VOICES_METADATA_BUCKET, f"{voice_name}.json"
     )
     voice = json.loads(file_content_bytes.decode("utf-8"))
-    return Voice(**voice)
+    return Voice.model_validate(voice)
 
 
 @app.post("/voices")
