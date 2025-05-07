@@ -15,10 +15,7 @@ from tta_types.types import (
 from tta_aws.s3 import S3Client
 
 import requests
-from fastapi import FastAPI
-
-
-app = FastAPI()
+import runpod
 
 
 SCRIPT_RESULTS_BUCKET = "tta-script-results"
@@ -56,8 +53,8 @@ def _get_textfile_content(textfile_name: str) -> str:
     return file.decode("utf-8")
 
 
-@app.post("/script")
-async def build_script(request: WebhookRequest):
+def handler(event: dict):
+    request = WebhookRequest.model_validate(event["input"])
     data = ScriptRequest.model_validate(request.data)
     script = generate_script(
         text=_get_textfile_content(data.textfile_name),
@@ -78,3 +75,7 @@ async def build_script(request: WebhookRequest):
         ).model_dump(),
         timeout=5,
     )
+
+
+if __name__ == "__main__":
+    runpod.serverless.start({"handler": handler})
