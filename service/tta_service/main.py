@@ -209,7 +209,7 @@ def send_script_request(
         json={"input": request.model_dump()},
         headers={
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {SPEECH_SERVICE_API_KEY}",
+            "Authorization": f"Bearer {SCRIPT_SERVICE_API_KEY}",
         },
         timeout=5,
     )
