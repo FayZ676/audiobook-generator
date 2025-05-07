@@ -1,3 +1,4 @@
+import os
 import io
 import json
 from typing import BinaryIO
@@ -21,8 +22,8 @@ import runpod
 SCRIPT_RESULTS_BUCKET = "tta-script-results"
 TEXT_FILES_BUCKET = "tta-text-files"
 
-SERVICE_API_URL = "http://localhost:8000"
-VOICES_API_URL = "http://localhost:8002"
+SERVICE_API_URL = os.environ.get("SERVICE_API_URL", "")
+VOICES_API_URL = os.environ.get("VOICES_API_URL", "")
 
 
 s3_client = S3Client()
