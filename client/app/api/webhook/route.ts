@@ -1,3 +1,5 @@
+import { revalidatePath } from "next/cache";
+
 interface WebhookNotificationData {
   filename: string;
 }
@@ -12,11 +14,9 @@ interface WebhookNotification {
 export async function POST(request: Request) {
   try {
     const notification: WebhookNotification = await request.json();
-    if (notification.event == "script") {
-      // Revalidate script data.
-    }
-    if (notification.event == "narration") {
-      // Revalidate narration data.
+    if (notification.event === "script" || notification.event === "narration") {
+      // TODO: Can also update some DB state indicating the job status.
+      revalidatePath("/");
     }
   } catch (error) {
     console.error("Failed to parse JSON:", error);
