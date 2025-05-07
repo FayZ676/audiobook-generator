@@ -1,5 +1,9 @@
 "use server";
 
+interface Script {
+  filename: string;
+}
+
 export async function createScript(formData: FormData) {
   const file = formData.get("file") as File;
   const narrator = formData.get("narrator") as string;
@@ -30,6 +34,6 @@ export async function createScript(formData: FormData) {
 
 export async function getScripts() {
   const response = await fetch(`${process.env.AUDIOBOOK_SERVICE_URL}/script`);
-  const data = await response.json();
+  const data: Script[] = await response.json();
   return data;
 }
