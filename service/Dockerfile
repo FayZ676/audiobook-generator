@@ -10,4 +10,4 @@ RUN pip install /app/aws
 RUN pip install /app/service
 
 # 10000 is default port used by Render
-CMD ["uvicorn", "service.tta_service.main:app", "-p", "10000"]
+CMD ["uvicorn", "service.tta_service.main:app", "--host", "0.0.0.0", "--port", "10000"]
