@@ -27,3 +27,9 @@ export async function createScript(formData: FormData) {
       console.error("Error:", error);
     });
 }
+
+export async function getScripts() {
+  const response = await fetch(`${process.env.AUDIOBOOK_SERVICE_URL}/script`);
+  const data = await response.json();
+  return data;
+}
