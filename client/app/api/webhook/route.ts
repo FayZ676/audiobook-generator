@@ -1,7 +1,9 @@
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    // TODO: Check the type and status of the event. i.e. fetch script/speech if success.
+    // TODO: Extract script/speech filename.
+    // TODO: Fetch script/narration file from DB.
+    // TODO: Update UI components with the script/speech data.
   } catch (error) {
     console.error("Failed to parse JSON:", error);
     return new Response(JSON.stringify({ error: "Invalid JSON payload" }), {
