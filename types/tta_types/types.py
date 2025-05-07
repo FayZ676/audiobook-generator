@@ -51,3 +51,14 @@ class WebhookResponse(BaseModel):
     message: str
     data: dict
     callback_url: str
+
+
+class WebhookResponseResultData(BaseModel):
+    filename: str
+
+
+class WebhookResponseResult(BaseModel):
+    event: Literal["script", "speech"]
+    job_id: str
+    status: str
+    data: WebhookResponseResultData

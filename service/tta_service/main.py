@@ -10,6 +10,8 @@ from tta_types.types import (
     SpeechRequest,
     SpeechRequestSegment,
     WebhookResponse,
+    WebhookResponseResult,
+    WebhookResponseResultData,
     SpeechResponse,
     ScriptRequest,
     ScriptResponse,
@@ -17,7 +19,7 @@ from tta_types.types import (
 from tta_aws.s3 import S3Client
 
 import requests
-from fastapi import FastAPI, UploadFile, BackgroundTasks, status
+from fastapi import FastAPI, UploadFile, BackgroundTasks, status, HTTPException
 from fastapi.responses import StreamingResponse
 
 
@@ -103,30 +105,30 @@ def webhook(response: WebhookResponse):
     match response_type:
         case "speech":
             speech_data = SpeechResponse.model_validate(response.data)
-            requests.post(
-                response.callback_url,
-                json={
-                    "event": "speech",
-                    "job_id": response.job_id,
-                    "status": "completed",
-                    "data": {"filename": speech_data.filename},
-                },
-                timeout=5,
+            payload = WebhookResponseResult(
+                event="speech",
+                job_id=response.job_id,
+                status="completed",
+                data=WebhookResponseResultData(filename=speech_data.filename),
             )
         case "script":
             script_data = ScriptResponse.model_validate(response.data)
-            requests.post(
-                response.callback_url,
-                json={
-                    "event": "script",
-                    "job_id": response.job_id,
-                    "status": "completed",
-                    "data": {"filename": script_data.filename},
-                },
-                timeout=5,
+            payload = WebhookResponseResult(
+                event="script",
+                job_id=response.job_id,
+                status="completed",
+                data=WebhookResponseResultData(filename=script_data.filename),
             )
         case _:
-            pass
+            return HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid response type: {response_type}",
+            )
+    requests.post(
+        response.callback_url,
+        json=payload,
+        timeout=5,
+    )
 
 
 @app.get("/voices")
