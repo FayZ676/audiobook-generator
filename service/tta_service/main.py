@@ -32,21 +32,14 @@ TEXT_FILES_BUCKET = "tta-text-files"
 
 SPEECH_SERVICE_API_KEY = os.environ.get("SPEECH_SERVICE_API_KEY")
 SPEECH_API_URL = "https://api.runpod.ai/v2/c8kreaii0ep89v/run"
-VOICES_API_URL = "http://localhost:8002"
-SCRIPT_API_URL = "http://localhost:8003"
+SCRIPT_SERVICE_API_KEY = os.environ.get("SCRIPT_SERVICE_API_KEY")
+SCRIPT_API_URL = "https://api.runpod.ai/v2/p5mfx4rszbavv0/run"
 
 
 s3_client = S3Client()
 
 
-def _get_voices() -> list[Voice]:
-    data = requests.get(VOICES_API_URL + "/voices", timeout=5)
-    if data.status_code != 200:
-        raise ValueError("Failed to fetch voices from the API")
-    return [Voice(**v) for v in data.json()]
-
-
-@app.post("/script")
+@app.post("/script", status_code=status.HTTP_202_ACCEPTED)
 async def build_script(
     file: UploadFile,
     narrator_voice_name: str,
@@ -84,10 +77,10 @@ def get_script(filename: str):
 
 @app.post("/narration", status_code=status.HTTP_202_ACCEPTED)
 async def build_narration(
-    script_path: str, callback_url: str, bg_tasks: BackgroundTasks
+    script_path: str, voices: list[Voice], callback_url: str, bg_tasks: BackgroundTasks
 ):
     job_id = str(uuid.uuid4())
-    bg_tasks.add_task(send_narration_request, script_path, callback_url, job_id)
+    bg_tasks.add_task(send_narration_request, script_path, voices, callback_url, job_id)
     return job_id
 
 
@@ -214,11 +207,17 @@ def send_script_request(
     requests.post(
         SCRIPT_API_URL + "/script",
         json={"input": request.model_dump()},
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {SPEECH_SERVICE_API_KEY}",
+        },
         timeout=5,
     )
 
 
-def send_narration_request(script_path: str, callback_url: str, job_id: str):
+def send_narration_request(
+    script_path: str, voices: list[Voice], callback_url: str, job_id: str
+):
     script_data = s3_client.get_file(SCRIPT_RESULTS_BUCKET, script_path)
     request = WebhookRequest(
         internal_callback=f"{SCRIPT_API_URL}/webhook",
@@ -229,7 +228,7 @@ def send_narration_request(script_path: str, callback_url: str, job_id: str):
             text=[
                 SpeechRequestSegment.model_validate(d) for d in json.loads(script_data)
             ],
-            voices=_get_voices(),
+            voices=voices,
         ).model_dump(),
     )
     requests.post(
