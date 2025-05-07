@@ -1,0 +1,11 @@
+{
+  "input": {
+    "internal_callback": "http://localhost:8003/webhook",
+    "external_callback": "foo",
+    "job_id": "dc833a39-57e7-4f59-a58e-8c5e58824976",
+    "data": {
+      "textfile_name": "harrypotter-sample-tiny.txt",
+      "narrator_voice_name": "Jim Dale"
+    }
+  }
+}
