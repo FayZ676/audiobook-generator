@@ -32,6 +32,7 @@ Resources:
     Properties:
       UserName: SpeechServiceUser
 
+  # Need to rename this policy to be more general.
   SpeechServiceIAMPolicy:
     Type: AWS::IAM::Policy
     Properties:
@@ -47,6 +48,9 @@ Resources:
             Resource:
               - !Sub "arn:aws:s3:::${SpeechResultsBucket}/*"
               - !Sub "arn:aws:s3:::${VoicesAudiosBucket}/*"
+              - !Sub "arn:aws:s3:::${VoicesMetadataBucket}/*"
+              - !Sub "arn:aws:s3:::${TextFilesBucket}/*"
+              - !Sub "arn:aws:s3:::${ScriptResultsBucket}/*"
           - Effect: Allow
             Action:
               - s3:ListBucket

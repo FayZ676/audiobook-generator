@@ -23,7 +23,6 @@ SCRIPT_RESULTS_BUCKET = "tta-script-results"
 TEXT_FILES_BUCKET = "tta-text-files"
 
 SERVICE_API_URL = os.environ.get("SERVICE_API_URL", "")
-VOICES_API_URL = os.environ.get("VOICES_API_URL", "")
 
 
 s3_client = S3Client()
@@ -41,7 +40,7 @@ def _to_json_fileobject(
 
 
 def _get_voices() -> list[Voice]:
-    data = requests.get(VOICES_API_URL + "/voices", timeout=5)
+    data = requests.get(SERVICE_API_URL + "/voices", timeout=5)
     if data.status_code != 200:
         raise ValueError("Failed to fetch voices from the API")
     return [Voice(**v) for v in data.json()]
