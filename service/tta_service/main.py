@@ -180,7 +180,7 @@ def send_script_request(
     )
     requests.post(
         SCRIPT_API_URL + "/script",
-        json=request.model_dump(),
+        json={"input": request.model_dump()},
         timeout=5,
     )
 
