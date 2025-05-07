@@ -9,4 +9,4 @@ RUN pip install /app/types
 RUN pip install /app/aws
 RUN pip install /app/service
 
-CMD ["uvicorn", "service.tta_speech.main:app"]
+CMD ["uvicorn", "service.tta_service.main:app"]
