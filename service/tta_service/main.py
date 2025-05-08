@@ -21,7 +21,7 @@ from tta_aws.s3 import S3Client
 from tta_service.types import BuildScriptRequest
 
 import requests
-from fastapi import FastAPI, UploadFile, BackgroundTasks, status, HTTPException
+from fastapi import FastAPI, UploadFile, BackgroundTasks, status, HTTPException, Form
 from fastapi.responses import StreamingResponse
 
 
@@ -45,21 +45,22 @@ s3_client = S3Client()
 
 @app.post("/script", status_code=status.HTTP_202_ACCEPTED)
 async def build_script(
-    file: UploadFile,
-    request: BuildScriptRequest,
     bg_tasks: BackgroundTasks,
+    file: UploadFile,
+    request: str = Form(...),
 ):
     job_id = str(uuid.uuid4())
     file_content = await file.read()
     filename = file.filename
     if not filename:
         raise ValueError("Invalid File. Name is required.")
+    request_data = BuildScriptRequest.model_validate_json(request)
     bg_tasks.add_task(
         send_script_request,
         io.BytesIO(file_content),
         filename,
-        request.narrator_voice_name,
-        request.callback_url,
+        request_data.narrator_voice_name,
+        request_data.callback_url,
         job_id,
     )
     return job_id

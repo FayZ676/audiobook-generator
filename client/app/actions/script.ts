@@ -12,34 +12,23 @@ interface BuildScriptRequest {
 export async function createScript(formData: FormData) {
   const file = formData.get("file") as File;
   const narrator = formData.get("narrator") as string;
-  const requestBody: BuildScriptRequest = {
+
+  const request: BuildScriptRequest = {
     narrator_voice_name: narrator,
     callback_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/webhook`,
   };
-
   const serverFormData = new FormData();
   serverFormData.append("file", file);
-  serverFormData.append("request", JSON.stringify(requestBody));
+  serverFormData.append("request", JSON.stringify(request));
 
-  fetch(
-    `${process.env.AUDIOBOOK_SERVICE_URL}/script?narrator=${encodeURIComponent(
-      narrator
-    )}`,
-    {
-      method: "POST",
-      body: serverFormData,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  )
-    .then((response) => response.json())
-    .then((data) => {
-      console.log(data);
-    })
-    .catch((error) => {
-      console.error("Error:", error);
-    });
+  try {
+    const response = await fetch(
+      `${process.env.AUDIOBOOK_SERVICE_URL}/script`,
+      { method: "POST", body: serverFormData }
+    );
+  } catch (error) {
+    console.error("Error submitting script:", error);
+  }
 }
 
 export async function getScripts() {
