@@ -4,12 +4,22 @@ interface Script {
   filename: string;
 }
 
+interface BuildScriptRequest {
+  narrator_voice_name: string;
+  callback_url: string;
+}
+
 export async function createScript(formData: FormData) {
   const file = formData.get("file") as File;
   const narrator = formData.get("narrator") as string;
+  const requestBody: BuildScriptRequest = {
+    narrator_voice_name: narrator,
+    callback_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/webhook`,
+  };
 
   const serverFormData = new FormData();
   serverFormData.append("file", file);
+  serverFormData.append("request", JSON.stringify(requestBody));
 
   fetch(
     `${process.env.AUDIOBOOK_SERVICE_URL}/script?narrator=${encodeURIComponent(
