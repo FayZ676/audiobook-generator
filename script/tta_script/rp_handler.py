@@ -40,7 +40,7 @@ def _to_json_fileobject(
 
 
 def _get_voices() -> list[Voice]:
-    data = requests.get(SERVICE_API_URL + "/voices", timeout=5)
+    data = requests.get(SERVICE_API_URL + "/voices", timeout=120)
     if data.status_code != 200:
         raise ValueError("Failed to fetch voices from the API")
     return [Voice(**v) for v in data.json()]
@@ -73,7 +73,7 @@ def handler(event: dict):
             data=ScriptResponse(filename=script_file.name).model_dump(),
             callback_url=request.external_callback,
         ).model_dump(),
-        timeout=5,
+        timeout=120,
     )
 
 
