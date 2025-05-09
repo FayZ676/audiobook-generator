@@ -20,7 +20,7 @@ from tta_aws.s3 import S3Client
 
 from tta_service.types import BuildScriptRequest
 
-import httpx
+import requests
 from fastapi import FastAPI, UploadFile, BackgroundTasks, status, HTTPException
 from fastapi.responses import StreamingResponse
 
@@ -133,7 +133,7 @@ async def webhook(response: WebhookResponse):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid response type: {response_type}",
             )
-    await httpx.AsyncClient().post(
+    requests.post(
         response.callback_url,
         json=payload,
         timeout=5,
@@ -198,7 +198,7 @@ def add_voice(
 def update_voice(name: str | None = None, age: str | None = None): ...
 
 
-async def send_script_request(
+def send_script_request(
     filename: str,
     narrator_voice_name: str,
     callback_url: str,
@@ -213,15 +213,24 @@ async def send_script_request(
             narrator_voice_name=narrator_voice_name,
         ).model_dump(),
     )
-    # NOTE: Add /runsync endpoint when testing locally.
-    await httpx.AsyncClient().post(
-        SCRIPT_API_URL,
-        json={"input": request.model_dump()},
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {SCRIPT_SERVICE_API_KEY}",
-        },
-    )
+    try:
+        # NOTE: Add /runsync endpoint when testing locally.
+        requests.post(
+            f"{SCRIPT_API_URL}/runsync",
+            json={"input": request.model_dump()},
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {SCRIPT_SERVICE_API_KEY}",
+            },
+            timeout=1,
+        )
+    except requests.exceptions.Timeout:
+        pass
+    except Exception as e:
+        return HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to send script request: {str(e)}",
+        )
 
 
 async def send_narration_request(
@@ -240,12 +249,21 @@ async def send_narration_request(
             voices=voices,
         ).model_dump(),
     )
-    await httpx.AsyncClient().post(
-        SPEECH_API_URL,
-        json={"input": request.model_dump()},
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {SPEECH_SERVICE_API_KEY}",
-        },
-        timeout=5,
-    )
+    try:
+        # NOTE: Add /runsync endpoint when testing locally.
+        requests.post(
+            SPEECH_API_URL,
+            json={"input": request.model_dump()},
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {SPEECH_SERVICE_API_KEY}",
+            },
+            timeout=1,
+        )
+    except requests.exceptions.Timeout:
+        pass
+    except Exception as e:
+        return HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to send script request: {str(e)}",
+        )
