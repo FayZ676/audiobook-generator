@@ -213,24 +213,15 @@ def send_script_request(
             narrator_voice_name=narrator_voice_name,
         ).model_dump(),
     )
-    try:
-        # NOTE: Add /runsync endpoint when testing locally.
-        requests.post(
-            f"{SCRIPT_API_URL}/runsync",
-            json={"input": request.model_dump()},
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {SCRIPT_SERVICE_API_KEY}",
-            },
-            timeout=1,
-        )
-    except requests.exceptions.Timeout:
-        pass
-    except Exception as e:
-        return HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to send script request: {str(e)}",
-        )
+    # NOTE: Add /runsync endpoint when testing locally.
+    send_async_request(
+        url=f"{SCRIPT_API_URL}/runsync",
+        payload=request.model_dump(),
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {SCRIPT_SERVICE_API_KEY}",
+        },
+    )
 
 
 async def send_narration_request(
@@ -249,15 +240,23 @@ async def send_narration_request(
             voices=voices,
         ).model_dump(),
     )
+    # NOTE: Add /runsync endpoint when testing locally.
+    send_async_request(
+        url=f"{SPEECH_API_URL}/runsync",
+        payload=request.model_dump(),
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {SPEECH_SERVICE_API_KEY}",
+        },
+    )
+
+
+def send_async_request(url: str, payload: dict, headers: dict):
     try:
-        # NOTE: Add /runsync endpoint when testing locally.
         requests.post(
-            SPEECH_API_URL,
-            json={"input": request.model_dump()},
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {SPEECH_SERVICE_API_KEY}",
-            },
+            url,
+            json=payload,
+            headers=headers,
             timeout=1,
         )
     except requests.exceptions.Timeout:
