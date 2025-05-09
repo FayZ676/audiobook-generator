@@ -20,8 +20,8 @@ from tta_aws.s3 import S3Client
 
 from tta_service.types import BuildScriptRequest
 
-import requests
-from fastapi import FastAPI, UploadFile, BackgroundTasks, status, HTTPException, Form
+import httpx
+from fastapi import FastAPI, UploadFile, BackgroundTasks, status, HTTPException
 from fastapi.responses import StreamingResponse
 
 
@@ -46,24 +46,22 @@ SCRIPT_API_URL = os.environ.get("SCRIPT_API_URL", "")
 s3_client = S3Client()
 
 
-@app.post("/script", status_code=status.HTTP_202_ACCEPTED)
-async def build_script(
-    bg_tasks: BackgroundTasks,
-    file: UploadFile,
-    request: str = Form(...),
-):
-    job_id = str(uuid.uuid4())
-    file_content = await file.read()
-    filename = file.filename
-    if not filename:
+@app.post("/text", status_code=status.HTTP_200_OK)
+async def upload_text_file(file: UploadFile):
+    if not file.filename:
         raise ValueError("Invalid File. Name is required.")
-    request_data = BuildScriptRequest.model_validate_json(request)
+    file_content = await file.read()
+    s3_client.upload_fileobj(TEXT_FILES_BUCKET, file.filename, io.BytesIO(file_content))
+
+
+@app.post("/script", status_code=status.HTTP_202_ACCEPTED)
+async def build_script(request: BuildScriptRequest, bg_tasks: BackgroundTasks):
+    job_id = str(uuid.uuid4())
     bg_tasks.add_task(
         send_script_request,
-        io.BytesIO(file_content),
-        filename,
-        request_data.narrator_voice_name,
-        request_data.callback_url,
+        request.filename,
+        request.narrator_voice_name,
+        request.callback_url,
         job_id,
     )
     return job_id
@@ -111,7 +109,7 @@ def get_narration(filename: str):
 
 
 @app.post("/webhook")
-def webhook(response: WebhookResponse):
+async def webhook(response: WebhookResponse):
     response_type = response.type
     match response_type:
         case "speech":
@@ -135,7 +133,7 @@ def webhook(response: WebhookResponse):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid response type: {response_type}",
             )
-    requests.post(
+    await httpx.AsyncClient().post(
         response.callback_url,
         json=payload,
         timeout=5,
@@ -200,14 +198,12 @@ def add_voice(
 def update_voice(name: str | None = None, age: str | None = None): ...
 
 
-def send_script_request(
-    file: BinaryIO,
+async def send_script_request(
     filename: str,
     narrator_voice_name: str,
     callback_url: str,
     job_id: str,
 ):
-    s3_client.upload_fileobj(TEXT_FILES_BUCKET, filename, file)
     request = WebhookRequest(
         internal_callback=f"{SERVICE_API_URL}/webhook",
         external_callback=callback_url,
@@ -217,18 +213,18 @@ def send_script_request(
             narrator_voice_name=narrator_voice_name,
         ).model_dump(),
     )
-    requests.post(
+    # NOTE: Add /runsync endpoint when testing locally.
+    await httpx.AsyncClient().post(
         SCRIPT_API_URL,
         json={"input": request.model_dump()},
         headers={
             "Content-Type": "application/json",
             "Authorization": f"Bearer {SCRIPT_SERVICE_API_KEY}",
         },
-        timeout=5,
     )
 
 
-def send_narration_request(
+async def send_narration_request(
     script_path: str, voices: list[Voice], callback_url: str, job_id: str
 ):
     script_data = s3_client.get_file(SCRIPT_RESULTS_BUCKET, script_path)
@@ -244,7 +240,7 @@ def send_narration_request(
             voices=voices,
         ).model_dump(),
     )
-    requests.post(
+    await httpx.AsyncClient().post(
         SPEECH_API_URL,
         json={"input": request.model_dump()},
         headers={
