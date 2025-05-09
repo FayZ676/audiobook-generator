@@ -34,9 +34,11 @@ SCRIPT_RESULTS_BUCKET = "tta-script-results"
 SPEECH_RESULTS_BUCKET = "tta-speech-results"
 TEXT_FILES_BUCKET = "tta-text-files"
 
-AUDIOBOOK_API_URL = os.environ.get("AUDIOBOOK_API_URL", "")
+SERVICE_API_URL = os.environ.get("SERVICE_API_URL", "")
+
 SPEECH_SERVICE_API_KEY = os.environ.get("SPEECH_SERVICE_API_KEY", "")
 SPEECH_API_URL = os.environ.get("SPEECH_API_URL", "")
+
 SCRIPT_SERVICE_API_KEY = os.environ.get("SCRIPT_SERVICE_API_KEY", "")
 SCRIPT_API_URL = os.environ.get("SCRIPT_API_URL", "")
 
@@ -207,7 +209,7 @@ def send_script_request(
 ):
     s3_client.upload_fileobj(TEXT_FILES_BUCKET, filename, file)
     request = WebhookRequest(
-        internal_callback=f"{AUDIOBOOK_API_URL}/webhook",
+        internal_callback=f"{SERVICE_API_URL}/webhook",
         external_callback=callback_url,
         job_id=job_id,
         data=ScriptRequest(
@@ -231,7 +233,7 @@ def send_narration_request(
 ):
     script_data = s3_client.get_file(SCRIPT_RESULTS_BUCKET, script_path)
     request = WebhookRequest(
-        internal_callback=f"{AUDIOBOOK_API_URL}/webhook",
+        internal_callback=f"{SERVICE_API_URL}/webhook",
         external_callback=callback_url,
         job_id=job_id,
         data=SpeechRequest(
