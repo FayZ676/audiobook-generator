@@ -1,11 +1,9 @@
 venv
 __pycache__
-.env
-.env.prod
+.env.local
 .coverage
 .pytest_cache
 .vscode
 .venv
-
 pytorch_model.bin
 *.pt
