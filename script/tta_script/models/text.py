@@ -1,10 +1,8 @@
 import os
 
 from openai import OpenAI
-from dotenv import load_dotenv
 
 
-load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
@@ -12,7 +10,6 @@ def generate_text(system_prompt: str, prompt: str, response_format) -> str:
     try:
         return str(
             client.beta.chat.completions.parse(
-                # TODO: Try with gpt-4.1
                 model="gpt-4.1",
                 messages=[
                     {"role": "system", "content": system_prompt},
