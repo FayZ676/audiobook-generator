@@ -113,7 +113,7 @@ def handler(event: dict):
             data=SpeechResponse(filename=f"{data.title}.mp3").model_dump(),
             callback_url=request.external_callback,
         ).model_dump(),
-        timeout=5,
+        timeout=120,
     )
 
 
