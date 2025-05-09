@@ -1,11 +1,9 @@
 install:
 	pip install -e ../types -e ../aws -e .
 
-export_env:
-	export $$(grep -v '^#' .env.local | xargs)
-
-run: export_env
-	python tta_script/rp_handler.py --rp_serve_api --rp_api_port 8001
+run:
+	@chmod +x ./run.sh
+	@./run.sh
 
 lint:
 	pylint --rcfile=../.pylintrc tta_script tests
