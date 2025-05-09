@@ -215,8 +215,8 @@ def send_script_request(
     )
     # NOTE: Add /runsync endpoint when testing locally.
     send_async_request(
-        url=f"{SCRIPT_API_URL}/runsync",
-        payload=request.model_dump(),
+        url=f"{SCRIPT_API_URL}",
+        payload={"input": request.model_dump()},
         headers={
             "Content-Type": "application/json",
             "Authorization": f"Bearer {SCRIPT_SERVICE_API_KEY}",
@@ -242,8 +242,8 @@ async def send_narration_request(
     )
     # NOTE: Add /runsync endpoint when testing locally.
     send_async_request(
-        url=f"{SPEECH_API_URL}/runsync",
-        payload=request.model_dump(),
+        url=f"{SPEECH_API_URL}",
+        payload={"input": request.model_dump()},
         headers={
             "Content-Type": "application/json",
             "Authorization": f"Bearer {SPEECH_SERVICE_API_KEY}",
