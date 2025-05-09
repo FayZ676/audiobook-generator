@@ -2,7 +2,7 @@ install:
 	pip install -e ../types -e ../aws -e .
 
 run:
-	uvicorn tta_script.main:app --reload --port 8003
+	python tta_script/rp_handler.py --rp_serve_api --rp_api_port 8001
 
 lint:
 	pylint --rcfile=../.pylintrc tta_script tests
