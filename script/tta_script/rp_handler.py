@@ -19,10 +19,9 @@ import requests
 import runpod
 
 
-SCRIPT_RESULTS_BUCKET = "tta-script-results"
-TEXT_FILES_BUCKET = "tta-text-files"
-
-SERVICE_API_URL = os.environ.get("SERVICE_API_URL", "")
+SCRIPT_RESULTS_BUCKET = os.environ.get("SCRIPT_RESULTS_BUCKET", "")
+TEXT_FILES_BUCKET = os.environ.get("TEXT_FILES_BUCKET", "")
+VOICE_METADATAS_BUCKET = os.environ.get("VOICE_METADATAS_BUCKET", "")
 
 
 s3_client = S3Client()
@@ -40,10 +39,8 @@ def _to_json_fileobject(
 
 
 def _get_voices() -> list[Voice]:
-    data = requests.get(SERVICE_API_URL + "/voices", timeout=120)
-    if data.status_code != 200:
-        raise ValueError("Failed to fetch voices from the API")
-    return [Voice(**v) for v in data.json()]
+    data = s3_client.get_files(VOICE_METADATAS_BUCKET)
+    return [Voice.model_validate(v) for v in data]
 
 
 def _get_textfile_content(textfile_name: str) -> str:
@@ -64,7 +61,7 @@ def handler(event: dict):
     script_file = _to_json_fileobject(data.textfile_name.rstrip(".txt"), script)
     s3_client.upload_fileobj(SCRIPT_RESULTS_BUCKET, script_file.name, script_file)
     requests.post(
-        SERVICE_API_URL + "/webhook",
+        request.internal_callback,
         json=WebhookResponse(
             job_id=request.job_id,
             type="script",
