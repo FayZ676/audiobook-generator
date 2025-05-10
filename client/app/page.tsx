@@ -7,12 +7,11 @@ export default async function Home() {
   return (
     <div className="max-w-md">
       <form action={createScript} className="flex flex-col gap-4 max-w-sm">
-        <label htmlFor="file-input">Text File</label>
+        <label htmlFor="filename-input">File Name</label>
         <input
-          id="file-input"
-          name="file"
-          type="file"
-          accept=".txt"
+          id="filename-input"
+          name="filename"
+          type="text"
           className="border"
         />
         <label htmlFor="narrator-input">Narrator Voice Name</label>

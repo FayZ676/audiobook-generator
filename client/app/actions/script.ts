@@ -5,29 +5,32 @@ interface Script {
 }
 
 interface BuildScriptRequest {
+  filename: string;
   narrator_voice_name: string;
   callback_url: string;
 }
 
 export async function createScript(formData: FormData) {
-  const file = formData.get("file") as File;
+  const filename = formData.get("filename") as string;
   const narrator = formData.get("narrator") as string;
 
   const request: BuildScriptRequest = {
+    filename: filename,
     narrator_voice_name: narrator,
-    callback_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/webhook`,
+    callback_url: `${process.env.CLIENT_URL}/api/webhook`,
   };
-  const serverFormData = new FormData();
-  serverFormData.append("file", file);
-  serverFormData.append("request", JSON.stringify(request));
 
   try {
-    const response = await fetch(
-      `${process.env.AUDIOBOOK_SERVICE_URL}/script`,
-      { method: "POST", body: serverFormData }
-    );
+    await fetch(`${process.env.AUDIOBOOK_SERVICE_URL}/script`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(request),
+    });
   } catch (error) {
     console.error("Error submitting script:", error);
+    throw error;
   }
 }
 
