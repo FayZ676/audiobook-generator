@@ -21,9 +21,11 @@ from tta_types.types import (
 from tta_aws.s3 import S3Client
 
 
+SPEECH_RESULTS_BUCKET = os.environ.get("SPEECH_RESULTS_BUCKET", "")
+VOICES_AUDIOS_BUCKET = os.environ.get("VOICES_AUDIOS_BUCKET", "")
+
+
 s3 = S3Client()
-SPEECH_RESULTS_BUCKET = os.environ.get("SPEECH_RESULTS_BUCKET") or ""
-VOICES_AUDIOS_BUCKET = os.environ.get("VOICES_AUDIOS_BUCKET") or ""
 
 
 def normalize_audio_volume(audio_path: str, headroom: float = 0.1) -> str:
