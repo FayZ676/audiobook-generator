@@ -119,7 +119,7 @@ async def webhook(response: WebhookResponse):
                 job_id=response.job_id,
                 status="completed",
                 data=WebhookResponseResultData(filename=speech_data.filename),
-            )
+            ).model_dump()
         case "script":
             script_data = ScriptResponse.model_validate(response.data)
             payload = WebhookResponseResult(
@@ -127,7 +127,7 @@ async def webhook(response: WebhookResponse):
                 job_id=response.job_id,
                 status="completed",
                 data=WebhookResponseResultData(filename=script_data.filename),
-            )
+            ).model_dump()
         case _:
             return HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
