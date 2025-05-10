@@ -21,7 +21,7 @@ import runpod
 
 SCRIPT_RESULTS_BUCKET = os.environ.get("SCRIPT_RESULTS_BUCKET", "")
 TEXT_FILES_BUCKET = os.environ.get("TEXT_FILES_BUCKET", "")
-VOICE_METADATAS_BUCKET = os.environ.get("VOICE_METADATAS_BUCKET", "")
+VOICES_METADATAS_BUCKET = os.environ.get("VOICE_METADATAS_BUCKET", "")
 
 
 s3_client = S3Client()
@@ -39,8 +39,15 @@ def _to_json_fileobject(
 
 
 def _get_voices() -> list[Voice]:
-    data = s3_client.get_files(VOICE_METADATAS_BUCKET)
-    return [Voice.model_validate(v) for v in data]
+    voices_metadata = s3_client.get_files(VOICES_METADATAS_BUCKET)
+    voices: list[Voice] = []
+    for voice_metadata_key in voices_metadata:
+        file_content_bytes = s3_client.get_file(
+            VOICES_METADATAS_BUCKET, str(voice_metadata_key)
+        )
+        voice_data = json.loads(file_content_bytes.decode("utf-8"))
+        voices.append(Voice.model_validate(voice_data))
+    return voices
 
 
 def _get_textfile_content(textfile_name: str) -> str:

@@ -1,4 +1,5 @@
 import { createScript, getScripts } from "@/app/actions/script";
+import { uploadTextFile } from "@/app/actions/file";
 
 export default async function Home() {
   const scripts = await getScripts();
@@ -6,6 +7,18 @@ export default async function Home() {
 
   return (
     <div className="max-w-md">
+      <form action={uploadTextFile}>
+        <label htmlFor="file-input">Upload Text File</label>
+        <input
+          id="file-input"
+          name="file"
+          type="file"
+          accept=".txt"
+          className="border"
+        />
+        <button type="submit">Upload</button>
+      </form>
+
       <form action={createScript} className="flex flex-col gap-4 max-w-sm">
         <label htmlFor="filename-input">File Name</label>
         <input
