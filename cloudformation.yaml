@@ -57,11 +57,5 @@ Resources:
               - !Sub "arn:aws:s3:::${VoicesMetadataBucket}"
               - !Sub "arn:aws:s3:::${TextFilesBucket}"
               - !Sub "arn:aws:s3:::${ScriptResultsBucket}"
-          - Effect: Allow
-            Action:
-              - s3:ListBucket
-            Resource:
-              - !GetAtt SpeechResultsBucket.Arn
-              - !GetAtt VoicesAudiosBucket.Arn
       Users:
         - !Ref SpeechServiceUser
