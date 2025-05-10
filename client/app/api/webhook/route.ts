@@ -18,6 +18,10 @@ export async function POST(request: Request) {
       // TODO: Can also update some DB state indicating the job status.
       revalidatePath("/");
     }
+    return new Response("OK", {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (error) {
     console.error("Failed to parse JSON:", error);
     return new Response(JSON.stringify({ error: "Invalid JSON payload" }), {
