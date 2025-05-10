@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: audiobook-generator-service
+    runtime: docker
+    repo: https://github.com/FayZ676/audiobook-generator
+    plan: free
+    envVars:
+      - key: AWS_DEFAULT_REGION
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: SERVICE_API_URL
+        sync: false
+      - key: SCRIPT_API_URL
+        sync: false
+      - key: SCRIPT_SERVICE_API_KEY
+        sync: false
+      - key: SPEECH_API_URL
+        sync: false
+      - key: SPEECH_SERVICE_API_KEY
+        sync: false
+    region: oregon
+    dockerContext: .
+    dockerfilePath: service/Dockerfile
+version: "1"
