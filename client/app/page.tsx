@@ -6,7 +6,7 @@ export default async function Home() {
   // Get narrations as well.
 
   return (
-    <div className="max-w-md">
+    <div className="max-w-md mx-auto">
       <form action={uploadTextFile}>
         <label htmlFor="file-input">Upload Text File</label>
         <input
