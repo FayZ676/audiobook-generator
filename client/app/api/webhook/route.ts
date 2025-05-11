@@ -1,4 +1,5 @@
 import { revalidatePath } from "next/cache";
+import { pusher } from "@/app/lib/pusher";
 
 interface WebhookNotificationData {
   filename: string;
@@ -17,6 +18,7 @@ export async function POST(request: Request) {
     if (notification.event === "script" || notification.event === "narration") {
       // TODO: Can also update some DB state indicating the job status.
       revalidatePath("/");
+      pusher.trigger("audiobook-generator-channel", "job-complete", {});
     }
     return new Response("OK", {
       status: 200,
