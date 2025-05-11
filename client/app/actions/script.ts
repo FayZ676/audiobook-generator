@@ -1,6 +1,6 @@
 "use server";
 
-interface Script {
+export interface Script {
   filename: string;
 }
 
