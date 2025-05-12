@@ -20,6 +20,7 @@ from tta_aws.s3 import S3Client
 
 from tta_service.types import BuildScriptRequest
 
+import pusher
 import requests
 from fastapi import FastAPI, UploadFile, BackgroundTasks, status, HTTPException
 from fastapi.responses import StreamingResponse
@@ -42,8 +43,22 @@ SPEECH_API_URL = os.environ.get("SPEECH_API_URL", "")
 SCRIPT_SERVICE_API_KEY = os.environ.get("SCRIPT_SERVICE_API_KEY", "")
 SCRIPT_API_URL = os.environ.get("SCRIPT_API_URL", "")
 
+PUSHER_APP_ID = os.environ.get("PUSHER_APP_ID", "")
+PUSHER_KEY = os.environ.get("PUSHER_KEY", "")
+PUSHER_SECRET = os.environ.get("PUSHER_SECRET", "")
+PUSHER_CLUSTER = os.environ.get("PUSHER_CLUSTER", "")
+
 
 s3_client = S3Client()
+
+
+pusher_client = pusher.Pusher(
+    app_id=PUSHER_APP_ID,
+    key=PUSHER_KEY,
+    secret=PUSHER_SECRET,
+    cluster=PUSHER_CLUSTER,
+    ssl=True,
+)
 
 
 @app.post("/text", status_code=status.HTTP_200_OK)
@@ -133,11 +148,7 @@ async def webhook(response: WebhookResponse):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid response type: {response_type}",
             )
-    requests.post(
-        response.callback_url,
-        json=payload,
-        timeout=5,
-    )
+    pusher_client.trigger("job-completed", "job-completed", payload)
 
 
 @app.get("/voices")

@@ -21,6 +21,14 @@ services:
         sync: false
       - key: SPEECH_SERVICE_API_KEY
         sync: false
+      - key: PUSHER_APP_ID
+        sync: false
+      - key: PUSHER_KEY
+        sync: false
+      - key: PUSHER_SECRET
+        sync: false
+      - key: PUSHER_CLUSTER
+        sync: false
     region: oregon
     dockerContext: .
     dockerfilePath: service/Dockerfile

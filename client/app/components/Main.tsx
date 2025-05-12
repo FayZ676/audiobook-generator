@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { Script } from "@/app/actions/script";
+import { revalidate } from "@/app/actions/revalidate";
 
 import pusherClient from "@/app/lib/pusher";
 
@@ -12,6 +13,17 @@ interface MainProps {
   scripts: Script[];
   uploadTextFile: (formData: FormData) => Promise<void>;
   createScript: (formData: FormData) => Promise<void>;
+}
+
+interface WebhookResponseResultData {
+  filename: string;
+}
+
+interface WebhookResponseResult {
+  event: string;
+  job_id: string;
+  status: string;
+  data: WebhookResponseResultData;
 }
 
 export default function Main({
@@ -22,9 +34,13 @@ export default function Main({
   const router = useRouter();
   useEffect(() => {
     const channel = pusherClient.subscribe("job-channel");
-    channel.bind("job-completed", (data: { message: string }) => {
-      router.refresh();
-    });
+    channel.bind(
+      "job-completed",
+      (data: { payload: WebhookResponseResult }) => {
+        revalidate();
+        router.refresh();
+      }
+    );
     return () => {
       channel.unbind_all();
       channel.unsubscribe();
@@ -34,7 +50,7 @@ export default function Main({
 
   return (
     <div className="max-w-md mx-auto">
-      <form action={uploadTextFile}>
+      <form action={uploadTextFile} className="flex flex-col gap-4 max-w-sm">
         <label htmlFor="file-input">Upload Text File</label>
         <input
           id="file-input"
@@ -66,8 +82,12 @@ export default function Main({
 
       <div className="flex flex-col gap-4">
         {scripts.map((script) => (
-          <div key={script.filename} className="border p-4">
+          <div
+            key={script.filename}
+            className="flex justify-between border p-4"
+          >
             <p>{script.filename}</p>
+            <button>Delete</button>
           </div>
         ))}
         {scripts.length === 0 && <p>No scripts available.</p>}
