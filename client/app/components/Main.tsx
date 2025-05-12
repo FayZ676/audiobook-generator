@@ -34,19 +34,16 @@ export default function Main({
   deleteScript,
 }: MainProps) {
   const router = useRouter();
+
   useEffect(() => {
     const channel = pusherClient.subscribe("job-channel");
-    channel.bind(
-      "job-completed",
-      (data: { payload: WebhookResponseResult }) => {
-        revalidate();
-        router.refresh();
-      }
-    );
+    channel.bind("job-completed", (data: WebhookResponseResult) => {
+      revalidate();
+      router.refresh();
+    });
     return () => {
-      channel.unbind_all();
-      channel.unsubscribe();
-      pusherClient.disconnect();
+      channel.unbind("job-completed");
+      pusherClient.unsubscribe("job-channel");
     };
   }, []);
 
