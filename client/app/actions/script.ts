@@ -10,6 +10,10 @@ interface BuildScriptRequest {
   callback_url: string;
 }
 
+interface DeleteScriptRequest {
+  filename: string;
+}
+
 export async function createScript(formData: FormData) {
   const filename = formData.get("filename") as string;
   const narrator = formData.get("narrator") as string;
@@ -38,4 +42,17 @@ export async function getScripts() {
   const response = await fetch(`${process.env.AUDIOBOOK_SERVICE_URL}/script`);
   const data: Script[] = await response.json();
   return data;
+}
+
+export async function deleteScript(filename: string) {
+  const request: DeleteScriptRequest = {
+    filename: filename,
+  };
+  await fetch(`${process.env.AUDIOBOOK_SERVICE_URL}/script/${filename}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(request),
+  });
 }

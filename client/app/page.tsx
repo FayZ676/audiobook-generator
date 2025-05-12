@@ -1,4 +1,4 @@
-import { createScript, getScripts } from "@/app/actions/script";
+import { createScript, getScripts, deleteScript } from "@/app/actions/script";
 import { uploadTextFile } from "@/app/actions/file";
 
 import Main from "@/app/components/Main";
@@ -12,6 +12,7 @@ export default async function Home() {
       scripts={scripts}
       uploadTextFile={uploadTextFile}
       createScript={createScript}
+      deleteScript={deleteScript}
     />
   );
 }

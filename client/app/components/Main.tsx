@@ -13,6 +13,7 @@ interface MainProps {
   scripts: Script[];
   uploadTextFile: (formData: FormData) => Promise<void>;
   createScript: (formData: FormData) => Promise<void>;
+  deleteScript: (filename: string) => Promise<void>;
 }
 
 interface WebhookResponseResultData {
@@ -30,6 +31,7 @@ export default function Main({
   scripts,
   uploadTextFile,
   createScript,
+  deleteScript,
 }: MainProps) {
   const router = useRouter();
   useEffect(() => {
@@ -63,6 +65,7 @@ export default function Main({
       </form>
 
       <form action={createScript} className="flex flex-col gap-4 max-w-sm">
+        <h2>Generate Script</h2>
         <label htmlFor="filename-input">File Name</label>
         <input
           id="filename-input"
@@ -81,13 +84,20 @@ export default function Main({
       </form>
 
       <div className="flex flex-col gap-4">
+        <h2>Scripts</h2>
         {scripts.map((script) => (
           <div
             key={script.filename}
             className="flex justify-between border p-4"
           >
             <p>{script.filename}</p>
-            <button>Delete</button>
+            <button
+              onClick={async () => {
+                await deleteScript(script.filename);
+              }}
+            >
+              Delete
+            </button>
           </div>
         ))}
         {scripts.length === 0 && <p>No scripts available.</p>}

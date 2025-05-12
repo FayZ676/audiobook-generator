@@ -18,3 +18,6 @@ class S3Client:
     def get_file(self, bucket_name: str, file_name: str):
         response = self.client.get_object(Bucket=bucket_name, Key=file_name)
         return response["Body"].read()
+
+    def delete_file(self, bucket_name: str, file_name: str):
+        self.client.delete_object(Bucket=bucket_name, Key=file_name)

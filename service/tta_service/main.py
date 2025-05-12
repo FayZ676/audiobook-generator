@@ -101,6 +101,11 @@ def get_script(filename: str):
     return script_file
 
 
+@app.delete("/script/{filename}")
+def delete_script(filename: str):
+    s3_client.delete_file(SCRIPT_RESULTS_BUCKET, filename)
+
+
 @app.post("/narration", status_code=status.HTTP_202_ACCEPTED)
 async def build_narration(
     script_path: str, voices: list[Voice], callback_url: str, bg_tasks: BackgroundTasks
