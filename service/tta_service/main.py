@@ -153,7 +153,7 @@ async def webhook(response: WebhookResponse):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid response type: {response_type}",
             )
-    pusher_client.trigger("job-completed", "job-completed", payload)
+    pusher_client.trigger("job-channel", "job-completed", payload)
 
 
 @app.get("/voices")
