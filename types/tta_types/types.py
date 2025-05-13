@@ -40,12 +40,12 @@ class ScriptResponse(BaseModel):
 class WebhookRequest(BaseModel):
     internal_callback: str
     external_callback: str
-    job_id: str
+    user_id: str
     data: dict
 
 
 class WebhookResponse(BaseModel):
-    job_id: str
+    user_id: str
     type: Literal["speech", "script"]
     status: str
     message: str
@@ -59,6 +59,6 @@ class WebhookResponseResultData(BaseModel):
 
 class WebhookResponseResult(BaseModel):
     event: Literal["script", "speech"]
-    job_id: str
+    user_id: str
     status: str
     data: WebhookResponseResultData

@@ -66,11 +66,13 @@ def handler(event: dict):
         narrator_name=data.narrator_voice_name,
     )
     script_file = _to_json_fileobject(data.textfile_name.rstrip(".txt"), script)
-    s3_client.upload_fileobj(SCRIPT_RESULTS_BUCKET, script_file.name, script_file)
+    s3_client.upload_fileobj(
+        f"{SCRIPT_RESULTS_BUCKET}/{request.user_id}", script_file.name, script_file
+    )
     requests.post(
         request.internal_callback,
         json=WebhookResponse(
-            job_id=request.job_id,
+            user_id=request.user_id,
             type="script",
             status="success",
             message="",

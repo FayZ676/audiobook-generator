@@ -62,35 +62,36 @@ pusher_client = pusher.Pusher(
 
 
 @app.post("/text", status_code=status.HTTP_200_OK)
-async def upload_text_file(file: UploadFile):
+async def upload_text_file(user_id: str, file: UploadFile):
     if not file.filename:
         raise ValueError("Invalid File. Name is required.")
     file_content = await file.read()
-    s3_client.upload_fileobj(TEXT_FILES_BUCKET, file.filename, io.BytesIO(file_content))
+    s3_client.upload_fileobj(
+        f"{TEXT_FILES_BUCKET}/{user_id}", file.filename, io.BytesIO(file_content)
+    )
 
 
 @app.post("/script", status_code=status.HTTP_202_ACCEPTED)
 async def build_script(request: BuildScriptRequest, bg_tasks: BackgroundTasks):
-    job_id = str(uuid.uuid4())
     bg_tasks.add_task(
         send_script_request,
+        request.user_id,
         request.filename,
         request.narrator_voice_name,
         request.callback_url,
-        job_id,
     )
-    return job_id
+    return request.filename
 
 
 @app.get("/script")
-def get_scripts():
-    scripts_metadata = s3_client.get_files(SCRIPT_RESULTS_BUCKET)
+def get_scripts(user_id: str):
+    scripts_metadata = s3_client.get_files(f"{SCRIPT_RESULTS_BUCKET}/{user_id}")
     return [ScriptResponse(filename=s) for s in scripts_metadata]
 
 
 @app.get("/script/{filename}")
-def get_script(filename: str):
-    script = s3_client.get_file(SCRIPT_RESULTS_BUCKET, filename)
+def get_script(user_id: str, filename: str):
+    script = s3_client.get_file(f"{SCRIPT_RESULTS_BUCKET}/{user_id}", filename)
     script_file = StreamingResponse(
         io.BytesIO(script),
         media_type="application/json",
@@ -102,8 +103,8 @@ def get_script(filename: str):
 
 
 @app.delete("/script/{filename}")
-def delete_script(filename: str):
-    s3_client.delete_file(SCRIPT_RESULTS_BUCKET, filename)
+def delete_script(user_id: str, filename: str):
+    s3_client.delete_file(f"{SCRIPT_RESULTS_BUCKET}/{user_id}", filename)
 
 
 @app.post("/narration", status_code=status.HTTP_202_ACCEPTED)
@@ -116,8 +117,8 @@ async def build_narration(
 
 
 @app.get("/narration/{filename}")
-def get_narration(filename: str):
-    narration = s3_client.get_file(SPEECH_RESULTS_BUCKET, filename)
+def get_narration(user_id: str, filename: str):
+    narration = s3_client.get_file(f"{SPEECH_RESULTS_BUCKET}/{user_id}", filename)
     narration_file = StreamingResponse(
         io.BytesIO(narration),
         media_type="audio/mpeg",
@@ -136,7 +137,7 @@ async def webhook(response: WebhookResponse):
             speech_data = SpeechResponse.model_validate(response.data)
             payload = WebhookResponseResult(
                 event="speech",
-                job_id=response.job_id,
+                user_id=response.user_id,
                 status="completed",
                 data=WebhookResponseResultData(filename=speech_data.filename),
             ).model_dump()
@@ -144,7 +145,7 @@ async def webhook(response: WebhookResponse):
             script_data = ScriptResponse.model_validate(response.data)
             payload = WebhookResponseResult(
                 event="script",
-                job_id=response.job_id,
+                user_id=response.user_id,
                 status="completed",
                 data=WebhookResponseResultData(filename=script_data.filename),
             ).model_dump()
@@ -215,15 +216,15 @@ def update_voice(name: str | None = None, age: str | None = None): ...
 
 
 def send_script_request(
+    user_id: str,
     filename: str,
     narrator_voice_name: str,
     callback_url: str,
-    job_id: str,
 ):
     request = WebhookRequest(
         internal_callback=f"{SERVICE_API_URL}/webhook",
         external_callback=callback_url,
-        job_id=job_id,
+        user_id=user_id,
         data=ScriptRequest(
             textfile_name=filename,
             narrator_voice_name=narrator_voice_name,
@@ -241,13 +242,13 @@ def send_script_request(
 
 
 async def send_narration_request(
-    script_path: str, voices: list[Voice], callback_url: str, job_id: str
+    script_path: str, voices: list[Voice], callback_url: str, user_id: str
 ):
     script_data = s3_client.get_file(SCRIPT_RESULTS_BUCKET, script_path)
     request = WebhookRequest(
         internal_callback=f"{SERVICE_API_URL}/webhook",
         external_callback=callback_url,
-        job_id=job_id,
+        user_id=user_id,
         data=SpeechRequest(
             title=script_path.rstrip(".json"),
             text=[
