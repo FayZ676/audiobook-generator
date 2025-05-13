@@ -1,10 +1,13 @@
 "use server";
 
+import { auth, currentUser } from "@clerk/nextjs/server";
+
 export interface Script {
   filename: string;
 }
 
 interface BuildScriptRequest {
+  user_id: string;
   filename: string;
   narrator_voice_name: string;
   callback_url: string;
@@ -17,8 +20,14 @@ interface DeleteScriptRequest {
 export async function createScript(formData: FormData) {
   const filename = formData.get("filename") as string;
   const narrator = formData.get("narrator") as string;
+  const { userId } = await auth();
+
+  if (!userId) {
+    throw new Error("User not authenticated");
+  }
 
   const request: BuildScriptRequest = {
+    user_id: userId,
     filename: filename,
     narrator_voice_name: narrator,
     callback_url: `${process.env.CLIENT_URL}/api/webhook`,
@@ -39,8 +48,16 @@ export async function createScript(formData: FormData) {
 }
 
 export async function getScripts() {
-  const response = await fetch(`${process.env.AUDIOBOOK_SERVICE_URL}/script`);
-  const data: Script = await response.json();
+  const { userId } = await auth();
+
+  if (!userId) {
+    throw new Error("User not authenticated");
+  }
+
+  const response = await fetch(
+    `${process.env.AUDIOBOOK_SERVICE_URL}/script?user_id=${userId}`
+  );
+  const data: Script[] = await response.json();
   return data;
 }
 
