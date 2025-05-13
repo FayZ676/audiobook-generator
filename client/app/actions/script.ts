@@ -40,7 +40,7 @@ export async function createScript(formData: FormData) {
 
 export async function getScripts() {
   const response = await fetch(`${process.env.AUDIOBOOK_SERVICE_URL}/script`);
-  const data: Script[] = await response.json();
+  const data: Script = await response.json();
   return data;
 }
 
