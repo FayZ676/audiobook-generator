@@ -67,7 +67,7 @@ async def upload_text_file(user_id: str, file: UploadFile):
         raise ValueError("Invalid File. Name is required.")
     file_content = await file.read()
     s3_client.upload_fileobj(
-        f"{TEXT_FILES_BUCKET}/{user_id}", file.filename, io.BytesIO(file_content)
+        TEXT_FILES_BUCKET, f"{user_id}-{file.filename}.txt", io.BytesIO(file_content)
     )
 
 
