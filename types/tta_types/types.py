@@ -39,7 +39,6 @@ class ScriptResponse(BaseModel):
 
 class WebhookRequest(BaseModel):
     internal_callback: str
-    external_callback: str
     user_id: str
     data: dict
 
@@ -50,7 +49,6 @@ class WebhookResponse(BaseModel):
     status: str
     message: str
     data: dict
-    callback_url: str
 
 
 class WebhookResponseResultData(BaseModel):

@@ -203,7 +203,6 @@ def update_voice(name: str | None = None, age: str | None = None): ...
 def send_script_request(script_request: BuildScriptRequest):
     request = WebhookRequest(
         internal_callback=f"{SERVICE_API_URL}/webhook",
-        external_callback=script_request.callback_url,
         user_id=script_request.user_id,
         data=ScriptRequest(
             textfile_name=script_request.filename,
@@ -227,7 +226,6 @@ async def send_narration_request(
     script_data = s3_client.get_file(SCRIPT_RESULTS_BUCKET, script_path)
     request = WebhookRequest(
         internal_callback=f"{SERVICE_API_URL}/webhook",
-        external_callback=callback_url,
         user_id=user_id,
         data=SpeechRequest(
             title=script_path.rstrip(".json"),

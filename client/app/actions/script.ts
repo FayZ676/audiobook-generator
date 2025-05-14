@@ -20,7 +20,6 @@ interface BuildScriptRequest {
   user_id: string;
   filename: string;
   narrator_voice_name: string;
-  callback_url: string;
 }
 
 interface DeleteScriptRequest {
@@ -43,7 +42,6 @@ export async function createScript(formData: FormData) {
     user_id: userId,
     filename: filename,
     narrator_voice_name: narrator,
-    callback_url: `${process.env.CLIENT_URL}/api/webhook`,
   };
 
   try {

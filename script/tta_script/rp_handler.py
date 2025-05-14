@@ -75,7 +75,6 @@ def handler(event: dict):
             status="success",
             message="",
             data=ScriptResponse(filename=script_file.name).model_dump(),
-            callback_url=request.external_callback,
         ).model_dump(),
         timeout=120,
     )
