@@ -95,10 +95,10 @@ def delete_script(user_id: str, filename: str):
 
 @app.post("/narration", status_code=status.HTTP_202_ACCEPTED)
 async def build_narration(
-    script_path: str, voices: list[Voice], callback_url: str, bg_tasks: BackgroundTasks
+    script_path: str, voices: list[Voice], bg_tasks: BackgroundTasks
 ):
     job_id = str(uuid.uuid4())
-    bg_tasks.add_task(send_narration_request, script_path, voices, callback_url, job_id)
+    bg_tasks.add_task(send_narration_request, script_path, voices, job_id)
     return job_id
 
 
