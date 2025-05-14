@@ -220,9 +220,7 @@ def send_script_request(script_request: BuildScriptRequest):
     )
 
 
-async def send_narration_request(
-    script_path: str, voices: list[Voice], callback_url: str, user_id: str
-):
+async def send_narration_request(script_path: str, voices: list[Voice], user_id: str):
     script_data = s3_client.get_file(SCRIPT_RESULTS_BUCKET, script_path)
     request = WebhookRequest(
         internal_callback=f"{SERVICE_API_URL}/webhook",
