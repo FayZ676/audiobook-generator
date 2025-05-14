@@ -75,10 +75,7 @@ async def upload_text_file(user_id: str, file: UploadFile):
 async def build_script(request: BuildScriptRequest, bg_tasks: BackgroundTasks):
     bg_tasks.add_task(
         send_script_request,
-        request.user_id,
-        request.filename,
-        request.narrator_voice_name,
-        request.callback_url,
+        request,
     )
     return request.filename
 
@@ -204,19 +201,14 @@ def add_voice(
 def update_voice(name: str | None = None, age: str | None = None): ...
 
 
-def send_script_request(
-    user_id: str,
-    filename: str,
-    narrator_voice_name: str,
-    callback_url: str,
-):
+def send_script_request(script_request: BuildScriptRequest):
     request = WebhookRequest(
         internal_callback=f"{SERVICE_API_URL}/webhook",
-        external_callback=callback_url,
-        user_id=user_id,
+        external_callback=script_request.callback_url,
+        user_id=script_request.user_id,
         data=ScriptRequest(
-            textfile_name=filename,
-            narrator_voice_name=narrator_voice_name,
+            textfile_name=script_request.filename,
+            narrator_voice_name=script_request.narrator_voice_name,
         ).model_dump(),
     )
     # NOTE: Add /runsync endpoint when testing locally.
