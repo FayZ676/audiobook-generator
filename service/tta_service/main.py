@@ -122,15 +122,14 @@ async def webhook(response: WebhookResponse):
         case "speech":
             speech_data = SpeechResponse.model_validate(response.data)
             payload = WebhookResponseResult(
-                event="speech",
                 user_id=response.user_id,
                 status="completed",
                 data=WebhookResponseResultData(filename=speech_data.filename),
             ).model_dump()
         case "script":
+            # TODO: Return the script data.
             script_data = ScriptResponse.model_validate(response.data)
             payload = WebhookResponseResult(
-                event="script",
                 user_id=response.user_id,
                 status="completed",
                 data=WebhookResponseResultData(filename=script_data.filename),

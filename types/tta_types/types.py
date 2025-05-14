@@ -58,7 +58,6 @@ class WebhookResponseResultData(BaseModel):
 
 
 class WebhookResponseResult(BaseModel):
-    event: Literal["script", "speech"]
     user_id: str
     status: str
     data: WebhookResponseResultData

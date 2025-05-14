@@ -1,8 +1,6 @@
 "use server";
 
-export async function uploadTextFile(formData: FormData) {
-  const file = formData.get("file") as File;
-
+export async function uploadTextFile(file: File) {
   if (!file) {
     throw new Error("File is required");
   }
@@ -10,10 +8,11 @@ export async function uploadTextFile(formData: FormData) {
   try {
     const fileFormData = new FormData();
     fileFormData.append("file", file);
-    await fetch(`${process.env.AUDIOBOOK_SERVICE_URL}/text`, {
+    const filename = await fetch(`${process.env.AUDIOBOOK_SERVICE_URL}/text`, {
       method: "POST",
       body: fileFormData,
     });
+    return filename;
   } catch (error) {
     console.error("Error uploading file:", error);
     throw error;

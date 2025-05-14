@@ -8,14 +8,12 @@ import { Script } from "@/app/actions/script";
 import { revalidate } from "@/app/actions/revalidate";
 
 import pusherClient from "@/app/lib/pusher";
-import UploadFileForm from "./UploadFileForm";
-import CreateScriptForm from "./CreateScriptForm";
+
+import GenerateScriptForm from "@/app/components/GenerateScriptForm";
 
 interface MainProps {
   script: Script;
-  uploadTextFile: (formData: FormData) => Promise<void>;
   createScript: (formData: FormData) => Promise<void>;
-  deleteScript: (filename: string) => Promise<void>;
 }
 
 interface WebhookResponseResultData {
@@ -29,11 +27,7 @@ interface WebhookResponseResult {
   data: WebhookResponseResultData;
 }
 
-export default function Main({
-  script,
-  uploadTextFile,
-  createScript,
-}: MainProps) {
+export default function Main({ script, createScript }: MainProps) {
   const router = useRouter();
 
   useEffect(() => {
@@ -51,12 +45,11 @@ export default function Main({
   return (
     <div className="max-w-md mx-auto">
       {script ? (
-        <div>Script data displayed here.</div>
-      ) : (
         <>
-          <UploadFileForm action={uploadTextFile} />
-          <CreateScriptForm action={createScript} />
+          <div>{JSON.stringify(script)}</div>
         </>
+      ) : (
+        <GenerateScriptForm action={createScript} />
       )}
     </div>
   );

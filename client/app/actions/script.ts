@@ -2,6 +2,8 @@
 
 import { auth } from "@clerk/nextjs/server";
 
+import { uploadTextFile } from "./file";
+
 export interface SpeakerDetails {
   names: string[];
   age: string;
@@ -26,13 +28,16 @@ interface DeleteScriptRequest {
 }
 
 export async function createScript(formData: FormData) {
-  const filename = formData.get("filename") as string;
+  const file = formData.get("file") as File;
   const narrator = formData.get("narrator") as string;
   const { userId } = await auth();
 
   if (!userId) {
     throw new Error("User not authenticated");
   }
+
+  const response = await uploadTextFile(file);
+  const filename = await response.text();
 
   const request: BuildScriptRequest = {
     user_id: userId,
@@ -63,7 +68,7 @@ export async function getScript() {
   }
 
   const response = await fetch(
-    `${process.env.AUDIOBOOK_SERVICE_URL}/script?user_id=${userId}`
+    `${process.env.AUDIOBOOK_SERVICE_URL}/script/${userId}`
   );
   const data: Script = await response.json();
   return data;
