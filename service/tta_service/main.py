@@ -83,20 +83,14 @@ async def build_script(request: BuildScriptRequest, bg_tasks: BackgroundTasks):
     return request.filename
 
 
-@app.get("/script")
-def get_scripts(user_id: str):
-    scripts_metadata = s3_client.get_files(f"{SCRIPT_RESULTS_BUCKET}/{user_id}")
-    return [ScriptResponse(filename=s) for s in scripts_metadata]
-
-
-@app.get("/script/{filename}")
-def get_script(user_id: str, filename: str):
-    script = s3_client.get_file(f"{SCRIPT_RESULTS_BUCKET}/{user_id}", filename)
+@app.get("/script/{user_id}")
+def get_script(user_id: str):
+    script = s3_client.get_file(f"{SCRIPT_RESULTS_BUCKET}", f"{user_id}.json")
     script_file = StreamingResponse(
         io.BytesIO(script),
         media_type="application/json",
         headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Disposition": f'attachment; filename="{user_id}.json"',
         },
     )
     return script_file

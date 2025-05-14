@@ -12,7 +12,7 @@ import UploadFileForm from "./UploadFileForm";
 import CreateScriptForm from "./CreateScriptForm";
 
 interface MainProps {
-  scripts: Script;
+  script: Script;
   uploadTextFile: (formData: FormData) => Promise<void>;
   createScript: (formData: FormData) => Promise<void>;
   deleteScript: (filename: string) => Promise<void>;
@@ -30,7 +30,7 @@ interface WebhookResponseResult {
 }
 
 export default function Main({
-  scripts,
+  script,
   uploadTextFile,
   createScript,
 }: MainProps) {

@@ -1,15 +1,15 @@
-import { createScript, getScripts, deleteScript } from "@/app/actions/script";
+import { createScript, getScript, deleteScript } from "@/app/actions/script";
 import { uploadTextFile } from "@/app/actions/file";
 
 import Main from "@/app/components/Main";
 
 export default async function Home() {
-  const scripts = await getScripts();
+  const script = await getScript();
   // Get narrations as well.
 
   return (
     <Main
-      scripts={scripts}
+      script={script}
       uploadTextFile={uploadTextFile}
       createScript={createScript}
       deleteScript={deleteScript}
