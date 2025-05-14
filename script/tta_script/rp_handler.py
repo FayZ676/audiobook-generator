@@ -39,7 +39,7 @@ def _to_json_fileobject(
 
 
 def _get_voices() -> list[Voice]:
-    voices_metadata = s3_client.get_files(VOICES_METADATAS_BUCKET)
+    voices_metadata = s3_client.list_files(VOICES_METADATAS_BUCKET, "")
     voices: list[Voice] = []
     for voice_metadata_key in voices_metadata:
         file_content_bytes = s3_client.get_file(

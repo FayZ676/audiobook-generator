@@ -86,14 +86,7 @@ async def build_script(request: BuildScriptRequest, bg_tasks: BackgroundTasks):
 @app.get("/script/{user_id}")
 def get_script(user_id: str):
     script = s3_client.get_file(f"{SCRIPT_RESULTS_BUCKET}", f"{user_id}.json")
-    script_file = StreamingResponse(
-        io.BytesIO(script),
-        media_type="application/json",
-        headers={
-            "Content-Disposition": f'attachment; filename="{user_id}.json"',
-        },
-    )
-    return script_file
+    return json.loads(script)
 
 
 @app.delete("/script/{filename}")
@@ -153,7 +146,7 @@ async def webhook(response: WebhookResponse):
 
 @app.get("/voices")
 def get_voices():
-    voices_metadata = s3_client.get_files(VOICES_METADATA_BUCKET)
+    voices_metadata = s3_client.list_files(VOICES_METADATA_BUCKET, "")
     voices: list[Voice] = []
     for voice_metadata_key in voices_metadata:
         file_content_bytes = s3_client.get_file(

@@ -11,8 +11,8 @@ class S3Client:
         self.client.upload_fileobj(file, bucket_name, file_name)
         return f"s3://{bucket_name}/{file_name}"
 
-    def get_files(self, bucket_name: str):
-        response = self.client.list_objects_v2(Bucket=bucket_name)
+    def list_files(self, bucket_name: str, prefix: str):
+        response = self.client.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
         return [obj["Key"] for obj in response.get("Contents", [])]
 
     def get_file(self, bucket_name: str, file_name: str):
