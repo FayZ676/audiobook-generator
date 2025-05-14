@@ -50,8 +50,14 @@ export default function Main({
 
   return (
     <div className="max-w-md mx-auto">
-      <UploadFileForm action={uploadTextFile} />
-      <CreateScriptForm action={createScript} />
+      {script ? (
+        <div>Script data displayed here.</div>
+      ) : (
+        <>
+          <UploadFileForm action={uploadTextFile} />
+          <CreateScriptForm action={createScript} />
+        </>
+      )}
     </div>
   );
 }
