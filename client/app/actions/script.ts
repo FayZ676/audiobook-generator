@@ -2,8 +2,16 @@
 
 import { auth } from "@clerk/nextjs/server";
 
+export interface SpeakerDetails {
+  names: string[];
+  age: string;
+  gender: string;
+}
+
 export interface Script {
-  filename: string;
+  voice_name: string;
+  speaker: SpeakerDetails;
+  text: string;
 }
 
 interface BuildScriptRequest {
