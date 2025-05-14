@@ -85,6 +85,8 @@ async def build_script(request: BuildScriptRequest, bg_tasks: BackgroundTasks):
 
 @app.get("/script/{user_id}")
 def get_script(user_id: str):
+    if not s3_client.list_files(SCRIPT_RESULTS_BUCKET, user_id):
+        return None
     script = s3_client.get_file(f"{SCRIPT_RESULTS_BUCKET}", f"{user_id}.json")
     return json.loads(script)
 
