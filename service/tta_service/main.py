@@ -18,7 +18,7 @@ from tta_types.types import (
 )
 from tta_aws.s3 import S3Client
 
-from tta_service.types import BuildScriptRequest
+from tta_service.types import BuildScriptRequest, BuildNarrationRequest
 
 import pusher
 import requests
@@ -94,11 +94,11 @@ def delete_script(user_id: str, filename: str):
 
 
 @app.post("/narration", status_code=status.HTTP_202_ACCEPTED)
-async def build_narration(
-    script_path: str, voices: list[Voice], bg_tasks: BackgroundTasks
-):
+async def build_narration(request: BuildNarrationRequest, bg_tasks: BackgroundTasks):
     job_id = str(uuid.uuid4())
-    bg_tasks.add_task(send_narration_request, script_path, voices, job_id)
+    bg_tasks.add_task(
+        send_narration_request, request.script_path, request.voices, job_id
+    )
     return job_id
 
 
