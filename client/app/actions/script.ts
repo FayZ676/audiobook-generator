@@ -35,8 +35,7 @@ export async function createScript(formData: FormData) {
     throw new Error("User not authenticated");
   }
 
-  const response = await uploadTextFile(file);
-  const filename = await response.text();
+  const filename = await uploadTextFile(file);
 
   const request: BuildScriptRequest = {
     user_id: userId,
