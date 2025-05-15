@@ -10,6 +10,7 @@ import { revalidate } from "@/app/actions/revalidate";
 import pusherClient from "@/app/lib/pusher";
 
 import GenerateScriptForm from "@/app/components/GenerateScriptForm";
+import ScriptView from "@/app/components/ScriptView";
 
 interface MainProps {
   script: Script;
@@ -45,9 +46,7 @@ export default function Main({ script, createScript }: MainProps) {
   return (
     <div className="max-w-md mx-auto">
       {script ? (
-        <>
-          <div>{JSON.stringify(script)}</div>
-        </>
+        <ScriptView script={script} />
       ) : (
         <GenerateScriptForm action={createScript} />
       )}

@@ -2,19 +2,23 @@
 
 import { auth } from "@clerk/nextjs/server";
 
+import { z } from "zod";
+
 import { uploadTextFile } from "./file";
 
-export interface SpeakerDetails {
-  names: string[];
-  age: string;
-  gender: string;
-}
+const SpeakerDetailsSchema = z.object({
+  names: z.array(z.string()),
+  age: z.string(),
+  gender: z.string(),
+});
 
-export interface Script {
-  voice_name: string;
-  speaker: SpeakerDetails;
-  text: string;
-}
+const ScriptSegmentSchema = z.object({
+  voice_name: z.string(),
+  speaker: SpeakerDetailsSchema,
+  text: z.string(),
+});
+
+const ScriptResponseSchema = z.array(ScriptSegmentSchema);
 
 interface BuildScriptRequest {
   user_id: string;
@@ -25,6 +29,8 @@ interface BuildScriptRequest {
 interface DeleteScriptRequest {
   filename: string;
 }
+
+export type Script = z.infer<typeof ScriptResponseSchema>;
 
 export async function createScript(formData: FormData) {
   const file = formData.get("file") as File;
@@ -67,8 +73,13 @@ export async function getScript() {
   const response = await fetch(
     `${process.env.AUDIOBOOK_SERVICE_URL}/script/${userId}`
   );
-  const data: Script = await response.json();
-  return data;
+  const rawData = await response.json();
+  const result = ScriptResponseSchema.safeParse(rawData);
+  if (!result.success) {
+    console.error("Validation error:", result.error.format());
+    throw new Error("Invalid API response: schema validation failed");
+  }
+  return result.data;
 }
 
 export async function deleteScript(filename: string) {
