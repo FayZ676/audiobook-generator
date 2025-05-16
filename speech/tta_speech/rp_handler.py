@@ -105,7 +105,7 @@ def handler(event: dict):
     )
     audio = _build_audio([result])
     s3.upload_fileobj(
-        f"{SPEECH_RESULTS_BUCKET}/{request.user_id}",
+        f"{SPEECH_RESULTS_BUCKET}",
         f"{data.title}.mp3",
         BytesIO(audio),
     )

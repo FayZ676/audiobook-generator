@@ -35,8 +35,8 @@ export type Script = z.infer<typeof ScriptResponseSchema>;
 export async function createScript(formData: FormData) {
   const file = formData.get("file") as File;
   const narrator = formData.get("narrator") as string;
-  const { userId } = await auth();
 
+  const { userId } = await auth();
   if (!userId) {
     throw new Error("User not authenticated");
   }
