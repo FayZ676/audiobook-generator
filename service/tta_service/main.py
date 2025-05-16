@@ -102,9 +102,12 @@ async def build_narration(request: BuildNarrationRequest, bg_tasks: BackgroundTa
     return job_id
 
 
-@app.get("/narration/{filename}")
-def get_narration(user_id: str, filename: str):
-    narration = s3_client.get_file(f"{SPEECH_RESULTS_BUCKET}/{user_id}", filename)
+@app.get("/narration/{user_id}")
+def get_narration(user_id: str):
+    if not s3_client.list_files(SPEECH_RESULTS_BUCKET, user_id):
+        return None
+    filename = f"{user_id}.mp3"
+    narration = s3_client.get_file(f"{SPEECH_RESULTS_BUCKET}", filename)
     narration_file = StreamingResponse(
         io.BytesIO(narration),
         media_type="audio/mpeg",

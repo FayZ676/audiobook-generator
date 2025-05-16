@@ -5,16 +5,18 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { Script } from "@/app/actions/script";
+import { Narration } from "../actions/narrate";
 import { revalidate } from "@/app/actions/revalidate";
 
 import pusherClient from "@/app/lib/pusher";
 
 import GenerateScriptForm from "@/app/components/GenerateScriptForm";
 import ScriptView from "@/app/components/ScriptView";
+import NarrationView from "./NarrationView";
 
 interface MainProps {
   script: Script;
-  narration: any;
+  narration: Narration;
   createScript: (formData: FormData) => Promise<void>;
   createNarration: (script: Script) => Promise<void>;
 }
@@ -32,6 +34,7 @@ interface WebhookResponseResult {
 
 export default function Main({
   script,
+  narration,
   createScript,
   createNarration,
 }: MainProps) {
@@ -53,15 +56,11 @@ export default function Main({
     <div className="max-w-md mx-auto">
       {script ? (
         <div className="flex flex-col gap-4">
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              createNarration(script);
-            }}
-            className="ml-auto border px-4 py-2"
-          >
-            Narrate
-          </button>
+          <NarrationView
+            script={script}
+            narration={narration}
+            createNarration={createNarration}
+          />
           <ScriptView script={script} />
         </div>
       ) : (
