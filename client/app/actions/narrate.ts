@@ -1,6 +1,10 @@
 "use server";
 
-export async function createNarration(formData: FormData) {}
+import { Script } from "./script";
+
+export async function createNarration(script: Script) {
+  console.log(script);
+}
 
 export async function getNarration() {}
 

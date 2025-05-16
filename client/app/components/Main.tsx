@@ -16,7 +16,7 @@ interface MainProps {
   script: Script;
   narration: any;
   createScript: (formData: FormData) => Promise<void>;
-  createNarration: (formData: FormData) => Promise<void>;
+  createNarration: (script: Script) => Promise<void>;
 }
 
 interface WebhookResponseResultData {
@@ -30,7 +30,11 @@ interface WebhookResponseResult {
   data: WebhookResponseResultData;
 }
 
-export default function Main({ script, createScript }: MainProps) {
+export default function Main({
+  script,
+  createScript,
+  createNarration,
+}: MainProps) {
   const router = useRouter();
 
   useEffect(() => {
@@ -48,12 +52,18 @@ export default function Main({ script, createScript }: MainProps) {
   return (
     <div className="max-w-md mx-auto">
       {script ? (
-        <form action={() => {}} className="flex flex-col gap-4">
-          <button type="submit" className="ml-auto border px-4 py-2">
+        <div className="flex flex-col gap-4">
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              createNarration(script);
+            }}
+            className="ml-auto border px-4 py-2"
+          >
             Narrate
           </button>
           <ScriptView script={script} />
-        </form>
+        </div>
       ) : (
         <GenerateScriptForm action={createScript} />
       )}
