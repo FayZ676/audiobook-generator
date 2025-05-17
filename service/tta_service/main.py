@@ -23,7 +23,6 @@ from tta_service.types import BuildScriptRequest, BuildNarrationRequest
 import pusher
 import requests
 from fastapi import FastAPI, UploadFile, BackgroundTasks, status, HTTPException
-from fastapi.responses import StreamingResponse
 
 
 app = FastAPI()
@@ -62,13 +61,12 @@ pusher_client = pusher.Pusher(
 
 
 @app.post("/text", status_code=status.HTTP_200_OK)
-async def upload_text_file(user_id: str, file: UploadFile):
+async def upload_text_file(file: UploadFile):
     if not file.filename:
         raise ValueError("Invalid File. Name is required.")
     file_content = await file.read()
-    filename = f"{user_id}-{file.filename}"
-    s3_client.upload_fileobj(TEXT_FILES_BUCKET, filename, io.BytesIO(file_content))
-    return filename
+    s3_client.upload_fileobj(TEXT_FILES_BUCKET, file.filename, io.BytesIO(file_content))
+    return file.filename
 
 
 @app.delete("/text/{filename}")
@@ -85,11 +83,11 @@ async def build_script(request: BuildScriptRequest, bg_tasks: BackgroundTasks):
     return request.filename
 
 
-@app.get("/script/{user_id}")
-def get_script(user_id: str):
-    if not s3_client.list_files(SCRIPT_RESULTS_BUCKET, user_id):
+@app.get("/script/{filename}")
+def get_script(filename: str):
+    if not s3_client.list_files(SCRIPT_RESULTS_BUCKET, filename):
         return None
-    script = s3_client.get_file(f"{SCRIPT_RESULTS_BUCKET}", f"{user_id}.json")
+    script = s3_client.get_file(f"{SCRIPT_RESULTS_BUCKET}", filename)
     return json.loads(script)
 
 
@@ -107,11 +105,10 @@ async def build_narration(request: BuildNarrationRequest, bg_tasks: BackgroundTa
     return job_id
 
 
-@app.get("/narration/{user_id}")
-def get_narration(user_id: str):
-    if not s3_client.list_files(SPEECH_RESULTS_BUCKET, user_id):
+@app.get("/narration/{filename}")
+def get_narration(filename: str):
+    if not s3_client.list_files(SPEECH_RESULTS_BUCKET, filename):
         return None
-    filename = f"{user_id}.mp3"
     narration_url = s3_client.presigned_url(SPEECH_RESULTS_BUCKET, filename)
     return narration_url
 

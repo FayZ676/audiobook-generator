@@ -19,7 +19,6 @@ export async function createNarration() {
 
   const voices = await getVoices();
 
-  // TODO: We should just need to send the user id and not add the json suffix.
   const request: NarrationRequest = {
     script_path: `${userId}.json`,
     voices: voices,
@@ -45,9 +44,10 @@ export async function getNarration(): Promise<NarrationUrl | null> {
     throw new Error("User not authenticated");
   }
 
+  const filename = `${userId}.mp3`;
   try {
     const response = await fetch(
-      `${process.env.AUDIOBOOK_SERVICE_URL}/narration/${userId}`
+      `${process.env.AUDIOBOOK_SERVICE_URL}/narration/${filename}`
     );
     const narrationUrl = await response.json();
     return narrationUrl;
@@ -57,4 +57,19 @@ export async function getNarration(): Promise<NarrationUrl | null> {
   }
 }
 
-export async function deleteNarration() {}
+export async function deleteNarration() {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("User not authenticated");
+  }
+
+  const filename = `${userId}.mp3`;
+  try {
+    await fetch(`${process.env.AUDIOBOOK_SERVICE_URL}/narration/${filename}`, {
+      method: "DELETE",
+    });
+  } catch (error) {
+    console.error("Error deleting narration:", error);
+    throw error;
+  }
+}

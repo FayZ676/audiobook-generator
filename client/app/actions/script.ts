@@ -70,8 +70,9 @@ export async function getScript() {
     throw new Error("User not authenticated");
   }
 
+  const filename = `${userId}.json`;
   const response = await fetch(
-    `${process.env.AUDIOBOOK_SERVICE_URL}/script/${userId}`
+    `${process.env.AUDIOBOOK_SERVICE_URL}/script/${filename}`
   );
   const rawData = await response.json();
   const result = ScriptResponseSchema.safeParse(rawData);
