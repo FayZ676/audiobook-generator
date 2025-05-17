@@ -9,11 +9,7 @@ interface NarrationRequest {
   voices: Voice[];
 }
 
-export interface Narration {
-  audioUrl: string;
-  contentType: string;
-  filename: string;
-}
+export type NarrationUrl = string;
 
 export async function createNarration() {
   const { userId } = await auth();
@@ -43,7 +39,7 @@ export async function createNarration() {
   }
 }
 
-export async function getNarration(): Promise<Narration> {
+export async function getNarration(): Promise<NarrationUrl | null> {
   const { userId } = await auth();
   if (!userId) {
     throw new Error("User not authenticated");
@@ -53,19 +49,8 @@ export async function getNarration(): Promise<Narration> {
     const response = await fetch(
       `${process.env.AUDIOBOOK_SERVICE_URL}/narration/${userId}`
     );
-
-    const blob = await response.blob();
-    const audioUrl = URL.createObjectURL(blob);
-
-    return {
-      audioUrl,
-      contentType: response.headers.get("content-type") || "audio/mpeg",
-      filename:
-        response.headers
-          .get("content-disposition")
-          ?.split("filename=")[1]
-          ?.replace(/"/g, "") || `narration_${userId}.mp3`,
-    };
+    const narrationUrl = await response.json();
+    return narrationUrl;
   } catch (error) {
     console.error("Error fetching narration:", error);
     throw error;

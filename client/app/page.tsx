@@ -5,13 +5,12 @@ import Main from "@/app/components/Main";
 
 export default async function Home() {
   const script = await getScript();
-  const narration = await getNarration();
-  // Get narrations as well.
+  const narrationUrl = await getNarration();
 
   return (
     <Main
       script={script}
-      narration={narration}
+      narrationUrl={narrationUrl}
       createScript={createScript}
       createNarration={createNarration}
     />

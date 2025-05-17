@@ -107,15 +107,8 @@ def get_narration(user_id: str):
     if not s3_client.list_files(SPEECH_RESULTS_BUCKET, user_id):
         return None
     filename = f"{user_id}.mp3"
-    narration = s3_client.get_file(f"{SPEECH_RESULTS_BUCKET}", filename)
-    narration_file = StreamingResponse(
-        io.BytesIO(narration),
-        media_type="audio/mpeg",
-        headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
-        },
-    )
-    return narration_file
+    narration_url = s3_client.presigned_url(SPEECH_RESULTS_BUCKET, filename)
+    return narration_url
 
 
 @app.post("/webhook")

@@ -21,3 +21,10 @@ class S3Client:
 
     def delete_file(self, bucket_name: str, file_name: str):
         self.client.delete_object(Bucket=bucket_name, Key=file_name)
+
+    def presigned_url(self, bucket_name: str, file_name: str):
+        return self.client.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": bucket_name, "Key": file_name},
+            ExpiresIn=3600,
+        )

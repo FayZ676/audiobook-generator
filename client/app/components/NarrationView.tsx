@@ -1,24 +1,24 @@
 import React from "react";
 
 import { Script } from "../actions/script";
-import { Narration } from "../actions/narrate";
+import { NarrationUrl } from "../actions/narrate";
 
 interface NarrationViewProps {
   script: Script;
-  narration: Narration | null;
+  narrationUrl: NarrationUrl | null;
   createNarration: (script: Script) => Promise<void>;
 }
 
 export default function NarrationView({
   script,
-  narration,
+  narrationUrl,
   createNarration,
 }: NarrationViewProps) {
   return (
     <>
-      {narration ? (
+      {narrationUrl ? (
         <audio controls>
-          <source src={narration.audioUrl} type={narration.contentType} />
+          <source src={narrationUrl} />
           Your browser does not support the audio element.
         </audio>
       ) : (

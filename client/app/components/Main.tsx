@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { Script } from "@/app/actions/script";
-import { Narration } from "../actions/narrate";
+import { NarrationUrl } from "../actions/narrate";
 import { revalidate } from "@/app/actions/revalidate";
 
 import pusherClient from "@/app/lib/pusher";
@@ -16,7 +16,7 @@ import NarrationView from "./NarrationView";
 
 interface MainProps {
   script: Script;
-  narration: Narration;
+  narrationUrl: NarrationUrl | null;
   createScript: (formData: FormData) => Promise<void>;
   createNarration: (script: Script) => Promise<void>;
 }
@@ -34,7 +34,7 @@ interface WebhookResponseResult {
 
 export default function Main({
   script,
-  narration,
+  narrationUrl,
   createScript,
   createNarration,
 }: MainProps) {
@@ -58,7 +58,7 @@ export default function Main({
         <div className="flex flex-col gap-4">
           <NarrationView
             script={script}
-            narration={narration}
+            narrationUrl={narrationUrl}
             createNarration={createNarration}
           />
           <ScriptView script={script} />
