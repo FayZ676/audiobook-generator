@@ -57,13 +57,7 @@ export async function getNarration(): Promise<NarrationUrl | null> {
   }
 }
 
-export async function deleteNarration() {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("User not authenticated");
-  }
-
-  const filename = `${userId}.mp3`;
+export async function deleteNarration(filename: string) {
   try {
     await fetch(`${process.env.AUDIOBOOK_SERVICE_URL}/narration/${filename}`, {
       method: "DELETE",

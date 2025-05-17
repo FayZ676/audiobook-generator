@@ -92,8 +92,8 @@ def get_script(filename: str):
 
 
 @app.delete("/script/{filename}")
-def delete_script(user_id: str, filename: str):
-    s3_client.delete_file(f"{SCRIPT_RESULTS_BUCKET}/{user_id}", filename)
+def delete_script(filename: str):
+    s3_client.delete_file(f"{SCRIPT_RESULTS_BUCKET}", filename)
 
 
 @app.post("/narration", status_code=status.HTTP_202_ACCEPTED)
