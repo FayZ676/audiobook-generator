@@ -13,6 +13,7 @@ import pusherClient from "@/app/lib/pusher";
 import GenerateScriptForm from "@/app/components/GenerateScriptForm";
 import ScriptView from "@/app/components/ScriptView";
 import NarrationView from "./NarrationView";
+import { deleteProject } from "../actions/audiobook";
 
 interface MainProps {
   script: Script;
@@ -56,6 +57,9 @@ export default function Main({
     <div className="max-w-md mx-auto">
       {script ? (
         <div className="flex flex-col gap-4">
+          <button onClick={deleteProject} className="ml-auto border py-2 px-4">
+            Delete Project
+          </button>
           <NarrationView
             script={script}
             narrationUrl={narrationUrl}

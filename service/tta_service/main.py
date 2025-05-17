@@ -71,6 +71,11 @@ async def upload_text_file(user_id: str, file: UploadFile):
     return filename
 
 
+@app.delete("/text/{filename}")
+async def delete_text_file(filename: str):
+    return s3_client.delete_file(TEXT_FILES_BUCKET, filename)
+
+
 @app.post("/script", status_code=status.HTTP_202_ACCEPTED)
 async def build_script(request: BuildScriptRequest, bg_tasks: BackgroundTasks):
     bg_tasks.add_task(
@@ -109,6 +114,11 @@ def get_narration(user_id: str):
     filename = f"{user_id}.mp3"
     narration_url = s3_client.presigned_url(SPEECH_RESULTS_BUCKET, filename)
     return narration_url
+
+
+@app.delete("/narration/{filename}")
+def delete_narration(filename: str):
+    return s3_client.delete_file(SPEECH_RESULTS_BUCKET, filename)
 
 
 @app.post("/webhook")

@@ -28,3 +28,22 @@ export async function uploadTextFile(file: File) {
     throw error;
   }
 }
+
+export async function deleteTextFile(filename: string) {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("User not authenticated");
+  }
+
+  try {
+    await fetch(
+      `${process.env.AUDIOBOOK_SERVICE_URL}/text/${filename}?user_id=${userId}`,
+      {
+        method: "DELETE",
+      }
+    );
+  } catch (error) {
+    console.error("Error deleting file:", error);
+    throw error;
+  }
+}

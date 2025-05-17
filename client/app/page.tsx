@@ -1,4 +1,4 @@
-import { createScript, getScript, deleteScript } from "@/app/actions/script";
+import { createScript, getScript } from "@/app/actions/script";
 import { createNarration, getNarration } from "./actions/narrate";
 
 import Main from "@/app/components/Main";

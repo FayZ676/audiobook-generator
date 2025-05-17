@@ -1,5 +1,5 @@
-export async function createAudiobook(formData: FormData) {
-  // Upload text file.
-  // Create script.
-  // Create narration.
+export async function deleteProject() {
+  // Delete Text File
+  // Delete Narration
+  // Delete Script
 }
