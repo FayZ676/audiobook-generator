@@ -16,10 +16,9 @@ import NarrationView from "./NarrationView";
 import { deleteProject } from "../actions/audiobook";
 
 interface MainProps {
-  script: Script;
+  script: Script | null;
   narrationUrl: NarrationUrl | null;
-  createScript: (formData: FormData) => Promise<void>;
-  createNarration: (script: Script) => Promise<void>;
+  createProject: (formData: FormData) => Promise<void>;
 }
 
 interface WebhookResponseResultData {
@@ -36,8 +35,7 @@ interface WebhookResponseResult {
 export default function Main({
   script,
   narrationUrl,
-  createScript,
-  createNarration,
+  createProject,
 }: MainProps) {
   const router = useRouter();
 
@@ -55,20 +53,16 @@ export default function Main({
 
   return (
     <div className="max-w-md mx-auto">
-      {script ? (
+      {script && narrationUrl ? (
         <div className="flex flex-col gap-4">
           <button onClick={deleteProject} className="ml-auto border py-2 px-4">
             Delete Project
           </button>
-          <NarrationView
-            script={script}
-            narrationUrl={narrationUrl}
-            createNarration={createNarration}
-          />
+          <NarrationView narrationUrl={narrationUrl} />
           <ScriptView script={script} />
         </div>
       ) : (
-        <GenerateScriptForm action={createScript} />
+        <GenerateScriptForm action={createProject} />
       )}
     </div>
   );

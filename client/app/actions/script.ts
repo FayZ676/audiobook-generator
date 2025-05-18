@@ -32,16 +32,11 @@ interface DeleteScriptRequest {
 
 export type Script = z.infer<typeof ScriptResponseSchema>;
 
-export async function createScript(formData: FormData) {
-  const file = formData.get("file") as File;
-  const narrator = formData.get("narrator") as string;
-
+export async function createScript(filename: string, narrator: string) {
   const { userId } = await auth();
   if (!userId) {
     throw new Error("User not authenticated");
   }
-
-  const filename = await uploadTextFile(file);
 
   const request: BuildScriptRequest = {
     user_id: userId,
@@ -63,7 +58,7 @@ export async function createScript(formData: FormData) {
   }
 }
 
-export async function getScript() {
+export async function getScript(): Promise<Script | null> {
   const { userId } = await auth();
 
   if (!userId) {
@@ -75,6 +70,9 @@ export async function getScript() {
     `${process.env.AUDIOBOOK_SERVICE_URL}/script/${filename}`
   );
   const rawData = await response.json();
+  if (rawData === null) {
+    return null;
+  }
   const result = ScriptResponseSchema.safeParse(rawData);
   if (!result.success) {
     console.error("Validation error:", result.error.format());
