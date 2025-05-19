@@ -21,6 +21,11 @@ Resources:
     Properties:
       BucketName: tta-text-files
 
+  JobStatusBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: tta-job-status
+
   # Need to manually create access keys for the user.
   SpeechServiceUser:
     Type: AWS::IAM::User
@@ -43,14 +48,14 @@ Resources:
               - s3:ListBucket
             Resource:
               - !Sub "arn:aws:s3:::${SpeechResultsBucket}/*"
-              - !Sub "arn:aws:s3:::${VoicesAudiosBucket}/*"
-              - !Sub "arn:aws:s3:::${VoicesMetadataBucket}/*"
+              - !Sub "arn:aws:s3:::${VoicesBucket}/*"
               - !Sub "arn:aws:s3:::${TextFilesBucket}/*"
               - !Sub "arn:aws:s3:::${ScriptResultsBucket}/*"
+              - !Sub "arn:aws:s3:::${JobStatusBucket}/*"
               - !Sub "arn:aws:s3:::${SpeechResultsBucket}"
-              - !Sub "arn:aws:s3:::${VoicesAudiosBucket}"
-              - !Sub "arn:aws:s3:::${VoicesMetadataBucket}"
+              - !Sub "arn:aws:s3:::${VoicesBucket}"
               - !Sub "arn:aws:s3:::${TextFilesBucket}"
               - !Sub "arn:aws:s3:::${ScriptResultsBucket}"
+              - !Sub "arn:aws:s3:::${JobStatusBucket}"
       Users:
         - !Ref SpeechServiceUser
