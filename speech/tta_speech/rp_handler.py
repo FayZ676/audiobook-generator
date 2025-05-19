@@ -22,7 +22,7 @@ from tta_aws.s3 import S3Client
 
 
 SPEECH_RESULTS_BUCKET = os.environ.get("SPEECH_RESULTS_BUCKET", "")
-VOICES_AUDIOS_BUCKET = os.environ.get("VOICES_AUDIOS_BUCKET", "")
+VOICES_BUCKET = os.environ.get("VOICES_BUCKET", "")
 
 
 s3 = S3Client()
@@ -46,7 +46,7 @@ def _prepare_input(
 ) -> InputData:
     def download_audio(audio_name: str):
         print(f"Downloading audio {audio_name}")
-        audio = s3.get_file(VOICES_AUDIOS_BUCKET, f"{audio_name}.mp3")
+        audio = s3.get_file(f"{VOICES_BUCKET}/audio", f"{audio_name}.mp3")
         audio_file = BytesIO(audio)
         temp_audio_path = f"{voice_save_path}/{audio_name}"
         with open(temp_audio_path, "wb") as f:

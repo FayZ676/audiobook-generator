@@ -28,8 +28,7 @@ from fastapi import FastAPI, UploadFile, BackgroundTasks, status, HTTPException
 app = FastAPI()
 
 
-VOICES_AUDIOS_BUCKET = "tta-voices-audios"
-VOICES_METADATA_BUCKET = "tta-voices-metadata"
+VOICES_BUCKET = "tta-voices"
 SCRIPT_RESULTS_BUCKET = "tta-script-results"
 SPEECH_RESULTS_BUCKET = "tta-speech-results"
 TEXT_FILES_BUCKET = "tta-text-files"
@@ -147,11 +146,11 @@ async def webhook(response: WebhookResponse):
 
 @app.get("/voices")
 def get_voices():
-    voices_metadata = s3_client.list_files(VOICES_METADATA_BUCKET, "")
+    voices_metadata = s3_client.list_files(f"{VOICES_BUCKET}/metadata", "")
     voices: list[Voice] = []
     for voice_metadata_key in voices_metadata:
         file_content_bytes = s3_client.get_file(
-            VOICES_METADATA_BUCKET, str(voice_metadata_key)
+            f"{VOICES_BUCKET}/metadata", str(voice_metadata_key)
         )
         voice_data = json.loads(file_content_bytes.decode("utf-8"))
         voices.append(Voice.model_validate(voice_data))
@@ -161,7 +160,7 @@ def get_voices():
 @app.get("/voices/{voice_id}")
 def get_voice(voice_name: str):
     file_content_bytes = s3_client.get_file(
-        VOICES_METADATA_BUCKET, f"{voice_name}.json"
+        f"{VOICES_BUCKET}/metadata", f"{voice_name}.json"
     )
     voice = json.loads(file_content_bytes.decode("utf-8"))
     return Voice.model_validate(voice)
@@ -180,10 +179,10 @@ def add_voice(
         raise ValueError("Audio file with name is required")
 
     path = s3_client.upload_fileobj(
-        VOICES_AUDIOS_BUCKET, audio_file.filename, audio_file.file
+        f"{VOICES_BUCKET}/audio", audio_file.filename, audio_file.file
     )
     s3_client.upload_fileobj(
-        VOICES_METADATA_BUCKET,
+        f"{VOICES_BUCKET}/metadata",
         f"{name}.json",
         to_json_fileobject(
             Voice(

@@ -1,15 +1,10 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
 Resources:
-  VoicesAudiosBucket:
+  VoicesBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: tta-voices-audios
-
-  VoicesMetadataBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: tta-voices-metadata
+      BucketName: tta-voices
 
   ScriptResultsBucket:
     Type: AWS::S3::Bucket
