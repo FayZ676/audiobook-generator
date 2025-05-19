@@ -28,10 +28,11 @@ from fastapi import FastAPI, UploadFile, BackgroundTasks, status, HTTPException
 app = FastAPI()
 
 
-VOICES_BUCKET = "tta-voices"
-SCRIPT_RESULTS_BUCKET = "tta-script-results"
-SPEECH_RESULTS_BUCKET = "tta-speech-results"
-TEXT_FILES_BUCKET = "tta-text-files"
+VOICES_BUCKET = os.environ.get("VOICES_BUCKET", "")
+SCRIPT_RESULTS_BUCKET = os.environ.get("SCRIPT_RESULTS_BUCKET", "")
+SPEECH_RESULTS_BUCKET = os.environ.get("SPEECH_RESULTS_BUCKET", "")
+TEXT_FILES_BUCKET = os.environ.get("TEXT_FILES_BUCKET", "")
+JOB_STATUS_BUCKET = os.environ.get("JOB_STATUS_BUCKET", "")
 
 SERVICE_API_URL = os.environ.get("SERVICE_API_URL", "")
 
@@ -117,33 +118,6 @@ def delete_narration(filename: str):
     return s3_client.delete_file(SPEECH_RESULTS_BUCKET, filename)
 
 
-@app.post("/webhook")
-async def webhook(response: WebhookResponse):
-    response_type = response.type
-    match response_type:
-        case "speech":
-            speech_data = SpeechResponse.model_validate(response.data)
-            payload = WebhookResponseResult(
-                user_id=response.user_id,
-                status="completed",
-                data=WebhookResponseResultData(filename=speech_data.filename),
-            ).model_dump()
-        case "script":
-            # TODO: Return the script data.
-            script_data = ScriptResponse.model_validate(response.data)
-            payload = WebhookResponseResult(
-                user_id=response.user_id,
-                status="completed",
-                data=WebhookResponseResultData(filename=script_data.filename),
-            ).model_dump()
-        case _:
-            return HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid response type: {response_type}",
-            )
-    pusher_client.trigger("job-channel", "job-completed", payload)
-
-
 @app.get("/voices")
 def get_voices():
     voices_metadata = s3_client.list_files(f"{VOICES_BUCKET}/metadata", "")
@@ -200,6 +174,45 @@ def add_voice(
 # TODO: Implement the update_voice function
 @app.patch("/voices/{voice_id}")
 def update_voice(name: str | None = None, age: str | None = None): ...
+
+
+@app.post("/status/{job_id}")
+def create_job_status(job_id: str): ...
+
+
+@app.get("/status/{job_id}")
+def get_job_status(job_id: str): ...
+
+
+@app.patch("/status/{job_id}")
+def update_job_status(job_id: str): ...
+
+
+@app.post("/webhook")
+async def webhook(response: WebhookResponse):
+    response_type = response.type
+    match response_type:
+        case "speech":
+            speech_data = SpeechResponse.model_validate(response.data)
+            payload = WebhookResponseResult(
+                user_id=response.user_id,
+                status="completed",
+                data=WebhookResponseResultData(filename=speech_data.filename),
+            ).model_dump()
+        case "script":
+            # TODO: Return the script data.
+            script_data = ScriptResponse.model_validate(response.data)
+            payload = WebhookResponseResult(
+                user_id=response.user_id,
+                status="completed",
+                data=WebhookResponseResultData(filename=script_data.filename),
+            ).model_dump()
+        case _:
+            return HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid response type: {response_type}",
+            )
+    pusher_client.trigger("job-channel", "job-completed", payload)
 
 
 def send_script_request(script_request: BuildScriptRequest):
