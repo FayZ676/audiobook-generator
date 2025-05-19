@@ -53,13 +53,13 @@ export default function Main({
 
   return (
     <div className="max-w-md mx-auto">
-      {script && narrationUrl ? (
+      {script || narrationUrl ? (
         <div className="flex flex-col gap-4">
           <button onClick={deleteProject} className="ml-auto border py-2 px-4">
             Delete Project
           </button>
-          <NarrationView narrationUrl={narrationUrl} />
-          <ScriptView script={script} />
+          {narrationUrl && <NarrationView narrationUrl={narrationUrl} />}
+          {script && <ScriptView script={script} />}
         </div>
       ) : (
         <GenerateScriptForm action={createProject} />

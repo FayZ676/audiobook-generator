@@ -7,8 +7,6 @@ import Main from "@/app/components/Main";
 export default async function Home() {
   const script = await getScript();
   const narrationUrl = await getNarration();
-  console.log("narrationUrl", narrationUrl);
-  console.log("script", script);
 
   return (
     <Main
