@@ -15,6 +15,7 @@ from tta_types.types import (
     SpeechResponse,
     ScriptRequest,
     ScriptResponse,
+    AudiobookJob,
 )
 from tta_aws.s3 import S3Client
 
@@ -176,16 +177,60 @@ def add_voice(
 def update_voice(name: str | None = None, age: str | None = None): ...
 
 
-@app.post("/status/{job_id}")
-def create_job_status(job_id: str): ...
+@app.post("/job/{job_id}")
+def create_job(job_details: AudiobookJob):
+    if s3_client.list_files(JOB_STATUS_BUCKET, job_details.job_id):
+        return HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Job ID {job_details.job_id} already exists.",
+        )
+    file = io.BytesIO(job_details.model_dump_json().encode("utf-8"))
+    file.name = f"{job_details.job_id}.json"
+    s3_client.upload_fileobj(
+        JOB_STATUS_BUCKET,
+        file.name,
+        file,
+    )
 
 
-@app.get("/status/{job_id}")
-def get_job_status(job_id: str): ...
+@app.get("/job/status/{job_id}")
+def get_job_status(job_id: str):
+    if not s3_client.list_files(JOB_STATUS_BUCKET, job_id):
+        return HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Job ID {job_id} not found.",
+        )
+    job_status = s3_client.get_file(JOB_STATUS_BUCKET, job_id)
+    return AudiobookJob.model_validate(json.loads(job_status)).status
 
 
-@app.patch("/status/{job_id}")
-def update_job_status(job_id: str): ...
+@app.patch("/job/status/{job_id}")
+def update_job_status(job_details: AudiobookJob):
+    if not s3_client.list_files(JOB_STATUS_BUCKET, job_details.job_id):
+        return HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Job ID {job_details.job_id} not found.",
+        )
+    data = s3_client.get_file(JOB_STATUS_BUCKET, job_details.job_id)
+    updated = AudiobookJob.model_validate(json.loads(data))
+    updated.status = job_details.status
+    file = io.BytesIO(updated.model_dump_json().encode("utf-8"))
+    file.name = f"{updated.job_id}.json"
+    s3_client.upload_fileobj(
+        JOB_STATUS_BUCKET,
+        file.name,
+        file,
+    )
+
+
+@app.delete("/job/{job_id}")
+def delete_job(job_id: str):
+    if not s3_client.list_files(JOB_STATUS_BUCKET, job_id):
+        return HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Job ID {job_id} not found.",
+        )
+    s3_client.delete_file(JOB_STATUS_BUCKET, job_id)
 
 
 @app.post("/webhook")

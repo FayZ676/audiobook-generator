@@ -59,3 +59,8 @@ class WebhookResponseResult(BaseModel):
     user_id: str
     status: str
     data: WebhookResponseResultData
+
+
+class AudiobookJob(BaseModel):
+    job_id: str
+    status: str
