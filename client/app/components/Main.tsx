@@ -69,8 +69,8 @@ export default function Main({
         <div className="flex flex-col gap-4">
           {jobState && <JobStateView status={jobState.status} />}
           <button
-            onClick={() => {
-              deleteProject;
+            onClick={async () => {
+              await deleteProject();
               router.refresh();
             }}
             className="ml-auto border py-2 px-4"
