@@ -17,7 +17,7 @@ export async function getJobState(): Promise<AudiobookJob | null> {
 
   try {
     const response = await fetch(
-      `${process.env.AUDIOBOOK_SERVICE_URL}/job/${userId}`,
+      `${process.env.AUDIOBOOK_SERVICE_URL}/job/status/${userId}`,
       {
         method: "GET",
         headers: {
@@ -25,6 +25,11 @@ export async function getJobState(): Promise<AudiobookJob | null> {
         },
       }
     );
+    if (!response.ok) {
+      throw new Error(
+        `Error retrieving job status: ${response.status} ${response.statusText}`
+      );
+    }
     const data = await response.json();
     const jobState = data ? AudiobookJobSchema.parse(data) : null;
     return jobState;

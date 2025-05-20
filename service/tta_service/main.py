@@ -196,12 +196,9 @@ def create_job(job_details: AudiobookJob):
 @app.get("/job/status/{job_id}")
 def get_job_status(job_id: str):
     if not s3_client.list_files(JOB_STATUS_BUCKET, job_id):
-        return HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Job ID {job_id} not found.",
-        )
+        return None
     job_status = s3_client.get_file(JOB_STATUS_BUCKET, job_id)
-    return AudiobookJob.model_validate(json.loads(job_status)).status
+    return AudiobookJob.model_validate(json.loads(job_status))
 
 
 # TODO: This should call the update_status function
