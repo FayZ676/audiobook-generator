@@ -39,12 +39,10 @@ def _to_json_fileobject(
 
 
 def _get_voices() -> list[Voice]:
-    voices_metadata = s3_client.list_files(f"{VOICES_BUCKET}/metadata", "")
+    voices_metadata = s3_client.list_files(VOICES_BUCKET, "metadata/")
     voices: list[Voice] = []
     for voice_metadata_key in voices_metadata:
-        file_content_bytes = s3_client.get_file(
-            f"{VOICES_BUCKET}/metadata", str(voice_metadata_key)
-        )
+        file_content_bytes = s3_client.get_file(VOICES_BUCKET, voice_metadata_key)
         voice_data = json.loads(file_content_bytes.decode("utf-8"))
         voices.append(Voice.model_validate(voice_data))
     return voices

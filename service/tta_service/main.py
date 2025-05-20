@@ -10,11 +10,7 @@ from tta_types.types import (
     SpeechRequest,
     SpeechRequestSegment,
     WebhookResponse,
-    WebhookResponseResult,
-    WebhookResponseResultData,
-    SpeechResponse,
     ScriptRequest,
-    ScriptResponse,
     AudiobookJob,
 )
 from tta_aws.s3 import S3Client
@@ -120,12 +116,10 @@ def delete_narration(filename: str):
 
 @app.get("/voices")
 def get_voices():
-    voices_metadata = s3_client.list_files(f"{VOICES_BUCKET}/metadata", "")
+    voices_metadata = s3_client.list_files(f"{VOICES_BUCKET}", "metadata/")
     voices: list[Voice] = []
     for voice_metadata_key in voices_metadata:
-        file_content_bytes = s3_client.get_file(
-            f"{VOICES_BUCKET}/metadata", str(voice_metadata_key)
-        )
+        file_content_bytes = s3_client.get_file(VOICES_BUCKET, voice_metadata_key)
         voice_data = json.loads(file_content_bytes.decode("utf-8"))
         voices.append(Voice.model_validate(voice_data))
     return voices

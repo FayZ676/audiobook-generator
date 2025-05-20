@@ -46,7 +46,7 @@ def _prepare_input(
 ) -> InputData:
     def download_audio(audio_name: str):
         print(f"Downloading audio {audio_name}")
-        audio = s3.get_file(f"{VOICES_BUCKET}/audio", f"{audio_name}.mp3")
+        audio = s3.get_file(VOICES_BUCKET, f"audio/{audio_name}.mp3")
         audio_file = BytesIO(audio)
         temp_audio_path = f"{voice_save_path}/{audio_name}"
         with open(temp_audio_path, "wb") as f:
