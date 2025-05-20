@@ -5,6 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { getVoices, Voice } from "./voices";
 
 interface NarrationRequest {
+  user_id: string;
   script_path: string;
   voices: Voice[];
 }
@@ -20,6 +21,7 @@ export async function createNarration() {
   const voices = await getVoices();
 
   const request: NarrationRequest = {
+    user_id: userId,
     script_path: `${userId}.json`,
     voices: voices,
   };

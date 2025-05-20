@@ -10,5 +10,6 @@ class BuildScriptRequest(BaseModel):
 
 
 class BuildNarrationRequest(BaseModel):
+    user_id: str
     script_path: str
     voices: list[Voice]
