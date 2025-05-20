@@ -202,29 +202,8 @@ def get_job_status(job_id: str):
 
 @app.post("/webhook")
 async def webhook(response: WebhookResponse):
-    response_type = response.type
-    match response_type:
-        case "speech":
-            speech_data = SpeechResponse.model_validate(response.data)
-            payload = WebhookResponseResult(
-                user_id=response.user_id,
-                status="completed",
-                data=WebhookResponseResultData(filename=speech_data.filename),
-            ).model_dump()
-        case "script":
-            script_data = ScriptResponse.model_validate(response.data)
-            payload = WebhookResponseResult(
-                user_id=response.user_id,
-                status="completed",
-                data=WebhookResponseResultData(filename=script_data.filename),
-            ).model_dump()
-        case _:
-            return HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid response type: {response_type}",
-            )
     s3_client.delete_file(JOB_STATUS_BUCKET, response.user_id)
-    pusher_client.trigger("job-channel", "job-completed", payload)
+    pusher_client.trigger("job-channel", "job-completed", {})
 
 
 def send_script_request(script_request: BuildScriptRequest):
@@ -304,3 +283,4 @@ def update_status(job_details: AudiobookJob):
         file.name,
         file,
     )
+    pusher_client.trigger("job-channel", "job-status-update", {})

@@ -45,12 +45,20 @@ export default function Main({
 
   useEffect(() => {
     const channel = pusherClient.subscribe("job-channel");
-    channel.bind("job-completed", (data: WebhookResponseResult) => {
+
+    channel.bind("job-completed", (data: {}) => {
       revalidate();
       router.refresh();
     });
+
+    channel.bind("job-status-update", (data: {}) => {
+      revalidate();
+      router.refresh();
+    });
+
     return () => {
       channel.unbind("job-completed");
+      channel.unbind("job-status-update");
       pusherClient.unsubscribe("job-channel");
     };
   }, []);
