@@ -201,7 +201,6 @@ def get_job_status(job_id: str):
     return AudiobookJob.model_validate(json.loads(job_status))
 
 
-# TODO: This should call the update_status function
 @app.patch("/job/status/{job_id}")
 def update_job_status(job_details: AudiobookJob):
     update_status(job_details)
