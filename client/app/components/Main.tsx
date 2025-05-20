@@ -5,19 +5,22 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { Script } from "@/app/actions/script";
-import { NarrationUrl } from "../actions/narrate";
+import { AudiobookJob } from "@/app/actions/job";
+import { NarrationUrl } from "@/app/actions/narrate";
 import { revalidate } from "@/app/actions/revalidate";
+import { deleteProject } from "@/app/actions/audiobook";
 
 import pusherClient from "@/app/lib/pusher";
 
 import GenerateScriptForm from "@/app/components/GenerateScriptForm";
 import ScriptView from "@/app/components/ScriptView";
-import NarrationView from "./NarrationView";
-import { deleteProject } from "../actions/audiobook";
+import NarrationView from "@/app/components/NarrationView";
+import JobStateView from "./JobStateView";
 
 interface MainProps {
   script: Script | null;
   narrationUrl: NarrationUrl | null;
+  jobState: AudiobookJob | null;
   createProject: (formData: FormData) => Promise<void>;
 }
 
@@ -35,6 +38,7 @@ interface WebhookResponseResult {
 export default function Main({
   script,
   narrationUrl,
+  jobState,
   createProject,
 }: MainProps) {
   const router = useRouter();
@@ -55,6 +59,7 @@ export default function Main({
     <div className="max-w-md mx-auto">
       {script || narrationUrl ? (
         <div className="flex flex-col gap-4">
+          {jobState && <JobStateView status={jobState.status} />}
           <button
             onClick={() => {
               deleteProject;

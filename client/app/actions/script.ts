@@ -4,8 +4,6 @@ import { auth } from "@clerk/nextjs/server";
 
 import { z } from "zod";
 
-import { uploadTextFile } from "./file";
-
 const SpeakerDetailsSchema = z.object({
   names: z.array(z.string()),
   age: z.string(),
