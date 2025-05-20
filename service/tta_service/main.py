@@ -212,24 +212,19 @@ async def webhook(response: WebhookResponse):
                 status="completed",
                 data=WebhookResponseResultData(filename=speech_data.filename),
             ).model_dump()
-            status = AudiobookJob(
-                job_id=response.user_id, status="Processing Narration"
-            )
         case "script":
-            # TODO: Return the script data.
             script_data = ScriptResponse.model_validate(response.data)
             payload = WebhookResponseResult(
                 user_id=response.user_id,
                 status="completed",
                 data=WebhookResponseResultData(filename=script_data.filename),
             ).model_dump()
-            status = AudiobookJob(job_id=response.user_id, status="Audiobook Complete")
         case _:
             return HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid response type: {response_type}",
             )
-    update_status(status)
+    s3_client.delete_file(JOB_STATUS_BUCKET, response.user_id)
     pusher_client.trigger("job-channel", "job-completed", payload)
 
 
