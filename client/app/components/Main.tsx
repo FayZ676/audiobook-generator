@@ -55,7 +55,13 @@ export default function Main({
     <div className="max-w-md mx-auto">
       {script || narrationUrl ? (
         <div className="flex flex-col gap-4">
-          <button onClick={deleteProject} className="ml-auto border py-2 px-4">
+          <button
+            onClick={() => {
+              deleteProject;
+              router.refresh();
+            }}
+            className="ml-auto border py-2 px-4"
+          >
             Delete Project
           </button>
           {narrationUrl && <NarrationView narrationUrl={narrationUrl} />}
