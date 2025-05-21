@@ -25,10 +25,6 @@ interface MainProps {
   jobState: AudiobookJob | null;
 }
 
-interface WebhookResponseResultData {
-  filename: string;
-}
-
 export default function Main({
   createScript,
   createNarration,
@@ -60,9 +56,9 @@ export default function Main({
 
   return (
     <div className="max-w-md mx-auto">
-      {jobState && <JobStateView status={jobState.status} />}
-      {script ? (
+      {script || jobState?.script_status || jobState?.narration_status ? (
         <div className="flex flex-col gap-4">
+          <JobStateView jobState={jobState} />
           <button
             onClick={async (e) => {
               e.preventDefault();

@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel
 
@@ -63,4 +63,5 @@ class WebhookResponseResult(BaseModel):
 
 class AudiobookJob(BaseModel):
     job_id: str
-    status: str
+    script_status: Optional[Literal["processing", "failed"]]
+    narration_status: Optional[Literal["processing", "failed"]]

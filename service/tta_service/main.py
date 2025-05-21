@@ -180,7 +180,9 @@ def get_job_status(job_id: str):
 
 @app.post("/webhook")
 async def webhook(response: WebhookResponse):
-    update_status(AudiobookJob(job_id=response.user_id, status="process complete"))
+    update_status(
+        AudiobookJob(job_id=response.user_id, script_status=None, narration_status=None)
+    )
 
 
 def send_script_request(script_request: BuildScriptRequest):
@@ -202,7 +204,11 @@ def send_script_request(script_request: BuildScriptRequest):
         },
     )
     update_status(
-        AudiobookJob(job_id=script_request.user_id, status="generating script")
+        AudiobookJob(
+            job_id=script_request.user_id,
+            script_status="processing",
+            narration_status=None,
+        )
     )
 
 
@@ -228,7 +234,9 @@ async def send_narration_request(script_path: str, voices: list[Voice], user_id:
             "Authorization": f"Bearer {SPEECH_SERVICE_API_KEY}",
         },
     )
-    update_status(AudiobookJob(job_id=user_id, status="generating narration"))
+    update_status(
+        AudiobookJob(job_id=user_id, narration_status="processing", script_status=None)
+    )
 
 
 def send_async_request(url: str, payload: dict, headers: dict):
@@ -253,11 +261,8 @@ def update_status(job_details: AudiobookJob):
     if not s3_client.list_files(JOB_STATUS_BUCKET, job_details.job_id):
         create_status(job_details)
     else:
-        data = s3_client.get_file(JOB_STATUS_BUCKET, f"{job_details.job_id}.json")
-        updated = AudiobookJob.model_validate(json.loads(data))
-        updated.status = job_details.status
-        file = io.BytesIO(updated.model_dump_json().encode("utf-8"))
-        file.name = f"{updated.job_id}.json"
+        file = io.BytesIO(job_details.model_dump_json().encode("utf-8"))
+        file.name = f"{job_details.job_id}.json"
         s3_client.upload_fileobj(
             JOB_STATUS_BUCKET,
             file.name,

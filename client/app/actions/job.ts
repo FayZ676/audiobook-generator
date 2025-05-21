@@ -4,7 +4,8 @@ import { auth } from "@clerk/nextjs/server";
 
 const AudiobookJobSchema = z.object({
   job_id: z.string(),
-  status: z.string(),
+  script_status: z.enum(["processing", "failed"]).nullable(),
+  narration_status: z.enum(["processing", "failed"]).nullable(),
 });
 
 export type AudiobookJob = z.infer<typeof AudiobookJobSchema>;
