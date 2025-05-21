@@ -174,14 +174,13 @@ def update_voice(name: str | None = None, age: str | None = None): ...
 def get_job_status(job_id: str):
     if not s3_client.list_files(JOB_STATUS_BUCKET, job_id):
         return None
-    job_status = s3_client.get_file(JOB_STATUS_BUCKET, job_id)
+    job_status = s3_client.get_file(JOB_STATUS_BUCKET, f"{job_id}.json")
     return AudiobookJob.model_validate(json.loads(job_status))
 
 
 @app.post("/webhook")
 async def webhook(response: WebhookResponse):
-    s3_client.delete_file(JOB_STATUS_BUCKET, response.user_id)
-    pusher_client.trigger("job-channel", "job-completed", {})
+    update_status(AudiobookJob(job_id=response.user_id, status="process complete"))
 
 
 def send_script_request(script_request: BuildScriptRequest):
@@ -251,15 +250,23 @@ def send_async_request(url: str, payload: dict, headers: dict):
 
 def update_status(job_details: AudiobookJob):
     if not s3_client.list_files(JOB_STATUS_BUCKET, job_details.job_id):
-        return HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Job ID {job_details.job_id} not found.",
-        )
-    data = s3_client.get_file(JOB_STATUS_BUCKET, job_details.job_id)
+        return create_status(job_details)
+    data = s3_client.get_file(JOB_STATUS_BUCKET, f"{job_details.job_id}.json")
     updated = AudiobookJob.model_validate(json.loads(data))
     updated.status = job_details.status
     file = io.BytesIO(updated.model_dump_json().encode("utf-8"))
     file.name = f"{updated.job_id}.json"
+    s3_client.upload_fileobj(
+        JOB_STATUS_BUCKET,
+        file.name,
+        file,
+    )
+    pusher_client.trigger("job-channel", "job-status-update", {})
+
+
+def create_status(job_details: AudiobookJob):
+    file = io.BytesIO(job_details.model_dump_json().encode("utf-8"))
+    file.name = f"{job_details.job_id}.json"
     s3_client.upload_fileobj(
         JOB_STATUS_BUCKET,
         file.name,
