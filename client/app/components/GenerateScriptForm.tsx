@@ -1,10 +1,10 @@
 import React from "react";
 
-export default function CreateScriptForm({
-  action,
-}: {
+interface CreateScriptFormProps {
   action: (formData: FormData) => Promise<void>;
-}) {
+}
+
+export default function CreateScriptForm({ action }: CreateScriptFormProps) {
   return (
     <form action={action} className="flex flex-col gap-4 max-w-sm">
       <h2>Generate Script</h2>

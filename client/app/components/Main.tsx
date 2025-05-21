@@ -18,28 +18,23 @@ import NarrationView from "@/app/components/NarrationView";
 import JobStateView from "./JobStateView";
 
 interface MainProps {
+  createScript: (formData: FormData) => Promise<void>;
+  createNarration: () => Promise<void>;
   script: Script | null;
   narrationUrl: NarrationUrl | null;
   jobState: AudiobookJob | null;
-  createProject: (formData: FormData) => Promise<void>;
 }
 
 interface WebhookResponseResultData {
   filename: string;
 }
 
-interface WebhookResponseResult {
-  event: string;
-  job_id: string;
-  status: string;
-  data: WebhookResponseResultData;
-}
-
 export default function Main({
+  createScript,
+  createNarration,
   script,
   narrationUrl,
   jobState,
-  createProject,
 }: MainProps) {
   const router = useRouter();
 
@@ -65,7 +60,7 @@ export default function Main({
 
   return (
     <div className="max-w-md mx-auto">
-      {script || narrationUrl ? (
+      {script ? (
         <div className="flex flex-col gap-4">
           {jobState && <JobStateView status={jobState.status} />}
           <button
@@ -81,7 +76,7 @@ export default function Main({
           {script && <ScriptView script={script} />}
         </div>
       ) : (
-        <GenerateScriptForm action={createProject} />
+        <GenerateScriptForm action={createScript} />
       )}
     </div>
   );

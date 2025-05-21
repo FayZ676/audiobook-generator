@@ -4,6 +4,8 @@ import { auth } from "@clerk/nextjs/server";
 
 import { z } from "zod";
 
+import { uploadTextFile } from "./file";
+
 const SpeakerDetailsSchema = z.object({
   names: z.array(z.string()),
   age: z.string(),
@@ -30,11 +32,15 @@ interface DeleteScriptRequest {
 
 export type Script = z.infer<typeof ScriptResponseSchema>;
 
-export async function createScript(filename: string, narrator: string) {
+export async function createScript(formData: FormData) {
   const { userId } = await auth();
   if (!userId) {
     throw new Error("User not authenticated");
   }
+
+  const file = formData.get("file") as File;
+  const filename = await uploadTextFile(file);
+  const narrator = formData.get("narrator") as string;
 
   const request: BuildScriptRequest = {
     user_id: userId,
