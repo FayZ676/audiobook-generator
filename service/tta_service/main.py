@@ -170,22 +170,6 @@ def add_voice(
 def update_voice(name: str | None = None, age: str | None = None): ...
 
 
-@app.post("/job/{job_id}")
-def create_job(job_details: AudiobookJob):
-    if s3_client.list_files(JOB_STATUS_BUCKET, job_details.job_id):
-        return HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Job ID {job_details.job_id} already exists.",
-        )
-    file = io.BytesIO(job_details.model_dump_json().encode("utf-8"))
-    file.name = f"{job_details.job_id}.json"
-    s3_client.upload_fileobj(
-        JOB_STATUS_BUCKET,
-        file.name,
-        file,
-    )
-
-
 @app.get("/job/status/{job_id}")
 def get_job_status(job_id: str):
     if not s3_client.list_files(JOB_STATUS_BUCKET, job_id):
