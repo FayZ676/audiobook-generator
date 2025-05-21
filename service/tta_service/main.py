@@ -202,7 +202,7 @@ def send_script_request(script_request: BuildScriptRequest):
         },
     )
     update_status(
-        AudiobookJob(job_id=script_request.user_id, status="processing script")
+        AudiobookJob(job_id=script_request.user_id, status="generating script")
     )
 
 
@@ -228,7 +228,7 @@ async def send_narration_request(script_path: str, voices: list[Voice], user_id:
             "Authorization": f"Bearer {SPEECH_SERVICE_API_KEY}",
         },
     )
-    update_status(AudiobookJob(job_id=user_id, status="processing narration"))
+    update_status(AudiobookJob(job_id=user_id, status="generating narration"))
 
 
 def send_async_request(url: str, payload: dict, headers: dict):
@@ -248,6 +248,7 @@ def send_async_request(url: str, payload: dict, headers: dict):
         )
 
 
+# TODO: Is there always a status? Should we delete it at any point?
 def update_status(job_details: AudiobookJob):
     if not s3_client.list_files(JOB_STATUS_BUCKET, job_details.job_id):
         create_status(job_details)

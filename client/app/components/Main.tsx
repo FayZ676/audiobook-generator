@@ -60,9 +60,9 @@ export default function Main({
 
   return (
     <div className="max-w-md mx-auto">
+      {jobState && <JobStateView status={jobState.status} />}
       {script ? (
         <div className="flex flex-col gap-4">
-          {jobState && <JobStateView status={jobState.status} />}
           <button
             onClick={async (e) => {
               e.preventDefault();
@@ -90,6 +90,7 @@ export default function Main({
           {script && <ScriptView script={script} />}
         </div>
       ) : (
+        // Disable the form if the script is already generated
         <GenerateScriptForm action={createScript} />
       )}
     </div>
