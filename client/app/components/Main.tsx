@@ -64,7 +64,8 @@ export default function Main({
         <div className="flex flex-col gap-4">
           {jobState && <JobStateView status={jobState.status} />}
           <button
-            onClick={async () => {
+            onClick={async (e) => {
+              e.preventDefault();
               await deleteProject();
               router.refresh();
             }}
@@ -72,7 +73,20 @@ export default function Main({
           >
             Delete Project
           </button>
-          {narrationUrl && <NarrationView narrationUrl={narrationUrl} />}
+          {narrationUrl ? (
+            <NarrationView narrationUrl={narrationUrl} />
+          ) : (
+            <button
+              onClick={async (e) => {
+                e.preventDefault();
+                await createNarration();
+                router.refresh();
+              }}
+              className="ml-auto border py-2 px-4"
+            >
+              Narrate
+            </button>
+          )}
           {script && <ScriptView script={script} />}
         </div>
       ) : (

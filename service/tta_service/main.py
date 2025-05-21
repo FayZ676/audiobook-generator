@@ -218,6 +218,9 @@ def send_script_request(script_request: BuildScriptRequest):
             "Authorization": f"Bearer {SCRIPT_SERVICE_API_KEY}",
         },
     )
+    update_status(
+        AudiobookJob(job_id=script_request.user_id, status="processing script")
+    )
 
 
 async def send_narration_request(script_path: str, voices: list[Voice], user_id: str):
@@ -242,6 +245,7 @@ async def send_narration_request(script_path: str, voices: list[Voice], user_id:
             "Authorization": f"Bearer {SPEECH_SERVICE_API_KEY}",
         },
     )
+    update_status(AudiobookJob(job_id=user_id, status="processing narration"))
 
 
 def send_async_request(url: str, payload: dict, headers: dict):
