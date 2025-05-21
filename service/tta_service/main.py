@@ -250,17 +250,18 @@ def send_async_request(url: str, payload: dict, headers: dict):
 
 def update_status(job_details: AudiobookJob):
     if not s3_client.list_files(JOB_STATUS_BUCKET, job_details.job_id):
-        return create_status(job_details)
-    data = s3_client.get_file(JOB_STATUS_BUCKET, f"{job_details.job_id}.json")
-    updated = AudiobookJob.model_validate(json.loads(data))
-    updated.status = job_details.status
-    file = io.BytesIO(updated.model_dump_json().encode("utf-8"))
-    file.name = f"{updated.job_id}.json"
-    s3_client.upload_fileobj(
-        JOB_STATUS_BUCKET,
-        file.name,
-        file,
-    )
+        create_status(job_details)
+    else:
+        data = s3_client.get_file(JOB_STATUS_BUCKET, f"{job_details.job_id}.json")
+        updated = AudiobookJob.model_validate(json.loads(data))
+        updated.status = job_details.status
+        file = io.BytesIO(updated.model_dump_json().encode("utf-8"))
+        file.name = f"{updated.job_id}.json"
+        s3_client.upload_fileobj(
+            JOB_STATUS_BUCKET,
+            file.name,
+            file,
+        )
     pusher_client.trigger("job-channel", "job-status-update", {})
 
 
