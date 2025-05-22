@@ -1,8 +1,5 @@
-"use client";
-
 import React from "react";
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 
 import { Script } from "@/app/actions/script";
 import { AudiobookJob } from "@/app/actions/job";
@@ -32,19 +29,15 @@ export default function Main({
   narrationUrl,
   jobState,
 }: MainProps) {
-  const router = useRouter();
-
   useEffect(() => {
     const channel = pusherClient.subscribe("job-channel");
 
     channel.bind("job-completed", (data: {}) => {
       revalidate();
-      router.refresh();
     });
 
     channel.bind("job-status-update", (data: {}) => {
       revalidate();
-      router.refresh();
     });
 
     return () => {
@@ -59,29 +52,15 @@ export default function Main({
       {script || jobState?.script_status || jobState?.narration_status ? (
         <div className="flex flex-col gap-4">
           <JobStateView jobState={jobState} />
-          <button
-            onClick={async (e) => {
-              e.preventDefault();
-              await deleteProject();
-              router.refresh();
-            }}
-            className="ml-auto border py-2 px-4"
-          >
-            Delete Project
-          </button>
+          <form action={deleteProject}>
+            <button className="ml-auto border py-2 px-4">Delete Project</button>
+          </form>
           {narrationUrl ? (
             <NarrationView narrationUrl={narrationUrl} />
           ) : (
-            <button
-              onClick={async (e) => {
-                e.preventDefault();
-                await createNarration();
-                router.refresh();
-              }}
-              className="ml-auto border py-2 px-4"
-            >
-              Narrate
-            </button>
+            <form action={createNarration}>
+              <button className="ml-auto border py-2 px-4">Narrate</button>
+            </form>
           )}
           {script && <ScriptView script={script} />}
         </div>
