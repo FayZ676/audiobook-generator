@@ -9,7 +9,6 @@ import Main from "@/app/components/Main";
 
 export default async function Home() {
   const script = await getScript();
-  const narrationUrl = await getNarration();
   const jobState = await getJobState();
 
   return (
@@ -17,7 +16,7 @@ export default async function Home() {
       createScript={createScript}
       createNarration={createNarration}
       script={script}
-      narrationUrl={narrationUrl}
+      getNarrationUrl={getNarration}
       jobState={jobState}
     />
   );

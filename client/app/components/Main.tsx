@@ -21,7 +21,7 @@ interface MainProps {
   createScript: (formData: FormData) => Promise<void>;
   createNarration: () => Promise<void>;
   script: Script | null;
-  narrationUrl: NarrationUrl | null;
+  getNarrationUrl: () => Promise<NarrationUrl | null>;
   jobState: AudiobookJob | null;
 }
 
@@ -29,7 +29,7 @@ export default function Main({
   createScript,
   createNarration,
   script,
-  narrationUrl,
+  getNarrationUrl,
   jobState,
 }: MainProps) {
   const router = useRouter();
@@ -59,29 +59,37 @@ export default function Main({
       {script || jobState?.script_status || jobState?.narration_status ? (
         <div className="flex flex-col gap-4">
           <JobStateView jobState={jobState} />
-          <button
-            onClick={async (e) => {
-              e.preventDefault();
-              await deleteProject();
-              router.refresh();
-            }}
-            className="ml-auto border py-2 px-4"
-          >
-            Delete Project
-          </button>
-          {narrationUrl ? (
-            <NarrationView narrationUrl={narrationUrl} />
-          ) : (
+          <div className="flex justify-between">
             <button
               onClick={async (e) => {
                 e.preventDefault();
-                await createNarration();
+                await deleteProject();
                 router.refresh();
               }}
-              className="ml-auto border py-2 px-4"
+              className="border py-2 px-4"
             >
-              Narrate
+              Delete Project
             </button>
+            
+            {script && !jobState?.narration_status && (
+              <button
+                onClick={async (e) => {
+                  e.preventDefault();
+                  await createNarration();
+                  router.refresh();
+                }}
+                className="border py-2 px-4"
+              >
+                Narrate
+              </button>
+            )}
+          </div>
+          {jobState?.narration_status === "processing" ? (
+            <div className="text-center py-2 bg-yellow-100">
+              Narration in progress...
+            </div>
+          ) : (
+            script && <NarrationView getNarrationUrl={getNarrationUrl} />
           )}
           {script && <ScriptView script={script} />}
         </div>
