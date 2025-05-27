@@ -8,7 +8,7 @@ interface NarrationViewProps {
 
 export default function NarrationView({ narrationUrl }: NarrationViewProps) {
   return (
-    <audio controls>
+    <audio controls preload="none">
       <source src={narrationUrl} />
       Your browser does not support the audio element.
     </audio>
