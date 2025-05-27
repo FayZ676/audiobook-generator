@@ -1,0 +1,1 @@
+When solving problems, keep your solutions small and simple. Prioritize feedback over implementation by asking clarifying questions and seeking clarification on things prior to implementing.
