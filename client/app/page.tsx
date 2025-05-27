@@ -1,6 +1,5 @@
 import { getScript } from "@/app/actions/script";
 
-import { getNarration } from "@/app/actions/narrate";
 import { createScript } from "@/app/actions/script";
 import { createNarration } from "@/app/actions/narrate";
 import { getJobState } from "@/app/actions/job";
@@ -16,7 +15,6 @@ export default async function Home() {
       createScript={createScript}
       createNarration={createNarration}
       script={script}
-      getNarrationUrl={getNarration}
       jobState={jobState}
     />
   );

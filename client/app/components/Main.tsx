@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 
 import { Script } from "@/app/actions/script";
 import { AudiobookJob } from "@/app/actions/job";
-import { NarrationUrl } from "@/app/actions/narrate";
 import { revalidate } from "@/app/actions/revalidate";
 import { deleteProject } from "@/app/actions/audiobook";
 
@@ -21,7 +20,6 @@ interface MainProps {
   createScript: (formData: FormData) => Promise<void>;
   createNarration: () => Promise<void>;
   script: Script | null;
-  getNarrationUrl: () => Promise<NarrationUrl | null>;
   jobState: AudiobookJob | null;
 }
 
@@ -29,7 +27,6 @@ export default function Main({
   createScript,
   createNarration,
   script,
-  getNarrationUrl,
   jobState,
 }: MainProps) {
   const router = useRouter();
@@ -89,7 +86,7 @@ export default function Main({
               Narration in progress...
             </div>
           ) : (
-            script && <NarrationView getNarrationUrl={getNarrationUrl} />
+            script && <NarrationView />
           )}
           {script && <ScriptView script={script} />}
         </div>

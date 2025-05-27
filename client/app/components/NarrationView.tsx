@@ -1,38 +1,39 @@
 "use client";
 
 import React, { useState } from "react";
+import useSWR from "swr";
 
 import { NarrationUrl } from "../actions/narrate";
 
+// SWR fetcher function
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error('An error occurred while fetching the data.');
+  }
+  return res.json();
+};
+
 interface NarrationViewProps {
-  getNarrationUrl: () => Promise<NarrationUrl | null>;
+  // No props needed anymore as we fetch directly in the component
 }
 
-export default function NarrationView({ getNarrationUrl }: NarrationViewProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [narrationUrl, setNarrationUrl] = useState<NarrationUrl | null>(null);
-  const [error, setError] = useState<string | null>(null);
+export default function NarrationView({}: NarrationViewProps) {
+  const [shouldFetch, setShouldFetch] = useState(false);
+  
+  // Only fetch when the user clicks the button
+  const { data: narrationUrl, error, isLoading } = useSWR(
+    shouldFetch ? '/api/narration' : null,
+    fetcher
+  );
 
-  const loadAudio = async () => {
-    if (narrationUrl) return; // Already loaded
-    
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const url = await getNarrationUrl();
-      setNarrationUrl(url);
-    } catch (err) {
-      setError("Failed to load audio. Please try again.");
-      console.error("Error loading narration:", err);
-    } finally {
-      setIsLoading(false);
-    }
+  const loadAudio = () => {
+    setShouldFetch(true);
   };
 
   return (
     <div className="w-full">
-      {!narrationUrl && !isLoading && (
+      {!shouldFetch && (
         <button
           onClick={loadAudio}
           className="w-full border py-2 px-4 bg-gray-100 hover:bg-gray-200"
@@ -49,7 +50,7 @@ export default function NarrationView({ getNarrationUrl }: NarrationViewProps) {
       
       {error && (
         <div className="text-red-500 text-center py-2">
-          {error}
+          Failed to load audio. Please try again.
         </div>
       )}
       
