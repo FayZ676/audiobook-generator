@@ -40,6 +40,30 @@ export async function createNarration() {
   }
 }
 
+export async function hasNarration(): Promise<boolean> {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("User not authenticated");
+  }
+
+  const filename = `${userId}.mp3`;
+  try {
+    const response = await fetch(
+      `${process.env.AUDIOBOOK_SERVICE_URL}/narration/${filename}/exists`
+    );
+    if (!response.ok) {
+      return false;
+    }
+    const exists = await response.json();
+    return exists;
+  } catch (error) {
+    console.error("Error checking narration existence:", error);
+    return false;
+  }
+}
+
+// Keep for backward compatibility but mark as deprecated
+/** @deprecated Use client-side fetching with getNarrationClient instead */
 export async function getNarration(): Promise<NarrationUrl | null> {
   const { userId } = await auth();
   if (!userId) {
