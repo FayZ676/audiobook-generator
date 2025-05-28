@@ -38,12 +38,12 @@ export default function Main({
   useEffect(() => {
     const channel = pusherClient.subscribe("job-channel");
 
-    channel.bind("job-completed", (data: {}) => {
+    channel.bind("job-completed", () => {
       revalidate();
       router.refresh();
     });
 
-    channel.bind("job-status-update", (data: {}) => {
+    channel.bind("job-status-update", () => {
       revalidate();
       router.refresh();
     });
@@ -53,7 +53,7 @@ export default function Main({
       channel.unbind("job-status-update");
       pusherClient.unsubscribe("job-channel");
     };
-  }, []);
+  }, [router]);
 
   return (
     <div className="max-w-md mx-auto">

@@ -109,6 +109,13 @@ def get_narration(filename: str):
     return narration_url
 
 
+@app.get("/narration/{filename}/exists")
+def narration_exists(filename: str):
+    """Check if a narration file exists without generating a presigned URL"""
+    exists = bool(s3_client.list_files(SPEECH_RESULTS_BUCKET, filename))
+    return exists
+
+
 @app.delete("/narration/{filename}")
 def delete_narration(filename: str):
     return s3_client.delete_file(SPEECH_RESULTS_BUCKET, filename)
