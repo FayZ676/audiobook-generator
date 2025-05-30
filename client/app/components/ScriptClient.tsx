@@ -6,11 +6,11 @@ import { use } from "react";
 import { Script } from "../actions/script";
 import GenerateScriptForm from "@/app/components/GenerateScriptForm";
 
-interface ScriptTextProps {
+interface ScriptClientProps {
   scriptPromise: Promise<Script | null>;
 }
 
-export default function ScriptText({ scriptPromise }: ScriptTextProps) {
+export default function ScriptClient({ scriptPromise }: ScriptClientProps) {
   const script = use(scriptPromise);
   return (
     <div>
