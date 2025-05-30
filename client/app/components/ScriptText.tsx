@@ -4,6 +4,7 @@ import React from "react";
 import { use } from "react";
 
 import { Script } from "../actions/script";
+import GenerateScriptForm from "@/app/components/GenerateScriptForm";
 
 interface ScriptTextProps {
   scriptPromise: Promise<Script | null>;
@@ -25,7 +26,7 @@ export default function ScriptText({ scriptPromise }: ScriptTextProps) {
           );
         })
       ) : (
-        <div>No script available</div>
+        <GenerateScriptForm />
       )}
     </div>
   );

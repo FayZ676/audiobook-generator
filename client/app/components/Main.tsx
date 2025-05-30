@@ -1,23 +1,20 @@
 import React from "react";
 
 import { AudiobookJob } from "@/app/actions/job";
-import { NarrationUrl } from "@/app/actions/narrate";
 import { revalidate } from "@/app/actions/revalidate";
 import { deleteProject } from "@/app/actions/audiobook";
 
 import pusherClient from "@/app/lib/pusher";
 
-import GenerateScriptForm from "@/app/components/GenerateScriptForm";
 import ScriptView from "@/app/components/ScriptView";
 import NarrationView from "@/app/components/NarrationView";
 import JobStateView from "./JobStateView";
 
 interface MainProps {
-  createScript: (formData: FormData) => Promise<void>;
   jobState: AudiobookJob | null;
 }
 
-export default function Main({ createScript, jobState }: MainProps) {
+export default function Main({ jobState }: MainProps) {
   useEffect(() => {
     const channel = pusherClient.subscribe("job-channel");
 
@@ -38,7 +35,7 @@ export default function Main({ createScript, jobState }: MainProps) {
 
   return (
     <div className="max-w-md mx-auto">
-      {jobState?.script_status || jobState?.narration_status ? (
+      {(jobState?.script_status || jobState?.narration_status) && (
         <div className="flex flex-col gap-4">
           <JobStateView jobState={jobState} />
           <form action={deleteProject}>
@@ -47,9 +44,6 @@ export default function Main({ createScript, jobState }: MainProps) {
           <NarrationView />
           <ScriptView />
         </div>
-      ) : (
-        // Disable the form if the script is already generated
-        <GenerateScriptForm action={createScript} />
       )}
     </div>
   );
