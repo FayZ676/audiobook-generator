@@ -1,7 +1,5 @@
 import React from "react";
-import { useEffect } from "react";
 
-import { Script } from "@/app/actions/script";
 import { AudiobookJob } from "@/app/actions/job";
 import { NarrationUrl } from "@/app/actions/narrate";
 import { revalidate } from "@/app/actions/revalidate";
@@ -17,7 +15,6 @@ import JobStateView from "./JobStateView";
 interface MainProps {
   createScript: (formData: FormData) => Promise<void>;
   createNarration: () => Promise<void>;
-  script: Script | null;
   narrationUrl: NarrationUrl | null;
   jobState: AudiobookJob | null;
 }
@@ -25,7 +22,6 @@ interface MainProps {
 export default function Main({
   createScript,
   createNarration,
-  script,
   narrationUrl,
   jobState,
 }: MainProps) {
@@ -49,7 +45,7 @@ export default function Main({
 
   return (
     <div className="max-w-md mx-auto">
-      {script || jobState?.script_status || jobState?.narration_status ? (
+      {jobState?.script_status || jobState?.narration_status ? (
         <div className="flex flex-col gap-4">
           <JobStateView jobState={jobState} />
           <form action={deleteProject}>
@@ -62,7 +58,7 @@ export default function Main({
               <button className="ml-auto border py-2 px-4">Narrate</button>
             </form>
           )}
-          {script && <ScriptView script={script} />}
+          {<ScriptView />}
         </div>
       ) : (
         // Disable the form if the script is already generated

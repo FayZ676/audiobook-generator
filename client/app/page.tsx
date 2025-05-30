@@ -8,7 +8,6 @@ import { getJobState } from "@/app/actions/job";
 import Main from "@/app/components/Main";
 
 export default async function Home() {
-  const script = await getScript();
   const narrationUrl = await getNarration();
   const jobState = await getJobState();
 
@@ -16,7 +15,6 @@ export default async function Home() {
     <Main
       createScript={createScript}
       createNarration={createNarration}
-      script={script}
       narrationUrl={narrationUrl}
       jobState={jobState}
     />

@@ -1,24 +1,15 @@
 import React from "react";
+import { Suspense } from "react";
 
-import { Script } from "@/app/actions/script";
+import { getScript } from "@/app/actions/script";
 
-interface ScriptViewProps {
-  script: Script;
-}
+import ScriptText from "@/app/components/ScriptText";
 
-export default function ScriptView({ script }: ScriptViewProps) {
+export default async function ScriptView() {
+  const script = getScript();
   return (
-    <div>
-      {script.map((scriptSegment, index) => {
-        // TODO: Don't use index as key.
-        return (
-          <div key={index} className="mb-4">
-            <p>
-              {scriptSegment.speaker.names[0]}: {scriptSegment.text}
-            </p>
-          </div>
-        );
-      })}
-    </div>
+    <Suspense fallback={<div>Loading...</div>}>
+      <ScriptText scriptPromise={script} />
+    </Suspense>
   );
 }
