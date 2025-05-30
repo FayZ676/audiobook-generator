@@ -10,11 +10,7 @@ import ScriptView from "@/app/components/ScriptView";
 import NarrationView from "@/app/components/NarrationView";
 import JobStateView from "./JobStateView";
 
-interface MainProps {
-  jobState: AudiobookJob | null;
-}
-
-export default function Main({ jobState }: MainProps) {
+export default function Main() {
   useEffect(() => {
     const channel = pusherClient.subscribe("job-channel");
 
@@ -34,17 +30,13 @@ export default function Main({ jobState }: MainProps) {
   }, []);
 
   return (
-    <div className="max-w-md mx-auto">
-      {(jobState?.script_status || jobState?.narration_status) && (
-        <div className="flex flex-col gap-4">
-          <JobStateView jobState={jobState} />
-          <form action={deleteProject}>
-            <button className="ml-auto border py-2 px-4">Delete Project</button>
-          </form>
-          <NarrationView />
-          <ScriptView />
-        </div>
-      )}
+    <div className="flex flex-col gap-4">
+      <JobStateView />
+      <form action={deleteProject}>
+        <button className="ml-auto border py-2 px-4">Delete Project</button>
+      </form>
+      <NarrationView />
+      <ScriptView />
     </div>
   );
 }

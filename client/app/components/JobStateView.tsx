@@ -1,11 +1,14 @@
 import React from "react";
+import { Suspense } from "react";
 
-import { AudiobookJob } from "../actions/job";
+import { getJobState } from "../actions/job";
+import JobStateClient from "./JobStateClient";
 
-interface JobStateViewProps {
-  jobState: AudiobookJob | null;
-}
-
-export default function JobStateView({ jobState }: JobStateViewProps) {
-  return <div>{jobState?.script_status || jobState?.narration_status}</div>;
+export default function JobStateView() {
+  const jobStatePromise = getJobState();
+  return (
+    <Suspense fallback={<div>Loading job state...</div>}>
+      <JobStateClient jobStatePromise={jobStatePromise} />
+    </Suspense>
+  );
 }
