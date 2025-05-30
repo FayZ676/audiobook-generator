@@ -1,6 +1,5 @@
 import React from "react";
 
-import { AudiobookJob } from "@/app/actions/job";
 import { revalidate } from "@/app/actions/revalidate";
 import { deleteProject } from "@/app/actions/audiobook";
 
