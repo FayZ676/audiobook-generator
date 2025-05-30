@@ -6,7 +6,7 @@ import { deleteProject } from "@/app/actions/audiobook";
 import pusherClient from "@/app/lib/pusher";
 
 import ScriptView from "@/app/components/ScriptView";
-import NarrationView from "@/app/components/NarrationView";
+import NarrationSection from "@/app/components/NarrationSection";
 import JobStateView from "./JobStateView";
 
 export default function Main() {
@@ -34,7 +34,7 @@ export default function Main() {
       <form action={deleteProject}>
         <button className="ml-auto border py-2 px-4">Delete Project</button>
       </form>
-      <NarrationView />
+      <NarrationSection />
       <ScriptView />
     </div>
   );

@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { getNarration } from "../actions/narrate";
 import NarrationClient from "./NarrationClient";
 
-export default function NarrationView() {
+export default function NarrationSection() {
   const narrationPromise = getNarration();
   return (
     <Suspense>
