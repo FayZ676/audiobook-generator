@@ -1,16 +1,14 @@
 import React from "react";
+import { Suspense } from "react";
 
-import { NarrationUrl } from "../actions/narrate";
+import { getNarration } from "../actions/narrate";
+import NarrationSection from "./NarrationSection";
 
-interface NarrationViewProps {
-  narrationUrl: NarrationUrl;
-}
-
-export default function NarrationView({ narrationUrl }: NarrationViewProps) {
+export default function NarrationView() {
+  const narrationPromise = getNarration();
   return (
-    <audio controls>
-      <source src={narrationUrl} />
-      Your browser does not support the audio element.
-    </audio>
+    <Suspense>
+      <NarrationSection narrationUrlPromise={narrationPromise} />
+    </Suspense>
   );
 }

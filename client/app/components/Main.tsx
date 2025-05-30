@@ -14,17 +14,10 @@ import JobStateView from "./JobStateView";
 
 interface MainProps {
   createScript: (formData: FormData) => Promise<void>;
-  createNarration: () => Promise<void>;
-  narrationUrl: NarrationUrl | null;
   jobState: AudiobookJob | null;
 }
 
-export default function Main({
-  createScript,
-  createNarration,
-  narrationUrl,
-  jobState,
-}: MainProps) {
+export default function Main({ createScript, jobState }: MainProps) {
   useEffect(() => {
     const channel = pusherClient.subscribe("job-channel");
 
@@ -51,14 +44,8 @@ export default function Main({
           <form action={deleteProject}>
             <button className="ml-auto border py-2 px-4">Delete Project</button>
           </form>
-          {narrationUrl ? (
-            <NarrationView narrationUrl={narrationUrl} />
-          ) : (
-            <form action={createNarration}>
-              <button className="ml-auto border py-2 px-4">Narrate</button>
-            </form>
-          )}
-          {<ScriptView />}
+          <NarrationView />
+          <ScriptView />
         </div>
       ) : (
         // Disable the form if the script is already generated
