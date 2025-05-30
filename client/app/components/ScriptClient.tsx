@@ -2,10 +2,11 @@
 
 import React from "react";
 import { use, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 import pusherClient from "@/app/lib/pusher";
 
-import { revalidate } from "@/app/actions/revalidate";
+import { handleRevalidateTag } from "@/app/actions/revalidate";
 
 import { Script } from "../actions/script";
 import GenerateScriptForm from "@/app/components/GenerateScriptForm";
@@ -15,13 +16,16 @@ interface ScriptClientProps {
 }
 
 export default function ScriptClient({ scriptPromise }: ScriptClientProps) {
+  const router = useRouter();
+
   const script = use(scriptPromise);
 
   useEffect(() => {
     const channel = pusherClient.subscribe("script-channel");
 
     channel.bind("script-complete", (data: {}) => {
-      revalidate();
+      handleRevalidateTag("script");
+      router.refresh();
     });
 
     return () => {
