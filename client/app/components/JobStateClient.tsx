@@ -5,11 +5,13 @@ import { use } from "react";
 
 import { AudiobookJob } from "../actions/job";
 
-interface JobStateViewProps {
+interface JobStateSectionProps {
   jobStatePromise: Promise<AudiobookJob | null>;
 }
 
-export default function JobStateClient({ jobStatePromise }: JobStateViewProps) {
+export default function JobStateClient({
+  jobStatePromise,
+}: JobStateSectionProps) {
   const jobState = use(jobStatePromise);
   return <div>{jobState?.script_status || jobState?.narration_status}</div>;
 }

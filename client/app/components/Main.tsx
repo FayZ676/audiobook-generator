@@ -7,7 +7,7 @@ import pusherClient from "@/app/lib/pusher";
 
 import ScriptSection from "@/app/components/ScriptSection";
 import NarrationSection from "@/app/components/NarrationSection";
-import JobStateView from "./JobStateView";
+import JobStateSection from "./JobStateSection";
 
 export default function Main() {
   useEffect(() => {
@@ -30,7 +30,7 @@ export default function Main() {
 
   return (
     <div className="flex flex-col gap-4">
-      <JobStateView />
+      <JobStateSection />
       <form action={deleteProject}>
         <button className="ml-auto border py-2 px-4">Delete Project</button>
       </form>
