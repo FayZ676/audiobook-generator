@@ -268,7 +268,7 @@ def update_status(job_details: AudiobookJob):
             file.name,
             file,
         )
-    pusher_client.trigger("job-channel", "job-status-update", {})
+    pusher_client.trigger("job-channel", "job-update", {})
 
 
 def create_status(job_details: AudiobookJob):
@@ -279,4 +279,4 @@ def create_status(job_details: AudiobookJob):
         file.name,
         file,
     )
-    pusher_client.trigger("job-channel", "job-status-update", {})
+    pusher_client.trigger("job-channel", "job-update", {})
