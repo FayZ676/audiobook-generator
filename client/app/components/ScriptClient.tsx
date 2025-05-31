@@ -23,13 +23,13 @@ export default function ScriptClient({ scriptPromise }: ScriptClientProps) {
   useEffect(() => {
     const channel = pusherClient.subscribe("script-channel");
 
-    channel.bind("script-complete", (data: {}) => {
+    channel.bind("script-update", (data: {}) => {
       handleRevalidateTag("script");
       router.refresh();
     });
 
     return () => {
-      channel.unbind("script-completed");
+      channel.unbind("script-update");
       pusherClient.unsubscribe("script-channel");
     };
   }, []);

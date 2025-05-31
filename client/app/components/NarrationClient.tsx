@@ -25,13 +25,13 @@ export default function NarrationClient({
   useEffect(() => {
     const channel = pusherClient.subscribe("narration-channel");
 
-    channel.bind("narration-complete", (data: {}) => {
+    channel.bind("narration-update", (data: {}) => {
       handleRevalidateTag("narration");
       router.refresh();
     });
 
     return () => {
-      channel.unbind("narration-completed");
+      channel.unbind("narration-update");
       pusherClient.unsubscribe("narration-channel");
     };
   }, []);
