@@ -9,7 +9,7 @@ import pusherClient from "@/app/lib/pusher";
 import { handleRevalidateTag } from "@/app/actions/revalidate";
 
 import NarrationAudio from "./NarrationAudio";
-import NarrationButton from "./NarrationButton";
+import ControlsSection from "./ControlsSection";
 
 interface NarrationClientProps {
   narrationUrlPromise: Promise<string | null>;
