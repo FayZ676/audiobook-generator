@@ -181,7 +181,11 @@ def get_job_status(job_id: str):
 @app.post("/webhook")
 async def webhook(response: WebhookResponse):
     update_status(
-        AudiobookJob(job_id=response.user_id, script_status=None, narration_status=None)
+        AudiobookJob(
+            job_id=response.user_id, script_status=None, narration_status=None
+        ),
+        "job-channel",
+        "job-update",
     )
 
 
@@ -208,7 +212,9 @@ def send_script_request(script_request: BuildScriptRequest):
             job_id=script_request.user_id,
             script_status="processing",
             narration_status=None,
-        )
+        ),
+        "script-channel",
+        "script-update",
     )
 
 
@@ -235,7 +241,9 @@ async def send_narration_request(script_path: str, voices: list[Voice], user_id:
         },
     )
     update_status(
-        AudiobookJob(job_id=user_id, narration_status="processing", script_status=None)
+        AudiobookJob(job_id=user_id, narration_status="processing", script_status=None),
+        "narration-channel",
+        "narration-update",
     )
 
 
@@ -257,9 +265,9 @@ def send_async_request(url: str, payload: dict, headers: dict):
 
 
 # TODO: Is there always a status? Should we delete it at any point?
-def update_status(job_details: AudiobookJob):
+def update_status(job_details: AudiobookJob, pusher_channel: str, pusher_event: str):
     if not s3_client.list_files(JOB_STATUS_BUCKET, job_details.job_id):
-        create_status(job_details)
+        create_status(job_details, pusher_channel, pusher_event)
     else:
         file = io.BytesIO(job_details.model_dump_json().encode("utf-8"))
         file.name = f"{job_details.job_id}.json"
@@ -268,10 +276,10 @@ def update_status(job_details: AudiobookJob):
             file.name,
             file,
         )
-    pusher_client.trigger("job-channel", "job-status-update", {})
+    pusher_client.trigger(pusher_channel, pusher_event, {})
 
 
-def create_status(job_details: AudiobookJob):
+def create_status(job_details: AudiobookJob, pusher_channel: str, pusher_event: str):
     file = io.BytesIO(job_details.model_dump_json().encode("utf-8"))
     file.name = f"{job_details.job_id}.json"
     s3_client.upload_fileobj(
@@ -279,4 +287,4 @@ def create_status(job_details: AudiobookJob):
         file.name,
         file,
     )
-    pusher_client.trigger("job-channel", "job-status-update", {})
+    pusher_client.trigger(pusher_channel, pusher_event, {})
