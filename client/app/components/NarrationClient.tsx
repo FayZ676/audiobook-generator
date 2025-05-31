@@ -36,13 +36,5 @@ export default function NarrationClient({
     };
   }, []);
 
-  return (
-    <>
-      {narrationUrl ? (
-        <NarrationAudio narrationUrl={narrationUrl} />
-      ) : (
-        <NarrationButton />
-      )}
-    </>
-  );
+  return <>{narrationUrl && <NarrationAudio narrationUrl={narrationUrl} />}</>;
 }

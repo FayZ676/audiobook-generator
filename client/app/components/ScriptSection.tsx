@@ -1,15 +1,19 @@
 import React from "react";
 import { Suspense } from "react";
 
-import { getScript } from "@/app/actions/script";
-
+import { Script } from "../actions/script";
 import ScriptClient from "@/app/components/ScriptClient";
 
-export default async function ScriptSection() {
-  const script = getScript();
+interface ScriptSectionProps {
+  scriptPromise: Promise<Script | null>;
+}
+
+export default async function ScriptSection({
+  scriptPromise,
+}: ScriptSectionProps) {
   return (
     <Suspense fallback={<div>Loading script ...</div>}>
-      <ScriptClient scriptPromise={script} />
+      <ScriptClient scriptPromise={scriptPromise} />
     </Suspense>
   );
 }

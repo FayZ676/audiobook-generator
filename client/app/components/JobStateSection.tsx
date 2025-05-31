@@ -1,11 +1,17 @@
 import React from "react";
 import { Suspense } from "react";
 
-import { getJobState } from "../actions/job";
+import { AudiobookJob } from "../actions/job";
+
 import JobStateClient from "./JobStateClient";
 
-export default function JobStateSection() {
-  const jobStatePromise = getJobState();
+interface JobStateSectionProps {
+  jobStatePromise: Promise<AudiobookJob | null>;
+}
+
+export default function JobStateSection({
+  jobStatePromise,
+}: JobStateSectionProps) {
   return (
     <Suspense fallback={<div>Loading job state ...</div>}>
       <JobStateClient jobStatePromise={jobStatePromise} />

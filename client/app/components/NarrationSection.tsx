@@ -1,14 +1,18 @@
 import React from "react";
 import { Suspense } from "react";
 
-import { getNarration } from "../actions/narrate";
 import NarrationClient from "./NarrationClient";
 
-export default function NarrationSection() {
-  const narrationPromise = getNarration();
+interface NarrationSectionProps {
+  narrationUrlPromise: Promise<string | null>;
+}
+
+export default function NarrationSection({
+  narrationUrlPromise,
+}: NarrationSectionProps) {
   return (
     <Suspense fallback={<div>Loading narration ...</div>}>
-      <NarrationClient narrationUrlPromise={narrationPromise} />
+      <NarrationClient narrationUrlPromise={narrationUrlPromise} />
     </Suspense>
   );
 }
