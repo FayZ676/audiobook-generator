@@ -52,6 +52,9 @@ export async function getNarration(): Promise<NarrationUrl | null> {
       `${process.env.AUDIOBOOK_SERVICE_URL}/narration/${filename}`,
       {
         cache: "force-cache",
+        next: {
+          tags: ["narration"],
+        },
       }
     );
     const narrationUrl = await response.json();

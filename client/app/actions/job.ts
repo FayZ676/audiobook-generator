@@ -25,6 +25,9 @@ export async function getJobState(): Promise<AudiobookJob | null> {
           "Content-Type": "application/json",
         },
         cache: "force-cache",
+        next: {
+          tags: ["job"],
+        },
       }
     );
     if (!response.ok) {

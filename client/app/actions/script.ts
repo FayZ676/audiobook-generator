@@ -74,6 +74,9 @@ export async function getScript(): Promise<Script | null> {
     `${process.env.AUDIOBOOK_SERVICE_URL}/script/${filename}`,
     {
       cache: "force-cache",
+      next: {
+        tags: ["script"],
+      },
     }
   );
   const rawData = await response.json();
