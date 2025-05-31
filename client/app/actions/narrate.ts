@@ -49,7 +49,10 @@ export async function getNarration(): Promise<NarrationUrl | null> {
   const filename = `${userId}.mp3`;
   try {
     const response = await fetch(
-      `${process.env.AUDIOBOOK_SERVICE_URL}/narration/${filename}`
+      `${process.env.AUDIOBOOK_SERVICE_URL}/narration/${filename}`,
+      {
+        cache: "force-cache",
+      }
     );
     const narrationUrl = await response.json();
     return narrationUrl;

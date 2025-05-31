@@ -71,7 +71,10 @@ export async function getScript(): Promise<Script | null> {
 
   const filename = `${userId}.json`;
   const response = await fetch(
-    `${process.env.AUDIOBOOK_SERVICE_URL}/script/${filename}`
+    `${process.env.AUDIOBOOK_SERVICE_URL}/script/${filename}`,
+    {
+      cache: "force-cache",
+    }
   );
   const rawData = await response.json();
   if (rawData === null) {
