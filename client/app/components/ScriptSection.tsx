@@ -8,7 +8,7 @@ import ScriptClient from "@/app/components/ScriptClient";
 export default async function ScriptSection() {
   const script = getScript();
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div>Loading script ...</div>}>
       <ScriptClient scriptPromise={script} />
     </Suspense>
   );

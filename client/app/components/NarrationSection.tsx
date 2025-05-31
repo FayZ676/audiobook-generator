@@ -7,7 +7,7 @@ import NarrationClient from "./NarrationClient";
 export default function NarrationSection() {
   const narrationPromise = getNarration();
   return (
-    <Suspense>
+    <Suspense fallback={<div>Loading narration ...</div>}>
       <NarrationClient narrationUrlPromise={narrationPromise} />
     </Suspense>
   );

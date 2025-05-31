@@ -7,7 +7,7 @@ import JobStateClient from "./JobStateClient";
 export default function JobStateSection() {
   const jobStatePromise = getJobState();
   return (
-    <Suspense fallback={<div>Loading job state...</div>}>
+    <Suspense fallback={<div>Loading job state ...</div>}>
       <JobStateClient jobStatePromise={jobStatePromise} />
     </Suspense>
   );
