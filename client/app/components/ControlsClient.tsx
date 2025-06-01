@@ -2,6 +2,7 @@
 
 import React from "react";
 import { use } from "react";
+import { useRouter } from "next/navigation";
 
 import { createNarration } from "../actions/narrate";
 import { deleteProject } from "../actions/audiobook";
@@ -16,6 +17,8 @@ export default function ControlsClient({
   narrationUrlPromise,
   scriptPromise,
 }: ControlsClientProps) {
+  const router = useRouter();
+
   const narrationUrl = use(narrationUrlPromise);
   const script = use(scriptPromise);
 
@@ -34,9 +37,10 @@ export default function ControlsClient({
       )}
       {(script || narrationUrl) && (
         <button
-          onClick={(e) => {
+          onClick={async (e) => {
             e.preventDefault();
             deleteProject();
+            router.refresh();
           }}
           className="ml-auto border py-2 px-4"
         >
