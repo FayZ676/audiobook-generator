@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { use, useEffect } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import pusherClient from "@/app/lib/pusher";
@@ -9,21 +9,19 @@ import pusherClient from "@/app/lib/pusher";
 import { handleRevalidateTag } from "@/app/actions/revalidate";
 
 import { Script } from "../actions/script";
-import GenerateScriptForm from "@/app/components/GenerateScriptForm";
 
-interface ScriptClientProps {
-  scriptPromise: Promise<Script | null>;
+interface ScriptTextClientProps {
+  script: Script | null;
 }
 
-export default function ScriptClient({ scriptPromise }: ScriptClientProps) {
+export default function ScriptTextClient({ script }: ScriptTextClientProps) {
   const router = useRouter();
-
-  const script = use(scriptPromise);
 
   useEffect(() => {
     const channel = pusherClient.subscribe("script-channel");
 
     channel.bind("script-update", (data: {}) => {
+      console.log("Script updated");
       handleRevalidateTag("script");
       router.refresh();
     });
@@ -36,7 +34,7 @@ export default function ScriptClient({ scriptPromise }: ScriptClientProps) {
 
   return (
     <div>
-      {script ? (
+      {script &&
         script.map((scriptSegment, index) => {
           // TODO: Don't use index as key.
           return (
@@ -46,10 +44,7 @@ export default function ScriptClient({ scriptPromise }: ScriptClientProps) {
               </p>
             </div>
           );
-        })
-      ) : (
-        <GenerateScriptForm />
-      )}
+        })}
     </div>
   );
 }

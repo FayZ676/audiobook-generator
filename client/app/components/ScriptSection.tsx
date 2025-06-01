@@ -1,8 +1,8 @@
 import React from "react";
-import { Suspense } from "react";
 
 import { Script } from "../actions/script";
-import ScriptClient from "@/app/components/ScriptClient";
+import ScriptTextClient from "@/app/components/ScriptTextClient";
+import GenerateScriptForm from "./GenerateScriptForm";
 
 interface ScriptSectionProps {
   scriptPromise: Promise<Script | null>;
@@ -11,9 +11,6 @@ interface ScriptSectionProps {
 export default async function ScriptSection({
   scriptPromise,
 }: ScriptSectionProps) {
-  return (
-    <Suspense fallback={<div>Loading script ...</div>}>
-      <ScriptClient scriptPromise={scriptPromise} />
-    </Suspense>
-  );
+  const script = await scriptPromise;
+  return script ? <ScriptTextClient script={script} /> : <GenerateScriptForm />;
 }
