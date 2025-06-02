@@ -180,6 +180,20 @@ def get_job_status(job_id: str):
 
 @app.post("/webhook")
 async def webhook(response: WebhookResponse):
+    match response.type:
+        case "speech":
+            channel = "speech-channel"
+            event = "speech-update"
+        case "script":
+            channel = "script-channel"
+            event = "script-update"
+    update_status(
+        AudiobookJob(
+            job_id=response.user_id, script_status=None, narration_status=None
+        ),
+        channel,
+        event,
+    )
     update_status(
         AudiobookJob(
             job_id=response.user_id, script_status=None, narration_status=None
@@ -213,8 +227,8 @@ def send_script_request(script_request: BuildScriptRequest):
             script_status="processing",
             narration_status=None,
         ),
-        "script-channel",
-        "script-update",
+        "job-channel",
+        "job-update",
     )
 
 
@@ -242,8 +256,8 @@ async def send_narration_request(script_path: str, voices: list[Voice], user_id:
     )
     update_status(
         AudiobookJob(job_id=user_id, narration_status="processing", script_status=None),
-        "narration-channel",
-        "narration-update",
+        "job-channel",
+        "job-update",
     )
 
 

@@ -1,10 +1,22 @@
+"use client";
+
 import React from "react";
+import { useState } from "react";
 
 import { createScript } from "../actions/script";
 
 export default function CreateScriptForm() {
+  const [file, setFile] = useState<File | null>(null);
+  const [narrator, setNarrator] = useState("");
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+
   return (
-    <form action={createScript} className="flex flex-col gap-4 max-w-sm">
+    <div className="flex flex-col gap-4 max-w-sm">
       <h2>Generate Script</h2>
       <label htmlFor="filename-input">Text File</label>
       <input
@@ -12,6 +24,7 @@ export default function CreateScriptForm() {
         name="file"
         type="file"
         accept=".txt"
+        onChange={handleFileChange}
         className="border"
       />
       <label htmlFor="narrator-input">Narrator Voice Name</label>
@@ -20,8 +33,16 @@ export default function CreateScriptForm() {
         name="narrator"
         type="text"
         className="border"
+        value={narrator}
+        onChange={(e) => setNarrator(e.target.value)}
       />
-      <button type="submit">Submit</button>
-    </form>
+      <button
+        disabled={!file || !narrator}
+        // @ts-expect-error We know file is set, but TypeScript doesn't
+        onClick={() => createScript({ file: file, narrator: narrator })}
+      >
+        Submit
+      </button>
+    </div>
   );
 }

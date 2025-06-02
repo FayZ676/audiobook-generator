@@ -30,18 +30,20 @@ interface DeleteScriptRequest {
   filename: string;
 }
 
+interface CreateScriptProps {
+  file: File;
+  narrator: string;
+}
+
 export type Script = z.infer<typeof ScriptResponseSchema>;
 
-export async function createScript(formData: FormData) {
+export async function createScript({ file, narrator }: CreateScriptProps) {
   const { userId } = await auth();
   if (!userId) {
     throw new Error("User not authenticated");
   }
 
-  const file = formData.get("file") as File;
   const filename = await uploadTextFile(file);
-  const narrator = formData.get("narrator") as string;
-
   const request: BuildScriptRequest = {
     user_id: userId,
     filename: filename,
