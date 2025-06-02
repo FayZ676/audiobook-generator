@@ -182,8 +182,8 @@ def get_job_status(job_id: str):
 async def webhook(response: WebhookResponse):
     match response.type:
         case "speech":
-            channel = "speech-channel"
-            event = "speech-update"
+            channel = "narration-channel"
+            event = "narration-update"
         case "script":
             channel = "script-channel"
             event = "script-update"
