@@ -9,7 +9,6 @@ import pusherClient from "@/app/lib/pusher";
 import { handleRevalidateTag } from "@/app/actions/revalidate";
 
 import NarrationAudio from "./NarrationAudio";
-import ControlsSection from "./ControlsSection";
 
 interface NarrationClientProps {
   narrationUrlPromise: Promise<string | null>;
@@ -24,7 +23,6 @@ export default function NarrationClient({
 
   useEffect(() => {
     const channel = pusherClient.subscribe("narration-channel");
-
     channel.bind("narration-update", (data: {}) => {
       handleRevalidateTag("narration");
       router.refresh();

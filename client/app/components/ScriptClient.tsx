@@ -23,9 +23,7 @@ export default function ScriptClient({ scriptPromise }: ScriptClientProps) {
 
   useEffect(() => {
     const channel = pusherClient.subscribe("script-channel");
-
     channel.bind("script-update", (data: {}) => {
-      console.log("Script updated");
       handleRevalidateTag("script");
       router.refresh();
     });
