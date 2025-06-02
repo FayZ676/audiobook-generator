@@ -15,6 +15,14 @@ export default function CreateScriptForm() {
     }
   };
 
+  async function handleCreateScript() {
+    if (file && narrator) {
+      await createScript({ file, narrator });
+      setFile(null);
+      setNarrator("");
+    }
+  }
+
   return (
     <div className="flex flex-col gap-4 max-w-sm">
       <h2>Generate Script</h2>
@@ -38,8 +46,9 @@ export default function CreateScriptForm() {
       />
       <button
         disabled={!file || !narrator}
-        // @ts-expect-error We know file is set, but TypeScript doesn't
-        onClick={() => createScript({ file: file, narrator: narrator })}
+        onClick={async () => {
+          await handleCreateScript();
+        }}
       >
         Submit
       </button>
