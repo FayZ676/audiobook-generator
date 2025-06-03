@@ -35,3 +35,35 @@ export async function getVoices(): Promise<Voice[]> {
     throw error;
   }
 }
+
+export async function addVoice(formData: {
+  name: string;
+  age: string;
+  gender: string;
+  audio_transcript: string;
+  audio_file: File;
+}): Promise<void> {
+  try {
+    const form = new FormData();
+    form.append("name", formData.name);
+    form.append("age", formData.age);
+    form.append("gender", formData.gender);
+    form.append("audio_transcript", formData.audio_transcript);
+    form.append("audio_file", formData.audio_file);
+
+    const response = await fetch(
+      `${process.env.AUDIOBOOK_SERVICE_URL}/voices`,
+      {
+        method: "POST",
+        body: form,
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to add voice");
+    }
+  } catch (error) {
+    console.error("Error adding voice:", error);
+    throw error;
+  }
+}
