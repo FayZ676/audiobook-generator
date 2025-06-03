@@ -1,5 +1,5 @@
-import Main from "@/app/components/Main";
+import { redirect } from "next/navigation";
 
 export default async function Home() {
-  return <Main />;
+  redirect("/project");
 }
