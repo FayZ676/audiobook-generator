@@ -1,4 +1,5 @@
 import React from "react";
+import { use } from "react";
 
 import { Voice } from "../actions/voices";
 
@@ -9,5 +10,16 @@ interface VoicesDashboardClientProps {
 export default function VoicesDashboardClient({
   voicesPromise,
 }: VoicesDashboardClientProps) {
-  return <div>VoicesDashboardClient</div>;
+  const voices = use(voicesPromise);
+  return (
+    <div>
+      <ul>
+        {voices.map((voice) => (
+          <li key={voice.name}>
+            <strong>{voice.name}</strong>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
