@@ -1,13 +1,13 @@
 import React from "react";
 
-import Main from "@/app/components/Main";
+import ProjectDashboard from "@/app/components/ProjectDashboard";
 import TabSection from "@/app/components/TabSection";
 
 export default function ProjectHome() {
   return (
     <div>
       <TabSection />
-      <Main />
+      <ProjectDashboard />
     </div>
   );
 }
