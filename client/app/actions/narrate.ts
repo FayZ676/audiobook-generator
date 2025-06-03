@@ -51,8 +51,8 @@ export async function getNarration(): Promise<NarrationUrl | null> {
     const response = await fetch(
       `${process.env.AUDIOBOOK_SERVICE_URL}/narration/${filename}`,
       {
-        cache: "force-cache",
         next: {
+          revalidate: 3600,
           tags: ["narration"],
         },
       }
