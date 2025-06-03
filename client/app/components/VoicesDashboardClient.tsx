@@ -3,6 +3,8 @@ import { use } from "react";
 
 import { Voice } from "../actions/voices";
 
+import VoiceCard from "./VoiceCard";
+
 interface VoicesDashboardClientProps {
   voicesPromise: Promise<Voice[]>;
 }
@@ -13,10 +15,10 @@ export default function VoicesDashboardClient({
   const voices = use(voicesPromise);
   return (
     <div>
-      <ul>
+      <ul className="grid grid-cols-2 gap-2">
         {voices.map((voice) => (
           <li key={voice.name}>
-            <strong>{voice.name}</strong>
+            <VoiceCard voice={voice} />
           </li>
         ))}
       </ul>
