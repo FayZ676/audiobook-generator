@@ -16,7 +16,15 @@ export type Voice = z.infer<typeof VoiceSchema>;
 
 export async function getVoices(): Promise<Voice[]> {
   try {
-    const response = await fetch(`${process.env.AUDIOBOOK_SERVICE_URL}/voices`);
+    const response = await fetch(
+      `${process.env.AUDIOBOOK_SERVICE_URL}/voices`,
+      {
+        cache: "force-cache",
+        next: {
+          tags: ["voices"],
+        },
+      }
+    );
     if (!response.ok) {
       throw new Error("Failed to fetch voices");
     }
