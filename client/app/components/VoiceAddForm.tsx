@@ -60,7 +60,9 @@ export default function VoiceAddForm() {
 
   return (
     <div className="flex flex-col gap-2 bg-gray-50 p-4 rounded">
-      <label htmlFor="name-input">Name</label>
+      <label htmlFor="name-input" className="font-medium">
+        Name
+      </label>
       <input
         id="name-input"
         name="name"
@@ -72,7 +74,9 @@ export default function VoiceAddForm() {
         required
       />
 
-      <label htmlFor="age-select">Age</label>
+      <label htmlFor="age-select" className="font-medium">
+        Age
+      </label>
       <select
         id="age-select"
         name="age"
@@ -89,7 +93,9 @@ export default function VoiceAddForm() {
         ))}
       </select>
 
-      <label htmlFor="gender-select">Gender</label>
+      <label htmlFor="gender-select" className="font-medium">
+        Gender
+      </label>
       <select
         id="gender-select"
         name="gender"
@@ -106,7 +112,9 @@ export default function VoiceAddForm() {
         ))}
       </select>
 
-      <label htmlFor="audio-file-input">Audio File</label>
+      <label htmlFor="audio-file-input" className="font-medium">
+        Audio File
+      </label>
       <input
         id="audio-file-input"
         name="audio_file"
@@ -117,7 +125,9 @@ export default function VoiceAddForm() {
         required
       />
 
-      <label htmlFor="transcript-input">Audio Transcript</label>
+      <label htmlFor="transcript-input" className="font-medium">
+        Audio Transcript
+      </label>
       <textarea
         id="transcript-input"
         name="audio_transcript"
