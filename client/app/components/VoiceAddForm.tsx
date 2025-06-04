@@ -3,7 +3,7 @@
 import React from "react";
 import { useState } from "react";
 
-import { addVoice, type Age, type Gender } from "../actions/voices";
+import { addVoice, type Age, type Gender, AgeEnum, GenderEnum } from "../actions/voices";
 import { handleRevalidateTag } from "../actions/revalidate";
 
 export default function VoiceAddForm() {
@@ -80,9 +80,11 @@ export default function VoiceAddForm() {
         required
       >
         <option value="">Select age</option>
-        <option value="young">Young</option>
-        <option value="middle-aged">Middle-aged</option>
-        <option value="old">Old</option>
+        {AgeEnum.options.map((ageValue) => (
+          <option key={ageValue} value={ageValue}>
+            {ageValue.charAt(0).toUpperCase() + ageValue.slice(1)}
+          </option>
+        ))}
       </select>
 
       <label htmlFor="gender-select">Gender</label>
@@ -95,8 +97,11 @@ export default function VoiceAddForm() {
         required
       >
         <option value="">Select gender</option>
-        <option value="male">Male</option>
-        <option value="female">Female</option>
+        {GenderEnum.options.map((genderValue) => (
+          <option key={genderValue} value={genderValue}>
+            {genderValue.charAt(0).toUpperCase() + genderValue.slice(1)}
+          </option>
+        ))}
       </select>
 
       <label htmlFor="transcript-input">Audio Transcript</label>
