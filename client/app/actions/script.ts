@@ -5,7 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 
 import { uploadTextFile } from "./file";
-import { AgeEnum, GenderEnum } from "./voices";
+import { AgeEnum, GenderEnum } from "../types";
 
 const SpeakerDetailsSchema = z.object({
   names: z.array(z.string()),

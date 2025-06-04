@@ -3,7 +3,9 @@
 import React from "react";
 import { useState } from "react";
 
-import { addVoice, type Age, type Gender, AgeEnum, GenderEnum } from "../actions/voices";
+import { AgeEnum, GenderEnum } from "../types";
+
+import { addVoice, type Age, type Gender } from "../actions/voices";
 import { handleRevalidateTag } from "../actions/revalidate";
 
 export default function VoiceAddForm() {
@@ -38,7 +40,9 @@ export default function VoiceAddForm() {
         setAudioTranscript("");
         setAudioFile(null);
         // Reset file input
-        const fileInput = document.getElementById("audio-file-input") as HTMLInputElement;
+        const fileInput = document.getElementById(
+          "audio-file-input"
+        ) as HTMLInputElement;
         if (fileInput) {
           fileInput.value = "";
         }
@@ -57,7 +61,7 @@ export default function VoiceAddForm() {
   return (
     <div className="flex flex-col gap-4 max-w-sm border p-4 rounded">
       <h2 className="text-lg font-semibold">Add New Voice</h2>
-      
+
       <label htmlFor="name-input">Voice Name</label>
       <input
         id="name-input"

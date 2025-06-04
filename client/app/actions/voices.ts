@@ -2,9 +2,7 @@
 
 import { z } from "zod";
 
-// Enum types for voice properties
-export const AgeEnum = z.enum(["young", "middle-aged", "old"]);
-export const GenderEnum = z.enum(["male", "female"]);
+import { AgeEnum, GenderEnum } from "../types";
 
 export type Age = z.infer<typeof AgeEnum>;
 export type Gender = z.infer<typeof GenderEnum>;
