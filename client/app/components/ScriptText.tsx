@@ -14,7 +14,10 @@ export default function ScriptText({ script }: ScriptTextProps) {
         return (
           <div key={index} className="mb-4">
             <p>
-              {scriptSegment.speaker.names[0]}: {scriptSegment.text}
+              <span className="font-medium">
+                {scriptSegment.speaker.names[0]}
+              </span>
+              : {scriptSegment.text}
             </p>
           </div>
         );
