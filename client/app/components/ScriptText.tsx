@@ -8,7 +8,7 @@ interface ScriptTextProps {
 
 export default function ScriptText({ script }: ScriptTextProps) {
   return (
-    <div className="bg-gray-50 p-4 rounded">
+    <div className="h-64 overflow-y-scroll bg-gray-50 p-4 rounded">
       {script.map((scriptSegment, index) => {
         // TODO: Don't use index as key.
         return (
