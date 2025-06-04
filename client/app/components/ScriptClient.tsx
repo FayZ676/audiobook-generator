@@ -11,6 +11,7 @@ import pusherClient from "@/app/lib/pusher";
 import { Script } from "../actions/script";
 
 import GenerateScriptForm from "./GenerateScriptForm";
+import ScriptText from "./ScriptText";
 
 interface ScriptClientProps {
   scriptPromise: Promise<Script | null>;
@@ -36,22 +37,7 @@ export default function ScriptClient({ scriptPromise }: ScriptClientProps) {
 
   return (
     <div>
-      {script ? (
-        <div className="bg-gray-50 p-4 rounded">
-          {script.map((scriptSegment, index) => {
-            // TODO: Don't use index as key.
-            return (
-              <div key={index} className="mb-4">
-                <p>
-                  {scriptSegment.speaker.names[0]}: {scriptSegment.text}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <GenerateScriptForm />
-      )}
+      {script ? <ScriptText script={script} /> : <GenerateScriptForm />}
     </div>
   );
 }
