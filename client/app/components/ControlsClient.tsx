@@ -24,22 +24,37 @@ export default function ControlsClient({
   const narrationUrl = use(narrationUrlPromise);
   const script = use(scriptPromise);
 
+  const handleCreateNarration = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsCreatingNarration(true);
+    try {
+      await createNarration();
+    } catch (error) {
+      console.error("Error creating narration:", error);
+    } finally {
+      setIsCreatingNarration(false);
+    }
+  };
+
+  const handleDeleteProject = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDeletingProject(true);
+    try {
+      await deleteProject();
+      router.refresh();
+    } catch (error) {
+      console.error("Error deleting project:", error);
+    } finally {
+      setIsDeletingProject(false);
+    }
+  };
+
   return (
     <div className="flex gap-4">
       {script && !narrationUrl && (
         <button
           disabled={isCreatingNarration}
-          onClick={async (e) => {
-            e.preventDefault();
-            setIsCreatingNarration(true);
-            try {
-              await createNarration();
-            } catch (error) {
-              console.error("Error creating narration:", error);
-            } finally {
-              setIsCreatingNarration(false);
-            }
-          }}
+          onClick={handleCreateNarration}
           className="ml-auto border py-2 px-4 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isCreatingNarration ? "Creating Narration..." : "Narrate"}
@@ -48,18 +63,7 @@ export default function ControlsClient({
       {(script || narrationUrl) && (
         <button
           disabled={isDeletingProject}
-          onClick={async (e) => {
-            e.preventDefault();
-            setIsDeletingProject(true);
-            try {
-              await deleteProject();
-              router.refresh();
-            } catch (error) {
-              console.error("Error deleting project:", error);
-            } finally {
-              setIsDeletingProject(false);
-            }
-          }}
+          onClick={handleDeleteProject}
           className="ml-auto border py-2 px-4 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isDeletingProject ? "Deleting Project..." : "Delete Project"}
