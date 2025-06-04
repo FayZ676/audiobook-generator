@@ -74,43 +74,49 @@ export default function VoiceAddForm() {
         required
       />
 
-      <label htmlFor="age-select" className="font-medium">
-        Age
-      </label>
-      <select
-        id="age-select"
-        name="age"
-        className="bg-gray-200 p-2 rounded"
-        value={age}
-        onChange={(e) => setAge(e.target.value as Age)}
-        required
-      >
-        <option value="">Select age</option>
-        {AgeEnum.options.map((ageValue) => (
-          <option key={ageValue} value={ageValue}>
-            {ageValue.charAt(0).toUpperCase() + ageValue.slice(1)}
-          </option>
-        ))}
-      </select>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="flex flex-col gap-2">
+          <label htmlFor="age-select" className="font-medium">
+            Age
+          </label>
+          <select
+            id="age-select"
+            name="age"
+            className="bg-gray-200 p-2 rounded"
+            value={age}
+            onChange={(e) => setAge(e.target.value as Age)}
+            required
+          >
+            <option value="">Select age</option>
+            {AgeEnum.options.map((ageValue) => (
+              <option key={ageValue} value={ageValue}>
+                {ageValue.charAt(0).toUpperCase() + ageValue.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      <label htmlFor="gender-select" className="font-medium">
-        Gender
-      </label>
-      <select
-        id="gender-select"
-        name="gender"
-        className="bg-gray-200 p-2 rounded"
-        value={gender}
-        onChange={(e) => setGender(e.target.value as Gender)}
-        required
-      >
-        <option value="">Select gender</option>
-        {GenderEnum.options.map((genderValue) => (
-          <option key={genderValue} value={genderValue}>
-            {genderValue.charAt(0).toUpperCase() + genderValue.slice(1)}
-          </option>
-        ))}
-      </select>
+        <div className="flex flex-col gap-2">
+          <label htmlFor="gender-select" className="font-medium">
+            Gender
+          </label>
+          <select
+            id="gender-select"
+            name="gender"
+            className="bg-gray-200 p-2 rounded"
+            value={gender}
+            onChange={(e) => setGender(e.target.value as Gender)}
+            required
+          >
+            <option value="">Select gender</option>
+            {GenderEnum.options.map((genderValue) => (
+              <option key={genderValue} value={genderValue}>
+                {genderValue.charAt(0).toUpperCase() + genderValue.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       <label htmlFor="audio-file-input" className="font-medium">
         Audio File
