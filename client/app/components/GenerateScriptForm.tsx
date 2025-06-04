@@ -24,23 +24,26 @@ export default function CreateScriptForm() {
   }
 
   return (
-    <div className="flex flex-col gap-4 max-w-sm">
-      <h2>Generate Script</h2>
-      <label htmlFor="filename-input">Text File</label>
+    <div className="flex flex-col gap-2 bg-gray-50 p-4 rounded">
+      <label htmlFor="filename-input" className="font-medium">
+        Text File
+      </label>
       <input
         id="file-input"
         name="file"
         type="file"
         accept=".txt"
         onChange={handleFileChange}
-        className="border"
+        className="bg-gray-200 p-2 rounded"
       />
-      <label htmlFor="narrator-input">Narrator Voice Name</label>
+      <label htmlFor="narrator-input" className="font-medium">
+        Narrator Voice Name
+      </label>
       <input
         id="narrator-input"
         name="narrator"
         type="text"
-        className="border"
+        className="bg-gray-200 p-2 rounded"
         value={narrator}
         onChange={(e) => setNarrator(e.target.value)}
       />
@@ -49,8 +52,9 @@ export default function CreateScriptForm() {
         onClick={async () => {
           await handleCreateScript();
         }}
+        className="bg-blue-500 text-white p-2 rounded disabled:bg-gray-300 disabled:cursor-not-allowed"
       >
-        Submit
+        Build Script
       </button>
     </div>
   );
