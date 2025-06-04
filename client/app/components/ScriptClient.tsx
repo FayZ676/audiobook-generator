@@ -37,16 +37,18 @@ export default function ScriptClient({ scriptPromise }: ScriptClientProps) {
   return (
     <div>
       {script ? (
-        script.map((scriptSegment, index) => {
-          // TODO: Don't use index as key.
-          return (
-            <div key={index} className="mb-4">
-              <p>
-                {scriptSegment.speaker.names[0]}: {scriptSegment.text}
-              </p>
-            </div>
-          );
-        })
+        <div className="bg-gray-50 p-4 rounded">
+          {script.map((scriptSegment, index) => {
+            // TODO: Don't use index as key.
+            return (
+              <div key={index} className="mb-4">
+                <p>
+                  {scriptSegment.speaker.names[0]}: {scriptSegment.text}
+                </p>
+              </div>
+            );
+          })}
+        </div>
       ) : (
         <GenerateScriptForm />
       )}
