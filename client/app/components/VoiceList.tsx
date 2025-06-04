@@ -5,17 +5,15 @@ import { Voice } from "../actions/voices";
 
 import VoiceCard from "./VoiceCard";
 
-interface VoicesDashboardClientProps {
+interface VoiceListProps {
   voicesPromise: Promise<Voice[]>;
 }
 
-export default function VoicesDashboardClient({
-  voicesPromise,
-}: VoicesDashboardClientProps) {
+export default function VoiceList({ voicesPromise }: VoiceListProps) {
   const voices = use(voicesPromise);
   return (
-    <div>
-      <ul className="grid grid-cols-2 gap-2">
+    <div className="h-64 overflow-y-scroll bg-gray-50 rounded p-4">
+      <ul className="grid grid-cols-1 gap-2">
         {voices.map((voice) => (
           <li key={voice.name}>
             <VoiceCard voice={voice} />
