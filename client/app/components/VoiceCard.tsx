@@ -8,9 +8,9 @@ interface VoiceCardProps {
 
 export default function VoiceCard({ voice }: VoiceCardProps) {
   return (
-    <div className="border p-3 rounded">
+    <div className="border-b border-gray-200 p-2">
       <div className="flex justify-between items-center">
-        <span className="font-medium">{voice.name}</span>
+        <span>{voice.name}</span>
         <div className="flex gap-4 text-sm text-gray-600">
           <span>{voice.gender}</span>
           <span>{voice.age}</span>

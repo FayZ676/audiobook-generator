@@ -9,12 +9,10 @@ interface VoiceListProps {
   voicesPromise: Promise<Voice[]>;
 }
 
-export default function VoiceList({
-  voicesPromise,
-}: VoiceListProps) {
+export default function VoiceList({ voicesPromise }: VoiceListProps) {
   const voices = use(voicesPromise);
   return (
-    <div className="h-64 overflow-y-auto">
+    <div className="h-64 overflow-y-scroll bg-gray-50 rounded p-4">
       <ul className="grid grid-cols-1 gap-2">
         {voices.map((voice) => (
           <li key={voice.name}>
