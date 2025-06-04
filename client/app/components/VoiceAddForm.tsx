@@ -33,20 +33,20 @@ export default function VoiceAddForm() {
           audio_transcript: audioTranscript,
           audio_file: audioFile,
         });
-        // Clear form
+
         setName("");
         setAge("");
         setGender("");
         setAudioTranscript("");
         setAudioFile(null);
-        // Reset file input
+
         const fileInput = document.getElementById(
           "audio-file-input"
         ) as HTMLInputElement;
         if (fileInput) {
           fileInput.value = "";
         }
-        // Revalidate voices cache
+
         await handleRevalidateTag("voices");
       } catch (error) {
         console.error("Failed to add voice:", error);
