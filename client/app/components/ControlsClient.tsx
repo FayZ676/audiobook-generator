@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { use } from "react";
+import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { createNarration } from "../actions/narrate";
@@ -18,6 +18,8 @@ export default function ControlsClient({
   scriptPromise,
 }: ControlsClientProps) {
   const router = useRouter();
+  const [isCreatingNarration, setIsCreatingNarration] = useState(false);
+  const [isDeletingProject, setIsDeletingProject] = useState(false);
 
   const narrationUrl = use(narrationUrlPromise);
   const script = use(scriptPromise);
@@ -26,25 +28,41 @@ export default function ControlsClient({
     <div className="flex gap-4">
       {script && !narrationUrl && (
         <button
-          onClick={(e) => {
+          disabled={isCreatingNarration}
+          onClick={async (e) => {
             e.preventDefault();
-            createNarration();
+            setIsCreatingNarration(true);
+            try {
+              await createNarration();
+            } catch (error) {
+              console.error("Error creating narration:", error);
+            } finally {
+              setIsCreatingNarration(false);
+            }
           }}
-          className="ml-auto border py-2 px-4"
+          className="ml-auto border py-2 px-4 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Narrate
+          {isCreatingNarration ? "Creating Narration..." : "Narrate"}
         </button>
       )}
       {(script || narrationUrl) && (
         <button
+          disabled={isDeletingProject}
           onClick={async (e) => {
             e.preventDefault();
-            deleteProject();
-            router.refresh();
+            setIsDeletingProject(true);
+            try {
+              await deleteProject();
+              router.refresh();
+            } catch (error) {
+              console.error("Error deleting project:", error);
+            } finally {
+              setIsDeletingProject(false);
+            }
           }}
-          className="ml-auto border py-2 px-4"
+          className="ml-auto border py-2 px-4 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Delete Project
+          {isDeletingProject ? "Deleting Project..." : "Delete Project"}
         </button>
       )}
     </div>
