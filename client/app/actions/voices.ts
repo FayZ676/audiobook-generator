@@ -2,10 +2,17 @@
 
 import { z } from "zod";
 
+// Enum types for voice properties
+export const AgeEnum = z.enum(["young", "middle-aged", "old"]);
+export const GenderEnum = z.enum(["male", "female"]);
+
+export type Age = z.infer<typeof AgeEnum>;
+export type Gender = z.infer<typeof GenderEnum>;
+
 const VoiceSchema = z.object({
   name: z.string(),
-  age: z.string(),
-  gender: z.string(),
+  age: AgeEnum,
+  gender: GenderEnum,
   audio_path: z.string(),
   audio_transcript: z.string(),
 });
@@ -38,8 +45,8 @@ export async function getVoices(): Promise<Voice[]> {
 
 export async function addVoice(formData: {
   name: string;
-  age: string;
-  gender: string;
+  age: Age;
+  gender: Gender;
   audio_transcript: string;
   audio_file: File;
 }): Promise<void> {

@@ -3,13 +3,13 @@
 import React from "react";
 import { useState } from "react";
 
-import { addVoice } from "../actions/voices";
+import { addVoice, type Age, type Gender } from "../actions/voices";
 import { handleRevalidateTag } from "../actions/revalidate";
 
-export default function AddVoiceForm() {
+export default function VoiceAddForm() {
   const [name, setName] = useState("");
-  const [age, setAge] = useState("");
-  const [gender, setGender] = useState("");
+  const [age, setAge] = useState<Age | "">("");
+  const [gender, setGender] = useState<Gender | "">("");
   const [audioTranscript, setAudioTranscript] = useState("");
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,8 +26,8 @@ export default function AddVoiceForm() {
       try {
         await addVoice({
           name,
-          age,
-          gender,
+          age: age as Age,
+          gender: gender as Gender,
           audio_transcript: audioTranscript,
           audio_file: audioFile,
         });
@@ -67,29 +67,37 @@ export default function AddVoiceForm() {
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Enter voice name"
+        required
       />
 
-      <label htmlFor="age-input">Age</label>
-      <input
-        id="age-input"
+      <label htmlFor="age-select">Age</label>
+      <select
+        id="age-select"
         name="age"
-        type="text"
         className="border p-2 rounded"
         value={age}
-        onChange={(e) => setAge(e.target.value)}
-        placeholder="Enter age"
-      />
+        onChange={(e) => setAge(e.target.value as Age)}
+        required
+      >
+        <option value="">Select age</option>
+        <option value="young">Young</option>
+        <option value="middle-aged">Middle-aged</option>
+        <option value="old">Old</option>
+      </select>
 
-      <label htmlFor="gender-input">Gender</label>
-      <input
-        id="gender-input"
+      <label htmlFor="gender-select">Gender</label>
+      <select
+        id="gender-select"
         name="gender"
-        type="text"
         className="border p-2 rounded"
         value={gender}
-        onChange={(e) => setGender(e.target.value)}
-        placeholder="Enter gender"
-      />
+        onChange={(e) => setGender(e.target.value as Gender)}
+        required
+      >
+        <option value="">Select gender</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+      </select>
 
       <label htmlFor="transcript-input">Audio Transcript</label>
       <textarea
@@ -100,6 +108,7 @@ export default function AddVoiceForm() {
         onChange={(e) => setAudioTranscript(e.target.value)}
         placeholder="Enter the transcript of the audio file"
         rows={3}
+        required
       />
 
       <label htmlFor="audio-file-input">Audio File</label>
@@ -110,6 +119,7 @@ export default function AddVoiceForm() {
         accept="audio/*"
         onChange={handleFileChange}
         className="border p-2 rounded"
+        required
       />
 
       <button
