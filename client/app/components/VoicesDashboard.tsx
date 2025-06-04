@@ -11,10 +11,10 @@ export default function VoicesDashboard() {
 
   return (
     <div className="flex flex-col gap-6">
-      <VoiceAddForm />
       <Suspense fallback={<div>Loading voices ...</div>}>
         <VoiceList voicesPromise={voicesPromise} />
       </Suspense>
+      <VoiceAddForm />
     </div>
   );
 }

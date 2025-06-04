@@ -59,15 +59,13 @@ export default function VoiceAddForm() {
   const isFormValid = name && age && gender && audioTranscript && audioFile;
 
   return (
-    <div className="flex flex-col gap-4 max-w-sm border p-4 rounded">
-      <h2 className="text-lg font-semibold">Add New Voice</h2>
-
-      <label htmlFor="name-input">Voice Name</label>
+    <div className="flex flex-col gap-2 bg-gray-50 p-4 rounded">
+      <label htmlFor="name-input">Name</label>
       <input
         id="name-input"
         name="name"
         type="text"
-        className="border p-2 rounded"
+        className="bg-gray-200 p-2 rounded"
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Enter voice name"
@@ -78,7 +76,7 @@ export default function VoiceAddForm() {
       <select
         id="age-select"
         name="age"
-        className="border p-2 rounded"
+        className="bg-gray-200 p-2 rounded"
         value={age}
         onChange={(e) => setAge(e.target.value as Age)}
         required
@@ -95,7 +93,7 @@ export default function VoiceAddForm() {
       <select
         id="gender-select"
         name="gender"
-        className="border p-2 rounded"
+        className="bg-gray-200 p-2 rounded"
         value={gender}
         onChange={(e) => setGender(e.target.value as Gender)}
         required
@@ -108,18 +106,6 @@ export default function VoiceAddForm() {
         ))}
       </select>
 
-      <label htmlFor="transcript-input">Audio Transcript</label>
-      <textarea
-        id="transcript-input"
-        name="audio_transcript"
-        className="border p-2 rounded"
-        value={audioTranscript}
-        onChange={(e) => setAudioTranscript(e.target.value)}
-        placeholder="Enter the transcript of the audio file"
-        rows={3}
-        required
-      />
-
       <label htmlFor="audio-file-input">Audio File</label>
       <input
         id="audio-file-input"
@@ -127,7 +113,19 @@ export default function VoiceAddForm() {
         type="file"
         accept="audio/*"
         onChange={handleFileChange}
-        className="border p-2 rounded"
+        className="bg-gray-200 p-2 rounded"
+        required
+      />
+
+      <label htmlFor="transcript-input">Audio Transcript</label>
+      <textarea
+        id="transcript-input"
+        name="audio_transcript"
+        className="bg-gray-200 p-2 rounded"
+        value={audioTranscript}
+        onChange={(e) => setAudioTranscript(e.target.value)}
+        placeholder="Enter the transcript of the audio file"
+        rows={3}
         required
       />
 
