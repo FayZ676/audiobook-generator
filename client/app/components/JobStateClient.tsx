@@ -34,5 +34,15 @@ export default function JobStateClient({
     };
   }, []);
 
-  return <div>{jobState?.script_status || jobState?.narration_status}</div>;
+  const getJobStatusMessage = () => {
+    if (jobState?.script_status) {
+      return `Script ${jobState.script_status}`;
+    }
+    if (jobState?.narration_status) {
+      return `Narration ${jobState.narration_status}`;
+    }
+    return null;
+  };
+
+  return <div>{getJobStatusMessage()}</div>;
 }
