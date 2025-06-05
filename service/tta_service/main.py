@@ -1,7 +1,6 @@
 import os
 import io
 import json
-import uuid
 from typing import BinaryIO
 
 from tta_types.types import (
@@ -15,11 +14,11 @@ from tta_types.types import (
 )
 from tta_aws.s3 import S3Client
 
-from tta_service.types import BuildScriptRequest, BuildNarrationRequest
+from tta_service.types import BuildScriptRequest, BuildNarrationRequest, Age, Gender
 
 import pusher
 import requests
-from fastapi import FastAPI, UploadFile, BackgroundTasks, status, HTTPException
+from fastapi import FastAPI, UploadFile, BackgroundTasks, status, HTTPException, Form
 
 
 app = FastAPI()
@@ -136,7 +135,11 @@ def get_voice(voice_name: str):
 
 @app.post("/voices")
 def add_voice(
-    name: str, age: str, gender: str, audio_transcript: str, audio_file: UploadFile
+    name: str = Form(...),
+    age: Age = Form(...),
+    gender: Gender = Form(...),
+    audio_transcript: str = Form(...),
+    audio_file: UploadFile = Form(...),
 ):
     def to_json_fileobject(voice: Voice) -> BinaryIO:
         file_obj = io.BytesIO(voice.model_dump_json().encode("utf-8"))
