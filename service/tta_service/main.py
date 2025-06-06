@@ -163,12 +163,19 @@ def add_voice(
         file_obj.name = f"{filename}.json"
         return file_obj
 
+    def build_filename(voice_name: str, audiofile_name: str):
+        name_normalized = voice_name.lower().replace(" ", "_")
+        extension = audiofile_name.split(".")[-1]
+        return f"{name_normalized}.{extension}"
+
     if not audio_file.filename:
         raise ValueError("Audio file with name is required")
 
-    filename = name.lower().replace(" ", "_")
+    filename = build_filename(name, audio_file.filename)
     path = s3_client.upload_fileobj(
-        VOICES_BUCKET, f"{user_id}/audio/{filename}", audio_file.file
+        VOICES_BUCKET,
+        f"{user_id}/audio/{filename}",
+        audio_file.file,
     )
     s3_client.upload_fileobj(
         VOICES_BUCKET,
