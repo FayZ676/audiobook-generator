@@ -2,6 +2,8 @@
 
 import { z } from "zod";
 
+import { getUserId } from "./user";
+
 import { AgeEnum, GenderEnum } from "../types";
 
 export type Age = z.infer<typeof AgeEnum>;
@@ -21,8 +23,9 @@ export type Voice = z.infer<typeof VoiceSchema>;
 
 export async function getVoices(): Promise<Voice[]> {
   try {
+    const userId = await getUserId();
     const response = await fetch(
-      `${process.env.AUDIOBOOK_SERVICE_URL}/voices`,
+      `${process.env.AUDIOBOOK_SERVICE_URL}/voices/${userId}`,
       {
         cache: "force-cache",
         next: {
@@ -50,6 +53,7 @@ export async function addVoice(formData: {
 }): Promise<void> {
   try {
     const form = new FormData();
+    form.append("user_id", await getUserId());
     form.append("name", formData.name);
     form.append("age", formData.age);
     form.append("gender", formData.gender);
