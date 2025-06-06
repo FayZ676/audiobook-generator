@@ -134,9 +134,18 @@ def get_voices(user_id: str):
 def get_voice(user_id: str, voice_name: str):
     paths = [f"metadata/{voice_name}.json", f"metadata/{user_id}/{voice_name}.json"]
     for path in paths:
-        file_content_bytes = s3_client.get_file(VOICES_BUCKET, path)
-        voice = json.loads(file_content_bytes.decode("utf-8"))
-        return Voice.model_validate(voice)
+        try:
+            file_content_bytes = s3_client.get_file(VOICES_BUCKET, path)
+            voice = json.loads(file_content_bytes.decode("utf-8"))
+            return Voice.model_validate(voice)
+        except Exception as e:
+            if "NoSuchKey" in str(e):
+                continue
+            else:
+                return HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Failed to get voice '{voice_name}'",
+                )
     return None
 
 
