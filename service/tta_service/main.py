@@ -113,9 +113,15 @@ def delete_narration(filename: str):
     return s3_client.delete_file(SPEECH_RESULTS_BUCKET, filename)
 
 
-@app.get("/voices")
-def get_voices():
-    voices_metadata = s3_client.list_files(f"{VOICES_BUCKET}", "metadata/")
+@app.get("/voices/{user_id}")
+def get_voices(user_id: str):
+    paths = [
+        "metadata/",
+        f"metadata/{user_id}/",
+    ]
+    voices_metadata = [
+        file for path in paths for file in s3_client.list_files(VOICES_BUCKET, path)
+    ]
     voices: list[Voice] = []
     for voice_metadata_key in voices_metadata:
         file_content_bytes = s3_client.get_file(VOICES_BUCKET, voice_metadata_key)
@@ -124,45 +130,60 @@ def get_voices():
     return voices
 
 
-@app.get("/voices/{voice_id}")
-def get_voice(voice_name: str):
-    file_content_bytes = s3_client.get_file(
-        f"{VOICES_BUCKET}/metadata", f"{voice_name}.json"
-    )
-    voice = json.loads(file_content_bytes.decode("utf-8"))
-    return Voice.model_validate(voice)
+@app.get("/voices/{user_id}/{voice_name}")
+def get_voice(user_id: str, voice_name: str):
+    paths = [f"metadata/{voice_name}.json", f"metadata/{user_id}/{voice_name}.json"]
+    for path in paths:
+        try:
+            file_content_bytes = s3_client.get_file(VOICES_BUCKET, path)
+            voice = json.loads(file_content_bytes.decode("utf-8"))
+            return Voice.model_validate(voice)
+        except Exception as e:
+            if "NoSuchKey" in str(e):
+                continue
+            else:
+                return HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Failed to get voice '{voice_name}'",
+                )
+    return None
 
 
 @app.post("/voices")
 def add_voice(
+    user_id: str = Form(...),
     name: str = Form(...),
     age: Age = Form(...),
     gender: Gender = Form(...),
     audio_transcript: str = Form(...),
     audio_file: UploadFile = Form(...),
 ):
-    def to_json_fileobject(voice: Voice) -> BinaryIO:
+    def to_json_fileobject(voice: Voice, filename: str) -> BinaryIO:
         file_obj = io.BytesIO(voice.model_dump_json().encode("utf-8"))
-        file_obj.name = f"{voice.name}.json"
+        file_obj.name = f"{filename}.json"
         return file_obj
 
     if not audio_file.filename:
         raise ValueError("Audio file with name is required")
 
+    name_normalized = name.lower().replace(" ", "_")
     path = s3_client.upload_fileobj(
-        f"{VOICES_BUCKET}/audio", audio_file.filename, audio_file.file
+        VOICES_BUCKET,
+        f"{user_id}/audio/{name_normalized}.{audio_file.filename.split(".")[-1]}",
+        audio_file.file,
     )
     s3_client.upload_fileobj(
-        f"{VOICES_BUCKET}/metadata",
-        f"{name}.json",
+        VOICES_BUCKET,
+        f"{user_id}/metadata/{name_normalized}.json",
         to_json_fileobject(
-            Voice(
+            voice=Voice(
                 name=name,
                 age=age,
                 gender=gender,
                 audio_path=path,
                 audio_transcript=audio_transcript,
-            )
+            ),
+            filename=name_normalized,
         ),
     )
     return
