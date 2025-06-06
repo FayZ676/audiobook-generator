@@ -125,13 +125,14 @@ def get_voices(user_id: str):
     return voices
 
 
-@app.get("/voices/{voice_id}")
-def get_voice(voice_name: str):
-    file_content_bytes = s3_client.get_file(
-        f"{VOICES_BUCKET}/metadata", f"{voice_name}.json"
-    )
-    voice = json.loads(file_content_bytes.decode("utf-8"))
-    return Voice.model_validate(voice)
+@app.get("/voices/{user_id}/{voice_name}")
+def get_voice(user_id: str, voice_name: str):
+    paths = [f"metadata/{voice_name}.json", f"metadata/{user_id}/{voice_name}.json"]
+    for path in paths:
+        file_content_bytes = s3_client.get_file(VOICES_BUCKET, path)
+        voice = json.loads(file_content_bytes.decode("utf-8"))
+        return Voice.model_validate(voice)
+    return None
 
 
 @app.post("/voices")
