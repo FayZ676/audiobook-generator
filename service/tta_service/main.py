@@ -115,10 +115,15 @@ def delete_narration(filename: str):
 
 @app.get("/voices/{user_id}")
 def get_voices(user_id: str):
-    shared_voices_metadata = s3_client.list_files(VOICES_BUCKET, "metadata/")
-    user_voices_metadata = s3_client.list_files(VOICES_BUCKET, f"metadata/{user_id}/")
+    paths = [
+        "metadata/",
+        f"metadata/{user_id}/",
+    ]
+    voices_metadata = [
+        file for path in paths for file in s3_client.list_files(VOICES_BUCKET, path)
+    ]
     voices: list[Voice] = []
-    for voice_metadata_key in shared_voices_metadata + user_voices_metadata:
+    for voice_metadata_key in voices_metadata:
         file_content_bytes = s3_client.get_file(VOICES_BUCKET, voice_metadata_key)
         voice_data = json.loads(file_content_bytes.decode("utf-8"))
         voices.append(Voice.model_validate(voice_data))
