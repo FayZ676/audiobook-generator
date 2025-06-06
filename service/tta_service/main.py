@@ -158,28 +158,30 @@ def add_voice(
     audio_transcript: str = Form(...),
     audio_file: UploadFile = Form(...),
 ):
-    def to_json_fileobject(voice: Voice) -> BinaryIO:
+    def to_json_fileobject(voice: Voice, filename: str) -> BinaryIO:
         file_obj = io.BytesIO(voice.model_dump_json().encode("utf-8"))
-        file_obj.name = f"{voice.name}.json"
+        file_obj.name = f"{filename}.json"
         return file_obj
 
     if not audio_file.filename:
         raise ValueError("Audio file with name is required")
 
+    filename = name.lower().replace(" ", "_")
     path = s3_client.upload_fileobj(
-        VOICES_BUCKET, f"{user_id}/audio/{audio_file.filename}", audio_file.file
+        VOICES_BUCKET, f"{user_id}/audio/{filename}", audio_file.file
     )
     s3_client.upload_fileobj(
         VOICES_BUCKET,
         f"{user_id}/metadata/{name}.json",
         to_json_fileobject(
-            Voice(
+            filename=filename,
+            voice=Voice(
                 name=name,
                 age=age,
                 gender=gender,
                 audio_path=path,
                 audio_transcript=audio_transcript,
-            )
+            ),
         ),
     )
     return
