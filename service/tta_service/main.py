@@ -137,6 +137,7 @@ def get_voice(user_id: str, voice_name: str):
 
 @app.post("/voices")
 def add_voice(
+    user_id: str = Form(...),
     name: str = Form(...),
     age: Age = Form(...),
     gender: Gender = Form(...),
@@ -152,10 +153,10 @@ def add_voice(
         raise ValueError("Audio file with name is required")
 
     path = s3_client.upload_fileobj(
-        f"{VOICES_BUCKET}/audio", audio_file.filename, audio_file.file
+        f"{VOICES_BUCKET}/{user_id}/audio", audio_file.filename, audio_file.file
     )
     s3_client.upload_fileobj(
-        f"{VOICES_BUCKET}/metadata",
+        f"{VOICES_BUCKET}/{user_id}/metadata",
         f"{name}.json",
         to_json_fileobject(
             Voice(
