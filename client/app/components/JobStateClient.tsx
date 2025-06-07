@@ -23,7 +23,7 @@ export default function JobStateClient({
 
   useEffect(() => {
     const channel = pusherClient.subscribe("job-channel");
-    channel.bind("job-update", (data: {}) => {
+    channel.bind("job-update", () => {
       handleRevalidateTag("job");
       router.refresh();
     });
