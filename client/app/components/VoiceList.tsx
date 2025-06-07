@@ -4,8 +4,6 @@ import React from "react";
 import { use, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-import { handleRevalidateTag } from "@/app/actions/revalidate";
-
 import pusherClient from "@/app/lib/pusher";
 
 import { Voice } from "../actions/voices";
@@ -24,7 +22,6 @@ export default function VoiceList({ voicesPromise }: VoiceListProps) {
   useEffect(() => {
     const channel = pusherClient.subscribe("voice-channel");
     channel.bind("voice-update", () => {
-      handleRevalidateTag("voices");
       router.refresh();
     });
 

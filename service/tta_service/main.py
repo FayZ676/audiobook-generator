@@ -187,7 +187,6 @@ def add_voice(
         ),
     )
     
-    # Trigger pusher event for voice updates
     pusher_client.trigger("voice-channel", "voice-update", {"user_id": user_id})
     
     return
