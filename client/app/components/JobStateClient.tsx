@@ -32,7 +32,7 @@ export default function JobStateClient({
       channel.unbind("job-update");
       pusherClient.unsubscribe("job-channel");
     };
-  }, []);
+  }, [router]);
 
   return <div>{jobState?.script_status || jobState?.narration_status}</div>;
 }

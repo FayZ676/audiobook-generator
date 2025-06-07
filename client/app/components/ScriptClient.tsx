@@ -33,7 +33,7 @@ export default function ScriptClient({ scriptPromise }: ScriptClientProps) {
       channel.unbind("script-update");
       pusherClient.unsubscribe("script-channel");
     };
-  }, []);
+  }, [router]);
 
   return (
     <div>

@@ -32,7 +32,7 @@ export default function NarrationClient({
       channel.unbind("narration-update");
       pusherClient.unsubscribe("narration-channel");
     };
-  }, []);
+  }, [router]);
 
   return <>{narrationUrl && <NarrationAudio narrationUrl={narrationUrl} />}</>;
 }
