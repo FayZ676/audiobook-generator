@@ -73,7 +73,6 @@ export async function addVoice(formData: {
       throw new Error("Failed to add voice");
     }
 
-    // Revalidate the voices cache after successfully adding the voice
     revalidateTag("voices");
   } catch (error) {
     console.error("Error adding voice:", error);
