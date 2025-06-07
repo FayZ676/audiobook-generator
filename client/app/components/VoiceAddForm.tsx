@@ -6,7 +6,6 @@ import { useState } from "react";
 import { AgeEnum, GenderEnum } from "../types";
 
 import { addVoice, type Age, type Gender } from "../actions/voices";
-import { handleRevalidateTag } from "../actions/revalidate";
 
 export default function VoiceAddForm() {
   const [name, setName] = useState("");
@@ -46,8 +45,6 @@ export default function VoiceAddForm() {
         if (fileInput) {
           fileInput.value = "";
         }
-
-        await handleRevalidateTag("voices");
       } catch (error) {
         console.error("Failed to add voice:", error);
       } finally {
