@@ -186,6 +186,9 @@ def add_voice(
             filename=name_normalized,
         ),
     )
+    
+    pusher_client.trigger("voice-channel", "voice-update", {"user_id": user_id})
+    
     return
 
 

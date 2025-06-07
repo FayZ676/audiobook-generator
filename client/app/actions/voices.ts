@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { revalidateTag } from "next/cache";
 
 import { getUserId } from "./user";
 
@@ -71,6 +72,8 @@ export async function addVoice(formData: {
     if (!response.ok) {
       throw new Error("Failed to add voice");
     }
+
+    revalidateTag("voices");
   } catch (error) {
     console.error("Error adding voice:", error);
     throw error;
