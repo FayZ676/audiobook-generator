@@ -7,15 +7,18 @@ import { useRouter } from "next/navigation";
 import { createNarration } from "../actions/narrate";
 import { deleteProject } from "../actions/audiobook";
 import { Script } from "../actions/script";
+import { AudiobookJob } from "../actions/job";
 
 interface ControlsClientProps {
   narrationUrlPromise: Promise<string | null>;
   scriptPromise: Promise<Script | null>;
+  jobStatePromise: Promise<AudiobookJob | null>;
 }
 
 export default function ControlsClient({
   narrationUrlPromise,
   scriptPromise,
+  jobStatePromise,
 }: ControlsClientProps) {
   const router = useRouter();
   const [isCreatingNarration, setIsCreatingNarration] = useState(false);
@@ -23,6 +26,7 @@ export default function ControlsClient({
 
   const narrationUrl = use(narrationUrlPromise);
   const script = use(scriptPromise);
+  const jobState = use(jobStatePromise);
 
   const handleCreateNarration = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -53,7 +57,7 @@ export default function ControlsClient({
     <div className="flex gap-4">
       {script && !narrationUrl && (
         <button
-          disabled={isCreatingNarration}
+          disabled={isCreatingNarration || jobState?.script_status === "processing" || jobState?.narration_status === "processing"}
           onClick={handleCreateNarration}
           className="ml-auto border py-2 px-4 disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -62,7 +66,7 @@ export default function ControlsClient({
       )}
       {(script || narrationUrl) && (
         <button
-          disabled={isDeletingProject}
+          disabled={isDeletingProject || jobState?.script_status === "processing" || jobState?.narration_status === "processing"}
           onClick={handleDeleteProject}
           className="ml-auto border py-2 px-4 disabled:opacity-50 disabled:cursor-not-allowed"
         >
