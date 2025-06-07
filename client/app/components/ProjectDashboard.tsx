@@ -20,6 +20,7 @@ export default function ProjectDashboard() {
       <ControlsSection
         narrationUrlPromise={narrationUrlPromise}
         scriptPromise={scriptPromise}
+        jobStatePromise={jobStatePromise}
       />
       <NarrationSection narrationUrlPromise={narrationUrlPromise} />
       <ScriptSection scriptPromise={scriptPromise} />
