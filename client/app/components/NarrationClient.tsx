@@ -23,7 +23,7 @@ export default function NarrationClient({
 
   useEffect(() => {
     const channel = pusherClient.subscribe("narration-channel");
-    channel.bind("narration-update", (data: {}) => {
+    channel.bind("narration-update", () => {
       handleRevalidateTag("narration");
       router.refresh();
     });
