@@ -10,13 +10,12 @@ export default function FeedbackForm() {
 
   const handleSubmit = async (formData: FormData) => {
     setIsSubmitting(true);
-    setIsModalOpen(false); // Close modal immediately as required
+    setIsModalOpen(false);
     
     try {
       await submitFeedback(formData);
     } catch (error) {
       console.error("Error submitting feedback:", error);
-      // You might want to show a toast notification here in a real app
     } finally {
       setIsSubmitting(false);
     }

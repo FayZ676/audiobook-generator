@@ -1,12 +1,9 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
+import { getUserId } from "./user";
 
 export async function submitFeedback(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("User not authenticated");
-  }
+  const userId = await getUserId();
 
   const message = formData.get("message") as string;
   if (!message || message.trim() === "") {

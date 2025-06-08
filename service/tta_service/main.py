@@ -30,7 +30,7 @@ SCRIPT_RESULTS_BUCKET = os.environ.get("SCRIPT_RESULTS_BUCKET", "")
 SPEECH_RESULTS_BUCKET = os.environ.get("SPEECH_RESULTS_BUCKET", "")
 TEXT_FILES_BUCKET = os.environ.get("TEXT_FILES_BUCKET", "")
 JOB_STATUS_BUCKET = os.environ.get("JOB_STATUS_BUCKET", "")
-FEEDBACK_BUCKET = os.environ.get("FEEDBACK_BUCKET", "feedback")
+FEEDBACK_BUCKET = os.environ.get("FEEDBACK_BUCKET", "")
 
 SERVICE_API_URL = os.environ.get("SERVICE_API_URL", "")
 
@@ -234,22 +234,15 @@ async def webhook(response: WebhookResponse):
 
 @app.post("/feedback")
 async def submit_feedback(request: FeedbackRequest):
-    # Create timestamp for filename
     timestamp = datetime.now().isoformat()
     filename = f"_{timestamp}.json"
     
-    # Create feedback JSON data
-    feedback_data = {
-        "message": request.message,
-        "user_id": request.user_id,
-        "timestamp": timestamp
-    }
+    feedback_data = request.model_dump()
+    feedback_data["timestamp"] = timestamp
     
-    # Convert to file object
     file_obj = io.BytesIO(json.dumps(feedback_data, indent=2).encode("utf-8"))
     file_obj.name = filename
     
-    # Upload to S3
     s3_client.upload_fileobj(FEEDBACK_BUCKET, filename, file_obj)
     
     return {"status": "success", "filename": filename}
