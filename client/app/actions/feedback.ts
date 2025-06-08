@@ -2,13 +2,27 @@
 
 import { getUserId } from "./user";
 
-export async function submitFeedback(formData: FormData) {
-  const userId = await getUserId();
+interface FeedbackData {
+  message: string;
+  user_id: string;
+}
 
+async function parseFeedbackFormData(formData: FormData): Promise<FeedbackData> {
+  const userId = await getUserId();
+  
   const message = formData.get("message") as string;
   if (!message || message.trim() === "") {
     throw new Error("Feedback message is required");
   }
+
+  return {
+    message: message.trim(),
+    user_id: userId,
+  };
+}
+
+export async function submitFeedback(formData: FormData) {
+  const feedbackData = await parseFeedbackFormData(formData);
 
   try {
     const response = await fetch(`${process.env.AUDIOBOOK_SERVICE_URL}/feedback`, {
@@ -16,10 +30,7 @@ export async function submitFeedback(formData: FormData) {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        message: message.trim(),
-        user_id: userId,
-      }),
+      body: JSON.stringify(feedbackData),
     });
 
     if (!response.ok) {
