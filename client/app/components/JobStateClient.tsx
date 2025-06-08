@@ -37,8 +37,7 @@ export default function JobStateClient({
   return (
     <div>
       {jobState?.script_status && `Script: ${jobState.script_status}`}
-      {jobState?.script_status && jobState?.narration_status && ' | '}
-      {jobState?.narration_status && `Narration: ${jobState.narration_status}`}
+      {!jobState?.script_status && jobState?.narration_status && `Narration: ${jobState.narration_status}`}
     </div>
   );
 }
