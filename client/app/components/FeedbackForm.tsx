@@ -11,7 +11,7 @@ export default function FeedbackForm() {
   const handleSubmit = async (formData: FormData) => {
     setIsSubmitting(true);
     setIsModalOpen(false);
-    
+
     try {
       await submitFeedback(formData);
     } catch (error) {
@@ -25,7 +25,7 @@ export default function FeedbackForm() {
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
+        className="bg-gray-200 text-xs text-gray-400 px-4 py-2 rounded hover:bg-yellow-300 hover:text-black transition-colors cursor-pointer"
       >
         Send Feedback
       </button>
@@ -34,7 +34,7 @@ export default function FeedbackForm() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
             <h2 className="text-lg font-semibold mb-4">Send Feedback</h2>
-            
+
             <form action={handleSubmit}>
               <textarea
                 name="message"
@@ -43,7 +43,7 @@ export default function FeedbackForm() {
                 className="w-full p-3 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
-              
+
               <div className="flex justify-end gap-2 mt-4">
                 <button
                   type="button"

@@ -15,7 +15,13 @@ from tta_types.types import (
 )
 from tta_aws.s3 import S3Client
 
-from tta_service.types import BuildScriptRequest, BuildNarrationRequest, Age, Gender, FeedbackRequest
+from tta_service.types import (
+    BuildScriptRequest,
+    BuildNarrationRequest,
+    Age,
+    Gender,
+    FeedbackRequest,
+)
 
 import pusher
 import requests
@@ -188,9 +194,9 @@ def add_voice(
             filename=name_normalized,
         ),
     )
-    
+
     pusher_client.trigger("voice-channel", "voice-update", {"user_id": user_id})
-    
+
     return
 
 
@@ -235,16 +241,16 @@ async def webhook(response: WebhookResponse):
 @app.post("/feedback")
 async def submit_feedback(request: FeedbackRequest):
     timestamp = datetime.now().isoformat()
-    filename = f"_{timestamp}.json"
-    
+    filename = f"{request.user_id}_{timestamp}.json"
+
     feedback_data = request.model_dump()
     feedback_data["timestamp"] = timestamp
-    
+
     file_obj = io.BytesIO(json.dumps(feedback_data, indent=2).encode("utf-8"))
     file_obj.name = filename
-    
+
     s3_client.upload_fileobj(FEEDBACK_BUCKET, filename, file_obj)
-    
+
     return {"status": "success", "filename": filename}
 
 
