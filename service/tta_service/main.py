@@ -2,6 +2,7 @@ import os
 import io
 import json
 from typing import BinaryIO
+from datetime import datetime
 
 from tta_types.types import (
     Voice,
@@ -14,7 +15,7 @@ from tta_types.types import (
 )
 from tta_aws.s3 import S3Client
 
-from tta_service.types import BuildScriptRequest, BuildNarrationRequest, Age, Gender
+from tta_service.types import BuildScriptRequest, BuildNarrationRequest, Age, Gender, FeedbackRequest
 
 import pusher
 import requests
@@ -29,6 +30,7 @@ SCRIPT_RESULTS_BUCKET = os.environ.get("SCRIPT_RESULTS_BUCKET", "")
 SPEECH_RESULTS_BUCKET = os.environ.get("SPEECH_RESULTS_BUCKET", "")
 TEXT_FILES_BUCKET = os.environ.get("TEXT_FILES_BUCKET", "")
 JOB_STATUS_BUCKET = os.environ.get("JOB_STATUS_BUCKET", "")
+FEEDBACK_BUCKET = os.environ.get("FEEDBACK_BUCKET", "")
 
 SERVICE_API_URL = os.environ.get("SERVICE_API_URL", "")
 
@@ -228,6 +230,22 @@ async def webhook(response: WebhookResponse):
         "job-channel",
         "job-update",
     )
+
+
+@app.post("/feedback")
+async def submit_feedback(request: FeedbackRequest):
+    timestamp = datetime.now().isoformat()
+    filename = f"_{timestamp}.json"
+    
+    feedback_data = request.model_dump()
+    feedback_data["timestamp"] = timestamp
+    
+    file_obj = io.BytesIO(json.dumps(feedback_data, indent=2).encode("utf-8"))
+    file_obj.name = filename
+    
+    s3_client.upload_fileobj(FEEDBACK_BUCKET, filename, file_obj)
+    
+    return {"status": "success", "filename": filename}
 
 
 def send_script_request(script_request: BuildScriptRequest):

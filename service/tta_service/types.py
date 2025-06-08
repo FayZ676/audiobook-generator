@@ -28,3 +28,8 @@ class AddVoiceRequest(BaseModel):
     age: Age
     gender: Gender
     audio_transcript: str
+
+
+class FeedbackRequest(BaseModel):
+    message: str
+    user_id: str
