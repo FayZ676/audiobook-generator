@@ -8,6 +8,7 @@ import { createNarration } from "../actions/narrate";
 import { deleteProject } from "../actions/audiobook";
 import { Script } from "../actions/script";
 import { AudiobookJob } from "../actions/job";
+import ControlButton from "./ControlButton";
 
 interface ControlsClientProps {
   narrationUrlPromise: Promise<string | null>;
@@ -56,22 +57,24 @@ export default function ControlsClient({
   return (
     <div className="flex gap-4">
       {script && !narrationUrl && (
-        <button
+        <ControlButton
           disabled={isCreatingNarration || jobState?.script_status === "processing" || jobState?.narration_status === "processing"}
           onClick={handleCreateNarration}
-          className="ml-auto border py-2 px-4 disabled:opacity-50 disabled:cursor-not-allowed"
+          variant="primary"
+          className="ml-auto"
         >
           {isCreatingNarration ? "Creating Narration..." : "Narrate"}
-        </button>
+        </ControlButton>
       )}
       {(script || narrationUrl) && (
-        <button
+        <ControlButton
           disabled={isDeletingProject || jobState?.script_status === "processing" || jobState?.narration_status === "processing"}
           onClick={handleDeleteProject}
-          className="ml-auto border py-2 px-4 disabled:opacity-50 disabled:cursor-not-allowed"
+          variant="destructive"
+          className="ml-auto"
         >
           {isDeletingProject ? "Deleting Project..." : "Delete Project"}
-        </button>
+        </ControlButton>
       )}
     </div>
   );
