@@ -55,10 +55,14 @@ export default function ControlsClient({
   };
 
   return (
-    <div className="flex gap-4">
+    <div className="flex gap-4 ml-auto">
       {script && !narrationUrl && (
         <ControlButton
-          disabled={isCreatingNarration || jobState?.script_status === "processing" || jobState?.narration_status === "processing"}
+          disabled={
+            isCreatingNarration ||
+            jobState?.script_status === "processing" ||
+            jobState?.narration_status === "processing"
+          }
           onClick={handleCreateNarration}
           variant="primary"
           className="ml-auto"
@@ -68,7 +72,11 @@ export default function ControlsClient({
       )}
       {(script || narrationUrl) && (
         <ControlButton
-          disabled={isDeletingProject || jobState?.script_status === "processing" || jobState?.narration_status === "processing"}
+          disabled={
+            isDeletingProject ||
+            jobState?.script_status === "processing" ||
+            jobState?.narration_status === "processing"
+          }
           onClick={handleDeleteProject}
           variant="destructive"
           className="ml-auto"
