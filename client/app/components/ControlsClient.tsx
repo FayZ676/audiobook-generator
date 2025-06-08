@@ -67,7 +67,9 @@ export default function ControlsClient({
           variant="primary"
           className="ml-auto"
         >
-          {isCreatingNarration ? "Creating Narration..." : "Narrate"}
+          {isCreatingNarration || jobState?.narration_status === "processing"
+            ? "Creating Narration..."
+            : "Narrate"}
         </ControlButton>
       )}
       {(script || narrationUrl) && (
