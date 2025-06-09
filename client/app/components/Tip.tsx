@@ -12,7 +12,7 @@ export default function Tip({
   className = "",
 }: TipProps) {
   const baseClasses =
-    "text-sm p-3 rounded-lg border-l-4 bg-opacity-50 flex items-start gap-2";
+    "text-sm p-3 rounded-lg bg-opacity-50 flex items-start gap-2";
 
   const variantClasses = {
     info: "bg-blue-50 border-blue-400 text-blue-800",
@@ -22,7 +22,7 @@ export default function Tip({
 
   const iconClasses = {
     info: "text-blue-500",
-    warning: "text-yellow-500", 
+    warning: "text-yellow-500",
     success: "text-green-500",
   };
 
@@ -45,7 +45,10 @@ export default function Tip({
 
   return (
     <div className={combinedClasses} role="note" aria-live="polite">
-      <span className={`flex-shrink-0 ${iconClasses[variant]}`} aria-hidden="true">
+      <span
+        className={`flex-shrink-0 ${iconClasses[variant]}`}
+        aria-hidden="true"
+      >
         {getIcon()}
       </span>
       <div className="flex-1">{children}</div>
