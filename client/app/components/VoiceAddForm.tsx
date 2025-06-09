@@ -6,6 +6,7 @@ import { useState } from "react";
 import { AgeEnum, GenderEnum } from "../types";
 
 import { addVoice, type Age, type Gender } from "../actions/voices";
+import Tip from "./Tip";
 
 export default function VoiceAddForm() {
   const [name, setName] = useState("");
@@ -131,6 +132,9 @@ export default function VoiceAddForm() {
       <label htmlFor="transcript-input" className="font-medium">
         Audio Transcript
       </label>
+      <Tip variant="info">
+        For best results, keep your audio file under 12 seconds.
+      </Tip>
       <textarea
         id="transcript-input"
         name="audio_transcript"
