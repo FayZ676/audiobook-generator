@@ -1,11 +1,18 @@
 "use client";
 
 import React from "react";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 
 import { createScript } from "../actions/script";
+import { Voice } from "../actions/voices";
 
-export default function CreateScriptForm() {
+import NarratorVoiceOptionsDropdown from "./NarratorVoiceOptionsDropdown";
+
+interface GenerateScriptFormProps {
+  voicesPromise: Promise<Voice[]>;
+}
+
+export default function CreateScriptForm({ voicesPromise }: GenerateScriptFormProps) {
   const [file, setFile] = useState<File | null>(null);
   const [narrator, setNarrator] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,14 +54,20 @@ export default function CreateScriptForm() {
       <label htmlFor="narrator-input" className="font-medium">
         Narrator Voice Name
       </label>
-      <input
-        id="narrator-input"
-        name="narrator"
-        type="text"
-        className="bg-gray-200 p-2 rounded"
-        value={narrator}
-        onChange={(e) => setNarrator(e.target.value)}
-      />
+      <Suspense
+        fallback={
+          <select className="bg-gray-200 p-2 rounded" disabled>
+            <option>Loading voices...</option>
+          </select>
+        }
+      >
+        <NarratorVoiceOptionsDropdown
+          voicesPromise={voicesPromise}
+          value={narrator}
+          onChange={setNarrator}
+          disabled={isSubmitting}
+        />
+      </Suspense>
       <button
         disabled={!file || !narrator || isSubmitting}
         onClick={async () => {
