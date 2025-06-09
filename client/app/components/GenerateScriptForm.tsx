@@ -7,6 +7,7 @@ import { createScript } from "../actions/script";
 import { Voice } from "../actions/voices";
 
 import NarratorVoiceOptionsDropdown from "./NarratorVoiceOptionsDropdown";
+import Tip from "./Tip";
 
 interface GenerateScriptFormProps {
   voicesPromise: Promise<Voice[]>;
@@ -43,6 +44,9 @@ export default function CreateScriptForm({ voicesPromise }: GenerateScriptFormPr
       <label htmlFor="filename-input" className="font-medium">
         Text File
       </label>
+      <Tip variant="info">
+        Only .txt files are supported for now.
+      </Tip>
       <input
         id="file-input"
         name="file"
