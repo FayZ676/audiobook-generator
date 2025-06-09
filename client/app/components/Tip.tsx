@@ -33,13 +33,13 @@ export default function Tip({
   const getIcon = () => {
     switch (variant) {
       case "info":
-        return "ℹ️";
+        return "❓";
       case "warning":
         return "⚠️";
       case "success":
         return "✅";
       default:
-        return "ℹ️";
+        return "❓";
     }
   };
 
