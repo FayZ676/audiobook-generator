@@ -119,6 +119,9 @@ export default function VoiceAddForm() {
       <label htmlFor="audio-file-input" className="font-medium">
         Audio File
       </label>
+      <Tip variant="info">
+        For best results, keep your audio file under 12 seconds.
+      </Tip>
       <input
         id="audio-file-input"
         name="audio_file"
@@ -132,9 +135,6 @@ export default function VoiceAddForm() {
       <label htmlFor="transcript-input" className="font-medium">
         Audio Transcript
       </label>
-      <Tip variant="info">
-        For best results, keep your audio file under 12 seconds.
-      </Tip>
       <textarea
         id="transcript-input"
         name="audio_transcript"
