@@ -9,6 +9,7 @@ import ScriptSection from "@/app/components/ScriptSection";
 import NarrationSection from "@/app/components/NarrationSection";
 import JobStateSection from "./JobStateSection";
 import ControlsSection from "./ControlsSection";
+import Tip from "./Tip";
 
 export default function ProjectDashboard() {
   const scriptPromise = getScript();
@@ -18,6 +19,9 @@ export default function ProjectDashboard() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Tip variant="info">
+        Multiple projects support is coming soon! Stay tuned for updates.
+      </Tip>
       <JobStateSection jobStatePromise={jobStatePromise} />
       <ControlsSection
         narrationUrlPromise={narrationUrlPromise}
