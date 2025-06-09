@@ -1,32 +1,21 @@
 "use client";
 
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState, Suspense } from "react";
 
 import { createScript } from "../actions/script";
-import { getVoices, Voice } from "../actions/voices";
+import { Voice } from "../actions/voices";
 
-export default function CreateScriptForm() {
+import NarratorVoiceOptionsDropdown from "./NarratorVoiceOptionsDropdown";
+
+interface GenerateScriptFormProps {
+  voicesPromise: Promise<Voice[]>;
+}
+
+export default function CreateScriptForm({ voicesPromise }: GenerateScriptFormProps) {
   const [file, setFile] = useState<File | null>(null);
   const [narrator, setNarrator] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [voices, setVoices] = useState<Voice[]>([]);
-  const [isLoadingVoices, setIsLoadingVoices] = useState(true);
-
-  useEffect(() => {
-    async function fetchVoices() {
-      try {
-        const voicesList = await getVoices();
-        setVoices(voicesList);
-      } catch (error) {
-        console.error("Error fetching voices:", error);
-      } finally {
-        setIsLoadingVoices(false);
-      }
-    }
-
-    fetchVoices();
-  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -65,23 +54,20 @@ export default function CreateScriptForm() {
       <label htmlFor="narrator-input" className="font-medium">
         Narrator Voice Name
       </label>
-      <select
-        id="narrator-input"
-        name="narrator"
-        className="bg-gray-200 p-2 rounded"
-        value={narrator}
-        onChange={(e) => setNarrator(e.target.value)}
-        disabled={isLoadingVoices}
+      <Suspense
+        fallback={
+          <select className="bg-gray-200 p-2 rounded" disabled>
+            <option>Loading voices...</option>
+          </select>
+        }
       >
-        <option value="">
-          {isLoadingVoices ? "Loading voices..." : "Select a narrator voice"}
-        </option>
-        {voices.map((voice) => (
-          <option key={voice.name} value={voice.name}>
-            {voice.name}
-          </option>
-        ))}
-      </select>
+        <NarratorVoiceOptionsDropdown
+          voicesPromise={voicesPromise}
+          value={narrator}
+          onChange={setNarrator}
+          disabled={isSubmitting}
+        />
+      </Suspense>
       <button
         disabled={!file || !narrator || isSubmitting}
         onClick={async () => {
