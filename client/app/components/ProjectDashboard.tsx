@@ -20,7 +20,7 @@ export default function ProjectDashboard() {
   return (
     <div className="flex flex-col gap-4">
       <Tip variant="info">
-        Multiple projects support is coming soon! Stay tuned for updates.
+        Multi-project support is coming soon.
       </Tip>
       <JobStateSection jobStatePromise={jobStatePromise} />
       <ControlsSection
