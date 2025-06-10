@@ -45,7 +45,7 @@ export default function CreateScriptForm({ voicesPromise }: GenerateScriptFormPr
         Text File
       </label>
       <Tip variant="info">
-        Only .txt files are supported for now.
+        Only supporting .txt files. Other formats coming soon.
       </Tip>
       <input
         id="file-input"
