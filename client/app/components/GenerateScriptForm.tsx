@@ -13,7 +13,9 @@ interface GenerateScriptFormProps {
   voicesPromise: Promise<Voice[]>;
 }
 
-export default function CreateScriptForm({ voicesPromise }: GenerateScriptFormProps) {
+export default function CreateScriptForm({
+  voicesPromise,
+}: GenerateScriptFormProps) {
   const [file, setFile] = useState<File | null>(null);
   const [narrator, setNarrator] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,7 +47,7 @@ export default function CreateScriptForm({ voicesPromise }: GenerateScriptFormPr
         Text File
       </label>
       <Tip variant="info">
-        Only supporting .txt files. Other formats coming soon.
+        Supporting .txt files. Other formats coming soon.
       </Tip>
       <input
         id="file-input"
