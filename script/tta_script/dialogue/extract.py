@@ -18,6 +18,9 @@ def get_dialogue_details(
 ):
     segments = split_by_dialogue(text)
     speakers = {s.character for s in speakers_voices}
+    voices = {s.character.first_alias(): s.voice.name for s in speakers_voices} | {
+        "Narrator": narrator_voice.voice.name
+    }
     label_dict = {
         label.index: label.speaker for label in label_dialogue(segments, speakers)
     }
@@ -35,7 +38,6 @@ def get_dialogue_details(
         else:
             speaker = narrator_voice.character
         dialogue.append(Dialogue(speaker, seg.text))
-    voices = {s.character.first_alias(): s.voice.name for s in speakers_voices}
     return [
         DialogueDetails(
             text=d.text,
