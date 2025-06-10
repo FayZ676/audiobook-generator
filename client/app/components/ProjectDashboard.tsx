@@ -9,7 +9,6 @@ import ScriptSection from "@/app/components/ScriptSection";
 import NarrationSection from "@/app/components/NarrationSection";
 import JobStateSection from "./JobStateSection";
 import ControlsSection from "./ControlsSection";
-import Tip from "./Tip";
 
 export default function ProjectDashboard() {
   const scriptPromise = getScript();
