@@ -4,6 +4,7 @@ import json
 from typing import BinaryIO
 
 from tta_script.dialogue.types import DialogueDetails
+from tta_script.character.extract import get_speaker_details
 from tta_script.script import generate_script
 
 from tta_types.types import (
@@ -55,25 +56,46 @@ def _get_textfile_content(textfile_name: str) -> str:
     return file.decode("utf-8")
 
 
+def _upload_script_result(user_id: str, script: list[DialogueDetails]):
+    script_file = _to_json_fileobject(user_id, script)
+    s3_client.upload_fileobj(f"{SCRIPT_RESULTS_BUCKET}", script_file.name, script_file)
+    return str(script_file.name)
+
+
 def handler(event: dict):
     request = WebhookRequest.model_validate(event["input"])
     data = ScriptRequest.model_validate(request.data)
-    script = generate_script(
-        text=_get_textfile_content(data.textfile_name),
-        voices=_get_voices(),
-        narrator_name=data.narrator_voice_name,
-    )
-    script_file = _to_json_fileobject(request.user_id, script)
-    s3_client.upload_fileobj(f"{SCRIPT_RESULTS_BUCKET}", script_file.name, script_file)
-    requests.post(
-        request.internal_callback,
-        json=WebhookResponse(
+    text = _get_textfile_content(data.textfile_name)
+    speaker_details = get_speaker_details(text)
+
+    if len(speaker_details) > len(_get_voices()):
+        # TODO: We need to handle this in the server and client side.
+        response = WebhookResponse(
+            user_id=request.user_id,
+            type="script",
+            status="error",
+            message="Not enough voices available for the number of speakers in the text.",
+            data={},
+        )
+    else:
+        script = generate_script(
+            text=text,
+            speaker_details=speaker_details,
+            voices=_get_voices(),
+            narrator_name=data.narrator_voice_name,
+        )
+        script_filename = _upload_script_result(request.user_id, script)
+        response = WebhookResponse(
             user_id=request.user_id,
             type="script",
             status="success",
             message="",
-            data=ScriptResponse(filename=script_file.name).model_dump(),
-        ).model_dump(),
+            data=ScriptResponse(filename=script_filename).model_dump(),
+        )
+
+    requests.post(
+        request.internal_callback,
+        json=response.model_dump(),
         timeout=120,
     )
 

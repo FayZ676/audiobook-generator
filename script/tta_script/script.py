@@ -7,11 +7,12 @@ from tta_script.voices import SpeakerVoice
 from tta_types.types import Voice
 
 
-def generate_script(text: str, voices: list[Voice], narrator_name: str):
-    speaker_details = get_speaker_details(text)
-    if len(speaker_details) > len(voices):
-        # TODO: We need a way to tell the server, and ultimately the client, that there are not enough voices.
-        pass
+def generate_script(
+    text: str,
+    speaker_details: set[SpeakerDetails],
+    voices: list[Voice],
+    narrator_name: str,
+):
     speaker_voices = assign_voices(speakers=speaker_details, voices=voices)
     narrator_speaker = get_narrator_speaker(narrator_name, voices)
     return get_dialogue_details(text, speaker_voices, narrator_speaker)
