@@ -65,18 +65,14 @@ def _upload_script_result(user_id: str, script: list[DialogueDetails]):
 def handler(event: dict):
     request = WebhookRequest.model_validate(event["input"])
     data = ScriptRequest.model_validate(request.data)
+
     text = _get_textfile_content(data.textfile_name)
     speaker_details = get_speaker_details(text)
 
     if len(speaker_details) > len(_get_voices()):
-        # TODO: We need to handle this in the server and client side.
-        response = WebhookResponse(
-            user_id=request.user_id,
-            type="script",
-            status="error",
-            message="Not enough voices available for the number of speakers in the text.",
-            data={},
-        )
+        status = "error"
+        message = "Not enough voices available for the number of speakers in the text."
+        data = {}
     else:
         script = generate_script(
             text=text,
@@ -85,17 +81,19 @@ def handler(event: dict):
             narrator_name=data.narrator_voice_name,
         )
         script_filename = _upload_script_result(request.user_id, script)
-        response = WebhookResponse(
-            user_id=request.user_id,
-            type="script",
-            status="success",
-            message="",
-            data=ScriptResponse(filename=script_filename).model_dump(),
-        )
+        status = "success"
+        message = ""
+        data = ScriptResponse(filename=script_filename).model_dump()
 
     requests.post(
         request.internal_callback,
-        json=response.model_dump(),
+        json=WebhookResponse(
+            user_id=request.user_id,
+            type="script",
+            status=status,
+            message=message,
+            data=data,
+        ).model_dump(),
         timeout=120,
     )
 
