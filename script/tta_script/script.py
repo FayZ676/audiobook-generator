@@ -1,4 +1,3 @@
-from tta_script.character.extract import get_speaker_details
 from tta_script.dialogue.extract import get_dialogue_details
 from tta_script.voices import assign_voices
 from tta_script.character.types import SpeakerDetails
