@@ -9,6 +9,12 @@ from tta_types.types import Voice
 
 def generate_script(text: str, voices: list[Voice], narrator_name: str):
     speaker_voices = assign_voices(get_speaker_details(text), voices=voices)
+
+    if len(speaker_voices) > len(voices):
+        raise ValueError(
+            "Not enough voices available for the number of speakers in the text."
+        )
+
     narrator_speaker = get_narrator_speaker(narrator_name, voices)
     return get_dialogue_details(text, speaker_voices, narrator_speaker)
 

@@ -28,6 +28,9 @@ def get_traits(chunk: str, names: list[str]) -> tuple[dict[str, str], dict[str, 
 
 
 def get_speaker_details(text: str):
+    """
+    Extract speaker details from the provided text using NER to identify names and LLMs to determine their traits.
+    """
     details: set[SpeakerDetails] = set()
     for chunk in get_chunks(text, 100000):
         names = list(get_aliases(chunk, get_speaker_names(chunk)))

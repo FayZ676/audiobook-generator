@@ -16,12 +16,14 @@ from tta_script.models.text import generate_text
 def get_dialogue_details(
     text: str, speakers_voices: set[SpeakerVoice], narrator_speaker: SpeakerVoice
 ):
+    segments = split_by_dialogue(text)
     speakers = {s.character for s in speakers_voices}
+    dialogue = build_dialogue(segments, speakers, narrator_speaker)
+
     voices = {s.character.first_alias(): s.voice.name for s in speakers_voices} | {
         "Narrator": narrator_speaker.voice.name
     }
-    segments = split_by_dialogue(text)
-    dialogue = build_dialogue(segments, speakers, narrator_speaker)
+
     return [
         DialogueDetails(
             text=d.text,
