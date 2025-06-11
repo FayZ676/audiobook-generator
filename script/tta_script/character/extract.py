@@ -37,6 +37,7 @@ def get_speaker_details(text: str):
         ages, genders = get_traits(chunk, [name[0] for name in names])
         details.update(
             {
+                # TODO: We need to make sure that age and gender are typed correctly.
                 SpeakerDetails(frozenset(name), age, gender)
                 for name, age, gender in zip(
                     names, list(ages.values()), list(genders.values())
