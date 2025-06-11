@@ -16,11 +16,28 @@ from tta_script.models.text import generate_text
 def get_dialogue_details(
     text: str, speakers_voices: set[SpeakerVoice], narrator_speaker: SpeakerVoice
 ):
-    segments = split_by_dialogue(text)
     speakers = {s.character for s in speakers_voices}
     voices = {s.character.first_alias(): s.voice.name for s in speakers_voices} | {
         "Narrator": narrator_speaker.voice.name
     }
+    segments = split_by_dialogue(text)
+    dialogue = build_dialogue(segments, speakers, narrator_speaker)
+    return [
+        DialogueDetails(
+            text=d.text,
+            speaker=d.speaker,
+            voice_name=voices[d.speaker.first_alias()],
+        )
+        for d in dialogue
+        if d.speaker.first_alias() in voices  # TODO: Is this necessary?
+    ]
+
+
+def build_dialogue(
+    segments: list[TextSegment],
+    speakers: set[SpeakerDetails],
+    narrator_speaker: SpeakerVoice,
+):
     label_dict = {
         label.index: label.speaker for label in label_dialogue(segments, speakers)
     }
@@ -38,15 +55,7 @@ def get_dialogue_details(
         else:
             speaker = narrator_speaker.character
         dialogue.append(Dialogue(speaker, seg.text))
-    return [
-        DialogueDetails(
-            text=d.text,
-            speaker=d.speaker,
-            voice_name=voices[d.speaker.first_alias()],
-        )
-        for d in dialogue
-        if d.speaker.first_alias() in voices  # TODO: Is this necessary?
-    ]
+    return dialogue
 
 
 def label_dialogue(

@@ -9,6 +9,11 @@ from tta_types.types import Voice
 
 def generate_script(text: str, voices: list[Voice], narrator_name: str):
     speaker_voices = assign_voices(get_speaker_details(text), voices=voices)
+    narrator_speaker = get_narrator_speaker(narrator_name, voices)
+    return get_dialogue_details(text, speaker_voices, narrator_speaker)
+
+
+def get_narrator_speaker(narrator_name: str, voices: list[Voice]):
     narrator_voice = next(voice for voice in voices if voice.name == narrator_name)
     narrator_speaker = SpeakerVoice(
         SpeakerDetails(
@@ -16,4 +21,4 @@ def generate_script(text: str, voices: list[Voice], narrator_name: str):
         ),
         narrator_voice,
     )
-    return get_dialogue_details(text, speaker_voices, narrator_speaker)
+    return narrator_speaker
