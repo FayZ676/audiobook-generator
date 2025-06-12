@@ -339,7 +339,7 @@ def update_status(
             file.name,
             file,
         )
-    pusher_client.trigger(pusher_channel, pusher_event, {})
+    pusher_client.trigger(pusher_channel, pusher_event, {"message": pusher_message})
 
 
 def create_status(job_details: AudiobookJob, pusher_channel: str, pusher_event: str):
