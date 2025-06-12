@@ -70,7 +70,7 @@ def handler(event: dict):
     speaker_details = get_speaker_details(text)
 
     if len(speaker_details) > len(_get_voices()):
-        status = "error"
+        status = "failed"
         message = "Not enough voices available for the number of speakers in the text."
         data = {}
     else:

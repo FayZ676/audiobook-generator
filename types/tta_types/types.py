@@ -46,7 +46,7 @@ class WebhookRequest(BaseModel):
 class WebhookResponse(BaseModel):
     user_id: str
     type: Literal["speech", "script"]
-    status: str
+    status: Literal["processing", "success", "failed"]
     message: str
     data: dict
 
@@ -63,5 +63,5 @@ class WebhookResponseResult(BaseModel):
 
 class AudiobookJob(BaseModel):
     job_id: str
-    script_status: Optional[Literal["processing", "failed"]]
-    narration_status: Optional[Literal["processing", "failed"]]
+    script_status: Optional[Literal["processing", "success", "failed"]]
+    narration_status: Optional[Literal["processing", "success", "failed"]]
