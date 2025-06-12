@@ -86,10 +86,10 @@ def handler(event: dict):
         data = ScriptResponse(filename=script_filename).model_dump()
 
     requests.post(
-        request.internal_callback,
+        request.callback,
         json=WebhookResponse(
             user_id=request.user_id,
-            type="script",
+            channel=request.channel,
             status=status,
             message=message,
             data=data,

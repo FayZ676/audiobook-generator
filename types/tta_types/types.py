@@ -38,15 +38,19 @@ class ScriptResponse(BaseModel):
 
 
 class WebhookRequest(BaseModel):
-    internal_callback: str
+    callback: str
+    channel: str
     user_id: str
     data: dict
 
 
+JobStatus = Literal["processing", "success", "failed"]
+
+
 class WebhookResponse(BaseModel):
     user_id: str
-    type: Literal["speech", "script"]
-    status: Literal["processing", "success", "failed"]
+    channel: str
+    status: JobStatus
     message: str
     data: dict
 

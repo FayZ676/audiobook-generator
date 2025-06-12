@@ -12,6 +12,7 @@ from tta_types.types import (
     WebhookResponse,
     ScriptRequest,
     AudiobookJob,
+    JobStatus,
 )
 from tta_aws.s3 import S3Client
 
@@ -215,26 +216,13 @@ def get_job_status(job_id: str):
 
 @app.post("/webhook")
 async def webhook(response: WebhookResponse):
-    match response.type:
-        case "speech":
-            channel = "narration-channel"
-            event = "narration-update"
-        case "script":
-            channel = "script-channel"
-            event = "script-update"
     update_status(
         AudiobookJob(
             job_id=response.user_id, script_status=None, narration_status=None
         ),
-        channel,
-        event,
-    )
-    update_status(
-        AudiobookJob(
-            job_id=response.user_id, script_status=None, narration_status=None
-        ),
-        "job-channel",
-        "job-update",
+        pusher_channel=response.channel,
+        pusher_event=response.status,
+        pusher_message=response.message,
     )
 
 
@@ -256,7 +244,8 @@ async def submit_feedback(request: FeedbackRequest):
 
 def send_script_request(script_request: BuildScriptRequest):
     request = WebhookRequest(
-        internal_callback=f"{SERVICE_API_URL}/webhook",
+        callback=f"{SERVICE_API_URL}/webhook",
+        channel="script-channel",
         user_id=script_request.user_id,
         data=ScriptRequest(
             textfile_name=script_request.filename,
@@ -278,15 +267,17 @@ def send_script_request(script_request: BuildScriptRequest):
             script_status="processing",
             narration_status=None,
         ),
-        "job-channel",
-        "job-update",
+        pusher_channel="script-channel",
+        pusher_event="processing",
+        pusher_message="",
     )
 
 
 async def send_narration_request(script_path: str, voices: list[Voice], user_id: str):
     script_data = s3_client.get_file(SCRIPT_RESULTS_BUCKET, script_path)
     request = WebhookRequest(
-        internal_callback=f"{SERVICE_API_URL}/webhook",
+        callback=f"{SERVICE_API_URL}/webhook",
+        channel="narration-channel",
         user_id=user_id,
         data=SpeechRequest(
             title=script_path.rstrip(".json"),
@@ -307,8 +298,9 @@ async def send_narration_request(script_path: str, voices: list[Voice], user_id:
     )
     update_status(
         AudiobookJob(job_id=user_id, narration_status="processing", script_status=None),
-        "job-channel",
-        "job-update",
+        pusher_channel="narration-channel",
+        pusher_event="processing",
+        pusher_message="",
     )
 
 
@@ -330,7 +322,13 @@ def send_async_request(url: str, payload: dict, headers: dict):
 
 
 # TODO: Is there always a status? Should we delete it at any point?
-def update_status(job_details: AudiobookJob, pusher_channel: str, pusher_event: str):
+# TODO: This function is prety much just to update pusher. The job_details shouldn't be specific to narration or script. It should work for anything.
+def update_status(
+    job_details: AudiobookJob,
+    pusher_channel: str,
+    pusher_event: JobStatus,
+    pusher_message: str,
+):
     if not s3_client.list_files(JOB_STATUS_BUCKET, job_details.job_id):
         create_status(job_details, pusher_channel, pusher_event)
     else:
