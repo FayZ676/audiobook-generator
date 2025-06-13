@@ -1,4 +1,4 @@
-export const ChannelEvents = ["processing", "completed", "failed"];
+export const ChannelEvents = ["processing", "complete", "failed"];
 
 export const NARRATION_CHANNEL = {
   channel: "narration-channel",
