@@ -30,12 +30,14 @@ export default function JobStateClient({
   });
 
   return (
-    <div>
-      {jobState?.script_status && `Script: ${jobState.script_status}`}
-      {!jobState?.script_status &&
-        jobState?.narration_status &&
-        `Narration: ${jobState.narration_status}`}
-      {jobState?.message && `Message: ${jobState.message}`}
+    <div className="flex flex-col gap-2">
+      <p>{jobState?.script_status && `Script: ${jobState.script_status}`}</p>
+      <p>
+        {!jobState?.script_status &&
+          jobState?.narration_status &&
+          `Narration: ${jobState.narration_status}`}
+      </p>
+      <p>{jobState?.message && jobState.message}</p>
     </div>
   );
 }
