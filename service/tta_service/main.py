@@ -76,6 +76,8 @@ async def upload_text_file(file: UploadFile):
 
 @app.delete("/text/{filename}")
 async def delete_text_file(filename: str):
+    if not s3_client.list_files(TEXT_FILES_BUCKET, filename):
+        return
     return s3_client.delete_file(TEXT_FILES_BUCKET, filename)
 
 
@@ -98,6 +100,8 @@ def get_script(filename: str):
 
 @app.delete("/script/{filename}")
 def delete_script(filename: str):
+    if not s3_client.list_files(SCRIPT_RESULTS_BUCKET, filename):
+        return
     s3_client.delete_file(f"{SCRIPT_RESULTS_BUCKET}", filename)
 
 
@@ -119,6 +123,8 @@ def get_narration(filename: str):
 
 @app.delete("/narration/{filename}")
 def delete_narration(filename: str):
+    if not s3_client.list_files(SPEECH_RESULTS_BUCKET, filename):
+        return
     return s3_client.delete_file(SPEECH_RESULTS_BUCKET, filename)
 
 
@@ -217,10 +223,7 @@ def get_job_status(job_id: str):
 @app.delete("/job/status/{job_id}")
 def delete_job_status(job_id: str):
     if not s3_client.list_files(JOB_STATUS_BUCKET, job_id):
-        return HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Job status with ID '{job_id}' not found.",
-        )
+        return
     s3_client.delete_file(JOB_STATUS_BUCKET, f"{job_id}.json")
 
 
