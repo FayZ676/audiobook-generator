@@ -1,12 +1,14 @@
 "use client";
 
 import React from "react";
-import { use, useEffect } from "react";
+import { use } from "react";
 import { useRouter } from "next/navigation";
 
 import { handleRevalidateTag } from "@/app/actions/revalidate";
 
-import pusherClient from "@/app/lib/pusher";
+import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
+
+import { SCRIPT_CHANNEL } from "@/app/lib/pusher-channels";
 
 import { Script } from "../actions/script";
 import { Voice } from "../actions/voices";
@@ -19,26 +21,22 @@ interface ScriptClientProps {
   voicesPromise: Promise<Voice[]>;
 }
 
-export default function ScriptClient({ 
+export default function ScriptClient({
   scriptPromise,
-  voicesPromise 
+  voicesPromise,
 }: ScriptClientProps) {
   const router = useRouter();
 
   const script = use(scriptPromise);
 
-  useEffect(() => {
-    const channel = pusherClient.subscribe("script-channel");
-    channel.bind("script-update", () => {
-      handleRevalidateTag("script");
+  usePusherSubscriptions({
+    channels: [SCRIPT_CHANNEL],
+    onUpdate: (channel, event, data) => {
+      handleRevalidateTag("job");
       router.refresh();
-    });
-
-    return () => {
-      channel.unbind("script-update");
-      pusherClient.unsubscribe("script-channel");
-    };
-  }, [router]);
+    },
+    dependencies: [router],
+  });
 
   return (
     <div>

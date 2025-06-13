@@ -1,10 +1,12 @@
 "use client";
 
 import React from "react";
-import { use, useEffect } from "react";
+import { use } from "react";
 import { useRouter } from "next/navigation";
 
-import pusherClient from "@/app/lib/pusher";
+import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
+
+import { NARRATION_CHANNEL } from "@/app/lib/pusher-channels";
 
 import { handleRevalidateTag } from "@/app/actions/revalidate";
 
@@ -21,18 +23,14 @@ export default function NarrationClient({
 
   const narrationUrl = use(narrationUrlPromise);
 
-  useEffect(() => {
-    const channel = pusherClient.subscribe("narration-channel");
-    channel.bind("narration-update", () => {
-      handleRevalidateTag("narration");
+  usePusherSubscriptions({
+    channels: [NARRATION_CHANNEL],
+    onUpdate: (channel, event, data) => {
+      handleRevalidateTag("job");
       router.refresh();
-    });
-
-    return () => {
-      channel.unbind("narration-update");
-      pusherClient.unsubscribe("narration-channel");
-    };
-  }, [router]);
+    },
+    dependencies: [router],
+  });
 
   return <>{narrationUrl && <NarrationAudio narrationUrl={narrationUrl} />}</>;
 }
