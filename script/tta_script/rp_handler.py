@@ -4,8 +4,9 @@ import json
 from typing import BinaryIO
 
 from tta_script.dialogue.types import DialogueDetails
+from tta_script.dialogue.extract import get_dialogue_details
 from tta_script.character.extract import get_speaker_details
-from tta_script.script import generate_script
+from tta_script.voices import assign_voices, SpeakerVoice, SpeakerDetails
 
 from tta_types.types import (
     Voice,
@@ -62,6 +63,18 @@ def _upload_script_result(user_id: str, script: list[DialogueDetails]):
     return str(script_file.name)
 
 
+def _get_narrator_speaker(narrator_name: str, voices: list[Voice]):
+    narrator_voice = next(voice for voice in voices if voice.name == narrator_name)
+    # TODO: If we can't find a narrator voice we should raise.
+    narrator_speaker = SpeakerVoice(
+        SpeakerDetails(
+            frozenset({"Narrator"}), narrator_voice.age, narrator_voice.gender  # type: ignore
+        ),
+        narrator_voice,
+    )
+    return narrator_speaker
+
+
 def handler(event: dict):
     request = WebhookRequest.model_validate(event["input"])
     data = ScriptRequest.model_validate(request.data)
@@ -74,12 +87,10 @@ def handler(event: dict):
         message = "Not enough voices available for the number of speakers in the text."
         data = {}
     else:
-        script = generate_script(
-            text=text,
-            speaker_details=speaker_details,
-            voices=_get_voices(),
-            narrator_name=data.narrator_voice_name,
-        )
+        voices = _get_voices()
+        speaker_voices = assign_voices(speakers=speaker_details, voices=voices)
+        narrator_speaker = _get_narrator_speaker(data.narrator_voice_name, voices)
+        script = get_dialogue_details(text, speaker_voices, narrator_speaker)
         script_filename = _upload_script_result(request.user_id, script)
         status = "complete"
         message = ""
