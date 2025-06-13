@@ -33,16 +33,16 @@ export default function JobStateClient({
   return (
     <div className="flex flex-col gap-2">
       {jobState?.script_status && jobState?.script_status === "complete" && (
-        <Tip variant="success">Script processing complete!</Tip>
+        <Tip variant="success">Script generated!</Tip>
       )}
       {jobState?.narration_status &&
         jobState?.narration_status === "complete" && (
-          <Tip variant="success">Narration processing complete!</Tip>
+          <Tip variant="success">Narration generated!</Tip>
         )}
       {jobState?.script_status && jobState?.script_status === "processing" && (
         <>
           <Tip variant="info">
-            Script is being processed{" "}
+            Generating script{" "}
             <span className="loading loading-dots loading-xs"></span>
           </Tip>
         </>
@@ -51,7 +51,7 @@ export default function JobStateClient({
         jobState?.narration_status === "processing" && (
           <>
             <Tip variant="info">
-              Narration is being processed{" "}
+              Generating narration{" "}
               <span className="loading loading-dots loading-xs"></span>
             </Tip>
           </>
