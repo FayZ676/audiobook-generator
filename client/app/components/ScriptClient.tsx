@@ -32,7 +32,7 @@ export default function ScriptClient({
   usePusherSubscriptions({
     channels: [SCRIPT_CHANNEL],
     onUpdate: (channel, event, data) => {
-      handleRevalidateTag("job");
+      handleRevalidateTag("script");
       router.refresh();
     },
     dependencies: [router],
