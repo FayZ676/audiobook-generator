@@ -248,6 +248,7 @@ async def webhook(response: WebhookResponse):
             job_id=response.user_id,
             script_status=script_status,
             narration_status=narration_status,
+            message=response.message,
         ),
         pusher_channel=response.channel,
         pusher_event=response.status,
@@ -295,6 +296,7 @@ def send_script_request(script_request: BuildScriptRequest):
             job_id=script_request.user_id,
             script_status="processing",
             narration_status=None,
+            message=None,
         ),
         pusher_channel="script-channel",
         pusher_event="processing",
@@ -326,7 +328,12 @@ async def send_narration_request(script_path: str, voices: list[Voice], user_id:
         },
     )
     update_status(
-        AudiobookJob(job_id=user_id, narration_status="processing", script_status=None),
+        AudiobookJob(
+            job_id=user_id,
+            narration_status="processing",
+            script_status=None,
+            message=None,
+        ),
         pusher_channel="narration-channel",
         pusher_event="processing",
         pusher_message="",
@@ -356,10 +363,10 @@ def update_status(
     job_details: AudiobookJob,
     pusher_channel: str,
     pusher_event: JobStatus,
-    pusher_message: str,
+    pusher_message: str | None,
 ):
     if not s3_client.list_files(JOB_STATUS_BUCKET, job_details.job_id):
-        create_status(job_details, pusher_channel, pusher_event)
+        create_status(job_details, pusher_channel, pusher_event, pusher_message)
     else:
         file = io.BytesIO(job_details.model_dump_json().encode("utf-8"))
         file.name = f"{job_details.job_id}.json"
@@ -371,7 +378,12 @@ def update_status(
     pusher_client.trigger(pusher_channel, pusher_event, {"message": pusher_message})
 
 
-def create_status(job_details: AudiobookJob, pusher_channel: str, pusher_event: str):
+def create_status(
+    job_details: AudiobookJob,
+    pusher_channel: str,
+    pusher_event: str,
+    pusher_message: str | None,
+):
     file = io.BytesIO(job_details.model_dump_json().encode("utf-8"))
     file.name = f"{job_details.job_id}.json"
     s3_client.upload_fileobj(
@@ -379,4 +391,4 @@ def create_status(job_details: AudiobookJob, pusher_channel: str, pusher_event: 
         file.name,
         file,
     )
-    pusher_client.trigger(pusher_channel, pusher_event, {})
+    pusher_client.trigger(pusher_channel, pusher_event, {"message": pusher_message})

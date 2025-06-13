@@ -8,6 +8,7 @@ const AudiobookJobSchema = z.object({
   job_id: z.string(),
   script_status: z.enum(["processing", "complete", "failed"]).nullable(),
   narration_status: z.enum(["processing", "complete", "failed"]).nullable(),
+  message: z.string(),
 });
 
 export type AudiobookJob = z.infer<typeof AudiobookJobSchema>;

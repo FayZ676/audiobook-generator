@@ -51,7 +51,7 @@ class WebhookResponse(BaseModel):
     user_id: str
     channel: str
     status: JobStatus
-    message: str
+    message: Optional[str]
     data: dict
 
 
@@ -69,3 +69,4 @@ class AudiobookJob(BaseModel):
     job_id: str
     script_status: Optional[JobStatus]
     narration_status: Optional[JobStatus]
+    message: Optional[str]

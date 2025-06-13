@@ -35,6 +35,7 @@ export default function JobStateClient({
       {!jobState?.script_status &&
         jobState?.narration_status &&
         `Narration: ${jobState.narration_status}`}
+      {jobState?.message && `Message: ${jobState.message}`}
     </div>
   );
 }
