@@ -23,7 +23,7 @@ export default function JobStateClient({
 
   usePusherSubscriptions({
     channels: [NARRATION_CHANNEL, SCRIPT_CHANNEL],
-    onUpdate: (channel, event, data) => {
+    onUpdate: () => {
       handleRevalidateTag("job");
       router.refresh();
     },

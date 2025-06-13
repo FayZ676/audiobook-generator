@@ -23,7 +23,7 @@ export default function VoiceList({ voicesPromise }: VoiceListProps) {
 
   usePusherSubscriptions({
     channels: [VOICES_CHANNEL],
-    onUpdate: (channel, event, data) => {
+    onUpdate: () => {
       handleRevalidateTag("voices");
       router.refresh();
     },

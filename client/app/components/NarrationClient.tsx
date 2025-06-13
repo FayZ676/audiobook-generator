@@ -25,7 +25,7 @@ export default function NarrationClient({
 
   usePusherSubscriptions({
     channels: [NARRATION_CHANNEL],
-    onUpdate: (channel, event, data) => {
+    onUpdate: () => {
       handleRevalidateTag("narration");
       router.refresh();
     },
