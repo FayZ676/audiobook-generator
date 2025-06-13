@@ -8,8 +8,8 @@ interface ChannelConfig {
 
 interface UsePusherSubscriptionsOptions {
   channels: ChannelConfig[];
-  onUpdate?: (channel: string, event: string, data?: any) => void;
-  dependencies?: any[];
+  onUpdate?: (channel: string, event: string, data?: unknown) => void;
+  dependencies?: React.DependencyList;
 }
 
 export const usePusherSubscriptions = ({
@@ -22,7 +22,7 @@ export const usePusherSubscriptions = ({
       const channelInstance = pusherClient.subscribe(channel);
 
       events.forEach((event) => {
-        const handler = (data?: any) => {
+        const handler = (data?: unknown) => {
           onUpdate?.(channel, event, data);
         };
         channelInstance.bind(event, handler);
