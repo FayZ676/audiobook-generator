@@ -1,12 +1,12 @@
 "use client";
 
 import React from "react";
-import { use, useEffect } from "react";
+import { use } from "react";
 import { useRouter } from "next/navigation";
 
-import pusherClient from "@/app/lib/pusher";
-
 import { handleRevalidateTag } from "@/app/actions/revalidate";
+import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
+import { PUSHER_CHANNELS } from "@/app/lib/pusher-channels";
 
 import { AudiobookJob } from "../actions/job";
 
@@ -18,26 +18,23 @@ export default function JobStateClient({
   jobStatePromise,
 }: JobStateSectionProps) {
   const router = useRouter();
-
   const jobState = use(jobStatePromise);
 
-  useEffect(() => {
-    const channel = pusherClient.subscribe("job-channel");
-    channel.bind("job-update", () => {
+  usePusherSubscriptions({
+    channels: PUSHER_CHANNELS,
+    onUpdate: (channel, event, data) => {
       handleRevalidateTag("job");
       router.refresh();
-    });
-
-    return () => {
-      channel.unbind("job-update");
-      pusherClient.unsubscribe("job-channel");
-    };
-  }, [router]);
+    },
+    dependencies: [router],
+  });
 
   return (
     <div>
       {jobState?.script_status && `Script: ${jobState.script_status}`}
-      {!jobState?.script_status && jobState?.narration_status && `Narration: ${jobState.narration_status}`}
+      {!jobState?.script_status &&
+        jobState?.narration_status &&
+        `Narration: ${jobState.narration_status}`}
     </div>
   );
 }
