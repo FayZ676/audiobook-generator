@@ -67,5 +67,5 @@ class WebhookResponseResult(BaseModel):
 
 class AudiobookJob(BaseModel):
     job_id: str
-    script_status: Optional[Literal["processing", "success", "failed"]]
-    narration_status: Optional[Literal["processing", "success", "failed"]]
+    script_status: Optional[JobStatus]
+    narration_status: Optional[JobStatus]
