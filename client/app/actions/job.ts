@@ -26,7 +26,7 @@ export async function getJobState(): Promise<AudiobookJob | null> {
         headers: {
           "Content-Type": "application/json",
         },
-        // cache: "force-cache",
+        cache: "force-cache",
         next: {
           tags: ["job"],
         },
@@ -49,7 +49,7 @@ export async function getJobState(): Promise<AudiobookJob | null> {
 export async function deleteJob(userId: string): Promise<void> {
   try {
     const response = await fetch(
-      `${process.env.AUDIOBOOK_SERVICE_URL}/job/delete/${userId}`,
+      `${process.env.AUDIOBOOK_SERVICE_URL}/job/status/${userId}`,
       {
         method: "DELETE",
         headers: {
