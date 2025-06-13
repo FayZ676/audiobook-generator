@@ -42,7 +42,7 @@ export default function CreateScriptForm({
   }
 
   return (
-    <div className="flex flex-col gap-2 bg-gray-50 p-4 rounded">
+    <div className="flex flex-col gap-2 bg-base-200 p-4 rounded">
       <label htmlFor="filename-input" className="font-medium">
         Text File
       </label>
@@ -55,14 +55,14 @@ export default function CreateScriptForm({
         type="file"
         accept=".txt"
         onChange={handleFileChange}
-        className="bg-gray-200 p-2 rounded"
+        className="bg-base-300 p-2 rounded"
       />
       <label htmlFor="narrator-input" className="font-medium">
         Narrator Voice Name
       </label>
       <Suspense
         fallback={
-          <select className="bg-gray-200 p-2 rounded" disabled>
+          <select className="bg-base-300 p-2 rounded" disabled>
             <option>Loading voices...</option>
           </select>
         }
@@ -79,7 +79,7 @@ export default function CreateScriptForm({
         onClick={async () => {
           await handleCreateScript();
         }}
-        className="bg-blue-500 text-white p-2 rounded disabled:bg-gray-300 disabled:cursor-not-allowed"
+        className="btn btn-block"
       >
         {isSubmitting ? "Building Script..." : "Build Script"}
       </button>

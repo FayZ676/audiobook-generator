@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.19.2",
+    "daisyui": "^5.0.43",
     "next": "15.3.2",
     "pusher": "^5.2.0",
     "pusher-js": "^8.4.0",

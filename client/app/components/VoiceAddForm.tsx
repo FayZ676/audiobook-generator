@@ -57,7 +57,7 @@ export default function VoiceAddForm() {
   const isFormValid = name && age && gender && audioTranscript && audioFile;
 
   return (
-    <div className="flex flex-col gap-2 bg-gray-50 p-4 rounded">
+    <div className="flex flex-col gap-2 bg-base-200 p-4 rounded">
       <label htmlFor="name-input" className="font-medium">
         Name
       </label>
@@ -65,7 +65,7 @@ export default function VoiceAddForm() {
         id="name-input"
         name="name"
         type="text"
-        className="bg-gray-200 p-2 rounded"
+        className="bg-base-300 p-2 rounded"
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Enter voice name"
@@ -80,7 +80,7 @@ export default function VoiceAddForm() {
           <select
             id="age-select"
             name="age"
-            className="bg-gray-200 p-2 rounded"
+            className="bg-base-300 p-2 rounded"
             value={age}
             onChange={(e) => setAge(e.target.value as Age)}
             required
@@ -101,7 +101,7 @@ export default function VoiceAddForm() {
           <select
             id="gender-select"
             name="gender"
-            className="bg-gray-200 p-2 rounded"
+            className="bg-base-300 p-2 rounded"
             value={gender}
             onChange={(e) => setGender(e.target.value as Gender)}
             required
@@ -128,7 +128,7 @@ export default function VoiceAddForm() {
         type="file"
         accept="audio/*"
         onChange={handleFileChange}
-        className="bg-gray-200 p-2 rounded"
+        className="bg-base-300 p-2 rounded"
         required
       />
 
@@ -138,7 +138,7 @@ export default function VoiceAddForm() {
       <textarea
         id="transcript-input"
         name="audio_transcript"
-        className="bg-gray-200 p-2 rounded"
+        className="bg-base-300 p-2 rounded"
         value={audioTranscript}
         onChange={(e) => setAudioTranscript(e.target.value)}
         placeholder="Enter the transcript of the audio file"
@@ -151,7 +151,7 @@ export default function VoiceAddForm() {
         onClick={async () => {
           await handleAddVoice();
         }}
-        className="bg-blue-500 text-white p-2 rounded disabled:bg-gray-300 disabled:cursor-not-allowed"
+        className="btn btn-block"
       >
         {isSubmitting ? "Adding Voice..." : "Add Voice"}
       </button>

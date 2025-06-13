@@ -24,7 +24,7 @@ export default function NarratorVoiceOptionsDropdown({
     <select
       id="narrator-input"
       name="narrator"
-      className="bg-gray-200 p-2 rounded"
+      className="bg-base-300 p-2 rounded"
       value={value}
       onChange={(e) => onChange(e.target.value)}
       disabled={disabled}

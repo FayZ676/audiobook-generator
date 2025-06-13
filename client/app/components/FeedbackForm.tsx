@@ -25,7 +25,7 @@ export default function FeedbackForm() {
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="bg-gray-200 text-xs text-gray-400 px-4 py-2 rounded hover:bg-yellow-300 hover:text-black transition-colors cursor-pointer"
+        className="bg-base-300 text-xs text-gray-400 px-4 py-2 rounded hover:bg-yellow-300 hover:text-black transition-colors cursor-pointer"
       >
         Send Feedback
       </button>

@@ -64,6 +64,9 @@ def _upload_script_result(user_id: str, script: list[DialogueDetails]):
 
 
 def _get_narrator_speaker(narrator_name: str, voices: list[Voice]):
+    print(f"Narrator name: {narrator_name}")
+    for voice in voices:
+        print(f"Available voice: {voice.name}")
     narrator_voice = next(
         (voice for voice in voices if voice.name == narrator_name), None
     )
@@ -91,6 +94,7 @@ def handler(event: dict):
         data = {}
     else:
         voices = _get_voices()
+        # NOTE: Is it possible for the narrator to have the same voice as a speaker since they are two agnostic steps?
         speaker_voices = assign_voices(speakers=speaker_details, voices=voices)
         narrator_speaker = _get_narrator_speaker(data.narrator_voice_name, voices)
         if not narrator_speaker:

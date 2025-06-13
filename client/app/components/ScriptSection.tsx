@@ -14,11 +14,18 @@ export default async function ScriptSection({
   voicesPromise,
 }: ScriptSectionProps) {
   return (
-    <Suspense fallback={<div>Loading script ...</div>}>
-      <ScriptClient 
-        scriptPromise={scriptPromise} 
+    <Suspense
+      fallback={
+        <div>
+          Loading script{" "}
+          <span className="loading loading-dots loading-xs"></span>
+        </div>
+      }
+    >
+      <ScriptClient
+        scriptPromise={scriptPromise}
         voicesPromise={voicesPromise}
-      />;
+      />
     </Suspense>
   );
 }

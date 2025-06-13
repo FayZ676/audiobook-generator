@@ -40,11 +40,17 @@ export default function JobStateClient({
           <Tip variant="success">Narration processing complete!</Tip>
         )}
       {jobState?.script_status && jobState?.script_status === "processing" && (
-        <Tip variant="info">Script is being processed...</Tip>
+        <>
+          <Tip variant="info">Script is being processed</Tip>
+          <span className="loading loading-dots loading-xs"></span>
+        </>
       )}
       {jobState?.narration_status &&
         jobState?.narration_status === "processing" && (
-          <Tip variant="info">Narration is being processed...</Tip>
+          <>
+            <Tip variant="info">Narration is being processed</Tip>
+            <span className="loading loading-dots loading-xs"></span>
+          </>
         )}
       {jobState?.script_status && jobState?.script_status === "failed" && (
         <Tip variant="warning">
