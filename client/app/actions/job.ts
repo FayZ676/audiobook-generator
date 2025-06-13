@@ -47,10 +47,10 @@ export async function getJobState(): Promise<AudiobookJob | null> {
   }
 }
 
-export async function deleteJob(userId: string): Promise<void> {
+export async function deleteJob(filename: string): Promise<void> {
   try {
     const response = await fetch(
-      `${process.env.AUDIOBOOK_SERVICE_URL}/job/status/${userId}`,
+      `${process.env.AUDIOBOOK_SERVICE_URL}/job/status/${filename}`,
       {
         method: "DELETE",
         headers: {

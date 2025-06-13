@@ -220,11 +220,11 @@ def get_job_status(job_id: str):
     return AudiobookJob.model_validate(json.loads(job_status))
 
 
-@app.delete("/job/status/{job_id}")
-def delete_job_status(job_id: str):
-    if not s3_client.list_files(JOB_STATUS_BUCKET, job_id):
+@app.delete("/job/status/{filename}")
+def delete_job_status(filename: str):
+    if not s3_client.list_files(JOB_STATUS_BUCKET, filename):
         return
-    s3_client.delete_file(JOB_STATUS_BUCKET, f"{job_id}.json")
+    s3_client.delete_file(JOB_STATUS_BUCKET, filename)
 
 
 @app.post("/webhook")
