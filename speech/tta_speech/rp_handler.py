@@ -110,10 +110,10 @@ def handler(event: dict):
         BytesIO(audio),
     )
     requests.post(
-        url=request.internal_callback,
+        url=request.callback,
         json=WebhookResponse(
             user_id=request.user_id,
-            type="speech",
+            channel=request.channel,
             status="complete",
             message="",
             data=SpeechResponse(filename=f"{data.title}.mp3").model_dump(),

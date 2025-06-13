@@ -44,7 +44,7 @@ class WebhookRequest(BaseModel):
     data: dict
 
 
-JobStatus = Literal["processing", "success", "failed"]
+JobStatus = Literal["processing", "complete", "failed"]
 
 
 class WebhookResponse(BaseModel):

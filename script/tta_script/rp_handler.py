@@ -81,7 +81,7 @@ def handler(event: dict):
             narrator_name=data.narrator_voice_name,
         )
         script_filename = _upload_script_result(request.user_id, script)
-        status = "success"
+        status = "complete"
         message = ""
         data = ScriptResponse(filename=script_filename).model_dump()
 
