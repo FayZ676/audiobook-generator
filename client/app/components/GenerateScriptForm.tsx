@@ -42,7 +42,7 @@ export default function CreateScriptForm({
   }
 
   return (
-    <div className="flex flex-col gap-2 bg-base-200 p-4 rounded">
+    <div className="flex flex-col gap-4 bg-base-200 p-4 rounded">
       <label htmlFor="filename-input" className="font-medium">
         Text File
       </label>
