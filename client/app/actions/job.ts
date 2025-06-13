@@ -45,3 +45,25 @@ export async function getJobState(): Promise<AudiobookJob | null> {
     throw error;
   }
 }
+
+export async function deleteJob(userId: string): Promise<void> {
+  try {
+    const response = await fetch(
+      `${process.env.AUDIOBOOK_SERVICE_URL}/job/delete/${userId}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (!response.ok) {
+      throw new Error(
+        `Error deleting job: ${response.status} ${response.statusText}`
+      );
+    }
+  } catch (error) {
+    console.error("Error deleting job:", error);
+    throw error;
+  }
+}

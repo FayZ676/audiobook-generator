@@ -19,6 +19,7 @@ def generate_script(
 
 def get_narrator_speaker(narrator_name: str, voices: list[Voice]):
     narrator_voice = next(voice for voice in voices if voice.name == narrator_name)
+    # TODO: If we can't find a narrator voice we should raise.
     narrator_speaker = SpeakerVoice(
         SpeakerDetails(
             frozenset({"Narrator"}), narrator_voice.age, narrator_voice.gender  # type: ignore

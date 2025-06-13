@@ -214,6 +214,16 @@ def get_job_status(job_id: str):
     return AudiobookJob.model_validate(json.loads(job_status))
 
 
+@app.delete("/job/status/{job_id}")
+def delete_job_status(job_id: str):
+    if not s3_client.list_files(JOB_STATUS_BUCKET, job_id):
+        return HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Job status with ID '{job_id}' not found.",
+        )
+    s3_client.delete_file(JOB_STATUS_BUCKET, f"{job_id}.json")
+
+
 @app.post("/webhook")
 async def webhook(response: WebhookResponse):
     existing_job = get_job_status(response.user_id)
