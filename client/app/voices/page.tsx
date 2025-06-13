@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default function VoicesHome() {
   return (
-    <div>
+    <div className="flex flex-col gap-4">
       <TabSection />
       <VoicesDashboard />
     </div>
