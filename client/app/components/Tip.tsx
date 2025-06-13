@@ -44,14 +44,9 @@ export default function Tip({
   };
 
   return (
-    <div className={combinedClasses} role="note" aria-live="polite">
-      <span
-        className={`flex-shrink-0 ${iconClasses[variant]}`}
-        aria-hidden="true"
-      >
-        {getIcon()}
-      </span>
-      <div className="flex-1">{children}</div>
+    <div role="alert" className="alert">
+      <span>{getIcon()}</span>
+      <span>{children}</span>
     </div>
   );
 }
