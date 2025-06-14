@@ -29,6 +29,6 @@ def assign_voices(
             voiced_characters.add(SpeakerVoice(character=speaker, voice=selected_voice))
         else:
             raise ValueError(
-                f"No available voices for {speaker.first_alias()} with age {speaker.age} and gender {speaker.gender}"
+                f"No available voices for {speaker.first_alias()} with age {speaker.age} and gender {speaker.gender}."
             )
     return voiced_characters

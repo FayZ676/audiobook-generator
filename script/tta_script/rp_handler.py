@@ -93,20 +93,25 @@ def handler(event: dict):
         data = {}
     else:
         # NOTE: Is it possible for the narrator to have the same voice as a speaker since they are two agnostic steps?
-        speaker_voices = assign_voices(speakers=speaker_details, voices=voices.copy())
-        narrator_speaker = _get_narrator_speaker(data.narrator_voice_name, voices)
-        if not narrator_speaker:
-            status = "failed"
-            message = (
-                f"Could not find a voice for the narrator '{data.narrator_voice_name}'."
+        try:
+            speaker_voices = assign_voices(
+                speakers=speaker_details, voices=voices.copy()
             )
+            narrator_speaker = _get_narrator_speaker(data.narrator_voice_name, voices)
+            if not narrator_speaker:
+                status = "failed"
+                message = f"Could not find a voice for the narrator '{data.narrator_voice_name}'."
+                data = {}
+            else:
+                script = get_dialogue_details(text, speaker_voices, narrator_speaker)
+                script_filename = _upload_script_result(request.user_id, script)
+                status = "complete"
+                message = ""
+                data = ScriptResponse(filename=script_filename).model_dump()
+        except ValueError as e:
+            status = "failed"
+            message = str(e)
             data = {}
-        else:
-            script = get_dialogue_details(text, speaker_voices, narrator_speaker)
-            script_filename = _upload_script_result(request.user_id, script)
-            status = "complete"
-            message = ""
-            data = ScriptResponse(filename=script_filename).model_dump()
 
     requests.post(
         request.callback,
