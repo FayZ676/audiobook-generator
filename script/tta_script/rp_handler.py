@@ -40,6 +40,7 @@ def _to_json_fileobject(
     return file_obj
 
 
+# TODO: This will need to get the voices from the user folder as well.
 def _get_voices() -> list[Voice]:
     voices_metadata = s3_client.list_files(VOICES_BUCKET, "metadata/")
     voices: list[Voice] = []
@@ -64,9 +65,6 @@ def _upload_script_result(user_id: str, script: list[DialogueDetails]):
 
 
 def _get_narrator_speaker(narrator_name: str, voices: list[Voice]):
-    print(f"Narrator name: {narrator_name}")
-    for voice in voices:
-        print(f"Available voice: {voice.name}")
     narrator_voice = next(
         (voice for voice in voices if voice.name == narrator_name), None
     )
@@ -87,15 +85,15 @@ def handler(event: dict):
 
     text = _get_textfile_content(data.textfile_name)
     speaker_details = get_speaker_details(text)
+    voices = _get_voices()
 
-    if len(speaker_details) > len(_get_voices()):
+    if len(speaker_details) > len(voices):
         status = "failed"
         message = "Not enough voices available for the number of speakers in the text."
         data = {}
     else:
-        voices = _get_voices()
         # NOTE: Is it possible for the narrator to have the same voice as a speaker since they are two agnostic steps?
-        speaker_voices = assign_voices(speakers=speaker_details, voices=voices)
+        speaker_voices = assign_voices(speakers=speaker_details, voices=voices.copy())
         narrator_speaker = _get_narrator_speaker(data.narrator_voice_name, voices)
         if not narrator_speaker:
             status = "failed"
