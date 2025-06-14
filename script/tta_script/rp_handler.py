@@ -69,7 +69,7 @@ def _get_narrator_speaker(narrator_name: str, voices: list[Voice]):
         (voice for voice in voices if voice.name == narrator_name), None
     )
     if not narrator_voice:
-        return None
+        raise ValueError(f"Could not find a voice for the narrator '{narrator_name}'.")
     narrator_speaker = SpeakerVoice(
         SpeakerDetails(
             frozenset({"Narrator"}), narrator_voice.age, narrator_voice.gender  # type: ignore
@@ -98,16 +98,11 @@ def handler(event: dict):
                 speakers=speaker_details, voices=voices.copy()
             )
             narrator_speaker = _get_narrator_speaker(data.narrator_voice_name, voices)
-            if not narrator_speaker:
-                status = "failed"
-                message = f"Could not find a voice for the narrator '{data.narrator_voice_name}'."
-                data = {}
-            else:
-                script = get_dialogue_details(text, speaker_voices, narrator_speaker)
-                script_filename = _upload_script_result(request.user_id, script)
-                status = "complete"
-                message = ""
-                data = ScriptResponse(filename=script_filename).model_dump()
+            script = get_dialogue_details(text, speaker_voices, narrator_speaker)
+            script_filename = _upload_script_result(request.user_id, script)
+            status = "complete"
+            message = ""
+            data = ScriptResponse(filename=script_filename).model_dump()
         except ValueError as e:
             status = "failed"
             message = str(e)
