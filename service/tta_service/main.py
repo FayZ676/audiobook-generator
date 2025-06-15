@@ -208,6 +208,60 @@ def add_voice(
 
 
 # TODO: Implement the update_voice function
+@app.get("/voices/{user_id}/{voice_name}/audio")
+def get_voice_audio_url(user_id: str, voice_name: str):
+    """Get presigned URL for voice audio file"""
+    try:
+        # Get voice metadata to find audio path
+        paths = [f"metadata/{voice_name}.json", f"metadata/{user_id}/{voice_name}.json"]
+        voice_data = None
+        
+        for path in paths:
+            try:
+                file_content_bytes = s3_client.get_file(VOICES_BUCKET, path)
+                voice_data = json.loads(file_content_bytes.decode("utf-8"))
+                break
+            except Exception as e:
+                if "NoSuchKey" not in str(e):
+                    raise e
+        
+        if not voice_data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Voice '{voice_name}' not found"
+            )
+        
+        voice = Voice.model_validate(voice_data)
+        
+        # Extract S3 key from audio_path (remove s3://bucket-name/ prefix)
+        if voice.audio_path.startswith("s3://"):
+            # Parse s3://bucket-name/key format
+            parts = voice.audio_path.replace("s3://", "").split("/", 1)
+            if len(parts) != 2:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid audio path format"
+                )
+            bucket_name, audio_key = parts
+            
+            # Generate presigned URL
+            presigned_url = s3_client.presigned_url(bucket_name, audio_key)
+            return {"audio_url": presigned_url}
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid audio path format"
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get audio URL: {str(e)}"
+        )
+
+
 @app.patch("/voices/{voice_id}")
 def update_voice(name: str | None = None, age: str | None = None): ...
 

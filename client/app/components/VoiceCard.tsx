@@ -1,6 +1,7 @@
 import React from "react";
 
 import { Voice } from "../actions/voices";
+import VoiceAudio from "./VoiceAudio";
 
 interface VoiceCardProps {
   voice: Voice;
@@ -15,6 +16,9 @@ export default function VoiceCard({ voice }: VoiceCardProps) {
           <span>{voice.gender}</span>
           <span>{voice.age}</span>
         </div>
+      </div>
+      <div className="mt-2">
+        <VoiceAudio voiceName={voice.name} />
       </div>
     </div>
   );

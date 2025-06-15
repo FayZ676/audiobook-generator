@@ -79,3 +79,29 @@ export async function addVoice(formData: {
     throw error;
   }
 }
+
+export async function getVoiceAudioUrl(voiceName: string): Promise<string | null> {
+  try {
+    const userId = await getUserId();
+    const normalizedVoiceName = voiceName.toLowerCase().replace(" ", "_");
+    const response = await fetch(
+      `${process.env.AUDIOBOOK_SERVICE_URL}/voices/${userId}/${normalizedVoiceName}/audio`,
+      {
+        cache: "no-store",
+      }
+    );
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null;
+      }
+      throw new Error("Failed to fetch voice audio URL");
+    }
+    
+    const data = await response.json();
+    return data.audio_url;
+  } catch (error) {
+    console.error("Error fetching voice audio URL:", error);
+    return null;
+  }
+}
