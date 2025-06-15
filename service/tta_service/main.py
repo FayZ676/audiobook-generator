@@ -273,7 +273,6 @@ async def submit_feedback(request: FeedbackRequest):
 
 
 def send_script_request(script_request: BuildScriptRequest):
-    # Get voices for the user
     voices = get_voices(script_request.user_id)
     
     request = WebhookRequest(
