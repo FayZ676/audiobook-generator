@@ -28,7 +28,6 @@ export default function ScriptClient({
   const router = useRouter();
 
   const script = use(scriptPromise);
-  const voices = use(voicesPromise);
 
   usePusherSubscriptions({
     channels: [SCRIPT_CHANNEL],
@@ -42,7 +41,7 @@ export default function ScriptClient({
   return (
     <div>
       {script ? (
-        <ScriptText script={script} voices={voices} />
+        <ScriptText script={script} />
       ) : (
         <GenerateScriptForm voicesPromise={voicesPromise} />
       )}
