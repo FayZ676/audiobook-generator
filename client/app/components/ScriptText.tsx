@@ -18,7 +18,7 @@ export default function ScriptText({ script }: ScriptTextProps) {
           <div key={index} className="mb-4">
             <p>
               <span 
-                className="font-medium tooltip" 
+                className="font-medium tooltip tooltip-right" 
                 data-tip={tooltipContent}
               >
                 {scriptSegment.speaker.names[0]}
