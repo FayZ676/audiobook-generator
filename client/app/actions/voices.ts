@@ -80,7 +80,9 @@ export async function addVoice(formData: {
   }
 }
 
-export async function getVoiceAudioUrl(voiceName: string): Promise<string | null> {
+export async function getVoiceAudioUrl(
+  voiceName: string
+): Promise<string | null> {
   try {
     const userId = await getUserId();
     const normalizedVoiceName = voiceName.toLowerCase().replace(" ", "_");
@@ -90,16 +92,17 @@ export async function getVoiceAudioUrl(voiceName: string): Promise<string | null
         cache: "no-store",
       }
     );
-    
+
     if (!response.ok) {
       if (response.status === 404) {
         return null;
       }
       throw new Error("Failed to fetch voice audio URL");
     }
-    
-    const data = await response.json();
-    return data.audio_url;
+
+    const audioUrl = await response.json();
+    console.log("Fetched voice audio URL:", audioUrl);
+    return audioUrl;
   } catch (error) {
     console.error("Error fetching voice audio URL:", error);
     return null;
