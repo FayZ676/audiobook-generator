@@ -31,6 +31,7 @@ class SpeechResponse(BaseModel):
 class ScriptRequest(BaseModel):
     textfile_name: str
     narrator_voice_name: str
+    voices: list[Voice]
 
 
 class ScriptResponse(BaseModel):

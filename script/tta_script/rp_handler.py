@@ -23,7 +23,6 @@ import runpod
 
 SCRIPT_RESULTS_BUCKET = os.environ.get("SCRIPT_RESULTS_BUCKET", "")
 TEXT_FILES_BUCKET = os.environ.get("TEXT_FILES_BUCKET", "")
-VOICES_BUCKET = os.environ.get("VOICES_BUCKET", "")
 
 
 s3_client = S3Client()
@@ -38,17 +37,6 @@ def _to_json_fileobject(
     file_obj = io.BytesIO(json_bytes)
     file_obj.name = f"{filename}.json"
     return file_obj
-
-
-# TODO: This will need to get the voices from the user folder as well.
-def _get_voices() -> list[Voice]:
-    voices_metadata = s3_client.list_files(VOICES_BUCKET, "metadata/")
-    voices: list[Voice] = []
-    for voice_metadata_key in voices_metadata:
-        file_content_bytes = s3_client.get_file(VOICES_BUCKET, voice_metadata_key)
-        voice_data = json.loads(file_content_bytes.decode("utf-8"))
-        voices.append(Voice.model_validate(voice_data))
-    return voices
 
 
 def _get_textfile_content(textfile_name: str) -> str:
@@ -85,7 +73,7 @@ def handler(event: dict):
 
     text = _get_textfile_content(data.textfile_name)
     speaker_details = get_speaker_details(text)
-    voices = _get_voices()
+    voices = data.voices
 
     if len(speaker_details) > len(voices):
         status = "failed"
