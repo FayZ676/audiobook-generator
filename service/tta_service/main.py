@@ -273,6 +273,9 @@ async def submit_feedback(request: FeedbackRequest):
 
 
 def send_script_request(script_request: BuildScriptRequest):
+    # Get voices for the user
+    voices = get_voices(script_request.user_id)
+    
     request = WebhookRequest(
         callback=f"{SERVICE_API_URL}/webhook",
         channel="script-channel",
@@ -280,6 +283,7 @@ def send_script_request(script_request: BuildScriptRequest):
         data=ScriptRequest(
             textfile_name=script_request.filename,
             narrator_voice_name=script_request.narrator_voice_name,
+            voices=voices,
         ).model_dump(),
     )
     # NOTE: Add /runsync endpoint when testing locally.
