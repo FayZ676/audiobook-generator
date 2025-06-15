@@ -208,6 +208,31 @@ def add_voice(
 
 
 # TODO: Implement the update_voice function
+@app.get("/voices/{user_id}/{voice_name}/audio")
+def get_voice_audio_url(user_id: str, voice_name: str):
+    """Get presigned URL for voice audio file"""
+    audio_paths = [
+        f"audio/{voice_name}.mp3",
+        f"{user_id}/audio/{voice_name}.mp3",
+    ]
+
+    for path in audio_paths:
+        try:
+            s3_client.get_file(VOICES_BUCKET, path)
+            return s3_client.presigned_url(VOICES_BUCKET, path)
+        except Exception as e:
+            if "NoSuchKey" not in str(e):
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Failed to get audio URL: {str(e)}",
+                ) from e
+
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"Voice audio '{voice_name}' not found",
+    )
+
+
 @app.patch("/voices/{voice_id}")
 def update_voice(name: str | None = None, age: str | None = None): ...
 
@@ -274,7 +299,6 @@ async def submit_feedback(request: FeedbackRequest):
 
 def send_script_request(script_request: BuildScriptRequest):
     voices = get_voices(script_request.user_id)
-    
     request = WebhookRequest(
         callback=f"{SERVICE_API_URL}/webhook",
         channel="script-channel",
