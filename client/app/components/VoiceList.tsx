@@ -21,17 +21,11 @@ export default function VoiceList({ voicesPromise }: VoiceListProps) {
 
   const voices = use(voicesPromise);
 
-  console.log('🎤 VoiceList component mounted, listening for pusher events on:', VOICES_CHANNEL);
-
   usePusherSubscriptions({
     channels: [VOICES_CHANNEL],
-    onUpdate: (channel, event, data) => {
-      console.log(`🔔 VoiceList received pusher update - Channel: "${channel}", Event: "${event}"`, data);
-      console.log('🔄 VoiceList calling handleRevalidateTag("voices")...');
+    onUpdate: () => {
       handleRevalidateTag("voices");
-      console.log('🔄 VoiceList calling router.refresh()...');
       router.refresh();
-      console.log('✅ VoiceList refresh completed');
     },
     dependencies: [router],
   });
