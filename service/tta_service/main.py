@@ -202,7 +202,7 @@ def add_voice(
         ),
     )
 
-    pusher_client.trigger("voice-channel", "voice-update", {"user_id": user_id})
+    pusher_client.trigger("voices-channel", "complete", {"user_id": user_id})
 
     return
 
