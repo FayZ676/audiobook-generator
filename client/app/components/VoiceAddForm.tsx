@@ -2,7 +2,6 @@
 
 import React from "react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 import { AgeEnum, GenderEnum } from "../types";
 
@@ -10,7 +9,6 @@ import { addVoice, type Age, type Gender } from "../actions/voices";
 import Tip from "./Tip";
 
 export default function VoiceAddForm() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [age, setAge] = useState<Age | "">("");
   const [gender, setGender] = useState<Gender | "">("");
@@ -28,6 +26,7 @@ export default function VoiceAddForm() {
     if (name && age && gender && audioTranscript && audioFile) {
       setIsSubmitting(true);
       try {
+        console.log('🚀 VoiceAddForm: Starting to add voice...');
         await addVoice({
           name,
           age: age as Age,
@@ -35,6 +34,7 @@ export default function VoiceAddForm() {
           audio_transcript: audioTranscript,
           audio_file: audioFile,
         });
+        console.log('✅ VoiceAddForm: Voice added successfully');
 
         setName("");
         setAge("");
@@ -48,8 +48,6 @@ export default function VoiceAddForm() {
         if (fileInput) {
           fileInput.value = "";
         }
-
-        router.refresh();
       } catch (error) {
         console.error("Failed to add voice:", error);
       } finally {
