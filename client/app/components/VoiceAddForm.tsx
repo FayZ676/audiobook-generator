@@ -26,7 +26,6 @@ export default function VoiceAddForm() {
     if (name && age && gender && audioTranscript && audioFile) {
       setIsSubmitting(true);
       try {
-        console.log('🚀 VoiceAddForm: Starting to add voice...');
         await addVoice({
           name,
           age: age as Age,
@@ -34,7 +33,6 @@ export default function VoiceAddForm() {
           audio_transcript: audioTranscript,
           audio_file: audioFile,
         });
-        console.log('✅ VoiceAddForm: Voice added successfully');
 
         setName("");
         setAge("");
