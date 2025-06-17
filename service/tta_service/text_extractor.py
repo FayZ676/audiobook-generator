@@ -46,10 +46,6 @@ def extract_text_from_file(file_content: bytes, filename: str) -> str:
         return _extract_from_epub(file_content)
     elif file_extension == '.docx':
         return _extract_from_docx(file_content)
-    elif file_extension == '.mobi':
-        # MOBI files require specialized tools like calibre
-        # For now, we'll raise an error but this can be extended later
-        raise ValueError("MOBI format support requires additional setup. Please convert to EPUB or PDF.")
     else:
         raise ValueError(f"Unsupported file format: {file_extension}")
 

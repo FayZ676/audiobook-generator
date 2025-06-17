@@ -18,12 +18,6 @@ def test_unsupported_format():
         extract_text_from_file(b"dummy content", "test.xyz")
 
 
-def test_mobi_format_error():
-    """Test that MOBI format raises appropriate error."""
-    with pytest.raises(ValueError, match="MOBI format support requires additional setup"):
-        extract_text_from_file(b"dummy content", "test.mobi")
-
-
 def test_get_supported_extensions():
     """Test that supported extensions include at least txt."""
     extensions = get_supported_extensions()
