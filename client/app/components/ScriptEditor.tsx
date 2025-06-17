@@ -97,7 +97,6 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
             <span className="loading loading-spinner loading-sm"></span>
           )}
           {error && <Tip variant="warning">{error}</Tip>}
-          {success && <Tip variant="success">{success}</Tip>}
         </div>
       )}
 
