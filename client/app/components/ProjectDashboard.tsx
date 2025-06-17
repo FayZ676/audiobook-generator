@@ -24,6 +24,7 @@ export default function ProjectDashboard() {
         scriptPromise={scriptPromise}
         jobStatePromise={jobStatePromise}
       />
+      <div className="divider"></div>
       <NarrationSection narrationUrlPromise={narrationUrlPromise} />
       <ScriptSection
         scriptPromise={scriptPromise}
