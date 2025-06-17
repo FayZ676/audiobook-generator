@@ -1,7 +1,8 @@
+import io
 import json
 from fastapi import APIRouter, BackgroundTasks, status
 from tta_types.types import WebhookRequest, ScriptRequest, AudiobookJob, Voice
-from tta_service.types import BuildScriptRequest
+from tta_service.types import BuildScriptRequest, UpdateScriptRequest
 from tta_service.config import (
     s3_client,
     SCRIPT_RESULTS_BUCKET,
@@ -39,6 +40,19 @@ def delete_script(filename: str):
     if not s3_client.list_files(SCRIPT_RESULTS_BUCKET, filename):
         return
     s3_client.delete_file(f"{SCRIPT_RESULTS_BUCKET}", filename)
+
+
+@router.put("/script/{filename}")
+def update_script(filename: str, request: UpdateScriptRequest):
+    if not s3_client.list_files(SCRIPT_RESULTS_BUCKET, filename):
+        return None
+    
+    # Convert script to JSON and upload to S3
+    script_json = json.dumps(request.script)
+    file_obj = io.BytesIO(script_json.encode('utf-8'))
+    s3_client.upload_fileobj(SCRIPT_RESULTS_BUCKET, filename, file_obj)
+    
+    return {"message": "Script updated successfully"}
 
 
 def send_script_request(script_request: BuildScriptRequest):

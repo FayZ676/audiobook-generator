@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
+import { getUserId } from "./user";
 
 import { z } from "zod";
 
@@ -34,6 +35,10 @@ interface DeleteScriptRequest {
 interface CreateScriptProps {
   file: File;
   narrator: string;
+}
+
+interface UpdateScriptProps {
+  script: Script;
 }
 
 export type Script = z.infer<typeof ScriptResponseSchema>;
@@ -105,4 +110,23 @@ export async function deleteScript(filename: string) {
     },
     body: JSON.stringify(request),
   });
+}
+
+export async function updateScript({ script }: UpdateScriptProps) {
+  const userId = await getUserId();
+
+  const filename = `${userId}.json`;
+  const response = await fetch(`${process.env.AUDIOBOOK_SERVICE_URL}/script/${filename}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ script }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to update script");
+  }
+  
+  return response.json();
 }
