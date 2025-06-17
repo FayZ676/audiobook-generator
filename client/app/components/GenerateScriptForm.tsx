@@ -47,13 +47,13 @@ export default function CreateScriptForm({
         Text File
       </label>
       <Tip variant="info">
-        Supporting .txt files. Other formats coming soon.
+        Supporting .txt, .pdf, .epub, .docx files. MOBI support coming soon.
       </Tip>
       <input
         id="file-input"
         name="file"
         type="file"
-        accept=".txt"
+        accept=".txt,.pdf,.epub,.docx"
         onChange={handleFileChange}
         className="bg-base-300 p-2 rounded"
       />

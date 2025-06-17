@@ -7,6 +7,7 @@ from tta_script.dialogue.types import DialogueDetails
 from tta_script.dialogue.extract import get_dialogue_details
 from tta_script.character.extract import get_speaker_details
 from tta_script.voices import assign_voices, SpeakerVoice, SpeakerDetails
+from tta_script.text_extractor import extract_text_from_file
 
 from tta_types.types import (
     Voice,
@@ -43,7 +44,7 @@ def _get_textfile_content(textfile_name: str) -> str:
     file: bytes = s3_client.get_file(TEXT_FILES_BUCKET, textfile_name)
     if not file:
         raise ValueError("File not found")
-    return file.decode("utf-8")
+    return extract_text_from_file(file, textfile_name)
 
 
 def _upload_script_result(user_id: str, script: list[DialogueDetails]):
