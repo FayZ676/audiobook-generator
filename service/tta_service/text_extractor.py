@@ -1,24 +1,13 @@
 """Text extraction utilities for multiple file formats."""
 
 import io
+import re
 from pathlib import Path
 
-try:
-    import PyPDF2
-except ImportError:
-    PyPDF2 = None
-
-try:
-    import ebooklib
-    from ebooklib import epub
-except ImportError:
-    ebooklib = None
-    epub = None
-
-try:
-    from docx import Document
-except ImportError:
-    Document = None
+import PyPDF2
+import ebooklib
+from ebooklib import epub
+from docx import Document
 
 
 def extract_text_from_file(file_content: bytes, filename: str) -> str:
@@ -37,23 +26,21 @@ def extract_text_from_file(file_content: bytes, filename: str) -> str:
     """
     file_extension = Path(filename).suffix.lower()
     
-    if file_extension == '.txt':
-        return file_content.decode('utf-8')
-    elif file_extension == '.pdf':
-        return _extract_from_pdf(file_content)
-    elif file_extension == '.epub':
-        return _extract_from_epub(file_content)
-    elif file_extension == '.docx':
-        return _extract_from_docx(file_content)
-    else:
-        raise ValueError(f"Unsupported file format: {file_extension}")
+    match file_extension:
+        case '.txt':
+            return file_content.decode('utf-8')
+        case '.pdf':
+            return _extract_from_pdf(file_content)
+        case '.epub':
+            return _extract_from_epub(file_content)
+        case '.docx':
+            return _extract_from_docx(file_content)
+        case _:
+            raise ValueError(f"Unsupported file format: {file_extension}")
 
 
 def _extract_from_pdf(file_content: bytes) -> str:
     """Extract text from PDF files."""
-    if PyPDF2 is None:
-        raise ValueError("PyPDF2 is required for PDF support. Please install it with: pip install PyPDF2")
-    
     pdf_file = io.BytesIO(file_content)
     pdf_reader = PyPDF2.PdfReader(pdf_file)
     
@@ -66,9 +53,6 @@ def _extract_from_pdf(file_content: bytes) -> str:
 
 def _extract_from_epub(file_content: bytes) -> str:
     """Extract text from EPUB files."""
-    if ebooklib is None or epub is None:
-        raise ValueError("ebooklib is required for EPUB support. Please install it with: pip install ebooklib")
-    
     epub_file = io.BytesIO(file_content)
     book = epub.read_epub(epub_file)
     
@@ -78,7 +62,6 @@ def _extract_from_epub(file_content: bytes) -> str:
             # Parse HTML content and extract text
             content = item.get_content().decode('utf-8')
             # Simple HTML tag removal - this could be enhanced with BeautifulSoup
-            import re
             text = re.sub(r'<[^>]+>', '', content)
             # Clean up whitespace
             text = re.sub(r'\s+', ' ', text).strip()
@@ -90,9 +73,6 @@ def _extract_from_epub(file_content: bytes) -> str:
 
 def _extract_from_docx(file_content: bytes) -> str:
     """Extract text from DOCX files."""
-    if Document is None:
-        raise ValueError("python-docx is required for DOCX support. Please install it with: pip install python-docx")
-    
     docx_file = io.BytesIO(file_content)
     doc = Document(docx_file)
     

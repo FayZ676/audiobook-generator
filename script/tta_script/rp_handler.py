@@ -43,7 +43,7 @@ def _get_textfile_content(textfile_name: str) -> str:
     file: bytes = s3_client.get_file(TEXT_FILES_BUCKET, textfile_name)
     if not file:
         raise ValueError("File not found")
-    return file.decode('utf-8')
+    return file.decode("utf-8")
 
 
 def _upload_script_result(user_id: str, script: list[DialogueDetails]):
