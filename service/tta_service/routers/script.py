@@ -1,3 +1,4 @@
+import io
 import json
 from fastapi import APIRouter, BackgroundTasks, status
 from tta_types.types import WebhookRequest, ScriptRequest, AudiobookJob, Voice
@@ -48,7 +49,8 @@ def update_script(filename: str, request: UpdateScriptRequest):
     
     # Convert script to JSON and upload to S3
     script_json = json.dumps(request.script)
-    s3_client.put_file(SCRIPT_RESULTS_BUCKET, filename, script_json.encode('utf-8'))
+    file_obj = io.BytesIO(script_json.encode('utf-8'))
+    s3_client.upload_fileobj(SCRIPT_RESULTS_BUCKET, filename, file_obj)
     
     return {"message": "Script updated successfully"}
 

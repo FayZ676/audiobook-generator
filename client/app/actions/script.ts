@@ -2,6 +2,7 @@
 
 import { revalidateTag } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
+import { getUserId } from "./user";
 
 import { z } from "zod";
 
@@ -113,10 +114,7 @@ export async function deleteScript(filename: string) {
 }
 
 export async function updateScript({ script }: UpdateScriptProps) {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("User not authenticated");
-  }
+  const userId = await getUserId();
 
   const filename = `${userId}.json`;
   const response = await fetch(`${process.env.AUDIOBOOK_SERVICE_URL}/script/${filename}`, {
