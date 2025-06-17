@@ -22,6 +22,7 @@ export default function ScriptText({ script, voices }: ScriptTextProps) {
             <a
               className={!isEditing ? "active" : ""}
               onClick={() => setIsEditing(false)}
+              title="View script"
             >
               <FileText className="h-5 w-5" />
             </a>
@@ -30,11 +31,7 @@ export default function ScriptText({ script, voices }: ScriptTextProps) {
             <a
               className={isEditing ? "active" : ""}
               onClick={() => setIsEditing(true)}
-              title={
-                voices.length === 0
-                  ? "Add voices to enable editing"
-                  : "Edit script"
-              }
+              title="Edit script"
               style={
                 voices.length === 0
                   ? { pointerEvents: "none", opacity: 0.5 }
