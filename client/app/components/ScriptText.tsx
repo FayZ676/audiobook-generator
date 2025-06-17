@@ -33,7 +33,7 @@ export default function ScriptText({ script, voices }: ScriptTextProps) {
   }
 
   return (
-    <div className="bg-base-200 p-4 rounded">
+    <div>
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-medium">Script</h3>
         <div className="flex gap-2">
@@ -55,23 +55,19 @@ export default function ScriptText({ script, voices }: ScriptTextProps) {
         </div>
       )}
       
-      <div className="h-[32rem] overflow-y-scroll bg-base-100 p-4 rounded">
+      <div className="h-[32rem] overflow-y-scroll bg-base-200 p-4 rounded">
         {script.map((scriptSegment, index) => {
           return (
             <div key={index} className="mb-4">
-              <div className="flex items-start gap-2">
-                <div className="flex flex-col gap-1 min-w-[150px]">
-                  <span
-                    className="font-medium tooltip tooltip-right"
-                    data-tip={scriptSegment.voice_name}
-                  >
-                    {scriptSegment.speaker.names[0]}
-                  </span>
-                </div>
-                <div className="flex-1">
-                  <p>{scriptSegment.text}</p>
-                </div>
-              </div>
+              <p>
+                <span
+                  className="font-medium tooltip tooltip-right"
+                  data-tip={scriptSegment.voice_name}
+                >
+                  {scriptSegment.speaker.names[0]}
+                </span>
+                : {scriptSegment.text}
+              </p>
             </div>
           );
         })}
