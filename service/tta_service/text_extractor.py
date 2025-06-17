@@ -2,7 +2,6 @@
 
 import io
 from pathlib import Path
-from typing import Union
 
 try:
     import PyPDF2
@@ -53,7 +52,7 @@ def extract_text_from_file(file_content: bytes, filename: str) -> str:
 def _extract_from_pdf(file_content: bytes) -> str:
     """Extract text from PDF files."""
     if PyPDF2 is None:
-        raise ValueError("PyPDF2 is required for PDF support. Please install it.")
+        raise ValueError("PyPDF2 is required for PDF support. Please install it with: pip install PyPDF2")
     
     pdf_file = io.BytesIO(file_content)
     pdf_reader = PyPDF2.PdfReader(pdf_file)
@@ -68,7 +67,7 @@ def _extract_from_pdf(file_content: bytes) -> str:
 def _extract_from_epub(file_content: bytes) -> str:
     """Extract text from EPUB files."""
     if ebooklib is None or epub is None:
-        raise ValueError("ebooklib is required for EPUB support. Please install it.")
+        raise ValueError("ebooklib is required for EPUB support. Please install it with: pip install ebooklib")
     
     epub_file = io.BytesIO(file_content)
     book = epub.read_epub(epub_file)
@@ -92,7 +91,7 @@ def _extract_from_epub(file_content: bytes) -> str:
 def _extract_from_docx(file_content: bytes) -> str:
     """Extract text from DOCX files."""
     if Document is None:
-        raise ValueError("python-docx is required for DOCX support. Please install it.")
+        raise ValueError("python-docx is required for DOCX support. Please install it with: pip install python-docx")
     
     docx_file = io.BytesIO(file_content)
     doc = Document(docx_file)
@@ -103,17 +102,3 @@ def _extract_from_docx(file_content: bytes) -> str:
             text_content.append(paragraph.text)
     
     return '\n\n'.join(text_content)
-
-
-def get_supported_extensions() -> list[str]:
-    """Get list of supported file extensions."""
-    extensions = ['.txt']
-    
-    if PyPDF2 is not None:
-        extensions.append('.pdf')
-    if ebooklib is not None:
-        extensions.append('.epub')
-    if Document is not None:
-        extensions.append('.docx')
-    
-    return extensions
