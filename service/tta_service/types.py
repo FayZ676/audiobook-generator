@@ -33,3 +33,7 @@ class AddVoiceRequest(BaseModel):
 class FeedbackRequest(BaseModel):
     message: str
     user_id: str
+
+
+class UpdateScriptRequest(BaseModel):
+    script: list
