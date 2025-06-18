@@ -2,17 +2,23 @@ import React, { Suspense } from "react";
 
 import { Script } from "../actions/script";
 import { Voice } from "../actions/voices";
-import ScriptClient from "@/app/components/ScriptClient";
+import { AudiobookJob } from "../actions/job";
 
-interface ScriptSectionProps {
+import ScriptManagerClient from "./ScriptManagerClient";
+
+interface ScriptManagerProps {
   scriptPromise: Promise<Script | null>;
   voicesPromise: Promise<Voice[]>;
+  narrationUrlPromise: Promise<string | null>;
+  jobStatePromise: Promise<AudiobookJob | null>;
 }
 
-export default async function ScriptSection({
+export default function ScriptManager({
   scriptPromise,
   voicesPromise,
-}: ScriptSectionProps) {
+  narrationUrlPromise,
+  jobStatePromise,
+}: ScriptManagerProps) {
   return (
     <Suspense
       fallback={
@@ -22,9 +28,11 @@ export default async function ScriptSection({
         </div>
       }
     >
-      <ScriptClient
+      <ScriptManagerClient
         scriptPromise={scriptPromise}
         voicesPromise={voicesPromise}
+        narrationUrlPromise={narrationUrlPromise}
+        jobStatePromise={jobStatePromise}
       />
     </Suspense>
   );

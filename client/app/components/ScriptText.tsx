@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { FileText, Edit3 } from "lucide-react";
+import React from "react";
 
 import { Script } from "../actions/script";
 import { Voice } from "../actions/voices";
@@ -8,42 +7,16 @@ import ScriptEditor from "./ScriptEditor";
 interface ScriptTextProps {
   script: Script;
   voices: Voice[];
+  isEditing: boolean;
 }
 
-export default function ScriptText({ script, voices }: ScriptTextProps) {
-  const [isEditing, setIsEditing] = useState(false);
-
+export default function ScriptText({
+  script,
+  voices,
+  isEditing,
+}: ScriptTextProps) {
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex justify-between items-center">
-        <h3 className="font-bold">Script controls</h3>
-        <ul className="menu menu-horizontal bg-base-200 rounded-box">
-          <li>
-            <a
-              className={!isEditing ? "active" : ""}
-              onClick={() => setIsEditing(false)}
-              title="View script"
-            >
-              <FileText className="h-5 w-5" />
-            </a>
-          </li>
-          <li>
-            <a
-              className={isEditing ? "active" : ""}
-              onClick={() => setIsEditing(true)}
-              title="Edit script"
-              style={
-                voices.length === 0
-                  ? { pointerEvents: "none", opacity: 0.5 }
-                  : {}
-              }
-            >
-              <Edit3 className="h-5 w-5" />
-            </a>
-          </li>
-        </ul>
-      </div>
-
       {isEditing ? (
         <ScriptEditor script={script} voices={voices} />
       ) : (

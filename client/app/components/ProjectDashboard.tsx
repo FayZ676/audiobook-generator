@@ -5,10 +5,9 @@ import { getNarration } from "../actions/narrate";
 import { getJobState } from "../actions/job";
 import { getVoices } from "../actions/voices";
 
-import ScriptSection from "@/app/components/ScriptSection";
+import ScriptManager from "@/app/components/ScriptManager";
 import NarrationSection from "@/app/components/NarrationSection";
 import JobStateSection from "./JobStateSection";
-import ControlsSection from "./ControlsSection";
 
 export default function ProjectDashboard() {
   const scriptPromise = getScript();
@@ -19,16 +18,13 @@ export default function ProjectDashboard() {
   return (
     <div className="flex flex-col gap-4">
       <JobStateSection jobStatePromise={jobStatePromise} />
-      <ControlsSection
-        narrationUrlPromise={narrationUrlPromise}
-        scriptPromise={scriptPromise}
-        jobStatePromise={jobStatePromise}
-      />
       <div className="divider"></div>
       <NarrationSection narrationUrlPromise={narrationUrlPromise} />
-      <ScriptSection
+      <ScriptManager
         scriptPromise={scriptPromise}
         voicesPromise={voicesPromise}
+        narrationUrlPromise={narrationUrlPromise}
+        jobStatePromise={jobStatePromise}
       />
     </div>
   );

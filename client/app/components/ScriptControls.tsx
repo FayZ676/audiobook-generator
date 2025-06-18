@@ -1,26 +1,33 @@
 "use client";
 
-import React from "react";
-import { use, useState } from "react";
+import React, { useState } from "react";
+import { use } from "react";
 import { useRouter } from "next/navigation";
-import { Mic, Trash2 } from "lucide-react";
+import { FileText, Edit3, Mic, Trash2 } from "lucide-react";
 
 import { createNarration } from "../actions/narrate";
 import { deleteProject } from "../actions/audiobook";
 import { Script } from "../actions/script";
 import { AudiobookJob } from "../actions/job";
+import { Voice } from "../actions/voices";
 
-interface ControlsClientProps {
+interface ScriptControlsProps {
   narrationUrlPromise: Promise<string | null>;
   scriptPromise: Promise<Script | null>;
   jobStatePromise: Promise<AudiobookJob | null>;
+  voicesPromise: Promise<Voice[]>;
+  isEditing: boolean;
+  onEditToggle: (editing: boolean) => void;
 }
 
-export default function ControlsClient({
+export default function ScriptControls({
   narrationUrlPromise,
   scriptPromise,
   jobStatePromise,
-}: ControlsClientProps) {
+  voicesPromise,
+  isEditing,
+  onEditToggle,
+}: ScriptControlsProps) {
   const router = useRouter();
   const [isCreatingNarration, setIsCreatingNarration] = useState(false);
   const [isDeletingProject, setIsDeletingProject] = useState(false);
@@ -28,6 +35,7 @@ export default function ControlsClient({
   const narrationUrl = use(narrationUrlPromise);
   const script = use(scriptPromise);
   const jobState = use(jobStatePromise);
+  const voices = use(voicesPromise);
 
   const handleCreateNarration = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -54,24 +62,51 @@ export default function ControlsClient({
     }
   };
 
+  const isProcessing =
+    jobState?.script_status === "processing" ||
+    jobState?.narration_status === "processing";
+
   return (
     <div className="flex justify-between items-center">
-      <h3 className="font-bold">Project controls</h3>
+      <h3 className="font-bold">Script controls</h3>
       <ul className="menu menu-horizontal bg-base-200 rounded-box">
+        {script && (
+          <>
+            <li>
+              <a
+                className={!isEditing ? "active" : ""}
+                onClick={() => onEditToggle(false)}
+                title="View script"
+              >
+                <FileText className="h-5 w-5" />
+              </a>
+            </li>
+            <li>
+              <a
+                className={isEditing ? "active" : ""}
+                onClick={() => onEditToggle(true)}
+                title="Edit script"
+                style={
+                  voices.length === 0
+                    ? { pointerEvents: "none", opacity: 0.5 }
+                    : {}
+                }
+              >
+                <Edit3 className="h-5 w-5" />
+              </a>
+            </li>
+          </>
+        )}
         {script && !narrationUrl && (
           <li>
             <a
               className={`${
-                isCreatingNarration ||
-                jobState?.script_status === "processing" ||
-                jobState?.narration_status === "processing"
+                isCreatingNarration || isProcessing
                   ? "disabled cursor-not-allowed opacity-50"
                   : "cursor-pointer"
               } font-medium`}
               onClick={
-                isCreatingNarration ||
-                jobState?.script_status === "processing" ||
-                jobState?.narration_status === "processing"
+                isCreatingNarration || isProcessing
                   ? undefined
                   : handleCreateNarration
               }
@@ -90,16 +125,12 @@ export default function ControlsClient({
           <li>
             <a
               className={`${
-                isDeletingProject ||
-                jobState?.script_status === "processing" ||
-                jobState?.narration_status === "processing"
+                isDeletingProject || isProcessing
                   ? "disabled cursor-not-allowed opacity-50"
                   : "cursor-pointer"
               } font-medium`}
               onClick={
-                isDeletingProject ||
-                jobState?.script_status === "processing" ||
-                jobState?.narration_status === "processing"
+                isDeletingProject || isProcessing
                   ? undefined
                   : handleDeleteProject
               }
