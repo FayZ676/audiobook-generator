@@ -1,0 +1,64 @@
+import React from "react";
+import { Script } from "../actions/script";
+import { Voice } from "../actions/voices";
+
+interface CharacterVoiceMappingProps {
+  script: Script;
+  voices: Voice[];
+  onCharacterVoiceChange: (characterName: string, voiceName: string) => void;
+}
+
+interface CharacterMapping {
+  characterName: string;
+  currentVoice: string;
+}
+
+function extractCharacterMappings(script: Script): CharacterMapping[] {
+  const characterMap = new Map<string, string>();
+  
+  script.forEach((segment) => {
+    const characterName = segment.speaker.names[0];
+    if (characterName && !characterMap.has(characterName)) {
+      characterMap.set(characterName, segment.voice_name);
+    }
+  });
+  
+  return Array.from(characterMap.entries()).map(([characterName, currentVoice]) => ({
+    characterName,
+    currentVoice,
+  }));
+}
+
+export default function CharacterVoiceMapping({
+  script,
+  voices,
+  onCharacterVoiceChange,
+}: CharacterVoiceMappingProps) {
+  const characterMappings = extractCharacterMappings(script);
+
+  return (
+    <div className="mb-6 p-4 bg-base-100 rounded border">
+      <h3 className="text-lg font-semibold mb-4">Character Voice Assignments</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {characterMappings.map((mapping) => (
+          <div key={mapping.characterName} className="flex items-center gap-2">
+            <span className="font-medium min-w-[100px] text-sm">
+              {mapping.characterName}:
+            </span>
+            <select
+              value={mapping.currentVoice}
+              onChange={(e) => onCharacterVoiceChange(mapping.characterName, e.target.value)}
+              className="select select-sm select-bordered flex-1"
+            >
+              {voices.map((voice) => (
+                <option key={voice.name} value={voice.name}>
+                  {voice.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

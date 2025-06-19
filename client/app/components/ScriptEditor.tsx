@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Script, updateScript } from "../actions/script";
 import { Voice } from "../actions/voices";
 import Tip from "./Tip";
+import CharacterVoiceMapping from "./CharacterVoiceMapping";
 
 interface ScriptEditorProps {
   script: Script;
@@ -70,27 +71,32 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
     debouncedAutoSave(updatedScript);
   };
 
-  const handleSpeakerChange = (index: number, voiceName: string) => {
+  const handleCharacterVoiceChange = (characterName: string, voiceName: string) => {
     clearMessages();
     const selectedVoice = voices.find((voice) => voice.name === voiceName);
     if (selectedVoice) {
-      const updatedScript = [...editingScript];
-      updatedScript[index] = {
-        ...updatedScript[index],
-        voice_name: selectedVoice.name,
-        speaker: {
-          names: [selectedVoice.name],
-          age: selectedVoice.age,
-          gender: selectedVoice.gender,
-        },
-      };
+      const updatedScript = editingScript.map((segment) => {
+        // Update all segments where this character speaks
+        if (segment.speaker.names[0] === characterName) {
+          return {
+            ...segment,
+            voice_name: selectedVoice.name,
+            speaker: {
+              ...segment.speaker,
+              // Keep the original character name, but update voice-related fields if needed
+              names: segment.speaker.names,
+            },
+          };
+        }
+        return segment;
+      });
       setEditingScript(updatedScript);
       debouncedAutoSave(updatedScript);
     }
   };
 
   return (
-    <div className="h-[32rem] overflow-y-scroll bg-base-200 p-4 rounded">
+    <div className="h-[40rem] overflow-y-scroll bg-base-200 p-4 rounded">
       {(error || success || isSaving) && (
         <div className="mb-4 flex items-center gap-2">
           {isSaving && (
@@ -100,36 +106,39 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
         </div>
       )}
 
-      {editingScript.map((scriptSegment, index) => {
-        return (
-          <div key={index} className="mb-4">
-            <div className="flex items-start gap-2">
-              <div className="flex flex-col gap-1 min-w-[150px]">
-                <select
-                  value={scriptSegment.voice_name}
-                  onChange={(e) => handleSpeakerChange(index, e.target.value)}
-                  className="select select-sm select-bordered"
-                >
-                  {voices.map((voice) => (
-                    <option key={voice.name} value={voice.name}>
-                      {voice.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex-1">
-                <textarea
-                  value={scriptSegment.text}
-                  onChange={(e) => handleTextChange(index, e.target.value)}
-                  className="textarea textarea-bordered w-full min-h-[80px]"
-                  rows={3}
-                  placeholder="Enter script text..."
-                />
+      <CharacterVoiceMapping
+        script={editingScript}
+        voices={voices}
+        onCharacterVoiceChange={handleCharacterVoiceChange}
+      />
+
+      <div className="h-[28rem] overflow-y-auto">
+        {editingScript.map((scriptSegment, index) => {
+          return (
+            <div key={index} className="mb-4">
+              <div className="flex items-start gap-2">
+                <div className="flex flex-col gap-1 min-w-[150px]">
+                  <div className="px-3 py-2 bg-base-100 rounded text-sm font-medium border">
+                    {scriptSegment.speaker.names[0]}
+                  </div>
+                  <div className="text-xs text-base-content/70 px-3">
+                    Voice: {scriptSegment.voice_name}
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <textarea
+                    value={scriptSegment.text}
+                    onChange={(e) => handleTextChange(index, e.target.value)}
+                    className="textarea textarea-bordered w-full min-h-[80px]"
+                    rows={3}
+                    placeholder="Enter script text..."
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }
