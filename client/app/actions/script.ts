@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidateTag } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { getUserId } from "./user";
 
@@ -127,6 +128,8 @@ export async function updateScript({ script }: UpdateScriptProps) {
   if (!response.ok) {
     throw new Error("Failed to update script");
   }
+  
+  revalidateTag("script");
   
   return response.json();
 }
