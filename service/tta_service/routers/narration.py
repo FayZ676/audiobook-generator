@@ -12,6 +12,7 @@ from tta_service.config import (
     SPEECH_SERVICE_API_KEY,
 )
 from tta_service.utils import send_async_request, update_status
+from tta_service.routers.job import get_job_status
 
 
 router = APIRouter()
@@ -64,8 +65,6 @@ async def send_narration_request(script_path: str, voices: list[Voice], user_id:
         },
     )
     
-    # Get existing job status to preserve script information
-    from tta_service.routers.job import get_job_status
     existing_job = get_job_status(user_id)
     
     update_status(
