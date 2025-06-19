@@ -26,22 +26,10 @@ export default function NarrationProgress({ script, narrationStartedAt }: Narrat
   useEffect(() => {
     if (isFinishing) return;
 
-    // Use server-provided start time if available, otherwise fall back to current time
-    // Handle both null and undefined cases for backwards compatibility
-    let startTime = Date.now();
-    
-    if (narrationStartedAt && narrationStartedAt !== null) {
-      try {
-        const serverStartTime = new Date(narrationStartedAt).getTime();
-        // Validate that the timestamp is reasonable (not in the future, not too far in the past)
-        const now = Date.now();
-        if (!isNaN(serverStartTime) && serverStartTime <= now && (now - serverStartTime) < 24 * 60 * 60 * 1000) {
-          startTime = serverStartTime;
-        }
-      } catch {
-        // If timestamp parsing fails, fall back to current time
-      }
-    }
+    // Use server-provided start time
+    const startTime = narrationStartedAt 
+      ? new Date(narrationStartedAt).getTime()
+      : Date.now();
     
     const interval = setInterval(() => {
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
