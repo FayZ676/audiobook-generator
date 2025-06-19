@@ -10,7 +10,7 @@ const sampleScript: Script = [
       age: "middle-aged",
       gender: "male",
     },
-    text: "Once upon a time, in a land far away, there lived a brave knight who embarked on an epic adventure. The journey was long and filled with challenges that tested both courage and wisdom.",
+    text: "This is sample text.",
   },
   {
     voice_name: "knight",
