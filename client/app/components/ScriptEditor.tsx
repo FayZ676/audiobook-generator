@@ -77,7 +77,8 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
     if (selectedVoice) {
       const updatedScript = editingScript.map((segment) => {
         // Update all segments where this character speaks
-        if (segment.speaker.names[0] === characterName) {
+        const segmentCharacterName = segment.speaker.names[0];
+        if (segmentCharacterName && segmentCharacterName === characterName) {
           return {
             ...segment,
             voice_name: selectedVoice.name,
@@ -114,12 +115,13 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
 
       <div className="h-[28rem] overflow-y-auto">
         {editingScript.map((scriptSegment, index) => {
+          const characterName = scriptSegment.speaker.names[0] || "Unknown";
           return (
             <div key={index} className="mb-4">
               <div className="flex items-start gap-2">
                 <div className="flex flex-col gap-1 min-w-[150px]">
                   <div className="px-3 py-2 bg-base-100 rounded text-sm font-medium border">
-                    {scriptSegment.speaker.names[0]}
+                    {characterName}
                   </div>
                   <div className="text-xs text-base-content/70 px-3">
                     Voice: {scriptSegment.voice_name}

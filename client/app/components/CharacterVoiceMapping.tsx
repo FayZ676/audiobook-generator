@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Script } from "../actions/script";
 import { Voice } from "../actions/voices";
 
@@ -18,7 +18,8 @@ function extractCharacterMappings(script: Script): CharacterMapping[] {
   
   script.forEach((segment) => {
     const characterName = segment.speaker.names[0];
-    if (characterName && !characterMap.has(characterName)) {
+    // Skip segments with no character name
+    if (characterName && characterName.trim() && !characterMap.has(characterName)) {
       characterMap.set(characterName, segment.voice_name);
     }
   });
@@ -34,7 +35,16 @@ export default function CharacterVoiceMapping({
   voices,
   onCharacterVoiceChange,
 }: CharacterVoiceMappingProps) {
-  const characterMappings = extractCharacterMappings(script);
+  const characterMappings = useMemo(() => extractCharacterMappings(script), [script]);
+
+  if (characterMappings.length === 0) {
+    return (
+      <div className="mb-6 p-4 bg-base-100 rounded border">
+        <h3 className="text-lg font-semibold mb-2">Character Voice Assignments</h3>
+        <p className="text-sm text-base-content/70">No characters found in the script.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="mb-6 p-4 bg-base-100 rounded border">
