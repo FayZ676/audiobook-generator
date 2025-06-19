@@ -1,5 +1,6 @@
 import io
 import json
+from datetime import datetime, timezone
 from fastapi import APIRouter, BackgroundTasks, status
 from tta_types.types import WebhookRequest, ScriptRequest, AudiobookJob, Voice
 from tta_service.types import BuildScriptRequest, UpdateScriptRequest
@@ -82,6 +83,8 @@ def send_script_request(script_request: BuildScriptRequest):
             script_status="processing",
             narration_status=None,
             message=None,
+            script_started_at=datetime.now(timezone.utc).isoformat(),
+            narration_started_at=None,
         ),
         pusher_channel="script-channel",
         pusher_event="processing",

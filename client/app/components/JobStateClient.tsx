@@ -57,7 +57,7 @@ export default function JobStateClient({
           <>
             <Tip variant="info">
               {script ? (
-                <NarrationProgress script={script} />
+                <NarrationProgress script={script} narrationStartedAt={jobState.narration_started_at} />
               ) : (
                 <>
                   Generating narration{" "}

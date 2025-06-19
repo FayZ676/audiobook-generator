@@ -39,3 +39,10 @@ export const Default: Story = {
     script: sampleScript,
   },
 };
+
+export const WithServerTimestamp: Story = {
+  args: {
+    script: sampleScript,
+    narrationStartedAt: new Date(Date.now() - 30000).toISOString(), // 30 seconds ago
+  },
+};
