@@ -9,7 +9,9 @@ export function calculateWordCount(script: Script): number {
 }
 
 export function estimateNarrationDuration(wordCount: number): number {
-  // Based on: 4500 words = 30 minutes audio = 15 minutes generation time
-  const wordsPerMinute = 4500 / 15; // 300 words per minute of generation time
+  const wordsPerMinute = parseInt(
+    process.env.NEXT_PUBLIC_NARRATION_WORDS_PER_MINUTE || '300',
+    10
+  );
   return Math.max(5, Math.round((wordCount / wordsPerMinute) * 60)); // At least 5 seconds, result in seconds
 }
