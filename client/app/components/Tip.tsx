@@ -7,19 +7,6 @@ interface TipProps {
 }
 
 export default function Tip({ children, variant = "info" }: TipProps) {
-  const getIcon = () => {
-    switch (variant) {
-      case "info":
-        return "💡";
-      case "warning":
-        return "⚠️";
-      case "success":
-        return "✅";
-      default:
-        return "ℹ️";
-    }
-  };
-
   const getClassName = () => {
     switch (variant) {
       case "info":
@@ -33,7 +20,6 @@ export default function Tip({ children, variant = "info" }: TipProps) {
 
   return (
     <div role="alert" className={`alert ${getClassName()} alert-soft`}>
-      <span>{getIcon()}</span>
       <span>{children}</span>
     </div>
   );
