@@ -104,12 +104,12 @@ export default function ScriptControls({
           <li>
             <a
               className={`${
-                isCreatingNarration || isProcessing
+                isCreatingNarration || isProcessing || isDeletingProject
                   ? "disabled cursor-not-allowed opacity-50"
                   : "cursor-pointer"
               } font-medium`}
               onClick={
-                isCreatingNarration || isProcessing
+                isCreatingNarration || isProcessing || isDeletingProject
                   ? undefined
                   : handleCreateNarration
               }
