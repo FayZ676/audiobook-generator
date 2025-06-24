@@ -71,7 +71,10 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
     debouncedAutoSave(updatedScript);
   };
 
-  const handleCharacterVoiceChange = (characterName: string, voiceName: string) => {
+  const handleCharacterVoiceChange = (
+    characterName: string,
+    voiceName: string
+  ) => {
     clearMessages();
     const selectedVoice = voices.find((voice) => voice.name === voiceName);
     if (selectedVoice) {
@@ -118,13 +121,11 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
           const characterName = scriptSegment.speaker.names[0] || "Unknown";
           return (
             <div key={index} className="mb-4">
-              <div className="flex items-start gap-2">
-                <div className="flex flex-col gap-1 min-w-[150px]">
-                  <div className="px-3 py-2 bg-base-100 rounded text-sm font-medium border">
-                    {characterName}
-                  </div>
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-between">
+                  <div className="text-sm font-medium">{characterName}</div>
                   <div className="text-xs text-base-content/70 px-3">
-                    Voice: {scriptSegment.voice_name}
+                    {scriptSegment.voice_name}
                   </div>
                 </div>
                 <div className="flex-1">
