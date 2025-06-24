@@ -46,21 +46,8 @@ export default function CharacterVoiceMapping({
     [script]
   );
 
-  if (characterMappings.length === 0) {
-    return (
-      <div className="mb-6 p-4 bg-base-100 rounded border">
-        <h3 className="text-lg font-semibold mb-2">
-          Character Voice Assignments
-        </h3>
-        <p className="text-sm text-base-content/70">
-          No characters found in the script.
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className="mb-6 p-4 bg-base-100 rounded">
+    <div className="max-h-[14rem] overflow-y-scroll bg-base-200 p-4 rounded">
       <div className="flex flex-col gap-4">
         {characterMappings.map((mapping) => (
           <div key={mapping.characterName} className="grid grid-cols-2">

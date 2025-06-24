@@ -100,7 +100,7 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
   };
 
   return (
-    <div className="h-[40rem] overflow-y-scroll bg-base-200 p-4 rounded">
+    <div className="flex flex-col gap-4">
       {(error || success || isSaving) && (
         <div className="mb-4 flex items-center gap-2">
           {isSaving && (
@@ -116,7 +116,7 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
         onCharacterVoiceChange={handleCharacterVoiceChange}
       />
 
-      <div className="h-[28rem] overflow-y-auto">
+      <div className="h-[28rem] overflow-y-scroll bg-base-200 p-4 rounded">
         {editingScript.map((scriptSegment, index) => {
           const characterName = scriptSegment.speaker.names[0] || "Unknown";
           return (
