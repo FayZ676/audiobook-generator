@@ -6,7 +6,4 @@ __pycache__
 .vscode
 .venv
 pytorch_model.bin
-*.pt# Testing files
-speech/test_download.py
-test_docker_build.sh
-validate_s3_setup.py
+*.pt
