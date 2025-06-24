@@ -100,7 +100,7 @@ export default function ScriptControls({
             </li>
           </>
         )}
-        {script && !narrationUrl && (
+        {script && (
           <li>
             <a
               className={`${
@@ -117,6 +117,8 @@ export default function ScriptControls({
                 isCreatingNarration ||
                 jobState?.narration_status === "processing"
                   ? "Creating Narration..."
+                  : narrationUrl
+                  ? "Regenerate Narration"
                   : "Narrate"
               }
             >

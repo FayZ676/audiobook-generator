@@ -6,7 +6,7 @@ interface NarrationAudioProps {
 
 export default function NarrationAudio({ narrationUrl }: NarrationAudioProps) {
   return (
-    <audio controls>
+    <audio key={narrationUrl} controls>
       <source src={narrationUrl} />
       Your browser does not support the audio element.
     </audio>

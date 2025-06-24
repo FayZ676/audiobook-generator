@@ -1,7 +1,13 @@
 import json
 from datetime import datetime, timezone
 from fastapi import APIRouter, BackgroundTasks, status
-from tta_types.types import Voice, WebhookRequest, SpeechRequest, SpeechRequestSegment, AudiobookJob
+from tta_types.types import (
+    Voice,
+    WebhookRequest,
+    SpeechRequest,
+    SpeechRequestSegment,
+    AudiobookJob,
+)
 from tta_service.types import BuildNarrationRequest
 from tta_service.config import (
     s3_client,
@@ -64,16 +70,14 @@ async def send_narration_request(script_path: str, voices: list[Voice], user_id:
             "Authorization": f"Bearer {SPEECH_SERVICE_API_KEY}",
         },
     )
-    
-    existing_job = get_job_status(user_id)
-    
+
     update_status(
         AudiobookJob(
             job_id=user_id,
             narration_status="processing",
-            script_status=existing_job.script_status if existing_job else None,
+            script_status=None,
             message=None,
-            script_started_at=existing_job.script_started_at if existing_job else None,
+            script_started_at=None,
             narration_started_at=datetime.now(timezone.utc).isoformat(),
         ),
         pusher_channel="narration-channel",
