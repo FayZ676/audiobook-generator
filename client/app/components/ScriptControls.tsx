@@ -83,14 +83,17 @@ export default function ScriptControls({
             </li>
             <li>
               <a
-                className={isEditing ? "active" : ""}
-                onClick={() => onEditToggle(true)}
-                title="Edit script"
-                style={
-                  voices.length === 0
-                    ? { pointerEvents: "none", opacity: 0.5 }
-                    : {}
+                className={`${isEditing ? "active" : ""} ${
+                  isProcessing || isDeletingProject || voices.length === 0
+                    ? "disabled cursor-not-allowed opacity-50"
+                    : "cursor-pointer"
+                }`}
+                onClick={
+                  isProcessing || isDeletingProject || voices.length === 0
+                    ? undefined
+                    : () => onEditToggle(true)
                 }
+                title="Edit script"
               >
                 <Edit3 className="h-5 w-5" />
               </a>
