@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 from fastapi import APIRouter, BackgroundTasks, status
 from tta_types.types import Voice, WebhookRequest, SpeechRequest, SpeechRequestSegment, AudiobookJob
 from tta_service.types import BuildNarrationRequest
@@ -11,6 +12,7 @@ from tta_service.config import (
     SPEECH_SERVICE_API_KEY,
 )
 from tta_service.utils import send_async_request, update_status
+from tta_service.routers.job import get_job_status
 
 
 router = APIRouter()
@@ -62,12 +64,17 @@ async def send_narration_request(script_path: str, voices: list[Voice], user_id:
             "Authorization": f"Bearer {SPEECH_SERVICE_API_KEY}",
         },
     )
+    
+    existing_job = get_job_status(user_id)
+    
     update_status(
         AudiobookJob(
             job_id=user_id,
             narration_status="processing",
-            script_status=None,
+            script_status=existing_job.script_status if existing_job else None,
             message=None,
+            script_started_at=existing_job.script_started_at if existing_job else None,
+            narration_started_at=datetime.now(timezone.utc).isoformat(),
         ),
         pusher_channel="narration-channel",
         pusher_event="processing",

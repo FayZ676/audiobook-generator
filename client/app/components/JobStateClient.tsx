@@ -9,17 +9,22 @@ import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
 import { NARRATION_CHANNEL, SCRIPT_CHANNEL } from "@/app/lib/pusher-channels";
 
 import { AudiobookJob } from "../actions/job";
+import { Script } from "../actions/script";
 import Tip from "./Tip";
+import NarrationProgress from "./NarrationProgress";
 
 interface JobStateSectionProps {
   jobStatePromise: Promise<AudiobookJob | null>;
+  scriptPromise: Promise<Script | null>;
 }
 
 export default function JobStateClient({
   jobStatePromise,
+  scriptPromise,
 }: JobStateSectionProps) {
   const router = useRouter();
   const jobState = use(jobStatePromise);
+  const script = use(scriptPromise);
 
   usePusherSubscriptions({
     channels: [NARRATION_CHANNEL, SCRIPT_CHANNEL],
@@ -32,12 +37,14 @@ export default function JobStateClient({
 
   return (
     <div className="flex flex-col gap-2">
-      {jobState?.script_status && jobState?.script_status === "complete" && (
-        <Tip variant="success">Script generated!</Tip>
-      )}
       {jobState?.narration_status &&
         jobState?.narration_status === "complete" && (
           <Tip variant="success">Narration generated!</Tip>
+        )}
+      {jobState?.script_status &&
+        jobState?.script_status === "complete" &&
+        !jobState?.narration_status && (
+          <Tip variant="success">Script generated!</Tip>
         )}
       {jobState?.script_status && jobState?.script_status === "processing" && (
         <>
@@ -50,10 +57,17 @@ export default function JobStateClient({
       {jobState?.narration_status &&
         jobState?.narration_status === "processing" && (
           <>
-            <Tip variant="info">
-              Generating narration{" "}
-              <span className="loading loading-dots loading-xs"></span>
-            </Tip>
+            {script ? (
+              <NarrationProgress
+                script={script}
+                narrationStartedAt={jobState.narration_started_at}
+              />
+            ) : (
+              <>
+                Generating narration{" "}
+                <span className="loading loading-dots loading-xs"></span>
+              </>
+            )}
           </>
         )}
       {jobState?.script_status && jobState?.script_status === "failed" && (

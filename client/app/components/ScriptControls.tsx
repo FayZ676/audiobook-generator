@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { use } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, Edit3, Mic, Trash2 } from "lucide-react";
+import { FileText, Edit3, MicVocal, Trash2 } from "lucide-react";
 
 import { createNarration } from "../actions/narrate";
 import { deleteProject } from "../actions/audiobook";
@@ -83,14 +83,17 @@ export default function ScriptControls({
             </li>
             <li>
               <a
-                className={isEditing ? "active" : ""}
-                onClick={() => onEditToggle(true)}
-                title="Edit script"
-                style={
-                  voices.length === 0
-                    ? { pointerEvents: "none", opacity: 0.5 }
-                    : {}
+                className={`${isEditing ? "active" : ""} ${
+                  isProcessing || isDeletingProject || voices.length === 0
+                    ? "disabled cursor-not-allowed opacity-50"
+                    : "cursor-pointer"
+                }`}
+                onClick={
+                  isProcessing || isDeletingProject || voices.length === 0
+                    ? undefined
+                    : () => onEditToggle(true)
                 }
+                title="Edit script"
               >
                 <Edit3 className="h-5 w-5" />
               </a>
@@ -101,12 +104,12 @@ export default function ScriptControls({
           <li>
             <a
               className={`${
-                isCreatingNarration || isProcessing
+                isCreatingNarration || isProcessing || isDeletingProject
                   ? "disabled cursor-not-allowed opacity-50"
                   : "cursor-pointer"
               } font-medium`}
               onClick={
-                isCreatingNarration || isProcessing
+                isCreatingNarration || isProcessing || isDeletingProject
                   ? undefined
                   : handleCreateNarration
               }
@@ -117,7 +120,7 @@ export default function ScriptControls({
                   : "Narrate"
               }
             >
-              <Mic className="h-5 w-5" />
+              <MicVocal className="h-5 w-5" />
             </a>
           </li>
         )}

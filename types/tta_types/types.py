@@ -71,3 +71,5 @@ class AudiobookJob(BaseModel):
     script_status: Optional[JobStatus]
     narration_status: Optional[JobStatus]
     message: Optional[str]
+    script_started_at: Optional[str] = None
+    narration_started_at: Optional[str] = None
