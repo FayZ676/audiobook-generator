@@ -17,7 +17,10 @@ export default function ProjectDashboard() {
 
   return (
     <div className="flex flex-col gap-4">
-      <JobStateSection jobStatePromise={jobStatePromise} />
+      <JobStateSection 
+        jobStatePromise={jobStatePromise} 
+        scriptPromise={scriptPromise}
+      />
       <NarrationSection narrationUrlPromise={narrationUrlPromise} />
       <ScriptManager
         scriptPromise={scriptPromise}

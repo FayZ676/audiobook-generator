@@ -1,5 +1,6 @@
 import io
 import json
+from datetime import datetime, timezone
 from fastapi import APIRouter, BackgroundTasks, status
 from tta_types.types import WebhookRequest, ScriptRequest, AudiobookJob, Voice
 from tta_service.types import BuildScriptRequest, UpdateScriptRequest
@@ -12,6 +13,7 @@ from tta_service.config import (
     SCRIPT_SERVICE_API_KEY,
 )
 from tta_service.utils import send_async_request, update_status
+from tta_service.routers.job import get_job_status
 
 
 
@@ -76,12 +78,17 @@ def send_script_request(script_request: BuildScriptRequest):
             "Authorization": f"Bearer {SCRIPT_SERVICE_API_KEY}",
         },
     )
+    
+    existing_job = get_job_status(script_request.user_id)
+    
     update_status(
         AudiobookJob(
             job_id=script_request.user_id,
             script_status="processing",
-            narration_status=None,
+            narration_status=existing_job.narration_status if existing_job else None,
             message=None,
+            script_started_at=datetime.now(timezone.utc).isoformat(),
+            narration_started_at=existing_job.narration_started_at if existing_job else None,
         ),
         pusher_channel="script-channel",
         pusher_event="processing",
