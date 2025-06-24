@@ -55,16 +55,17 @@ export default function JobStateClient({
       {jobState?.narration_status &&
         jobState?.narration_status === "processing" && (
           <>
-            <Tip variant="info">
-              {script ? (
-                <NarrationProgress script={script} narrationStartedAt={jobState.narration_started_at} />
-              ) : (
-                <>
-                  Generating narration{" "}
-                  <span className="loading loading-dots loading-xs"></span>
-                </>
-              )}
-            </Tip>
+            {script ? (
+              <NarrationProgress
+                script={script}
+                narrationStartedAt={jobState.narration_started_at}
+              />
+            ) : (
+              <>
+                Generating narration{" "}
+                <span className="loading loading-dots loading-xs"></span>
+              </>
+            )}
           </>
         )}
       {jobState?.script_status && jobState?.script_status === "failed" && (

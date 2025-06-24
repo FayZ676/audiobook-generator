@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
+
 import NarrationProgress from "../app/components/NarrationProgress";
-import Tip from "../app/components/Tip";
 import { Script } from "../app/actions/script";
 
 const sampleScript: Script = [
@@ -39,11 +39,7 @@ export const Default: Story = {
   args: {
     script: sampleScript,
   },
-  render: (args) => (
-    <Tip variant="info">
-      <NarrationProgress {...args} />
-    </Tip>
-  ),
+  render: (args) => <NarrationProgress {...args} />,
 };
 
 export const WithServerTimestamp: Story = {
@@ -51,9 +47,5 @@ export const WithServerTimestamp: Story = {
     script: sampleScript,
     narrationStartedAt: new Date(Date.now() - 30000).toISOString(), // 30 seconds ago
   },
-  render: (args) => (
-    <Tip variant="info">
-      <NarrationProgress {...args} />
-    </Tip>
-  ),
+  render: (args) => <NarrationProgress {...args} />,
 };
