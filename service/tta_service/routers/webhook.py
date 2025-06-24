@@ -13,14 +13,16 @@ async def webhook(response: WebhookResponse):
 
     if response.channel == "script-channel":
         script_status = response.status
-        narration_status = existing_job.narration_status if existing_job else None
         script_started_at = existing_job.script_started_at if existing_job else None
-        narration_started_at = existing_job.narration_started_at if existing_job else None
+        narration_status = None
+        narration_started_at = None
     elif response.channel == "narration-channel":
-        script_status = existing_job.script_status if existing_job else None
+        script_status = None
+        script_started_at = None
         narration_status = response.status
-        script_started_at = existing_job.script_started_at if existing_job else None
-        narration_started_at = existing_job.narration_started_at if existing_job else None
+        narration_started_at = (
+            existing_job.narration_started_at if existing_job else None
+        )
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
