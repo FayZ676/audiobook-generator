@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { use } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, Edit3, Mic, Trash2 } from "lucide-react";
+import { FileText, Edit3, MicVocal, Trash2 } from "lucide-react";
 
 import { createNarration } from "../actions/narrate";
 import { deleteProject } from "../actions/audiobook";
@@ -120,7 +120,7 @@ export default function ScriptControls({
                   : "Narrate"
               }
             >
-              <Mic className="h-5 w-5" />
+              <MicVocal className="h-5 w-5" />
             </a>
           </li>
         )}
