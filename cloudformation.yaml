@@ -31,6 +31,11 @@ Resources:
     Properties:
       BucketName: tta-feedback
 
+  ModelFilesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: tta-model-files
+
   # Need to manually create access keys for the user.
   SpeechServiceUser:
     Type: AWS::IAM::User
@@ -58,10 +63,13 @@ Resources:
               - !Sub "arn:aws:s3:::${ScriptResultsBucket}/*"
               - !Sub "arn:aws:s3:::${JobStatusBucket}/*"
               - !Sub "arn:aws:s3:::${FeedbackBucket}/*"
+              - !Sub "arn:aws:s3:::${ModelFilesBucket}/*"
               - !Sub "arn:aws:s3:::${SpeechResultsBucket}"
               - !Sub "arn:aws:s3:::${VoicesBucket}"
               - !Sub "arn:aws:s3:::${TextFilesBucket}"
               - !Sub "arn:aws:s3:::${ScriptResultsBucket}"
               - !Sub "arn:aws:s3:::${JobStatusBucket}"
+              - !Sub "arn:aws:s3:::${FeedbackBucket}"
+              - !Sub "arn:aws:s3:::${ModelFilesBucket}"
       Users:
         - !Ref SpeechServiceUser

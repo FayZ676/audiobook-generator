@@ -1,8 +1,8 @@
 {
   "input": {
-    "internal_callback": "http://localhost:8003/webhook",
-    "external_callback": "foo",
-    "job_id": "ab1c1ea6-9878-4185-8ef8-6156ef9f57f4",
+    "callback": "http://localhost:8003/webhook",
+    "channel": "test_channel",
+    "user_id": "test_user_123",
     "data": {
       "title": "harrypotter-sample-tiny",
       "text": [
