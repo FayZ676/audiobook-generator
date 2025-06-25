@@ -52,14 +52,6 @@ def main():
             text="Indeed it is! Perfect weather for an adventure.",
             voice_name="Character2",
         ),
-        SpeechRequestSegment(
-            text="I couldn't agree more! Let's explore the forest.",
-            voice_name="Character1",
-        ),
-        SpeechRequestSegment(
-            text="And so their journey began, filled with wonder and excitement.",
-            voice_name="Narrator",
-        ),
     ]
 
     request = SpeechRequest(title="example_dialogue", text=segments, voices=voices)
