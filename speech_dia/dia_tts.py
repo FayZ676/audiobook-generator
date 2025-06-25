@@ -6,6 +6,7 @@ system but uses the Dia TTS model from nari-labs instead of F5-TTS.
 """
 
 import os
+import platform
 import tempfile
 from typing import Optional
 
@@ -46,8 +47,12 @@ def generate_speech(request: SpeechRequest) -> bytes:
 
     # Generate audio
     try:
-        # Generate with torch compile disabled for better compatibility
-        output = model.generate(dia_text, use_torch_compile=False, verbose=True)
+        # Determine torch compile setting based on platform
+        # Mac requires use_torch_compile=False as torch.compile is not supported on MacOS
+        is_mac = platform.system() == "Darwin"
+        use_compile = not is_mac  # False for Mac, True for other platforms
+        
+        output = model.generate(dia_text, use_torch_compile=use_compile, verbose=True)
     except Exception as e:
         raise RuntimeError(f"Failed to generate speech: {e}") from e
 

@@ -40,6 +40,7 @@ Since Dia uses only `[S1]` and `[S2]` speaker tags, the POC maps multiple voice 
 
 ## Installation & Setup
 
+### General Installation
 1. Install Dia TTS:
 ```bash
 pip install git+https://github.com/nari-labs/dia.git
@@ -49,6 +50,11 @@ pip install git+https://github.com/nari-labs/dia.git
 ```bash
 export HF_TOKEN="your_hf_token_here"
 ```
+
+### Mac-Specific Setup
+For Mac users with Apple Silicon:
+- The implementation automatically detects Mac and disables `torch.compile` (not supported on MacOS)
+- No additional configuration needed - the code handles Mac compatibility automatically
 
 3. Run the test:
 ```bash
