@@ -15,7 +15,6 @@ def main():
     print("Dia TTS POC Example")
     print("=" * 20)
 
-    # Create example voices (these would normally come from the database)
     voices = [
         Voice(
             name="Narrator",
@@ -40,7 +39,6 @@ def main():
         ),
     ]
 
-    # Create example dialogue
     segments = [
         SpeechRequestSegment(
             text="Once upon a time, in a land far away, there lived two friends.",
@@ -55,7 +53,7 @@ def main():
             voice_name="Character2",
         ),
         SpeechRequestSegment(
-            text="(laughs) I couldn't agree more! Let's explore the forest.",
+            text="I couldn't agree more! Let's explore the forest.",
             voice_name="Character1",
         ),
         SpeechRequestSegment(
@@ -64,38 +62,23 @@ def main():
         ),
     ]
 
-    # Create the speech request
     request = SpeechRequest(title="example_dialogue", text=segments, voices=voices)
 
     print(f"Processing {len(segments)} text segments with {len(voices)} voices...")
     print(f"Total characters: {sum(len(s.text) for s in segments)}")
 
     try:
-        # Generate speech using Dia TTS
         audio_data, sample_rate = infer_dia(request)
 
         print(f"\n✓ Successfully generated audio!")
         print(f"  Audio size: {len(audio_data):,} bytes")
         print(f"  Sample rate: {sample_rate}")
 
-        # Save the result
         output_file = "example_output.mp3"
         with open(output_file, "wb") as f:
             f.write(audio_data)
 
         print(f"  Saved to: {output_file}")
-
-        # Show how this compares to the existing F5-TTS interface
-        print(f"\n📋 Interface Comparison:")
-        print(f"  F5-TTS: infer(InferenceParams) -> tuple[bytes, int | None]")
-        print(f"  Dia TTS: infer_dia(SpeechRequest) -> tuple[bytes, int | None]")
-        print(f"  ✓ Same return type - drop-in replacement!")
-
-    except ImportError as e:
-        print(f"\n⚠️  Could not generate audio: {e}")
-        print(f"📦 To install Dia TTS:")
-        print(f"   pip install git+https://github.com/nari-labs/dia.git")
-        print(f"🔑 Don't forget to set your HF_TOKEN environment variable")
 
     except Exception as e:
         print(f"\n❌ Error generating audio: {e}")
