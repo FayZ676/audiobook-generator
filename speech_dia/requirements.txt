@@ -1,2 +1,1 @@
-# Dia TTS dependencies
 git+https://github.com/nari-labs/dia.git
