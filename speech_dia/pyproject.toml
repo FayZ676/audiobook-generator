@@ -1,0 +1,22 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "speech_dia"
+version = "0.0.1"
+authors = [
+  { name="Faizi Fifita", email="author@example.com" },
+]
+description = "Dia TTS POC for audiobook generation"
+requires-python = ">=3.12"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "tta_types",
+]
+
+[project.urls]
+Homepage = "https://github.com/FayZ676/audiobook-generator"
