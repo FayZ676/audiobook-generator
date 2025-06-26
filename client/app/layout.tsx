@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-// import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-// Temporarily disable authentication for demo
-/*
 import {
   ClerkProvider,
   SignInButton,
@@ -24,7 +22,6 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-*/
 
 export const metadata: Metadata = {
   title: "Audiobook Generator",
@@ -37,13 +34,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="antialiased max-w-md mx-auto">
-        <header className="flex justify-end items-center p-4 gap-4 h-16">
-          <div className="text-sm text-gray-500">Demo Mode</div>
-        </header>
-        {children}
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased max-w-md mx-auto`}
+        >
+          <header className="flex justify-end items-center p-4 gap-4 h-16">
+            <SignedOut>
+              <SignInButton />
+              <SignUpButton />
+            </SignedOut>
+            <SignedIn>
+              <FeedbackForm />
+              <UserButton />
+            </SignedIn>
+          </header>
+          {children}
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
