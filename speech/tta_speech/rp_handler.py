@@ -29,21 +29,6 @@ MODEL_FILES_BUCKET = os.environ.get("MODEL_FILES_BUCKET", "tta-model-files")
 s3 = S3Client()
 
 
-def ensure_model_downloaded():
-    """Download the VOCOS model file from S3 if it doesn't exist locally."""
-
-    model_dir = Path(__file__).parent / "vocos"
-    model_file = model_dir / "pytorch_model.bin"
-
-    if model_file.exists():
-        return
-
-    model_dir.mkdir(parents=True, exist_ok=True)
-    file_content = s3.get_file(MODEL_FILES_BUCKET, "pytorch_model.bin")
-    with open(model_file, "wb") as f:
-        f.write(file_content)
-
-
 def normalize_audio_volume(audio_path: str, headroom: float = 0.1) -> str:
     try:
         audio = AudioSegment.from_file(audio_path)
@@ -104,8 +89,6 @@ def _build_audio(audio_segments: list[tuple[bytes, int | None]]) -> bytes:
 
 
 def handler(event: dict):
-    ensure_model_downloaded()
-
     request = WebhookRequest.model_validate(event["input"])
     voice_save_path = "/tmp"
     data = SpeechRequest.model_validate(request.data)
@@ -119,6 +102,7 @@ def handler(event: dict):
             vocoder_local_path=f"{Path(__file__).parent}/vocos",
             load_vocoder_from_local=True,
             remove_silence=True,
+            ckpt_file=f"{Path(__file__).parent}/checkpoints/model_1250000.safetensors",
         )
     )
     audio = _build_audio([result])
