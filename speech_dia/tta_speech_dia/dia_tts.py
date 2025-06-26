@@ -10,6 +10,8 @@ import platform
 import tempfile
 from typing import Optional
 
+from dia.model import Dia
+
 # Import types from the project
 from tta_types.types import SpeechRequest, SpeechRequestSegment
 
@@ -23,17 +25,7 @@ def generate_speech(request: SpeechRequest) -> bytes:
 
     Returns:
         bytes: MP3 audio data
-
-    Raises:
-        ImportError: If dia package is not installed
-        Exception: If speech generation fails
     """
-    try:
-        from dia.model import Dia
-    except ImportError as e:
-        raise ImportError(
-            "Dia TTS package not found. Install with: pip install git+https://github.com/nari-labs/dia.git"
-        ) from e
 
     # Convert SpeechRequest to Dia format
     dia_text = _convert_to_dia_format(request.text)
@@ -51,7 +43,7 @@ def generate_speech(request: SpeechRequest) -> bytes:
         # Mac requires use_torch_compile=False as torch.compile is not supported on MacOS
         is_mac = platform.system() == "Darwin"
         use_compile = not is_mac  # False for Mac, True for other platforms
-        
+
         output = model.generate(dia_text, use_torch_compile=use_compile, verbose=True)
     except Exception as e:
         raise RuntimeError(f"Failed to generate speech: {e}") from e
