@@ -20,21 +20,21 @@ def main():
             name="Narrator",
             age="40",
             gender="neutral",
-            audio_path="narrator.mp3",
+            audio_path="voices/narrator.mp3",
             audio_transcript="Welcome to our story.",
         ),
         Voice(
             name="Character1",
             age="25",
             gender="female",
-            audio_path="char1.mp3",
+            audio_path="voices/char1.mp3",
             audio_transcript="Hello there!",
         ),
         Voice(
             name="Character2",
             age="30",
             gender="male",
-            audio_path="char2.mp3",
+            audio_path="voices/char2.mp3",
             audio_transcript="How are you doing?",
         ),
     ]
@@ -56,24 +56,11 @@ def main():
 
     request = SpeechRequest(title="example_dialogue", text=segments, voices=voices)
 
-    print(f"Processing {len(segments)} text segments with {len(voices)} voices...")
-    print(f"Total characters: {sum(len(s.text) for s in segments)}")
+    audio_data, sample_rate = infer_dia(request)
 
-    try:
-        audio_data, sample_rate = infer_dia(request)
-
-        print(f"\n✓ Successfully generated audio!")
-        print(f"  Audio size: {len(audio_data):,} bytes")
-        print(f"  Sample rate: {sample_rate}")
-
-        output_file = "example_output.mp3"
-        with open(output_file, "wb") as f:
-            f.write(audio_data)
-
-        print(f"  Saved to: {output_file}")
-
-    except Exception as e:
-        print(f"\n❌ Error generating audio: {e}")
+    output_file = "example_output.mp3"
+    with open(output_file, "wb") as f:
+        f.write(audio_data)
 
 
 if __name__ == "__main__":
