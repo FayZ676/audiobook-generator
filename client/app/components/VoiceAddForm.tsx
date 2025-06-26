@@ -7,6 +7,7 @@ import { AgeEnum, GenderEnum } from "../types";
 
 import { addVoice, type Age, type Gender } from "../actions/voices";
 import Tip from "./Tip";
+import AudioRecorder from "./AudioRecorder";
 
 export default function VoiceAddForm() {
   const [name, setName] = useState("");
@@ -15,10 +16,28 @@ export default function VoiceAddForm() {
   const [audioTranscript, setAudioTranscript] = useState("");
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [audioInputMode, setAudioInputMode] = useState<"upload" | "record">("upload");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setAudioFile(e.target.files[0]);
+    }
+  };
+
+  const handleRecordingComplete = (recordedFile: File) => {
+    setAudioFile(recordedFile);
+  };
+
+  const handleAudioInputModeChange = (mode: "upload" | "record") => {
+    setAudioInputMode(mode);
+    setAudioFile(null); // Clear current audio file when switching modes
+    
+    // Clear file input if switching from upload mode
+    if (mode === "record") {
+      const fileInput = document.getElementById("audio-file-input") as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = "";
+      }
     }
   };
 
@@ -46,6 +65,9 @@ export default function VoiceAddForm() {
         if (fileInput) {
           fileInput.value = "";
         }
+        
+        // Reset audio input mode to upload
+        setAudioInputMode("upload");
       } catch (error) {
         console.error("Failed to add voice:", error);
       } finally {
@@ -116,19 +138,64 @@ export default function VoiceAddForm() {
         </div>
       </div>
 
-      <label htmlFor="audio-file-input" className="font-medium">
-        Audio File
+      <label htmlFor="audio-input-mode" className="font-medium">
+        Audio Input Method
       </label>
+      <div className="flex gap-2 mb-2">
+        <button
+          type="button"
+          onClick={() => handleAudioInputModeChange("upload")}
+          className={`btn btn-sm ${audioInputMode === "upload" ? "btn-primary" : "btn-outline"}`}
+        >
+          Upload File
+        </button>
+        <button
+          type="button"
+          onClick={() => handleAudioInputModeChange("record")}
+          className={`btn btn-sm ${audioInputMode === "record" ? "btn-primary" : "btn-outline"}`}
+        >
+          Record Audio
+        </button>
+      </div>
+
       <Tip variant="info">Keep your audio file under 12 seconds.</Tip>
-      <input
-        id="audio-file-input"
-        name="audio_file"
-        type="file"
-        accept="audio/*"
-        onChange={handleFileChange}
-        className="bg-base-300 p-2 rounded"
-        required
-      />
+
+      {audioInputMode === "upload" ? (
+        <>
+          <label htmlFor="audio-file-input" className="font-medium">
+            Audio File
+          </label>
+          <input
+            id="audio-file-input"
+            name="audio_file"
+            type="file"
+            accept="audio/*"
+            onChange={handleFileChange}
+            className="bg-base-300 p-2 rounded"
+            required
+          />
+          {audioFile && audioInputMode === "upload" && (
+            <div className="text-sm text-success">
+              ✓ File selected: {audioFile.name}
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          <label className="font-medium">
+            Record Audio Sample
+          </label>
+          <AudioRecorder 
+            onRecordingComplete={handleRecordingComplete}
+            maxDuration={12}
+          />
+          {audioFile && audioInputMode === "record" && (
+            <div className="text-sm text-success">
+              ✓ Recording complete: {audioFile.name}
+            </div>
+          )}
+        </>
+      )}
 
       <label htmlFor="transcript-input" className="font-medium">
         Audio Transcript
