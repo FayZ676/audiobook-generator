@@ -1,11 +1,14 @@
 download_vocos_model:
-	@echo "DEPRECATED: Use 'make upload_model_to_s3' instead"
-	@echo "Direct download from HuggingFace is no longer recommended for security reasons"
 	wget -P tta_speech/vocos https://huggingface.co/charactr/vocos-mel-24khz/resolve/main/pytorch_model.bin
+
+download_checkpoint:
+	wget -P tta_speech/checkpoints https://huggingface.co/SWivid/F5-TTS/resolve/main/F5TTS_v1_Base/model_1250000.safetensors
 
 init: 
 
 install:
+	python -m venv .venv
+	source .venv/bin/activate && \
 	pip install -e ../aws -e ../types -e .
 
 docker_build:
