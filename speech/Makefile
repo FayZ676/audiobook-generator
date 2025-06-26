@@ -15,7 +15,7 @@ docker_build:
 	cd .. && docker build --platform linux/amd64 -f speech/Dockerfile -t tta_speech .
 
 docker_run:
-	docker run --rm -it -p 5000:5000 --platform linux/amd64 --env-file .env.local tta_speech
+	docker run --rm -it -p 8001:8001 --platform linux/amd64 --env-file .env.local tta_speech
 
 run:
 	@chmod +x ./run.sh
