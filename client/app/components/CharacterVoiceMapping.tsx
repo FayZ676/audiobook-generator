@@ -36,7 +36,7 @@ function extractCharacterMappings(script: Script, manualCharacters: ManualCharac
   // Add manual characters that aren't already in the script
   manualCharacters.forEach((character) => {
     if (!characterMap.has(character.name)) {
-      // Default to first available voice for new characters
+      // Default to empty string for new manual characters without voice assignment
       characterMap.set(character.name, "");
     }
   });

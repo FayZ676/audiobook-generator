@@ -119,6 +119,7 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
     // Find the character (either from script or manual characters)
     let characterAge: Age = "middle-aged";
     let characterGender: Gender = "male";
+    let characterVoice = "";
     
     // First check existing script segments for this character
     const existingSegment = editingScript.find(
@@ -127,12 +128,18 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
     if (existingSegment) {
       characterAge = existingSegment.speaker.age;
       characterGender = existingSegment.speaker.gender;
+      characterVoice = existingSegment.voice_name;
     } else {
       // Check manual characters
       const manualCharacter = manualCharacters.find(c => c.name === characterName);
       if (manualCharacter) {
         characterAge = manualCharacter.age;
         characterGender = manualCharacter.gender;
+        // For manual characters, try to find a suitable voice based on age/gender
+        const suitableVoice = voices.find(v => 
+          v.age === characterAge && v.gender === characterGender
+        );
+        characterVoice = suitableVoice?.name || "";
       }
     }
 
@@ -143,8 +150,7 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
         age: characterAge,
         gender: characterGender,
       },
-      // Keep existing voice or reset if character doesn't have one assigned
-      voice_name: updatedScript[segmentIndex].voice_name,
+      voice_name: characterVoice,
     };
     
     setEditingScript(updatedScript);
