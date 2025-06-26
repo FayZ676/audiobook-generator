@@ -23,6 +23,13 @@ export default function AudioRecorder({
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
+  const stopTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
+
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
@@ -50,13 +57,6 @@ export default function AudioRecorder({
       });
     }, 1000);
   }, [maxDuration, stopRecording]);
-
-  const stopTimer = useCallback(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-  }, []);
 
   const startRecording = async () => {
     try {
@@ -127,21 +127,6 @@ export default function AudioRecorder({
       startTimer();
     }
   };
-
-  const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      setIsPaused(false);
-      stopTimer();
-      
-      // Stop all tracks to release microphone
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-        streamRef.current = null;
-      }
-    }
-  }, [isRecording, stopTimer]);
 
   const clearRecording = () => {
     if (audioUrl) {
