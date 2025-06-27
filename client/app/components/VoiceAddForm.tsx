@@ -16,7 +16,9 @@ export default function VoiceAddForm() {
   const [audioTranscript, setAudioTranscript] = useState("");
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [audioInputMode, setAudioInputMode] = useState<"upload" | "record">("upload");
+  const [audioInputMode, setAudioInputMode] = useState<"upload" | "record">(
+    "upload"
+  );
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -31,10 +33,12 @@ export default function VoiceAddForm() {
   const handleAudioInputModeChange = (mode: "upload" | "record") => {
     setAudioInputMode(mode);
     setAudioFile(null); // Clear current audio file when switching modes
-    
+
     // Clear file input if switching from upload mode
     if (mode === "record") {
-      const fileInput = document.getElementById("audio-file-input") as HTMLInputElement;
+      const fileInput = document.getElementById(
+        "audio-file-input"
+      ) as HTMLInputElement;
       if (fileInput) {
         fileInput.value = "";
       }
@@ -65,7 +69,7 @@ export default function VoiceAddForm() {
         if (fileInput) {
           fileInput.value = "";
         }
-        
+
         // Reset audio input mode to upload
         setAudioInputMode("upload");
       } catch (error) {
@@ -139,20 +143,24 @@ export default function VoiceAddForm() {
       </div>
 
       <label htmlFor="audio-input-mode" className="font-medium">
-        Audio Input Method
+        Audio Sample
       </label>
       <div className="flex gap-2 mb-2">
         <button
           type="button"
           onClick={() => handleAudioInputModeChange("upload")}
-          className={`btn btn-sm ${audioInputMode === "upload" ? "btn-primary" : "btn-outline"}`}
+          className={`btn btn-sm ${
+            audioInputMode === "upload" ? "btn-primary" : "btn-outline"
+          }`}
         >
           Upload File
         </button>
         <button
           type="button"
           onClick={() => handleAudioInputModeChange("record")}
-          className={`btn btn-sm ${audioInputMode === "record" ? "btn-primary" : "btn-outline"}`}
+          className={`btn btn-sm ${
+            audioInputMode === "record" ? "btn-primary" : "btn-outline"
+          }`}
         >
           Record Audio
         </button>
@@ -182,10 +190,8 @@ export default function VoiceAddForm() {
         </>
       ) : (
         <>
-          <label className="font-medium">
-            Record Audio Sample
-          </label>
-          <AudioRecorder 
+          <label className="font-medium">Record Audio Sample</label>
+          <AudioRecorder
             onRecordingComplete={handleRecordingComplete}
             maxDuration={12}
           />
