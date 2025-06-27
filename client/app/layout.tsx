@@ -25,7 +25,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Audiobook Generator",
-  description: "Transform your text into engaging multi-speaker audiobooks with AI-powered narration",
+  description:
+    "Transform your text into engaging multi-speaker audiobooks with AI-powered narration",
 };
 
 export default function RootLayout({
@@ -37,7 +38,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased max-w-md mx-auto`}
+          className={`${geistSans.variable} ${geistMono.variable} antialiased max-w-lg mx-auto`}
         >
           <header className="flex justify-end items-center p-4 gap-4 h-16">
             <SignedOut>
