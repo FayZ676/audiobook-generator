@@ -145,7 +145,8 @@ export default function VoiceAddForm() {
       <label htmlFor="audio-input-mode" className="font-medium">
         Audio Sample
       </label>
-      <div className="flex gap-2 mb-2">
+      <Tip variant="info">Keep your audio file under 12 seconds.</Tip>
+      <div className="grid grid-cols-2 gap-2">
         <button
           type="button"
           onClick={() => handleAudioInputModeChange("upload")}
@@ -153,7 +154,7 @@ export default function VoiceAddForm() {
             audioInputMode === "upload" ? "btn-primary" : "btn-outline"
           }`}
         >
-          Upload File
+          Upload
         </button>
         <button
           type="button"
@@ -162,11 +163,9 @@ export default function VoiceAddForm() {
             audioInputMode === "record" ? "btn-primary" : "btn-outline"
           }`}
         >
-          Record Audio
+          Record
         </button>
       </div>
-
-      <Tip variant="info">Keep your audio file under 12 seconds.</Tip>
 
       {audioInputMode === "upload" ? (
         <>
