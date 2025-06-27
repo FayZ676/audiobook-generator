@@ -13,7 +13,7 @@ interface GenerateScriptFormProps {
   voicesPromise: Promise<Voice[]>;
 }
 
-export default function CreateScriptForm({
+export default function GenerateScriptForm({
   voicesPromise,
 }: GenerateScriptFormProps) {
   const [file, setFile] = useState<File | null>(null);
