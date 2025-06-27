@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import NarrationProgress from "../app/components/NarrationProgress";
+import NarrationProgress from "../app/components/narration/NarrationProgress";
 import { Script } from "../app/actions/script";
 
 const sampleScript: Script = [

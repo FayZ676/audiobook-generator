@@ -5,11 +5,11 @@ import { use } from "react";
 import { useRouter } from "next/navigation";
 import { FileText, Edit3, MicVocal, Trash2 } from "lucide-react";
 
-import { createNarration } from "../actions/narrate";
-import { deleteProject } from "../actions/audiobook";
-import { Script } from "../actions/script";
-import { AudiobookJob } from "../actions/job";
-import { Voice } from "../actions/voices";
+import { createNarration } from "../../actions/narrate";
+import { deleteProject } from "../../actions/audiobook";
+import { Script } from "../../actions/script";
+import { AudiobookJob } from "../../actions/job";
+import { Voice } from "../../actions/voices";
 
 interface ScriptControlsProps {
   narrationUrlPromise: Promise<string | null>;

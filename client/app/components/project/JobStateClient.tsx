@@ -8,10 +8,10 @@ import { handleRevalidateTag } from "@/app/actions/revalidate";
 import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
 import { NARRATION_CHANNEL, SCRIPT_CHANNEL } from "@/app/lib/pusher-channels";
 
-import { AudiobookJob } from "../actions/job";
-import { Script } from "../actions/script";
-import Tip from "./Tip";
-import NarrationProgress from "./NarrationProgress";
+import { AudiobookJob } from "../../actions/job";
+import { Script } from "../../actions/script";
+import Tip from "../ui/Tip";
+import NarrationProgress from "../narration/NarrationProgress";
 
 interface JobStateSectionProps {
   jobStatePromise: Promise<AudiobookJob | null>;

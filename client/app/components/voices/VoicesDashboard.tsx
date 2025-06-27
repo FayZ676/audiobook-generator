@@ -1,7 +1,7 @@
 import React from "react";
 import { Suspense } from "react";
 
-import { getVoices } from "../actions/voices";
+import { getVoices } from "../../actions/voices";
 
 import VoiceAddForm from "./VoiceAddForm";
 import VoiceList from "./VoiceList";

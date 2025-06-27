@@ -3,10 +3,10 @@
 import React from "react";
 import { useState } from "react";
 
-import { AgeEnum, GenderEnum } from "../types";
+import { AgeEnum, GenderEnum } from "../../types";
 
-import { addVoice, type Age, type Gender } from "../actions/voices";
-import Tip from "./Tip";
+import { addVoice, type Age, type Gender } from "../../actions/voices";
+import Tip from "../ui/Tip";
 
 export default function VoiceAddForm() {
   const [name, setName] = useState("");

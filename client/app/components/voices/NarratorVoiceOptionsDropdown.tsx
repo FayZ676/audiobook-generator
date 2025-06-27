@@ -3,7 +3,7 @@
 import React from "react";
 import { use } from "react";
 
-import { Voice } from "../actions/voices";
+import { Voice } from "../../actions/voices";
 
 interface NarratorVoiceOptionsDropdownProps {
   voicesPromise: Promise<Voice[]>;

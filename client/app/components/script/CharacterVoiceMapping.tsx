@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
-import { Script } from "../actions/script";
-import { Voice } from "../actions/voices";
+import { Script } from "../../actions/script";
+import { Voice } from "../../actions/voices";
 
 interface CharacterVoiceMappingProps {
   script: Script;

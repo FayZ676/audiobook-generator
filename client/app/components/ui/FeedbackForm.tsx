@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useState } from "react";
-import { submitFeedback } from "../actions/feedback";
+import { submitFeedback } from "../../actions/feedback";
 
 export default function FeedbackForm() {
   const [isModalOpen, setIsModalOpen] = useState(false);

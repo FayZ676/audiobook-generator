@@ -7,9 +7,9 @@ import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
 import { SCRIPT_CHANNEL } from "@/app/lib/pusher-channels";
 import { handleRevalidateTag } from "@/app/actions/revalidate";
 
-import { Script } from "../actions/script";
-import { Voice } from "../actions/voices";
-import { AudiobookJob } from "../actions/job";
+import { Script } from "../../actions/script";
+import { Voice } from "../../actions/voices";
+import { AudiobookJob } from "../../actions/job";
 
 import ScriptControls from "./ScriptControls";
 import ScriptText from "./ScriptText";

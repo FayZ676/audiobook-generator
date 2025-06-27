@@ -3,11 +3,11 @@
 import React from "react";
 import { useState, Suspense } from "react";
 
-import { createScript } from "../actions/script";
-import { Voice } from "../actions/voices";
+import { createScript } from "../../actions/script";
+import { Voice } from "../../actions/voices";
 
-import NarratorVoiceOptionsDropdown from "./NarratorVoiceOptionsDropdown";
-import Tip from "./Tip";
+import NarratorVoiceOptionsDropdown from "../voices/NarratorVoiceOptionsDropdown";
+import Tip from "../ui/Tip";
 
 interface GenerateScriptFormProps {
   voicesPromise: Promise<Voice[]>;
