@@ -6,7 +6,6 @@ import { getUserId } from "./user";
 
 import { z } from "zod";
 
-import { uploadTextFile } from "./file";
 import { AgeEnum, GenderEnum } from "../types";
 
 const SpeakerDetailsSchema = z.object({
@@ -25,7 +24,7 @@ const ScriptResponseSchema = z.array(ScriptSegmentSchema);
 
 interface BuildScriptRequest {
   user_id: string;
-  filename: string;
+  text_content: string;
   narrator_voice_name: string;
 }
 
@@ -34,7 +33,7 @@ interface DeleteScriptRequest {
 }
 
 interface CreateScriptProps {
-  file: File;
+  textContent: string;
   narrator: string;
 }
 
@@ -44,16 +43,15 @@ interface UpdateScriptProps {
 
 export type Script = z.infer<typeof ScriptResponseSchema>;
 
-export async function createScript({ file, narrator }: CreateScriptProps) {
+export async function createScript({ textContent, narrator }: CreateScriptProps) {
   const { userId } = await auth();
   if (!userId) {
     throw new Error("User not authenticated");
   }
 
-  const filename = await uploadTextFile(file);
   const request: BuildScriptRequest = {
     user_id: userId,
-    filename: filename,
+    text_content: textContent,
     narrator_voice_name: narrator,
   };
 
