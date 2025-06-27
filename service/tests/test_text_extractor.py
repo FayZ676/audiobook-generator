@@ -13,52 +13,16 @@ def test_txt_extraction():
     assert result == sample_text
 
 
-def test_pdf_extraction():
-    """Test extraction from PDF files."""
-    # Load test PDF file
-    test_file = Path(__file__).parent / "test_files" / "test.pdf"
-    if not test_file.exists():
-        pytest.skip("Test PDF file not found")
-    
-    with open(test_file, "rb") as f:
-        pdf_content = f.read()
-    
-    result = extract_text_from_file(pdf_content, "test.pdf")
-    assert "Test PDF Content" in result
-    assert "This is a test PDF file" in result
-
-
-def test_epub_extraction():
-    """Test extraction from EPUB files."""
-    # Load test EPUB file
-    test_file = Path(__file__).parent / "test_files" / "test.epub"
-    if not test_file.exists():
-        pytest.skip("Test EPUB file not found")
-    
-    with open(test_file, "rb") as f:
-        epub_content = f.read()
-    
-    result = extract_text_from_file(epub_content, "test.epub")
-    assert "Test EPUB Content" in result
-    assert "This is a test EPUB file" in result
-
-
-def test_docx_extraction():
-    """Test extraction from DOCX files."""
-    # Load test DOCX file
-    test_file = Path(__file__).parent / "test_files" / "test.docx"
-    if not test_file.exists():
-        pytest.skip("Test DOCX file not found")
-    
-    with open(test_file, "rb") as f:
-        docx_content = f.read()
-    
-    result = extract_text_from_file(docx_content, "test.docx")
-    assert "Test DOCX Content" in result
-    assert "This is a test DOCX file" in result
-
-
 def test_unsupported_format():
     """Test handling of unsupported file formats."""
+    with pytest.raises(ValueError, match="Unsupported file format"):
+        extract_text_from_file(b"dummy content", "test.pdf")
+        
+    with pytest.raises(ValueError, match="Unsupported file format"):
+        extract_text_from_file(b"dummy content", "test.epub")
+        
+    with pytest.raises(ValueError, match="Unsupported file format"):
+        extract_text_from_file(b"dummy content", "test.docx")
+        
     with pytest.raises(ValueError, match="Unsupported file format"):
         extract_text_from_file(b"dummy content", "test.xyz")
