@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 import { AgeEnum, GenderEnum } from "../types";
 
@@ -19,6 +19,7 @@ export default function VoiceAddForm() {
   const [audioInputMode, setAudioInputMode] = useState<"upload" | "record">(
     "upload"
   );
+  const modalRef = useRef<HTMLDialogElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -32,9 +33,8 @@ export default function VoiceAddForm() {
 
   const handleAudioInputModeChange = (mode: "upload" | "record") => {
     setAudioInputMode(mode);
-    setAudioFile(null); // Clear current audio file when switching modes
+    setAudioFile(null);
 
-    // Clear file input if switching from upload mode
     if (mode === "record") {
       const fileInput = document.getElementById(
         "audio-file-input"
@@ -43,6 +43,21 @@ export default function VoiceAddForm() {
         fileInput.value = "";
       }
     }
+
+    modalRef.current?.showModal();
+  };
+
+  const closeModal = () => {
+    modalRef.current?.close();
+  };
+
+  const handleModalFileSelect = () => {
+    closeModal();
+  };
+
+  const handleModalRecordingComplete = (recordedFile: File) => {
+    setAudioFile(recordedFile);
+    closeModal();
   };
 
   async function handleAddVoice() {
@@ -70,7 +85,6 @@ export default function VoiceAddForm() {
           fileInput.value = "";
         }
 
-        // Reset audio input mode to upload
         setAudioInputMode("upload");
       } catch (error) {
         console.error("Failed to add voice:", error);
@@ -150,56 +164,23 @@ export default function VoiceAddForm() {
         <button
           type="button"
           onClick={() => handleAudioInputModeChange("upload")}
-          className={`btn btn-sm ${
-            audioInputMode === "upload" ? "btn-primary" : "btn-outline"
-          }`}
+          className="btn btn-primary"
         >
-          Upload
+          Upload Audio
         </button>
         <button
           type="button"
           onClick={() => handleAudioInputModeChange("record")}
-          className={`btn btn-sm ${
-            audioInputMode === "record" ? "btn-primary" : "btn-outline"
-          }`}
+          className="btn btn-primary"
         >
-          Record
+          Record Audio
         </button>
       </div>
 
-      {audioInputMode === "upload" ? (
-        <>
-          <label htmlFor="audio-file-input" className="font-medium">
-            Audio File
-          </label>
-          <input
-            id="audio-file-input"
-            name="audio_file"
-            type="file"
-            accept="audio/*"
-            onChange={handleFileChange}
-            className="bg-base-300 p-2 rounded"
-            required
-          />
-          {audioFile && audioInputMode === "upload" && (
-            <div className="text-sm text-success">
-              ✓ File selected: {audioFile.name}
-            </div>
-          )}
-        </>
-      ) : (
-        <>
-          <label className="font-medium">Record Audio Sample</label>
-          <AudioRecorder
-            onRecordingComplete={handleRecordingComplete}
-            maxDuration={12}
-          />
-          {audioFile && audioInputMode === "record" && (
-            <div className="text-sm text-success">
-              ✓ Recording complete: {audioFile.name}
-            </div>
-          )}
-        </>
+      {audioFile && (
+        <div className="text-sm text-success">
+          ✓ Audio ready: {audioFile.name}
+        </div>
       )}
 
       <label htmlFor="transcript-input" className="font-medium">
@@ -225,6 +206,49 @@ export default function VoiceAddForm() {
       >
         {isSubmitting ? "Adding Voice..." : "Add Voice"}
       </button>
+
+      <dialog id="audio-modal" className="modal" ref={modalRef}>
+        <div className="modal-box">
+          <form method="dialog">
+            <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
+              ✕
+            </button>
+          </form>
+          <h3 className="font-bold text-lg mb-4">
+            {audioInputMode === "upload" ? "Upload Audio File" : "Record Audio"}
+          </h3>
+
+          {audioInputMode === "upload" ? (
+            <div className="flex flex-col gap-4">
+              <Tip variant="info">Select an audio file under 12 seconds.</Tip>
+              <input
+                id="audio-file-input"
+                name="audio_file"
+                type="file"
+                accept="audio/*"
+                onChange={(e) => {
+                  handleFileChange(e);
+                  if (e.target.files && e.target.files[0]) {
+                    handleModalFileSelect();
+                  }
+                }}
+                className="file-input file-input-bordered w-full"
+                required
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              <AudioRecorder
+                onRecordingComplete={handleModalRecordingComplete}
+                maxDuration={12}
+              />
+            </div>
+          )}
+        </div>
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
     </div>
   );
 }
