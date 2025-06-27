@@ -18,10 +18,7 @@ export default function Home() {
               minutes.
             </p>
             <div className="flex flex-col gap-4">
-              <Link href="#" className="btn btn-primary">
-                Get Started
-              </Link>
-              <Link href="#demo" className="btn btn-outline">
+              <Link href="#demo" className="btn btn-primary">
                 See Demo
               </Link>
             </div>
