@@ -46,9 +46,7 @@ export default function CreateScriptForm({
       <label htmlFor="filename-input" className="font-medium">
         Text File
       </label>
-      <Tip variant="info">
-        Supporting .txt files only.
-      </Tip>
+      <Tip variant="info">Only supporting .txt files.</Tip>
       <input
         id="file-input"
         name="file"
