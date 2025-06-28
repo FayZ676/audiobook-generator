@@ -37,7 +37,7 @@ export default function Home() {
           <div className="flex items-center gap-2 mb-4">
             <Play className="h-6 w-6 text-primary" />
             <h3 className="text-xl font-semibold">
-              Capture Your Character's Voice
+              Capture Your Character&apos;s Voice
             </h3>
           </div>
           <div className="bg-base-200 p-6 rounded-lg">
