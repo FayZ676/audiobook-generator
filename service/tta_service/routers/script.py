@@ -26,7 +26,7 @@ async def build_script(request: BuildScriptRequest, bg_tasks: BackgroundTasks):
         send_script_request,
         request,
     )
-    return request.filename
+    return request.text_content
 
 
 @router.get("/script/{filename}")
@@ -64,7 +64,7 @@ def send_script_request(script_request: BuildScriptRequest):
         channel="script-channel",
         user_id=script_request.user_id,
         data=ScriptRequest(
-            textfile_name=script_request.filename,
+            text_content=script_request.text_content,
             narrator_voice_name=script_request.narrator_voice_name,
             voices=voices,
         ).model_dump(),
