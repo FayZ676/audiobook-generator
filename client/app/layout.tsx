@@ -5,7 +5,7 @@ import "./globals.css";
 import {
   ClerkProvider,
   SignInButton,
-  SignUpButton,
+  // SignUpButton,
   SignedIn,
   SignedOut,
   UserButton,
