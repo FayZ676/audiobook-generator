@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 
-import { getVoiceAudioUrl } from "../actions/voices";
+import { getVoiceAudioUrl } from "../../actions/voices";
 
 interface VoiceAudioProps {
   voiceName: string;

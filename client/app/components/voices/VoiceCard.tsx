@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Voice } from "../actions/voices";
+import { Voice } from "../../actions/voices";
 import VoiceAudio from "./VoiceAudio";
 
 interface VoiceCardProps {

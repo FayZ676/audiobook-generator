@@ -29,7 +29,6 @@ export default function NarrationClient({
       handleRevalidateTag("narration");
       router.refresh();
     },
-    dependencies: [router],
   });
 
   return <>{narrationUrl && <NarrationAudio narrationUrl={narrationUrl} />}</>;

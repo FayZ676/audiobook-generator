@@ -7,3 +7,4 @@ __pycache__
 .venv
 pytorch_model.bin
 *.pt
+*.safetensors

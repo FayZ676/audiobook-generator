@@ -1,8 +1,8 @@
 import React, { Suspense } from "react";
 
-import { Script } from "../actions/script";
-import { Voice } from "../actions/voices";
-import { AudiobookJob } from "../actions/job";
+import { Script } from "../../actions/script";
+import { Voice } from "../../actions/voices";
+import { AudiobookJob } from "../../actions/job";
 
 import ScriptManagerClient from "./ScriptManagerClient";
 

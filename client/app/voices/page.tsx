@@ -1,7 +1,7 @@
 import React from "react";
 
-import VoicesDashboard from "../components/VoicesDashboard";
-import TabSection from "../components/TabSection";
+import VoicesDashboard from "../components/voices/VoicesDashboard";
+import TabSection from "../components/ui/TabSection";
 
 // Force dynamic rendering since this page uses authentication
 export const dynamic = "force-dynamic";

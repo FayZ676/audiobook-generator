@@ -3,35 +3,43 @@
 import React from "react";
 import { useState, Suspense } from "react";
 
-import { createScript } from "../actions/script";
-import { Voice } from "../actions/voices";
+import { createScript } from "../../actions/script";
+import { Voice } from "../../actions/voices";
 
-import NarratorVoiceOptionsDropdown from "./NarratorVoiceOptionsDropdown";
-import Tip from "./Tip";
+import NarratorVoiceOptionsDropdown from "../voices/NarratorVoiceOptionsDropdown";
+import Tip from "../ui/Tip";
 
 interface GenerateScriptFormProps {
   voicesPromise: Promise<Voice[]>;
 }
 
-export default function CreateScriptForm({
+export default function GenerateScriptForm({
   voicesPromise,
 }: GenerateScriptFormProps) {
-  const [file, setFile] = useState<File | null>(null);
+  const [textContent, setTextContent] = useState<string>("");
   const [narrator, setNarrator] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+
+      try {
+        const content = await selectedFile.text();
+        setTextContent(content);
+      } catch (error) {
+        console.error("Error reading file:", error);
+        setTextContent("");
+      }
     }
   };
 
   async function handleCreateScript() {
-    if (file && narrator) {
+    if (textContent && narrator) {
       setIsSubmitting(true);
       try {
-        await createScript({ file, narrator });
-        setFile(null);
+        await createScript({ textContent, narrator });
+        setTextContent("");
         setNarrator("");
       } catch (error) {
         console.error("Error creating script:", error);
@@ -46,14 +54,12 @@ export default function CreateScriptForm({
       <label htmlFor="filename-input" className="font-medium">
         Text File
       </label>
-      <Tip variant="info">
-        Supporting .txt, .pdf, .epub, .docx files.
-      </Tip>
+      <Tip variant="info">Only supporting .txt files.</Tip>
       <input
         id="file-input"
         name="file"
         type="file"
-        accept=".txt,.pdf,.epub,.docx"
+        accept=".txt"
         onChange={handleFileChange}
         className="bg-base-300 p-2 rounded"
       />
@@ -75,7 +81,7 @@ export default function CreateScriptForm({
         />
       </Suspense>
       <button
-        disabled={!file || !narrator || isSubmitting}
+        disabled={!textContent || !narrator || isSubmitting}
         onClick={async () => {
           await handleCreateScript();
         }}

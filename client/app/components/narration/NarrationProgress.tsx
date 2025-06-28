@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Script } from "../actions/script";
+import { Script } from "../../actions/script";
 import {
   calculateWordCount,
   estimateNarrationDuration,
-} from "../utils/narrationEstimation";
+} from "../../utils/narrationEstimation";
 
 interface NarrationProgressProps {
   script: Script;

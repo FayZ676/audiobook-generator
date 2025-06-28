@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 
-import { Script, updateScript } from "../actions/script";
-import { Voice, Age, Gender } from "../actions/voices";
-import { ManualCharacter } from "../types";
-import Tip from "./Tip";
+import { Script, updateScript } from "@/app/actions/script";
+import { Voice, Age, Gender } from "@/app/actions/voices";
+import { ManualCharacter } from "@/app/types";
+import Tip from "@/app/components/ui/Tip";
 import CharacterVoiceMapping from "./CharacterVoiceMapping";
 
 interface ScriptEditorProps {
@@ -13,7 +13,9 @@ interface ScriptEditorProps {
 
 export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
   const [editingScript, setEditingScript] = useState<Script>(script);
-  const [manualCharacters, setManualCharacters] = useState<ManualCharacter[]>([]);
+  const [manualCharacters, setManualCharacters] = useState<ManualCharacter[]>(
+    []
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -27,7 +29,7 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
     setSuccess(null);
   };
 
-  const autoSave = useCallback(async (scriptToSave: Script) => {
+  const autoSave = async (scriptToSave: Script) => {
     if (scriptToSave.length === 0) {
       setError("Script cannot be empty");
       return;
@@ -52,18 +54,15 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
     } finally {
       setIsSaving(false);
     }
-  }, []);
+  };
 
-  const debouncedAutoSave = useCallback(
-    (() => {
-      let timeoutId: NodeJS.Timeout;
-      return (scriptToSave: Script) => {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => autoSave(scriptToSave), 1000);
-      };
-    })(),
-    [autoSave]
-  );
+  const debouncedAutoSave = (() => {
+    let timeoutId: NodeJS.Timeout;
+    return (scriptToSave: Script) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => autoSave(scriptToSave), 1000);
+    };
+  })();
 
   const handleTextChange = (index: number, newText: string) => {
     clearMessages();
@@ -103,9 +102,11 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
 
   const handleAddCharacter = (character: ManualCharacter) => {
     // Check if character already exists
-    const existingCharacter = manualCharacters.find(c => c.name === character.name);
+    const existingCharacter = manualCharacters.find(
+      (c) => c.name === character.name
+    );
     if (!existingCharacter) {
-      setManualCharacters(prev => [...prev, character]);
+      setManualCharacters((prev) => [...prev, character]);
     }
   };
 
@@ -115,15 +116,15 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
   ) => {
     clearMessages();
     const updatedScript = [...editingScript];
-    
+
     // Find the character (either from script or manual characters)
     let characterAge: Age = "middle-aged";
     let characterGender: Gender = "male";
     let characterVoice = "";
-    
+
     // First check existing script segments for this character
     const existingSegment = editingScript.find(
-      seg => seg.speaker.names[0] === characterName
+      (seg) => seg.speaker.names[0] === characterName
     );
     if (existingSegment) {
       characterAge = existingSegment.speaker.age;
@@ -131,13 +132,15 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
       characterVoice = existingSegment.voice_name;
     } else {
       // Check manual characters
-      const manualCharacter = manualCharacters.find(c => c.name === characterName);
+      const manualCharacter = manualCharacters.find(
+        (c) => c.name === characterName
+      );
       if (manualCharacter) {
         characterAge = manualCharacter.age;
         characterGender = manualCharacter.gender;
         // For manual characters, try to find a suitable voice based on age/gender
-        const suitableVoice = voices.find(v => 
-          v.age === characterAge && v.gender === characterGender
+        const suitableVoice = voices.find(
+          (v) => v.age === characterAge && v.gender === characterGender
         );
         characterVoice = suitableVoice?.name || "";
       }
@@ -152,7 +155,7 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
       },
       voice_name: characterVoice,
     };
-    
+
     setEditingScript(updatedScript);
     debouncedAutoSave(updatedScript);
   };
@@ -160,20 +163,20 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
   // Get all available characters (from script + manual)
   const getAllCharacters = () => {
     const scriptCharacters = new Set<string>();
-    editingScript.forEach(segment => {
+    editingScript.forEach((segment) => {
       const characterName = segment.speaker.names[0];
       if (characterName && characterName.trim()) {
         scriptCharacters.add(characterName);
       }
     });
-    
+
     const allCharacters = Array.from(scriptCharacters);
-    manualCharacters.forEach(character => {
+    manualCharacters.forEach((character) => {
       if (!allCharacters.includes(character.name)) {
         allCharacters.push(character.name);
       }
     });
-    
+
     return allCharacters.sort();
   };
 
@@ -200,16 +203,20 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
         {editingScript.map((scriptSegment, index) => {
           const characterName = scriptSegment.speaker.names[0] || "Unknown";
           const availableCharacters = getAllCharacters();
-          
+
           return (
             <div key={index} className="mb-4">
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-base-content/70">Character:</span>
+                    <span className="text-xs text-base-content/70">
+                      Character:
+                    </span>
                     <select
                       value={characterName}
-                      onChange={(e) => handleSegmentCharacterChange(index, e.target.value)}
+                      onChange={(e) =>
+                        handleSegmentCharacterChange(index, e.target.value)
+                      }
                       className="select select-xs select-bordered min-w-[120px]"
                     >
                       {availableCharacters.map((char) => (

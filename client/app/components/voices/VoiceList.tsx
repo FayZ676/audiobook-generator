@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
 import { VOICES_CHANNEL } from "@/app/lib/pusher-channels";
 
-import { Voice } from "../actions/voices";
+import { Voice } from "../../actions/voices";
 import { handleRevalidateTag } from "@/app/actions/revalidate";
 
 import VoiceCard from "./VoiceCard";
@@ -27,7 +27,6 @@ export default function VoiceList({ voicesPromise }: VoiceListProps) {
       handleRevalidateTag("voices");
       router.refresh();
     },
-    dependencies: [router],
   });
 
   return (

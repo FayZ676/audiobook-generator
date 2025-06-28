@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from "react";
-import { Script } from "../actions/script";
-import { Voice, Age, Gender } from "../actions/voices";
-import { ManualCharacter } from "../types";
-import { AgeEnum, GenderEnum } from "../types";
+import { Script } from "@/app/actions/script";
+import { Voice, Age, Gender } from "@/app/actions/voices";
+import { ManualCharacter } from "@/app/types";
+import { AgeEnum, GenderEnum } from "@/app/types";
 
 interface CharacterVoiceMappingProps {
   script: Script;
@@ -17,7 +17,10 @@ interface CharacterMapping {
   currentVoice: string;
 }
 
-function extractCharacterMappings(script: Script, manualCharacters: ManualCharacter[]): CharacterMapping[] {
+function extractCharacterMappings(
+  script: Script,
+  manualCharacters: ManualCharacter[]
+): CharacterMapping[] {
   const characterMap = new Map<string, string>();
 
   // Add characters from script segments
@@ -33,10 +36,8 @@ function extractCharacterMappings(script: Script, manualCharacters: ManualCharac
     }
   });
 
-  // Add manual characters that aren't already in the script
   manualCharacters.forEach((character) => {
     if (!characterMap.has(character.name)) {
-      // Default to empty string for new manual characters without voice assignment
       characterMap.set(character.name, "");
     }
   });
@@ -79,7 +80,8 @@ export default function CharacterVoiceMapping({
     }
   };
 
-  const isFormValid = newCharacterName.trim() && newCharacterAge && newCharacterGender;
+  const isFormValid =
+    newCharacterName.trim() && newCharacterAge && newCharacterGender;
 
   return (
     <div className="bg-base-200 p-4 rounded">

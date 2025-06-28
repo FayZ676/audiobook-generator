@@ -2,10 +2,8 @@
 
 ### Setup
 
-1. ~~Download VOCOS `config.yaml` and `pytorch_model.bin` model file from https://huggingface.co/charactr/vocos-mel-24khz/tree/main and store in `tta_speech/vocos` directory.~~ **DEPRECATED**: Model files are now downloaded from S3.
+1. Download VOCOS `config.yaml` and `pytorch_model.bin` model file from https://huggingface.co/charactr/vocos-mel-24khz/tree/main and store in `tta_speech/vocos` directory.
 
-2. **Upload model file to S3**: Download `pytorch_model.bin` from https://huggingface.co/charactr/vocos-mel-24khz/resolve/main/pytorch_model.bin and upload it to the S3 bucket `tta-model-files` with the key `vocos/pytorch_model.bin`.
+2. Set environment variables for `SPEECH_RESULTS_BUCKET`, `VOICES_AUDIOS_BUCKET`, and `MODEL_FILES_BUCKET` (defaults to `tta-model-files`). Refer to `cloudformation.yaml` file in root for details on these buckets.
 
-3. Set environment variables for `SPEECH_RESULTS_BUCKET`, `VOICES_AUDIOS_BUCKET`, and `MODEL_FILES_BUCKET` (defaults to `tta-model-files`). Refer to `cloudformation.yaml` file in root for details on these buckets.
-
-4. Ensure AWS credentials are configured as environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`) for S3 access during container build and runtime.
+3. Ensure AWS credentials are configured as environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`) for S3 access during container build and runtime.
