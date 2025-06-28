@@ -9,13 +9,11 @@ interface ChannelConfig {
 interface UsePusherSubscriptionsOptions {
   channels: ChannelConfig[];
   onUpdate?: (channel: string, event: string, data?: unknown) => void;
-  dependencies?: React.DependencyList;
 }
 
 export const usePusherSubscriptions = ({
   channels,
   onUpdate,
-  dependencies = [],
 }: UsePusherSubscriptionsOptions) => {
   useEffect(() => {
     const subscriptions = channels.map(({ channel, events }) => {
@@ -39,5 +37,5 @@ export const usePusherSubscriptions = ({
         pusherClient.unsubscribe(channel);
       });
     };
-  }, dependencies);
+  }, [channels, onUpdate]);
 };

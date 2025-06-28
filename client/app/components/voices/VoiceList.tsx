@@ -27,7 +27,6 @@ export default function VoiceList({ voicesPromise }: VoiceListProps) {
       handleRevalidateTag("voices");
       router.refresh();
     },
-    dependencies: [router],
   });
 
   return (

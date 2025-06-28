@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 
 import { Script, updateScript } from "../../actions/script";
 import { Voice } from "../../actions/voices";
@@ -25,7 +25,7 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
     setSuccess(null);
   };
 
-  const autoSave = useCallback(async (scriptToSave: Script) => {
+  const autoSave = async (scriptToSave: Script) => {
     if (scriptToSave.length === 0) {
       setError("Script cannot be empty");
       return;
@@ -50,18 +50,15 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
     } finally {
       setIsSaving(false);
     }
-  }, []);
+  };
 
-  const debouncedAutoSave = useCallback(
-    (() => {
-      let timeoutId: NodeJS.Timeout;
-      return (scriptToSave: Script) => {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => autoSave(scriptToSave), 1000);
-      };
-    })(),
-    [autoSave]
-  );
+  const debouncedAutoSave = (() => {
+    let timeoutId: NodeJS.Timeout;
+    return (scriptToSave: Script) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => autoSave(scriptToSave), 1000);
+    };
+  })();
 
   const handleTextChange = (index: number, newText: string) => {
     clearMessages();

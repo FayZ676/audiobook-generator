@@ -32,7 +32,6 @@ export default function JobStateClient({
       handleRevalidateTag("job");
       router.refresh();
     },
-    dependencies: [router],
   });
 
   return (

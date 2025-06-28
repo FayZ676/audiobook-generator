@@ -40,7 +40,6 @@ export default function ScriptManagerClient({
       handleRevalidateTag("script");
       router.refresh();
     },
-    dependencies: [router],
   });
 
   if (!script) {
