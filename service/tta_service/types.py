@@ -13,7 +13,7 @@ type Gender = Literal["male", "female"]
 
 class BuildScriptRequest(BaseModel):
     user_id: str
-    filename: str
+    text_content: str
     narrator_voice_name: str
 
 

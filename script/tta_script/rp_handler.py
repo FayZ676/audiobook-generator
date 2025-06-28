@@ -22,7 +22,6 @@ import runpod
 
 
 SCRIPT_RESULTS_BUCKET = os.environ.get("SCRIPT_RESULTS_BUCKET", "")
-TEXT_FILES_BUCKET = os.environ.get("TEXT_FILES_BUCKET", "")
 
 
 s3_client = S3Client()
@@ -37,13 +36,6 @@ def _to_json_fileobject(
     file_obj = io.BytesIO(json_bytes)
     file_obj.name = f"{filename}.json"
     return file_obj
-
-
-def _get_textfile_content(textfile_name: str) -> str:
-    file: bytes = s3_client.get_file(TEXT_FILES_BUCKET, textfile_name)
-    if not file:
-        raise ValueError("File not found")
-    return file.decode("utf-8")
 
 
 def _upload_script_result(user_id: str, script: list[DialogueDetails]):
@@ -71,7 +63,7 @@ def handler(event: dict):
     request = WebhookRequest.model_validate(event["input"])
     data = ScriptRequest.model_validate(request.data)
 
-    text = _get_textfile_content(data.textfile_name)
+    text = data.text_content
     speaker_details = get_speaker_details(text)
     voices = data.voices
 
