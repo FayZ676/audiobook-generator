@@ -16,7 +16,6 @@ interface GenerateScriptFormProps {
 export default function GenerateScriptForm({
   voicesPromise,
 }: GenerateScriptFormProps) {
-  const [file, setFile] = useState<File | null>(null);
   const [textContent, setTextContent] = useState<string>("");
   const [narrator, setNarrator] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -24,8 +23,7 @@ export default function GenerateScriptForm({
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
-      setFile(selectedFile);
-      
+
       try {
         const content = await selectedFile.text();
         setTextContent(content);
@@ -41,7 +39,6 @@ export default function GenerateScriptForm({
       setIsSubmitting(true);
       try {
         await createScript({ textContent, narrator });
-        setFile(null);
         setTextContent("");
         setNarrator("");
       } catch (error) {
