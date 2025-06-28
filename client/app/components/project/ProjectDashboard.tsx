@@ -1,12 +1,12 @@
 import React from "react";
 
-import { getScript } from "../actions/script";
-import { getNarration } from "../actions/narrate";
-import { getJobState } from "../actions/job";
-import { getVoices } from "../actions/voices";
+import { getScript } from "../../actions/script";
+import { getNarration } from "../../actions/narrate";
+import { getJobState } from "../../actions/job";
+import { getVoices } from "../../actions/voices";
 
-import ScriptManager from "@/app/components/ScriptManager";
-import NarrationSection from "@/app/components/NarrationSection";
+import ScriptManager from "@/app/components/script/ScriptManager";
+import NarrationSection from "@/app/components/narration/NarrationSection";
 import JobStateSection from "./JobStateSection";
 
 export default function ProjectDashboard() {

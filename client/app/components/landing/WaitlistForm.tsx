@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { submitWaitlist } from "../actions/waitlist";
+import { submitWaitlist } from "../../actions/waitlist";
 
 export default function WaitlistForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);

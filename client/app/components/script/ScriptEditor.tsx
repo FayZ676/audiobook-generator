@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 
-import { Script, updateScript } from "../actions/script";
-import { Voice } from "../actions/voices";
-import Tip from "./Tip";
+import { Script, updateScript } from "../../actions/script";
+import { Voice } from "../../actions/voices";
+import Tip from "../ui/Tip";
 import CharacterVoiceMapping from "./CharacterVoiceMapping";
 
 interface ScriptEditorProps {

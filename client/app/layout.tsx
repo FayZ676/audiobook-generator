@@ -11,7 +11,7 @@ import {
   UserButton,
 } from "@clerk/nextjs";
 
-import FeedbackForm from "./components/FeedbackForm";
+import FeedbackForm from "./components/ui/FeedbackForm";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Play, Mic, Edit, Check } from "lucide-react";
-import WaitlistForm from "./components/WaitlistForm";
-import DemoAudio from "./components/DemoAudio";
+import WaitlistForm from "./components/landing/WaitlistForm";
+import DemoAudio from "./components/landing/DemoAudio";
 
 export default function Home() {
   return (
