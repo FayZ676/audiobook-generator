@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import ScriptEditor from "../app/components/ScriptEditor";
-import { Script } from "../app/actions/script";
-import { Voice } from "../app/actions/voices";
+import ScriptEditor from "@/app/components/script/ScriptEditor";
+import { Script } from "@/app/actions/script";
+import { Voice } from "@/app/actions/voices";
 
 const sampleScript: Script = [
   {
