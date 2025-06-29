@@ -253,9 +253,6 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-base-content/70">
-                      Character:
-                    </span>
                     <select
                       value={characterName}
                       onChange={(e) =>
