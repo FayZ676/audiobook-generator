@@ -13,6 +13,8 @@ const SpeakerDetailsSchema = z.object({
   age: AgeEnum,
   gender: GenderEnum,
   voice_name: z.string(),
+  audio_path: z.string(),
+  audio_transcript: z.string(),
 });
 
 const ScriptSegmentSchema = z.object({

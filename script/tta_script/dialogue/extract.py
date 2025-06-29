@@ -16,39 +16,21 @@ from tta_script.models.text import generate_text
 
 
 
-
 def get_script(
     text: str, speakers_voices: set[Speaker], narrator_speaker: Speaker
 ) -> Script:
-    """
-    Extract dialogue as a Script structure with separated speaker metadata.
-    
-    This is the new preferred method that eliminates SpeakerDetails duplication.
-    """
     segments = split_by_dialogue(text)
-    
-    # Use Speaker directly - no conversion needed
     all_speakers = speakers_voices.copy()
     all_speakers.add(narrator_speaker)
-    
     dialogue = build_dialogue(segments, all_speakers, narrator_speaker)
 
-    # Create script segments with speaker aliases
     script_segments = [
-        ScriptSegment(
-            text=d.text,
-            speaker_alias=d.speaker.first_alias(),
-        )
+        ScriptSegment(text=d.text, speaker_alias=d.speaker.first_alias())
         for d in dialogue
     ]
-
-    # Get unique speakers from the dialogue
     unique_speakers = list({d.speaker for d in dialogue})
 
-    return Script(
-        segments=script_segments,
-        speakers=unique_speakers,
-    )
+    return Script(segments=script_segments, speakers=unique_speakers)
 
 
 def build_dialogue(

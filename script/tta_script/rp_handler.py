@@ -6,7 +6,8 @@ from typing import BinaryIO
 from tta_script.dialogue.types import Script
 from tta_script.dialogue.extract import get_script
 from tta_script.character.extract import get_speaker_details
-from tta_script.voices import assign_voices, Speaker, SpeakerDetails
+from tta_script.character.types import SpeakerDetails
+from tta_script.voices import assign_voices, Speaker
 
 from tta_types.types import (
     Voice,
@@ -69,14 +70,11 @@ def handler(event: dict):
         message = "Not enough voices available for the number of speakers in the text."
         data = {}
     else:
-        # NOTE: Is it possible for the narrator to have the same voice as a speaker since they are two agnostic steps?
         try:
             speaker_voices = assign_voices(
                 speakers=speaker_details, voices=voices.copy()
             )
             narrator_speaker = _get_narrator_speaker(data.narrator_voice_name, voices)
-            
-            # Use Script structure for memory efficiency
             script = get_script(text, speaker_voices, narrator_speaker)
             script_filename = _upload_script_result(request.user_id, script)
             status = "complete"

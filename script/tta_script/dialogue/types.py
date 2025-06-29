@@ -2,7 +2,6 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel
 
-from tta_script.character.types import SpeakerDetails
 from tta_script.voices import Speaker
 
 

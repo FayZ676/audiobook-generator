@@ -76,33 +76,24 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
     clearMessages();
     const selectedVoice = voices.find((voice) => voice.name === voiceName);
     if (selectedVoice) {
-      // Update the speaker's voice_name directly
+      // Update the speaker's voice information
       const updatedSpeakers = editingScript.speakers.map((speaker) => {
         if (speaker.names.includes(characterName)) {
           return {
             ...speaker,
             voice_name: selectedVoice.name,
+            age: selectedVoice.age,
+            gender: selectedVoice.gender,
+            audio_path: selectedVoice.audio_path,
+            audio_transcript: selectedVoice.audio_transcript,
           };
         }
         return speaker;
       });
       
-      // Update segments to use the new voice
-      const updatedSegments = editingScript.segments.map((segment) => {
-        if (segment.speaker_alias === characterName) {
-          return {
-            ...segment,
-            voice_name: selectedVoice.name,
-          };
-        }
-        return segment;
-      });
-      
       const updatedScript = {
         ...editingScript,
         speakers: updatedSpeakers,
-        segments: updatedSegments,
-        voices: editingScript.voices, // Keep existing voices for backward compatibility
       };
       
       setEditingScript(updatedScript);
