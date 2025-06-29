@@ -9,13 +9,6 @@ Gender = Literal["male", "female"]
 
 
 @dataclass(eq=True, frozen=True)
-class Character:
-    name: str
-    age: Age
-    gender: Gender
-
-
-@dataclass(eq=True, frozen=True)
 class SpeakerDetails:
     names: frozenset[str]
     age: Age
@@ -30,10 +23,6 @@ class SpeakerDetails:
             "age": self.age,
             "gender": self.gender,
         }
-
-
-class SpeakersResponse(BaseModel):
-    response: list[Character]
 
 
 class AliasResponse(BaseModel):

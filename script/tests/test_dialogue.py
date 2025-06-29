@@ -3,15 +3,36 @@ from pathlib import Path
 import pytest
 
 from tta_script.dialogue.extract import (
-    get_dialogue_details,
+    get_script,
     create_text_batches,
     label_dialogue,
     label,
     split_by_dialogue,
 )
-from tta_script.dialogue.types import TextSegment, DialogueLabel, DialogueDetails
-from tta_script.character.types import SpeakerDetails
-from tta_script.voices import SpeakerVoice, Voice
+from tta_script.dialogue.types import TextSegment, DialogueLabel
+from tta_script.character.types import SpeakerDetails, Age, Gender
+from tta_script.voices import Speaker
+from tta_types.types import Voice
+
+
+def build_speaker_voice(
+    names: set[str],
+    gender: Gender = "male",
+    age: Age = "middle-aged",
+    voice_name: str = "default_voice",
+    audio_path: str = "foo",
+    audio_transcript: str = "foo",
+):
+    return Speaker(
+        SpeakerDetails(frozenset(names), age, gender),
+        Voice(
+            name=voice_name,
+            age=age,
+            gender=gender,
+            audio_path=audio_path,
+            audio_transcript=audio_transcript,
+        ),
+    )
 
 
 def get_text(filename: str) -> str:
@@ -21,16 +42,15 @@ def get_text(filename: str) -> str:
 
 
 def get_dialogue_expectation(filename: str):
-    details: list[DialogueDetails] = []
+    details: list[dict] = []
     text = get_text(filename)
     for segment in text.split("\n"):
         split = segment.split(":")
         details.append(
-            DialogueDetails(
-                SpeakerDetails(frozenset({split[0].strip()}), "middle-aged", "female"),
-                split[1].strip(),
-                "foo",
-            )
+            {
+                "speaker": split[0].strip(),
+                "text": split[1].strip(),
+            }
         )
     return details
 
@@ -44,8 +64,8 @@ def test_label_dialogue():
         TextSegment("replied Mary.", False),
     ]
     speakers = {
-        SpeakerDetails(frozenset({"Bob"}), "middle-aged", "male"),
-        SpeakerDetails(frozenset({"Mary"}), "middle-aged", "female"),
+        build_speaker_voice({"Bob"}, gender="male", voice_name="bob_voice"),
+        build_speaker_voice({"Mary"}, gender="female", voice_name="mary_voice"),
     }
     assert label_dialogue(texts, speakers, batch_size=2) == [
         DialogueLabel(index=0, speaker="Bob"),
@@ -55,35 +75,30 @@ def test_label_dialogue():
 
 @pytest.mark.integration
 def test_label_dialogue__large():
-    def build_speaker_details(names: set[str]) -> SpeakerDetails:
-        return SpeakerDetails(frozenset(names), "middle-aged", "female")
-
-    def get_expectation(filename: str, speakers: set[SpeakerDetails]):
-        return [
-            DialogueDetails(s, e.text, "foo")
-            for e in get_dialogue_expectation(filename)
-            for s in speakers
-            if e.speaker.names.issubset(s.names)
-        ]
-
     speakers = {
-        build_speaker_details({"Narrator"}),
-        build_speaker_details({"Professor McGonagall"}),
-        build_speaker_details({"Albus Dumbledore"}),
-        build_speaker_details({"Mrs. Dursley", "Aunt Petunia"}),
-        build_speaker_details({"Mr. Dursley", "Uncle Vernon"}),
-        build_speaker_details({"Hagrid"}),
-        build_speaker_details({"Dudley"}),
-        build_speaker_details({"Harry Potter"}),
+        build_speaker_voice({"Narrator"}, age="middle-aged", gender="male"),
+        build_speaker_voice({"Professor McGonagall"}, age="old", gender="female"),
+        build_speaker_voice({"Albus Dumbledore"}, age="old", gender="male"),
+        build_speaker_voice(
+            {"Mrs. Dursley", "Aunt Petunia"}, age="middle-aged", gender="female"
+        ),
+        build_speaker_voice(
+            {"Mr. Dursley", "Uncle Vernon"}, age="middle-aged", gender="male"
+        ),
+        build_speaker_voice({"Hagrid"}, age="middle-aged", gender="male"),
+        build_speaker_voice({"Dudley"}, age="young", gender="male"),
+        build_speaker_voice({"Harry Potter"}, age="young", gender="male"),
     }
-    expectation = get_expectation("harrypotter-1-expected-dialogue.txt", speakers)
     dialogues = [
-        TextSegment(e.text, False if e.speaker == "Narrator" else True)
-        for e in expectation
+        TextSegment(e["text"], False if e["speaker"] == "Narrator" else True)
+        for e in get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
     ]
     result = label_dialogue(dialogues, speakers)
     expectated_dialogues = [
-        DialogueLabel(i, ", ".join(e.speaker.names)) for i, e in enumerate(expectation)
+        DialogueLabel(i, e["speaker"])
+        for i, e in enumerate(
+            get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
+        )
     ]
 
     failures = []
@@ -103,8 +118,8 @@ def test_label():
         3: TextSegment("replied Mary.", False),
     }
     speakers = {
-        SpeakerDetails(frozenset({"Bob"}), "middle-aged", "male"),
-        SpeakerDetails(frozenset({"Mary"}), "middle-aged", "female"),
+        build_speaker_voice({"Bob"}, gender="male", voice_name="bob_voice"),
+        build_speaker_voice({"Mary"}, gender="female", voice_name="mary_voice"),
     }
     assert label(dialogues, speakers) == [
         DialogueLabel(index=0, speaker="Bob"),
@@ -133,18 +148,8 @@ def test_create_text_batches():
 
 
 @pytest.mark.integration
-def test_get_dialogue_details():
-    def build_speaker_voice(names: set[str]) -> SpeakerVoice:
-        return SpeakerVoice(
-            SpeakerDetails(frozenset(names), "middle-aged", "male"),
-            Voice(
-                name="name",
-                gender="male",
-                age="young",
-                audio_path="foo",
-                audio_transcript="bar",
-            ),
-        )
+def test_get_script():
+    """Test the get_script function that returns Script structure."""
 
     speakers = {
         build_speaker_voice({"Professor McGonagall"}),
@@ -155,16 +160,20 @@ def test_get_dialogue_details():
         build_speaker_voice({"Dudley"}),
         build_speaker_voice({"Harry Potter"}),
     }
-    result = get_dialogue_details(
+
+    script = get_script(
         text=get_text("harrypotter-1.txt"),
         speakers_voices=speakers,
-        narrator_voice=build_speaker_voice({"Narrator"}),
+        narrator_speaker=build_speaker_voice({"Narrator"}),
     )
-    expectation = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
-    assert [r.text for r in result] == [e.text for e in expectation]
+
+    expected_details = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
+    assert [seg.text for seg in script.segments] == [
+        e["text"] for e in expected_details
+    ]
 
 
 def test_split_by_dialogue():
     result = split_by_dialogue(get_text("harrypotter-1.txt"))
     expectation = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
-    assert [r.text for r in result] == [e.text for e in expectation]
+    assert [r.text for r in result] == [e["text"] for e in expectation]

@@ -12,15 +12,20 @@ const SpeakerDetailsSchema = z.object({
   names: z.array(z.string()),
   age: AgeEnum,
   gender: GenderEnum,
+  voice_name: z.string(),
+  audio_path: z.string(),
+  audio_transcript: z.string(),
 });
 
 const ScriptSegmentSchema = z.object({
-  voice_name: z.string(),
-  speaker: SpeakerDetailsSchema,
   text: z.string(),
+  speaker_alias: z.string(),
 });
 
-const ScriptResponseSchema = z.array(ScriptSegmentSchema);
+const ScriptSchema = z.object({
+  segments: z.array(ScriptSegmentSchema),
+  speakers: z.array(SpeakerDetailsSchema),
+});
 
 interface BuildScriptRequest {
   user_id: string;
@@ -41,7 +46,9 @@ interface UpdateScriptProps {
   script: Script;
 }
 
-export type Script = z.infer<typeof ScriptResponseSchema>;
+export type Script = z.infer<typeof ScriptSchema>;
+
+
 
 export async function createScript({ textContent, narrator }: CreateScriptProps) {
   const { userId } = await auth();
@@ -90,11 +97,12 @@ export async function getScript(): Promise<Script | null> {
   if (rawData === null) {
     return null;
   }
-  const result = ScriptResponseSchema.safeParse(rawData);
+  const result = ScriptSchema.safeParse(rawData);
   if (!result.success) {
     console.error("Validation error:", result.error.format());
     throw new Error("Invalid API response: schema validation failed");
   }
+  
   return result.data;
 }
 

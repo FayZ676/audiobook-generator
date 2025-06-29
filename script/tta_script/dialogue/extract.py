@@ -3,47 +3,46 @@ import json
 from tta_script.dialogue.prompts import label_prompt
 from tta_script.dialogue.types import (
     Dialogue,
-    DialogueDetails,
     TextSegment,
     DialogueLabel,
     DialogueLabelResponse,
+    ScriptSegment,
+    Script,
 )
 from tta_script.character.types import SpeakerDetails
-from tta_script.voices import SpeakerVoice
+from tta_script.voices import Speaker
 from tta_script.models.text import generate_text
 
 
-def get_dialogue_details(
-    text: str, speakers_voices: set[SpeakerVoice], narrator_speaker: SpeakerVoice
-):
+
+
+def get_script(
+    text: str, speakers_voices: set[Speaker], narrator_speaker: Speaker
+) -> Script:
     segments = split_by_dialogue(text)
-    speakers = {s.character for s in speakers_voices}
-    dialogue = build_dialogue(segments, speakers, narrator_speaker)
+    all_speakers = speakers_voices.copy()
+    all_speakers.add(narrator_speaker)
+    dialogue = build_dialogue(segments, all_speakers, narrator_speaker)
 
-    voices = {s.character.first_alias(): s.voice.name for s in speakers_voices} | {
-        "Narrator": narrator_speaker.voice.name
-    }
-
-    return [
-        DialogueDetails(
-            text=d.text,
-            speaker=d.speaker,
-            voice_name=voices[d.speaker.first_alias()],
-        )
+    script_segments = [
+        ScriptSegment(text=d.text, speaker_alias=d.speaker.first_alias())
         for d in dialogue
-        if d.speaker.first_alias() in voices  # TODO: Is this necessary?
     ]
+    unique_speakers = list({d.speaker for d in dialogue})
+
+    return Script(segments=script_segments, speakers=unique_speakers)
 
 
 def build_dialogue(
     segments: list[TextSegment],
-    speakers: set[SpeakerDetails],
-    narrator_speaker: SpeakerVoice,
+    speakers: set[Speaker],
+    narrator_speaker: Speaker,
 ):
     label_dict = {
         label.index: label.speaker for label in label_dialogue(segments, speakers)
     }
     dialogue: list[Dialogue] = []
+    
     for i, seg in enumerate(segments):
         if seg.dialogue:
             label_speaker = label_dict.get(i)
@@ -52,16 +51,16 @@ def build_dialogue(
                     (s for s in speakers if s.first_alias() == label_speaker),
                     None,
                 )
-                or narrator_speaker.character
+                or narrator_speaker
             )
         else:
-            speaker = narrator_speaker.character
+            speaker = narrator_speaker
         dialogue.append(Dialogue(speaker, seg.text))
     return dialogue
 
 
 def label_dialogue(
-    texts: list[TextSegment], speakers: set[SpeakerDetails], batch_size: int = 100
+    texts: list[TextSegment], speakers: set[Speaker], batch_size: int = 100
 ):
     labels: list[DialogueLabel] = []
     batches = create_text_batches(texts, batch_size)
@@ -84,7 +83,7 @@ def create_text_batches(texts: list[TextSegment], batch_size: int):
 
 
 def label(
-    texts: dict[int, TextSegment], speakers: set[SpeakerDetails], max_retries: int = 3
+    texts: dict[int, TextSegment], speakers: set[Speaker], max_retries: int = 3
 ):
     prompt = label_prompt.substitute(
         text="\n".join([f"{i}. {d}" for i, d in texts.items()]),

@@ -30,12 +30,14 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
   };
 
   const autoSave = async (scriptToSave: Script) => {
-    if (scriptToSave.length === 0) {
+    if (scriptToSave.segments.length === 0) {
       setError("Script cannot be empty");
       return;
     }
 
-    const hasEmptyText = scriptToSave.some((segment) => !segment.text.trim());
+    const hasEmptyText = scriptToSave.segments.some(
+      (segment) => !segment.text.trim()
+    );
     if (hasEmptyText) {
       setError("All script segments must have text");
       return;
@@ -66,8 +68,9 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
 
   const handleTextChange = (index: number, newText: string) => {
     clearMessages();
-    const updatedScript = [...editingScript];
-    updatedScript[index] = { ...updatedScript[index], text: newText };
+    const updatedSegments = [...editingScript.segments];
+    updatedSegments[index] = { ...updatedSegments[index], text: newText };
+    const updatedScript = { ...editingScript, segments: updatedSegments };
     setEditingScript(updatedScript);
     debouncedAutoSave(updatedScript);
   };
@@ -79,22 +82,26 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
     clearMessages();
     const selectedVoice = voices.find((voice) => voice.name === voiceName);
     if (selectedVoice) {
-      const updatedScript = editingScript.map((segment) => {
-        // Update all segments where this character speaks
-        const segmentCharacterName = segment.speaker.names[0];
-        if (segmentCharacterName && segmentCharacterName === characterName) {
+      // Update the speaker's voice information
+      const updatedSpeakers = editingScript.speakers.map((speaker) => {
+        if (speaker.names.includes(characterName)) {
           return {
-            ...segment,
+            ...speaker,
             voice_name: selectedVoice.name,
-            speaker: {
-              ...segment.speaker,
-              // Keep the original character name, but update voice-related fields if needed
-              names: segment.speaker.names,
-            },
+            age: selectedVoice.age,
+            gender: selectedVoice.gender,
+            audio_path: selectedVoice.audio_path,
+            audio_transcript: selectedVoice.audio_transcript,
           };
         }
-        return segment;
+        return speaker;
       });
+
+      const updatedScript = {
+        ...editingScript,
+        speakers: updatedSpeakers,
+      };
+
       setEditingScript(updatedScript);
       debouncedAutoSave(updatedScript);
     }
@@ -115,21 +122,21 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
     characterName: string
   ) => {
     clearMessages();
-    const updatedScript = [...editingScript];
+    const updatedSegments = [...editingScript.segments];
 
     // Find the character (either from script or manual characters)
     let characterAge: Age = "middle-aged";
     let characterGender: Gender = "male";
     let characterVoice = "";
 
-    // First check existing script segments for this character
-    const existingSegment = editingScript.find(
-      (seg) => seg.speaker.names[0] === characterName
+    // First check existing script speakers for this character
+    const existingSpeaker = editingScript.speakers.find((speaker) =>
+      speaker.names.includes(characterName)
     );
-    if (existingSegment) {
-      characterAge = existingSegment.speaker.age;
-      characterGender = existingSegment.speaker.gender;
-      characterVoice = existingSegment.voice_name;
+    if (existingSpeaker) {
+      characterAge = existingSpeaker.age;
+      characterGender = existingSpeaker.gender;
+      characterVoice = existingSpeaker.voice_name;
     } else {
       // Check manual characters
       const manualCharacter = manualCharacters.find(
@@ -146,14 +153,44 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
       }
     }
 
-    updatedScript[segmentIndex] = {
-      ...updatedScript[segmentIndex],
-      speaker: {
+    // Update the segment's speaker_alias
+    updatedSegments[segmentIndex] = {
+      ...updatedSegments[segmentIndex],
+      speaker_alias: characterName,
+    };
+
+    // Update or add speaker in speakers array
+    const updatedSpeakers = [...editingScript.speakers];
+    const speakerIndex = updatedSpeakers.findIndex((speaker) =>
+      speaker.names.includes(characterName)
+    );
+
+    if (speakerIndex >= 0) {
+      // Update existing speaker
+      updatedSpeakers[speakerIndex] = {
+        ...updatedSpeakers[speakerIndex],
         names: [characterName],
         age: characterAge,
         gender: characterGender,
-      },
-      voice_name: characterVoice,
+        voice_name: characterVoice,
+      };
+    } else {
+      // Add new speaker
+      const selectedVoice = voices.find((v) => v.name === characterVoice);
+      updatedSpeakers.push({
+        names: [characterName],
+        age: characterAge,
+        gender: characterGender,
+        voice_name: characterVoice,
+        audio_path: selectedVoice?.audio_path || "",
+        audio_transcript: selectedVoice?.audio_transcript || "",
+      });
+    }
+
+    const updatedScript = {
+      ...editingScript,
+      segments: updatedSegments,
+      speakers: updatedSpeakers,
     };
 
     setEditingScript(updatedScript);
@@ -163,8 +200,8 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
   // Get all available characters (from script + manual)
   const getAllCharacters = () => {
     const scriptCharacters = new Set<string>();
-    editingScript.forEach((segment) => {
-      const characterName = segment.speaker.names[0];
+    editingScript.segments.forEach((segment) => {
+      const characterName = segment.speaker_alias;
       if (characterName && characterName.trim()) {
         scriptCharacters.add(characterName);
       }
@@ -179,6 +216,8 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
 
     return allCharacters.sort();
   };
+
+  const availableCharacters = getAllCharacters();
 
   return (
     <div className="flex flex-col gap-4">
@@ -200,9 +239,14 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
       />
 
       <div className="h-[28rem] overflow-y-scroll bg-base-200 p-4 rounded">
-        {editingScript.map((scriptSegment, index) => {
-          const characterName = scriptSegment.speaker.names[0] || "Unknown";
-          const availableCharacters = getAllCharacters();
+        {editingScript.segments.map((scriptSegment, index) => {
+          // Find speaker details for this segment
+          const speaker = editingScript.speakers.find((s) =>
+            s.names.includes(scriptSegment.speaker_alias)
+          );
+          const characterName =
+            speaker?.names[0] || scriptSegment.speaker_alias;
+          const voiceName = speaker?.voice_name || "";
 
           return (
             <div key={index} className="mb-4">
@@ -227,7 +271,7 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
                     </select>
                   </div>
                   <div className="text-xs text-base-content/70 px-3">
-                    Voice: {scriptSegment.voice_name || "Not assigned"}
+                    {voiceName}
                   </div>
                 </div>
                 <div className="flex-1">
