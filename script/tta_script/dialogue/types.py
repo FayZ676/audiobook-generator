@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from pydantic import BaseModel
 
 from tta_script.character.types import SpeakerDetails
-from tta_script.voices import SpeakerVoice
+from tta_script.voices import Speaker
 
 
 class LLMDialogue(BaseModel):
@@ -23,7 +23,7 @@ class DialogueLabelResponse(BaseModel):
 
 @dataclass(frozen=True, eq=True)
 class Dialogue:
-    speaker: SpeakerVoice
+    speaker: Speaker
     text: str
 
 
@@ -51,21 +51,16 @@ class ScriptSegment:
 @dataclass(frozen=True, eq=True) 
 class Script:
     segments: list[ScriptSegment]
-    speakers: list[SpeakerVoice]  # All unique speakers with voice details
+    speakers: list[Speaker]  # All unique speakers with voice details
 
     def to_dict(self) -> dict:
-        # Create a lookup for speaker voice by alias
-        speaker_voice_map = {speaker.first_alias(): speaker.voice.name for speaker in self.speakers}
-        
         return {
             "segments": [
                 {
                     "text": segment.text,
                     "speaker_alias": segment.speaker_alias,
-                    "voice_name": speaker_voice_map.get(segment.speaker_alias, "")
                 }
                 for segment in self.segments
             ],
             "speakers": [speaker.to_dict() for speaker in self.speakers],
-            "voices": speaker_voice_map,  # Keep for backward compatibility
         }

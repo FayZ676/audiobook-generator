@@ -12,11 +12,11 @@ from tta_script.dialogue.extract import (
 from tta_script.dialogue.types import TextSegment, DialogueLabel, Script, ScriptSegment
 from tta_script.character.types import SpeakerDetails
 try:
-    from tta_script.voices import SpeakerVoice
+    from tta_script.voices import Speaker
     from tta_types.types import Voice
 except ImportError:
     # For testing without full dependencies
-    SpeakerVoice = None
+    Speaker = None
     Voice = None
 
 
@@ -47,12 +47,12 @@ def test_label_dialogue():
         TextSegment("replied Mary.", False),
     ]
     speakers = {
-        SpeakerVoice(
-            SpeakerDetails(frozenset({"Bob"}), "middle-aged", "male", "bob_voice"),
+        Speaker(
+            SpeakerDetails(frozenset({"Bob"}), "middle-aged", "male"),
             Voice(name="bob_voice", age="middle-aged", gender="male", audio_path="", audio_transcript="")
         ),
-        SpeakerVoice(
-            SpeakerDetails(frozenset({"Mary"}), "middle-aged", "female", "mary_voice"),
+        Speaker(
+            SpeakerDetails(frozenset({"Mary"}), "middle-aged", "female"),
             Voice(name="mary_voice", age="middle-aged", gender="female", audio_path="", audio_transcript="")
         ),
     }
@@ -64,13 +64,13 @@ def test_label_dialogue():
 
 @pytest.mark.integration
 def test_label_dialogue__large():
-    def build_speaker_voice(names: set[str]) -> SpeakerVoice:
-        return SpeakerVoice(
-            SpeakerDetails(frozenset(names), "middle-aged", "female", "default_voice"),
+    def build_speaker_voice(names: set[str]) -> Speaker:
+        return Speaker(
+            SpeakerDetails(frozenset(names), "middle-aged", "female"),
             Voice(name="default_voice", age="middle-aged", gender="female", audio_path="", audio_transcript="")
         )
 
-    def get_expectation(filename: str, speakers: set[SpeakerVoice]):
+    def get_expectation(filename: str, speakers: set[Speaker]):
         expected_details = get_dialogue_expectation(filename)
         return [
             {"speaker": s, "text": e["text"]}
@@ -116,12 +116,12 @@ def test_label():
         3: TextSegment("replied Mary.", False),
     }
     speakers = {
-        SpeakerVoice(
-            SpeakerDetails(frozenset({"Bob"}), "middle-aged", "male", "bob_voice"),
+        Speaker(
+            SpeakerDetails(frozenset({"Bob"}), "middle-aged", "male"),
             Voice(name="bob_voice", age="middle-aged", gender="male", audio_path="", audio_transcript="")
         ),
-        SpeakerVoice(
-            SpeakerDetails(frozenset({"Mary"}), "middle-aged", "female", "mary_voice"),
+        Speaker(
+            SpeakerDetails(frozenset({"Mary"}), "middle-aged", "female"),
             Voice(name="mary_voice", age="middle-aged", gender="female", audio_path="", audio_transcript="")
         ),
     }
@@ -154,9 +154,9 @@ def test_create_text_batches():
 @pytest.mark.integration
 def test_get_script():
     """Test the get_script function that returns Script structure."""
-    def build_speaker_voice(names: set[str]) -> SpeakerVoice:
-        return SpeakerVoice(
-            SpeakerDetails(frozenset(names), "middle-aged", "male", "default_voice"),
+    def build_speaker_voice(names: set[str]) -> Speaker:
+        return Speaker(
+            SpeakerDetails(frozenset(names), "middle-aged", "male"),
             Voice(
                 name="name",
                 gender="male",
@@ -192,7 +192,7 @@ def test_get_script():
     
     # Verify we have speakers
     assert len(script.speakers) > 0
-    assert all(isinstance(speaker, SpeakerVoice) for speaker in script.speakers)
+    assert all(isinstance(speaker, Speaker) for speaker in script.speakers)
     
     # Verify speakers have voice information
     assert all(speaker.voice.name for speaker in script.speakers)

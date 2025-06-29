@@ -27,13 +27,14 @@ export default function ScriptText({
               s.names.includes(scriptSegment.speaker_alias)
             );
             const speakerName = speaker?.names[0] || scriptSegment.speaker_alias;
+            const voiceName = speaker?.voice_name || '';
             
             return (
               <div key={index} className="mb-4">
                 <p>
                   <span
                     className="font-medium tooltip tooltip-right"
-                    data-tip={scriptSegment.voice_name}
+                    data-tip={voiceName}
                   >
                     {speakerName}
                   </span>

@@ -6,7 +6,7 @@ from typing import BinaryIO
 from tta_script.dialogue.types import Script
 from tta_script.dialogue.extract import get_script
 from tta_script.character.extract import get_speaker_details
-from tta_script.voices import assign_voices, SpeakerVoice, SpeakerDetails
+from tta_script.voices import assign_voices, Speaker, SpeakerDetails
 
 from tta_types.types import (
     Voice,
@@ -47,9 +47,9 @@ def _get_narrator_speaker(narrator_name: str, voices: list[Voice]):
     )
     if not narrator_voice:
         raise ValueError(f"Could not find a voice for the narrator '{narrator_name}'.")
-    narrator_speaker = SpeakerVoice(
+    narrator_speaker = Speaker(
         SpeakerDetails(
-            frozenset({"Narrator"}), narrator_voice.age, narrator_voice.gender, narrator_voice.name  # type: ignore
+            frozenset({"Narrator"}), narrator_voice.age, narrator_voice.gender  # type: ignore
         ),
         narrator_voice,
     )

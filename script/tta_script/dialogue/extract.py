@@ -10,7 +10,7 @@ from tta_script.dialogue.types import (
     Script,
 )
 from tta_script.character.types import SpeakerDetails
-from tta_script.voices import SpeakerVoice
+from tta_script.voices import Speaker
 from tta_script.models.text import generate_text
 
 
@@ -18,7 +18,7 @@ from tta_script.models.text import generate_text
 
 
 def get_script(
-    text: str, speakers_voices: set[SpeakerVoice], narrator_speaker: SpeakerVoice
+    text: str, speakers_voices: set[Speaker], narrator_speaker: Speaker
 ) -> Script:
     """
     Extract dialogue as a Script structure with separated speaker metadata.
@@ -27,7 +27,7 @@ def get_script(
     """
     segments = split_by_dialogue(text)
     
-    # Use SpeakerVoice directly - no conversion needed
+    # Use Speaker directly - no conversion needed
     all_speakers = speakers_voices.copy()
     all_speakers.add(narrator_speaker)
     
@@ -53,8 +53,8 @@ def get_script(
 
 def build_dialogue(
     segments: list[TextSegment],
-    speakers: set[SpeakerVoice],
-    narrator_speaker: SpeakerVoice,
+    speakers: set[Speaker],
+    narrator_speaker: Speaker,
 ):
     label_dict = {
         label.index: label.speaker for label in label_dialogue(segments, speakers)
@@ -78,7 +78,7 @@ def build_dialogue(
 
 
 def label_dialogue(
-    texts: list[TextSegment], speakers: set[SpeakerVoice], batch_size: int = 100
+    texts: list[TextSegment], speakers: set[Speaker], batch_size: int = 100
 ):
     labels: list[DialogueLabel] = []
     batches = create_text_batches(texts, batch_size)
@@ -101,7 +101,7 @@ def create_text_batches(texts: list[TextSegment], batch_size: int):
 
 
 def label(
-    texts: dict[int, TextSegment], speakers: set[SpeakerVoice], max_retries: int = 3
+    texts: dict[int, TextSegment], speakers: set[Speaker], max_retries: int = 3
 ):
     prompt = label_prompt.substitute(
         text="\n".join([f"{i}. {d}" for i, d in texts.items()]),

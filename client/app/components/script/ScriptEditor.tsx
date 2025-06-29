@@ -134,6 +134,7 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
             s.names.includes(scriptSegment.speaker_alias)
           );
           const characterName = speaker?.names[0] || scriptSegment.speaker_alias;
+          const voiceName = speaker?.voice_name || '';
           
           return (
             <div key={index} className="mb-4">
@@ -141,7 +142,7 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
                 <div className="flex justify-between">
                   <div className="text-sm font-medium">{characterName}</div>
                   <div className="text-xs text-base-content/70 px-3">
-                    {scriptSegment.voice_name}
+                    {voiceName}
                   </div>
                 </div>
                 <div className="flex-1">

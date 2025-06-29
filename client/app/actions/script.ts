@@ -18,13 +18,11 @@ const SpeakerDetailsSchema = z.object({
 const ScriptSegmentSchema = z.object({
   text: z.string(),
   speaker_alias: z.string(),
-  voice_name: z.string(),
 });
 
 const ScriptSchema = z.object({
   segments: z.array(ScriptSegmentSchema),
   speakers: z.array(SpeakerDetailsSchema),
-  voices: z.record(z.string()),
 });
 
 interface BuildScriptRequest {
