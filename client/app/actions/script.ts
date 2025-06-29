@@ -15,12 +15,26 @@ const SpeakerDetailsSchema = z.object({
 });
 
 const ScriptSegmentSchema = z.object({
+  text: z.string(),
+  speaker_alias: z.string(),
+  voice_name: z.string(),
+});
+
+const LegacyScriptSegmentSchema = z.object({
   voice_name: z.string(),
   speaker: SpeakerDetailsSchema,
   text: z.string(),
 });
 
-const ScriptResponseSchema = z.array(ScriptSegmentSchema);
+const NewScriptSchema = z.object({
+  segments: z.array(ScriptSegmentSchema),
+  speakers: z.array(SpeakerDetailsSchema),
+  voices: z.record(z.string()),
+});
+
+const LegacyScriptSchema = z.array(LegacyScriptSegmentSchema);
+
+const ScriptResponseSchema = z.union([NewScriptSchema, LegacyScriptSchema]);
 
 interface BuildScriptRequest {
   user_id: string;
@@ -38,10 +52,43 @@ interface CreateScriptProps {
 }
 
 interface UpdateScriptProps {
-  script: Script;
+  script: Script | LegacyScript;
 }
 
-export type Script = z.infer<typeof ScriptResponseSchema>;
+export type Script = z.infer<typeof NewScriptSchema>;
+export type LegacyScript = z.infer<typeof LegacyScriptSchema>;
+export type ScriptResponse = z.infer<typeof ScriptResponseSchema>;
+
+// Helper function to normalize script format
+export function normalizeScript(scriptResponse: ScriptResponse): Script {
+  if (Array.isArray(scriptResponse)) {
+    // Legacy format - convert to new format
+    const segmentMap = new Map<string, { speaker: typeof scriptResponse[0]["speaker"], voice: string }>();
+    const segments = scriptResponse.map(segment => {
+      const speakerAlias = segment.speaker.names[0];
+      segmentMap.set(speakerAlias, { speaker: segment.speaker, voice: segment.voice_name });
+      return {
+        text: segment.text,
+        speaker_alias: speakerAlias,
+        voice_name: segment.voice_name,
+      };
+    });
+    
+    const speakers = Array.from(segmentMap.values()).map(entry => entry.speaker);
+    const voices = Object.fromEntries(
+      Array.from(segmentMap.entries()).map(([alias, entry]) => [alias, entry.voice])
+    );
+    
+    return {
+      segments,
+      speakers,
+      voices,
+    };
+  } else {
+    // New format - return as is
+    return scriptResponse;
+  }
+}
 
 export async function createScript({ textContent, narrator }: CreateScriptProps) {
   const { userId } = await auth();
@@ -95,7 +142,9 @@ export async function getScript(): Promise<Script | null> {
     console.error("Validation error:", result.error.format());
     throw new Error("Invalid API response: schema validation failed");
   }
-  return result.data;
+  
+  // Normalize to new format
+  return normalizeScript(result.data);
 }
 
 export async function deleteScript(filename: string) {

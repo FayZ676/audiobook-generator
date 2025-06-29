@@ -7,6 +7,8 @@ from tta_script.dialogue.types import (
     TextSegment,
     DialogueLabel,
     DialogueLabelResponse,
+    ScriptSegment,
+    Script,
 )
 from tta_script.character.types import SpeakerDetails
 from tta_script.voices import SpeakerVoice
@@ -33,6 +35,42 @@ def get_dialogue_details(
         for d in dialogue
         if d.speaker.first_alias() in voices  # TODO: Is this necessary?
     ]
+
+
+def get_script(
+    text: str, speakers_voices: set[SpeakerVoice], narrator_speaker: SpeakerVoice
+) -> Script:
+    """
+    Extract dialogue as a Script structure with separated speaker metadata.
+    
+    This is the new preferred method that eliminates SpeakerDetails duplication.
+    """
+    segments = split_by_dialogue(text)
+    speakers = {s.character for s in speakers_voices}
+    dialogue = build_dialogue(segments, speakers, narrator_speaker)
+
+    voices = {s.character.first_alias(): s.voice.name for s in speakers_voices} | {
+        "Narrator": narrator_speaker.voice.name
+    }
+
+    # Create script segments with speaker aliases
+    script_segments = [
+        ScriptSegment(
+            text=d.text,
+            speaker_alias=d.speaker.first_alias(),
+        )
+        for d in dialogue
+        if d.speaker.first_alias() in voices
+    ]
+
+    # Get unique speakers from the dialogue
+    unique_speakers = list({d.speaker for d in dialogue if d.speaker.first_alias() in voices})
+
+    return Script(
+        segments=script_segments,
+        speakers=unique_speakers,
+        voices=voices,
+    )
 
 
 def build_dialogue(

@@ -3,8 +3,8 @@ import io
 import json
 from typing import BinaryIO
 
-from tta_script.dialogue.types import DialogueDetails
-from tta_script.dialogue.extract import get_dialogue_details
+from tta_script.dialogue.types import DialogueDetails, Script
+from tta_script.dialogue.extract import get_dialogue_details, get_script
 from tta_script.character.extract import get_speaker_details
 from tta_script.voices import assign_voices, SpeakerVoice, SpeakerDetails
 
@@ -28,18 +28,22 @@ s3_client = S3Client()
 
 
 def _to_json_fileobject(
-    filename: str, dialogue_details: list[DialogueDetails]
+    filename: str, script_data: Script | list[DialogueDetails]
 ) -> BinaryIO:
-    json_bytes = json.dumps([d.to_dict() for d in dialogue_details], indent=4).encode(
-        "utf-8"
-    )
+    if isinstance(script_data, Script):
+        json_data = script_data.to_dict()
+    else:
+        # Backward compatibility for DialogueDetails list
+        json_data = [d.to_dict() for d in script_data]
+    
+    json_bytes = json.dumps(json_data, indent=4).encode("utf-8")
     file_obj = io.BytesIO(json_bytes)
     file_obj.name = f"{filename}.json"
     return file_obj
 
 
-def _upload_script_result(user_id: str, script: list[DialogueDetails]):
-    script_file = _to_json_fileobject(user_id, script)
+def _upload_script_result(user_id: str, script_data: Script | list[DialogueDetails]):
+    script_file = _to_json_fileobject(user_id, script_data)
     s3_client.upload_fileobj(f"{SCRIPT_RESULTS_BUCKET}", script_file.name, script_file)
     return str(script_file.name)
 
@@ -78,7 +82,9 @@ def handler(event: dict):
                 speakers=speaker_details, voices=voices.copy()
             )
             narrator_speaker = _get_narrator_speaker(data.narrator_voice_name, voices)
-            script = get_dialogue_details(text, speaker_voices, narrator_speaker)
+            
+            # Use new Script structure for better memory efficiency
+            script = get_script(text, speaker_voices, narrator_speaker)
             script_filename = _upload_script_result(request.user_id, script)
             status = "complete"
             message = ""
