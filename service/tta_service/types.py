@@ -1,4 +1,4 @@
-from typing import Literal, Union, Dict, List, Any
+from typing import Literal, Dict, List, Any
 
 from tta_types.types import Voice
 
@@ -36,4 +36,4 @@ class FeedbackRequest(BaseModel):
 
 
 class UpdateScriptRequest(BaseModel):
-    script: Union[Dict[str, Any], List[Dict[str, Any]]]  # Support both new Script format and legacy list format
+    script: Dict[str, Any]  # New Script format only

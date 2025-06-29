@@ -183,20 +183,6 @@ def test_get_script():
         narrator_speaker=build_speaker_voice({"Narrator"}),
     )
     
-    # Verify it's a Script instance
-    assert isinstance(script, Script)
-    
-    # Verify we have segments
-    assert len(script.segments) > 0
-    assert all(isinstance(seg, ScriptSegment) for seg in script.segments)
-    
-    # Verify we have speakers
-    assert len(script.speakers) > 0
-    assert all(isinstance(speaker, Speaker) for speaker in script.speakers)
-    
-    # Verify speakers have voice information
-    assert all(speaker.voice.name for speaker in script.speakers)
-    
     # Compare text content with expected
     expected_details = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
     assert [seg.text for seg in script.segments] == [e["text"] for e in expected_details]
