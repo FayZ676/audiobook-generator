@@ -16,11 +16,6 @@ Resources:
     Properties:
       BucketName: tta-speech-results
 
-  TextFilesBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: tta-text-files
-
   JobStatusBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -30,11 +25,6 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: tta-feedback
-
-  ModelFilesBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: tta-model-files
 
   # Need to manually create access keys for the user.
   SpeechServiceUser:

@@ -6,14 +6,23 @@ from tta_types.types import Voice
 
 
 @dataclass(eq=True, frozen=True)
-class SpeakerVoice:
+class Speaker:
     character: SpeakerDetails
     voice: Voice
 
+    def first_alias(self) -> str:
+        return self.character.first_alias()
 
-def assign_voices(
-    speakers: set[SpeakerDetails], voices: list[Voice]
-) -> set[SpeakerVoice]:
+    def to_dict(self) -> dict:
+        return {
+            "names": list(self.character.names),
+            "age": self.voice.age,
+            "gender": self.voice.gender,
+            "voice_name": self.voice.name,
+        }
+
+
+def assign_voices(speakers: set[SpeakerDetails], voices: list[Voice]) -> set[Speaker]:
     available_voices = voices
     voiced_characters = set()
     for speaker in speakers:
@@ -26,7 +35,8 @@ def assign_voices(
         if matching_voices:
             selected_voice = matching_voices[0]
             available_voices.remove(selected_voice)
-            voiced_characters.add(SpeakerVoice(character=speaker, voice=selected_voice))
+            # Create Speaker directly without conversion
+            voiced_characters.add(Speaker(character=speaker, voice=selected_voice))
         else:
             raise ValueError(
                 f"No available voices for {speaker.first_alias()} with age {speaker.age} and gender {speaker.gender}."

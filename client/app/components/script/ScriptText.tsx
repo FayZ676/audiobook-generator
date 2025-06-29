@@ -21,15 +21,22 @@ export default function ScriptText({
         <ScriptEditor script={script} voices={voices} />
       ) : (
         <div className="h-[32rem] overflow-y-scroll bg-base-200 p-4 rounded">
-          {script.map((scriptSegment, index) => {
+          {script.segments.map((scriptSegment, index) => {
+            // Find speaker details for this segment
+            const speaker = script.speakers.find(s => 
+              s.names.includes(scriptSegment.speaker_alias)
+            );
+            const speakerName = speaker?.names[0] || scriptSegment.speaker_alias;
+            const voiceName = speaker?.voice_name || '';
+            
             return (
               <div key={index} className="mb-4">
                 <p>
                   <span
                     className="font-medium tooltip tooltip-right"
-                    data-tip={scriptSegment.voice_name}
+                    data-tip={voiceName}
                   >
-                    {scriptSegment.speaker.names[0]}
+                    {speakerName}
                   </span>
                   : {scriptSegment.text}
                 </p>
