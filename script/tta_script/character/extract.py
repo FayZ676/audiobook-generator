@@ -45,7 +45,7 @@ def get_speaker_details(text: str):
                 if name and age and gender
             }
         )
-    # NOTE: We are hardcoding the narratiorn SpeakerDetails here. We do something similar in `get_dialogue_details`. Is this necessary?
+    # NOTE: We are hardcoding the narrator SpeakerDetails here. We do something similar in `get_script`. Is this necessary?
     details.add(SpeakerDetails(frozenset(["Narrator"]), "middle-aged", "male"))
     return details
 

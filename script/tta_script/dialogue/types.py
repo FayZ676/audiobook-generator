@@ -26,19 +26,7 @@ class Dialogue:
     text: str
 
 
-@dataclass(eq=True, frozen=True)
-class DialogueDetails(Dialogue):
-    voice_name: str
 
-    def __str__(self) -> str:
-        return f"{self.speaker.first_alias()}: {self.text}"
-
-    def to_dict(self) -> dict:
-        return {
-            "speaker": self.speaker.to_dict(),
-            "text": self.text,
-            "voice_name": self.voice_name,
-        }
 
 
 @dataclass(frozen=True, eq=True)

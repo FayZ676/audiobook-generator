@@ -3,7 +3,6 @@ import json
 from tta_script.dialogue.prompts import label_prompt
 from tta_script.dialogue.types import (
     Dialogue,
-    DialogueDetails,
     TextSegment,
     DialogueLabel,
     DialogueLabelResponse,
@@ -15,26 +14,7 @@ from tta_script.voices import SpeakerVoice
 from tta_script.models.text import generate_text
 
 
-def get_dialogue_details(
-    text: str, speakers_voices: set[SpeakerVoice], narrator_speaker: SpeakerVoice
-):
-    segments = split_by_dialogue(text)
-    speakers = {s.character for s in speakers_voices}
-    dialogue = build_dialogue(segments, speakers, narrator_speaker)
 
-    voices = {s.character.first_alias(): s.voice.name for s in speakers_voices} | {
-        "Narrator": narrator_speaker.voice.name
-    }
-
-    return [
-        DialogueDetails(
-            text=d.text,
-            speaker=d.speaker,
-            voice_name=voices[d.speaker.first_alias()],
-        )
-        for d in dialogue
-        if d.speaker.first_alias() in voices  # TODO: Is this necessary?
-    ]
 
 
 def get_script(

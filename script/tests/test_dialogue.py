@@ -3,14 +3,13 @@ from pathlib import Path
 import pytest
 
 from tta_script.dialogue.extract import (
-    get_dialogue_details,
     get_script,
     create_text_batches,
     label_dialogue,
     label,
     split_by_dialogue,
 )
-from tta_script.dialogue.types import TextSegment, DialogueLabel, DialogueDetails, Script, ScriptSegment
+from tta_script.dialogue.types import TextSegment, DialogueLabel, Script, ScriptSegment
 from tta_script.character.types import SpeakerDetails
 try:
     from tta_script.voices import SpeakerVoice
@@ -28,17 +27,14 @@ def get_text(filename: str) -> str:
 
 
 def get_dialogue_expectation(filename: str):
-    details: list[DialogueDetails] = []
+    details: list[dict] = []
     text = get_text(filename)
     for segment in text.split("\n"):
         split = segment.split(":")
-        details.append(
-            DialogueDetails(
-                SpeakerDetails(frozenset({split[0].strip()}), "middle-aged", "female"),
-                split[1].strip(),
-                "foo",
-            )
-        )
+        details.append({
+            "speaker": split[0].strip(),
+            "text": split[1].strip(),
+        })
     return details
 
 
@@ -66,11 +62,12 @@ def test_label_dialogue__large():
         return SpeakerDetails(frozenset(names), "middle-aged", "female")
 
     def get_expectation(filename: str, speakers: set[SpeakerDetails]):
+        expected_details = get_dialogue_expectation(filename)
         return [
-            DialogueDetails(s, e.text, "foo")
-            for e in get_dialogue_expectation(filename)
+            {"speaker": s, "text": e["text"]}
+            for e in expected_details
             for s in speakers
-            if e.speaker.names.issubset(s.names)
+            if e["speaker"] in [alias for alias in s.names]
         ]
 
     speakers = {
@@ -85,12 +82,12 @@ def test_label_dialogue__large():
     }
     expectation = get_expectation("harrypotter-1-expected-dialogue.txt", speakers)
     dialogues = [
-        TextSegment(e.text, False if e.speaker == "Narrator" else True)
-        for e in expectation
+        TextSegment(e["text"], False if e["speaker"] == "Narrator" else True)
+        for e in get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
     ]
     result = label_dialogue(dialogues, speakers)
     expectated_dialogues = [
-        DialogueLabel(i, ", ".join(e.speaker.names)) for i, e in enumerate(expectation)
+        DialogueLabel(i, e["speaker"]) for i, e in enumerate(get_dialogue_expectation("harrypotter-1-expected-dialogue.txt"))
     ]
 
     failures = []
@@ -139,36 +136,7 @@ def test_create_text_batches():
     assert create_text_batches(texts, 2) == expected_batches
 
 
-@pytest.mark.integration
-def test_get_dialogue_details():
-    def build_speaker_voice(names: set[str]) -> SpeakerVoice:
-        return SpeakerVoice(
-            SpeakerDetails(frozenset(names), "middle-aged", "male"),
-            Voice(
-                name="name",
-                gender="male",
-                age="young",
-                audio_path="foo",
-                audio_transcript="bar",
-            ),
-        )
 
-    speakers = {
-        build_speaker_voice({"Professor McGonagall"}),
-        build_speaker_voice({"Albus Dumbledore"}),
-        build_speaker_voice({"Mrs. Dursley", "Aunt Petunia"}),
-        build_speaker_voice({"Mr. Dursley", "Uncle Vernon"}),
-        build_speaker_voice({"Hagrid"}),
-        build_speaker_voice({"Dudley"}),
-        build_speaker_voice({"Harry Potter"}),
-    }
-    result = get_dialogue_details(
-        text=get_text("harrypotter-1.txt"),
-        speakers_voices=speakers,
-        narrator_voice=build_speaker_voice({"Narrator"}),
-    )
-    expectation = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
-    assert [r.text for r in result] == [e.text for e in expectation]
 
 
 @pytest.mark.integration
@@ -218,15 +186,9 @@ def test_get_script():
     assert len(script.voices) > 0
     assert "Narrator" in script.voices
     
-    # Compare text content with legacy version
-    legacy_result = get_dialogue_details(
-        text=get_text("harrypotter-1.txt"),
-        speakers_voices=speakers,
-        narrator_voice=build_speaker_voice({"Narrator"}),
-    )
-    
-    # Text content should be the same
-    assert [seg.text for seg in script.segments] == [r.text for r in legacy_result]
+    # Compare text content with expected
+    expected_details = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
+    assert [seg.text for seg in script.segments] == [e["text"] for e in expected_details]
     
     # Test serialization
     script_dict = script.to_dict()
@@ -238,7 +200,7 @@ def test_get_script():
 def test_split_by_dialogue():
     result = split_by_dialogue(get_text("harrypotter-1.txt"))
     expectation = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
-    assert [r.text for r in result] == [e.text for e in expectation]
+    assert [r.text for r in result] == [e["text"] for e in expectation]
 
 
 def test_script_structure():
@@ -286,21 +248,11 @@ def test_script_structure():
 
 
 def test_script_memory_efficiency():
-    """Test that Script structure is more memory efficient than DialogueDetails list."""
+    """Test that Script structure is more memory efficient than duplicating speaker data."""
     speaker = SpeakerDetails(frozenset(["TestSpeaker"]), "young", "male")
     
     # Create many segments with the same speaker
     num_segments = 50
-    
-    # Old approach - duplicate speaker in each DialogueDetails
-    old_segments = [
-        DialogueDetails(
-            text=f"Segment {i}",
-            speaker=speaker,  # Duplicated!
-            voice_name="test_voice"
-        )
-        for i in range(num_segments)
-    ]
     
     # New approach - speaker stored once in Script
     new_segments = [
@@ -317,13 +269,13 @@ def test_script_memory_efficiency():
         voices={"TestSpeaker": "test_voice"}
     )
     
-    # Verify we have the same number of text segments
-    assert len(old_segments) == len(script.segments)
+    # Verify we have the expected number of text segments
+    assert len(script.segments) == num_segments
     
-    # Verify text content is the same
-    old_texts = [seg.text for seg in old_segments]
-    new_texts = [seg.text for seg in script.segments]
-    assert old_texts == new_texts
+    # Verify text content is correct
+    expected_texts = [f"Segment {i}" for i in range(num_segments)]
+    actual_texts = [seg.text for seg in script.segments]
+    assert actual_texts == expected_texts
     
     # In the new structure, speaker is stored only once
     assert len(script.speakers) == 1
