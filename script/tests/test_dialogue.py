@@ -47,8 +47,14 @@ def test_label_dialogue():
         TextSegment("replied Mary.", False),
     ]
     speakers = {
-        SpeakerDetails(frozenset({"Bob"}), "middle-aged", "male", "bob_voice"),
-        SpeakerDetails(frozenset({"Mary"}), "middle-aged", "female", "mary_voice"),
+        SpeakerVoice(
+            SpeakerDetails(frozenset({"Bob"}), "middle-aged", "male", "bob_voice"),
+            Voice(name="bob_voice", age="middle-aged", gender="male", audio_path="", audio_transcript="")
+        ),
+        SpeakerVoice(
+            SpeakerDetails(frozenset({"Mary"}), "middle-aged", "female", "mary_voice"),
+            Voice(name="mary_voice", age="middle-aged", gender="female", audio_path="", audio_transcript="")
+        ),
     }
     assert label_dialogue(texts, speakers, batch_size=2) == [
         DialogueLabel(index=0, speaker="Bob"),
@@ -58,27 +64,30 @@ def test_label_dialogue():
 
 @pytest.mark.integration
 def test_label_dialogue__large():
-    def build_speaker_details(names: set[str]) -> SpeakerDetails:
-        return SpeakerDetails(frozenset(names), "middle-aged", "female", "default_voice")
+    def build_speaker_voice(names: set[str]) -> SpeakerVoice:
+        return SpeakerVoice(
+            SpeakerDetails(frozenset(names), "middle-aged", "female", "default_voice"),
+            Voice(name="default_voice", age="middle-aged", gender="female", audio_path="", audio_transcript="")
+        )
 
-    def get_expectation(filename: str, speakers: set[SpeakerDetails]):
+    def get_expectation(filename: str, speakers: set[SpeakerVoice]):
         expected_details = get_dialogue_expectation(filename)
         return [
             {"speaker": s, "text": e["text"]}
             for e in expected_details
             for s in speakers
-            if e["speaker"] in [alias for alias in s.names]
+            if e["speaker"] in [alias for alias in s.character.names]
         ]
 
     speakers = {
-        build_speaker_details({"Narrator"}),
-        build_speaker_details({"Professor McGonagall"}),
-        build_speaker_details({"Albus Dumbledore"}),
-        build_speaker_details({"Mrs. Dursley", "Aunt Petunia"}),
-        build_speaker_details({"Mr. Dursley", "Uncle Vernon"}),
-        build_speaker_details({"Hagrid"}),
-        build_speaker_details({"Dudley"}),
-        build_speaker_details({"Harry Potter"}),
+        build_speaker_voice({"Narrator"}),
+        build_speaker_voice({"Professor McGonagall"}),
+        build_speaker_voice({"Albus Dumbledore"}),
+        build_speaker_voice({"Mrs. Dursley", "Aunt Petunia"}),
+        build_speaker_voice({"Mr. Dursley", "Uncle Vernon"}),
+        build_speaker_voice({"Hagrid"}),
+        build_speaker_voice({"Dudley"}),
+        build_speaker_voice({"Harry Potter"}),
     }
     expectation = get_expectation("harrypotter-1-expected-dialogue.txt", speakers)
     dialogues = [
@@ -107,8 +116,14 @@ def test_label():
         3: TextSegment("replied Mary.", False),
     }
     speakers = {
-        SpeakerDetails(frozenset({"Bob"}), "middle-aged", "male", "bob_voice"),
-        SpeakerDetails(frozenset({"Mary"}), "middle-aged", "female", "mary_voice"),
+        SpeakerVoice(
+            SpeakerDetails(frozenset({"Bob"}), "middle-aged", "male", "bob_voice"),
+            Voice(name="bob_voice", age="middle-aged", gender="male", audio_path="", audio_transcript="")
+        ),
+        SpeakerVoice(
+            SpeakerDetails(frozenset({"Mary"}), "middle-aged", "female", "mary_voice"),
+            Voice(name="mary_voice", age="middle-aged", gender="female", audio_path="", audio_transcript="")
+        ),
     }
     assert label(dialogues, speakers) == [
         DialogueLabel(index=0, speaker="Bob"),
@@ -177,10 +192,10 @@ def test_get_script():
     
     # Verify we have speakers
     assert len(script.speakers) > 0
-    assert all(isinstance(speaker, SpeakerDetails) for speaker in script.speakers)
+    assert all(isinstance(speaker, SpeakerVoice) for speaker in script.speakers)
     
-    # Verify speakers have voice names
-    assert all(speaker.voice_name for speaker in script.speakers)
+    # Verify speakers have voice information
+    assert all(speaker.voice.name for speaker in script.speakers)
     
     # Compare text content with expected
     expected_details = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")

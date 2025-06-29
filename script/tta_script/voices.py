@@ -9,6 +9,19 @@ from tta_types.types import Voice
 class SpeakerVoice:
     character: SpeakerDetails
     voice: Voice
+    
+    def first_alias(self) -> str:
+        return self.character.first_alias()
+    
+    def to_dict(self) -> dict:
+        return {
+            "names": list(self.character.names),
+            "age": self.voice.age,
+            "gender": self.voice.gender,
+            "voice_name": self.voice.name,
+            "audio_path": self.voice.audio_path,
+            "audio_transcript": self.voice.audio_transcript,
+        }
 
 
 def assign_voices(
@@ -26,11 +39,8 @@ def assign_voices(
         if matching_voices:
             selected_voice = matching_voices[0]
             available_voices.remove(selected_voice)
-            # Create new SpeakerDetails with voice name included
-            speaker_with_voice = SpeakerDetails(
-                speaker.names, speaker.age, speaker.gender, selected_voice.name
-            )
-            voiced_characters.add(SpeakerVoice(character=speaker_with_voice, voice=selected_voice))
+            # Create SpeakerVoice directly without conversion
+            voiced_characters.add(SpeakerVoice(character=speaker, voice=selected_voice))
         else:
             raise ValueError(
                 f"No available voices for {speaker.first_alias()} with age {speaker.age} and gender {speaker.gender}."
