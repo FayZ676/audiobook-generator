@@ -11,14 +11,8 @@ from tta_script.dialogue.extract import (
 )
 from tta_script.dialogue.types import TextSegment, DialogueLabel
 from tta_script.character.types import SpeakerDetails, Age, Gender
-
-try:
-    from tta_script.voices import Speaker
-    from tta_types.types import Voice
-except ImportError:
-    # For testing without full dependencies
-    Speaker = None
-    Voice = None
+from tta_script.voices import Speaker
+from tta_types.types import Voice
 
 
 def build_speaker_voice(
