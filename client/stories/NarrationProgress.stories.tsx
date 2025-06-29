@@ -3,26 +3,36 @@ import type { Meta, StoryObj } from "@storybook/react";
 import NarrationProgress from "../app/components/narration/NarrationProgress";
 import { Script } from "../app/actions/script";
 
-const sampleScript: Script = [
-  {
-    voice_name: "narrator",
-    speaker: {
+const sampleScript: Script = {
+  segments: [
+    {
+      text: "This is sample text.",
+      speaker_alias: "narrator",
+    },
+    {
+      text: "I shall face whatever dangers lie ahead, for honor and justice guide my path. No darkness can extinguish the light of righteousness that burns within my heart.",
+      speaker_alias: "knight",
+    },
+  ],
+  speakers: [
+    {
       names: ["Narrator"],
       age: "middle-aged",
       gender: "male",
+      voice_name: "narrator",
+      audio_path: "",
+      audio_transcript: "",
     },
-    text: "This is sample text.",
-  },
-  {
-    voice_name: "knight",
-    speaker: {
+    {
       names: ["Sir Galahad"],
       age: "young",
       gender: "male",
+      voice_name: "knight",
+      audio_path: "",
+      audio_transcript: "",
     },
-    text: "I shall face whatever dangers lie ahead, for honor and justice guide my path. No darkness can extinguish the light of righteousness that burns within my heart.",
-  },
-];
+  ],
+};
 
 const meta: Meta<typeof NarrationProgress> = {
   title: "Components/NarrationProgress",

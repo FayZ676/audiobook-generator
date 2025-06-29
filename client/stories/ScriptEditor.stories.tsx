@@ -4,35 +4,48 @@ import ScriptEditor from "@/app/components/script/ScriptEditor";
 import { Script } from "@/app/actions/script";
 import { Voice } from "@/app/actions/voices";
 
-const sampleScript: Script = [
-  {
-    voice_name: "narrator_voice",
-    speaker: {
+const sampleScript: Script = {
+  segments: [
+    {
+      text: "Once upon a time, in a land far, far away, there lived a brave knight.",
+      speaker_alias: "narrator",
+    },
+    {
+      text: "I shall face whatever dangers lie ahead, for honor and justice guide my path. No darkness can extinguish the light of righteousness that burns within my heart.",
+      speaker_alias: "knight",
+    },
+    {
+      text: "Thank you, brave knight, for saving our kingdom from the terrible dragon!",
+      speaker_alias: "princess",
+    },
+  ],
+  speakers: [
+    {
       names: ["Narrator"],
       age: "middle-aged",
       gender: "male",
+      voice_name: "narrator_voice",
+      audio_path: "",
+      audio_transcript: "",
     },
-    text: "Once upon a time, in a land far, far away, there lived a brave knight.",
-  },
-  {
-    voice_name: "knight_voice",
-    speaker: {
+    {
       names: ["Sir Galahad"],
       age: "young",
       gender: "male",
+      voice_name: "knight_voice",
+      audio_path: "",
+      audio_transcript: "",
     },
-    text: "I shall face whatever dangers lie ahead, for honor and justice guide my path. No darkness can extinguish the light of righteousness that burns within my heart.",
-  },
-  {
-    voice_name: "princess_voice",
-    speaker: {
+    {
       names: ["Princess Elara"],
       age: "young",
       gender: "female",
+      voice_name: "princess_voice",
+      audio_path: "",
+      audio_transcript: "",
     },
-    text: "Thank you, brave knight, for saving our kingdom from the terrible dragon!",
-  },
-];
+  ],
+};
 
 const sampleVoices: Voice[] = [
   {
@@ -93,7 +106,7 @@ export const Default: Story = {
 
 export const EmptyScript: Story = {
   args: {
-    script: [],
+    script: { segments: [], speakers: [] },
     voices: sampleVoices,
   },
   render: (args) => <ScriptEditor {...args} />,
