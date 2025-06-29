@@ -16,15 +16,12 @@ interface CharacterMapping {
 function extractCharacterMappings(script: Script): CharacterMapping[] {
   const characterMap = new Map<string, string>();
 
-  script.forEach((segment) => {
-    const characterName = segment.speaker.names[0];
-    // Skip segments with no character name
-    if (
-      characterName &&
-      characterName.trim() &&
-      !characterMap.has(characterName)
-    ) {
-      characterMap.set(characterName, segment.voice_name);
+  // Use speakers array and voices mapping from Script structure
+  script.speakers.forEach((speaker) => {
+    const characterName = speaker.names[0];
+    if (characterName && characterName.trim()) {
+      const voiceName = script.voices[characterName] || '';
+      characterMap.set(characterName, voiceName);
     }
   });
 
