@@ -222,9 +222,9 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
   return (
     <div className="flex flex-col gap-4">
       {(error || success || isSaving) && (
-        <div className="mb-4 flex items-center gap-2">
+        <div className="mb-4">
           {isSaving && (
-            <span className="loading loading-spinner loading-sm"></span>
+            <span className="flex items-center loading loading-spinner loading-sm"></span>
           )}
           {error && <Tip variant="warning">{error}</Tip>}
         </div>
