@@ -10,7 +10,7 @@ from tta_script.dialogue.extract import (
     split_by_dialogue,
 )
 from tta_script.dialogue.types import TextSegment, DialogueLabel
-from tta_script.character.types import SpeakerDetails
+from tta_script.character.types import SpeakerDetails, Age, Gender
 
 try:
     from tta_script.voices import Speaker
@@ -19,6 +19,26 @@ except ImportError:
     # For testing without full dependencies
     Speaker = None
     Voice = None
+
+
+def build_speaker_voice(
+    names: set[str],
+    gender: Gender,
+    age: Age = "middle-aged",
+    voice_name: str = "default_voice",
+    audio_path: str = "foo",
+    audio_transcript: str = "foo",
+):
+    return Speaker(
+        SpeakerDetails(frozenset(names), age, gender),
+        Voice(
+            name=voice_name,
+            age=age,
+            gender=gender,
+            audio_path=audio_path,
+            audio_transcript=audio_transcript,
+        ),
+    )
 
 
 def get_text(filename: str) -> str:
@@ -50,26 +70,8 @@ def test_label_dialogue():
         TextSegment("replied Mary.", False),
     ]
     speakers = {
-        Speaker(
-            SpeakerDetails(frozenset({"Bob"}), "middle-aged", "male"),
-            Voice(
-                name="bob_voice",
-                age="middle-aged",
-                gender="male",
-                audio_path="",
-                audio_transcript="",
-            ),
-        ),
-        Speaker(
-            SpeakerDetails(frozenset({"Mary"}), "middle-aged", "female"),
-            Voice(
-                name="mary_voice",
-                age="middle-aged",
-                gender="female",
-                audio_path="",
-                audio_transcript="",
-            ),
-        ),
+        build_speaker_voice({"Bob"}, gender="male", voice_name="bob_voice"),
+        build_speaker_voice({"Mary"}, gender="female", voice_name="mary_voice"),
     }
     assert label_dialogue(texts, speakers, batch_size=2) == [
         DialogueLabel(index=0, speaker="Bob"),
@@ -79,38 +81,20 @@ def test_label_dialogue():
 
 @pytest.mark.integration
 def test_label_dialogue__large():
-    def build_speaker_voice(names: set[str]) -> Speaker:
-        return Speaker(
-            SpeakerDetails(frozenset(names), "middle-aged", "female"),
-            Voice(
-                name="default_voice",
-                age="middle-aged",
-                gender="female",
-                audio_path="",
-                audio_transcript="",
-            ),
-        )
-
-    def get_expectation(filename: str, speakers: set[Speaker]):
-        expected_details = get_dialogue_expectation(filename)
-        return [
-            {"speaker": s, "text": e["text"]}
-            for e in expected_details
-            for s in speakers
-            if e["speaker"] in [alias for alias in s.character.names]
-        ]
-
     speakers = {
-        build_speaker_voice({"Narrator"}),
-        build_speaker_voice({"Professor McGonagall"}),
-        build_speaker_voice({"Albus Dumbledore"}),
-        build_speaker_voice({"Mrs. Dursley", "Aunt Petunia"}),
-        build_speaker_voice({"Mr. Dursley", "Uncle Vernon"}),
-        build_speaker_voice({"Hagrid"}),
-        build_speaker_voice({"Dudley"}),
-        build_speaker_voice({"Harry Potter"}),
+        build_speaker_voice({"Narrator"}, age="middle-aged", gender="male"),
+        build_speaker_voice({"Professor McGonagall"}, age="old", gender="female"),
+        build_speaker_voice({"Albus Dumbledore"}, age="old", gender="male"),
+        build_speaker_voice(
+            {"Mrs. Dursley", "Aunt Petunia"}, age="middle-aged", gender="female"
+        ),
+        build_speaker_voice(
+            {"Mr. Dursley", "Uncle Vernon"}, age="middle-aged", gender="male"
+        ),
+        build_speaker_voice({"Hagrid"}, age="middle-aged", gender="male"),
+        build_speaker_voice({"Dudley"}, age="young", gender="male"),
+        build_speaker_voice({"Harry Potter"}, age="young", gender="male"),
     }
-    expectation = get_expectation("harrypotter-1-expected-dialogue.txt", speakers)
     dialogues = [
         TextSegment(e["text"], False if e["speaker"] == "Narrator" else True)
         for e in get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
@@ -140,26 +124,8 @@ def test_label():
         3: TextSegment("replied Mary.", False),
     }
     speakers = {
-        Speaker(
-            SpeakerDetails(frozenset({"Bob"}), "middle-aged", "male"),
-            Voice(
-                name="bob_voice",
-                age="middle-aged",
-                gender="male",
-                audio_path="",
-                audio_transcript="",
-            ),
-        ),
-        Speaker(
-            SpeakerDetails(frozenset({"Mary"}), "middle-aged", "female"),
-            Voice(
-                name="mary_voice",
-                age="middle-aged",
-                gender="female",
-                audio_path="",
-                audio_transcript="",
-            ),
-        ),
+        build_speaker_voice({"Bob"}, gender="male", voice_name="bob_voice"),
+        build_speaker_voice({"Mary"}, gender="female", voice_name="mary_voice"),
     }
     assert label(dialogues, speakers) == [
         DialogueLabel(index=0, speaker="Bob"),
@@ -191,36 +157,54 @@ def test_create_text_batches():
 def test_get_script():
     """Test the get_script function that returns Script structure."""
 
-    def build_speaker_voice(names: set[str]) -> Speaker:
-        return Speaker(
-            SpeakerDetails(frozenset(names), "middle-aged", "male"),
-            Voice(
-                name="name",
-                gender="male",
-                age="young",
-                audio_path="foo",
-                audio_transcript="bar",
-            ),
-        )
-
     speakers = {
-        build_speaker_voice({"Professor McGonagall"}),
-        build_speaker_voice({"Albus Dumbledore"}),
-        build_speaker_voice({"Mrs. Dursley", "Aunt Petunia"}),
-        build_speaker_voice({"Mr. Dursley", "Uncle Vernon"}),
-        build_speaker_voice({"Hagrid"}),
-        build_speaker_voice({"Dudley"}),
-        build_speaker_voice({"Harry Potter"}),
+        build_speaker_voice(
+            {"Professor McGonagall"},
+            age="old",
+            gender="male",
+        ),
+        build_speaker_voice(
+            {"Albus Dumbledore"},
+            age="old",
+            gender="male",
+        ),
+        build_speaker_voice(
+            {"Mrs. Dursley", "Aunt Petunia"},
+            age="middle-aged",
+            gender="female",
+        ),
+        build_speaker_voice(
+            {"Mr. Dursley", "Uncle Vernon"},
+            age="middle-aged",
+            gender="male",
+        ),
+        build_speaker_voice(
+            {"Hagrid"},
+            age="middle-aged",
+            gender="male",
+        ),
+        build_speaker_voice(
+            {"Dudley"},
+            age="young",
+            gender="male",
+        ),
+        build_speaker_voice(
+            {"Harry Potter"},
+            age="young",
+            gender="male",
+        ),
     }
 
-    # Test new Script structure
     script = get_script(
         text=get_text("harrypotter-1.txt"),
         speakers_voices=speakers,
-        narrator_speaker=build_speaker_voice({"Narrator"}),
+        narrator_speaker=build_speaker_voice(
+            {"Narrator"},
+            age="young",
+            gender="male",
+        ),
     )
 
-    # Compare text content with expected
     expected_details = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
     assert [seg.text for seg in script.segments] == [
         e["text"] for e in expected_details
