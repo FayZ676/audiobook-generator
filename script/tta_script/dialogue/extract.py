@@ -26,12 +26,28 @@ def get_script(
     This is the new preferred method that eliminates SpeakerDetails duplication.
     """
     segments = split_by_dialogue(text)
-    speakers = {s.character for s in speakers_voices}
-    dialogue = build_dialogue(segments, speakers, narrator_speaker)
-
-    voices = {s.character.first_alias(): s.voice.name for s in speakers_voices} | {
-        "Narrator": narrator_speaker.voice.name
+    
+    # Create speakers with voice names included
+    speakers_with_voices = {
+        SpeakerDetails(
+            s.character.names,
+            s.character.age,
+            s.character.gender,
+            s.voice.name
+        ) 
+        for s in speakers_voices
     }
+    
+    # Add narrator with voice
+    narrator_with_voice = SpeakerDetails(
+        narrator_speaker.character.names,
+        narrator_speaker.character.age,
+        narrator_speaker.character.gender,
+        narrator_speaker.voice.name
+    )
+    speakers_with_voices.add(narrator_with_voice)
+    
+    dialogue = build_dialogue(segments, speakers_with_voices, narrator_speaker)
 
     # Create script segments with speaker aliases
     script_segments = [
@@ -40,16 +56,14 @@ def get_script(
             speaker_alias=d.speaker.first_alias(),
         )
         for d in dialogue
-        if d.speaker.first_alias() in voices
     ]
 
-    # Get unique speakers from the dialogue
-    unique_speakers = list({d.speaker for d in dialogue if d.speaker.first_alias() in voices})
+    # Get unique speakers from the dialogue (they already have voice names)
+    unique_speakers = list({d.speaker for d in dialogue})
 
     return Script(
         segments=script_segments,
         speakers=unique_speakers,
-        voices=voices,
     )
 
 
@@ -62,6 +76,15 @@ def build_dialogue(
         label.index: label.speaker for label in label_dialogue(segments, speakers)
     }
     dialogue: list[Dialogue] = []
+    
+    # Create narrator speaker details with voice
+    narrator_with_voice = SpeakerDetails(
+        narrator_speaker.character.names,
+        narrator_speaker.character.age,
+        narrator_speaker.character.gender,
+        narrator_speaker.voice.name
+    )
+    
     for i, seg in enumerate(segments):
         if seg.dialogue:
             label_speaker = label_dict.get(i)
@@ -70,10 +93,10 @@ def build_dialogue(
                     (s for s in speakers if s.first_alias() == label_speaker),
                     None,
                 )
-                or narrator_speaker.character
+                or narrator_with_voice
             )
         else:
-            speaker = narrator_speaker.character
+            speaker = narrator_with_voice
         dialogue.append(Dialogue(speaker, seg.text))
     return dialogue
 

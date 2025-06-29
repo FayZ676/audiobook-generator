@@ -16,11 +16,11 @@ interface CharacterMapping {
 function extractCharacterMappings(script: Script): CharacterMapping[] {
   const characterMap = new Map<string, string>();
 
-  // Use speakers array and voices mapping from Script structure
+  // Use speakers array with voice_name directly from speaker details
   script.speakers.forEach((speaker) => {
     const characterName = speaker.names[0];
     if (characterName && characterName.trim()) {
-      const voiceName = script.voices[characterName] || '';
+      const voiceName = speaker.voice_name || '';
       characterMap.set(characterName, voiceName);
     }
   });

@@ -51,18 +51,20 @@ class ScriptSegment:
 class Script:
     segments: list[ScriptSegment]
     speakers: list[SpeakerDetails]  # All unique speakers
-    voices: dict[str, str]  # Maps speaker alias to voice name
 
     def to_dict(self) -> dict:
+        # Create a lookup for speaker voice by alias
+        speaker_voice_map = {speaker.first_alias(): speaker.voice_name for speaker in self.speakers}
+        
         return {
             "segments": [
                 {
                     "text": segment.text,
                     "speaker_alias": segment.speaker_alias,
-                    "voice_name": self.voices.get(segment.speaker_alias, "")
+                    "voice_name": speaker_voice_map.get(segment.speaker_alias, "")
                 }
                 for segment in self.segments
             ],
             "speakers": [speaker.to_dict() for speaker in self.speakers],
-            "voices": self.voices,
+            "voices": speaker_voice_map,  # Keep for backward compatibility
         }

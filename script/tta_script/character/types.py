@@ -20,6 +20,7 @@ class SpeakerDetails:
     names: frozenset[str]
     age: Age
     gender: Gender
+    voice_name: str = ""
 
     def first_alias(self) -> str:
         return list(self.names)[0]
@@ -29,6 +30,7 @@ class SpeakerDetails:
             "names": list(self.names),
             "age": self.age,
             "gender": self.gender,
+            "voice_name": self.voice_name,
         }
 
 

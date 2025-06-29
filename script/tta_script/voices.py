@@ -26,7 +26,11 @@ def assign_voices(
         if matching_voices:
             selected_voice = matching_voices[0]
             available_voices.remove(selected_voice)
-            voiced_characters.add(SpeakerVoice(character=speaker, voice=selected_voice))
+            # Create new SpeakerDetails with voice name included
+            speaker_with_voice = SpeakerDetails(
+                speaker.names, speaker.age, speaker.gender, selected_voice.name
+            )
+            voiced_characters.add(SpeakerVoice(character=speaker_with_voice, voice=selected_voice))
         else:
             raise ValueError(
                 f"No available voices for {speaker.first_alias()} with age {speaker.age} and gender {speaker.gender}."

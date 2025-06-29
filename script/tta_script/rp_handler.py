@@ -49,7 +49,7 @@ def _get_narrator_speaker(narrator_name: str, voices: list[Voice]):
         raise ValueError(f"Could not find a voice for the narrator '{narrator_name}'.")
     narrator_speaker = SpeakerVoice(
         SpeakerDetails(
-            frozenset({"Narrator"}), narrator_voice.age, narrator_voice.gender  # type: ignore
+            frozenset({"Narrator"}), narrator_voice.age, narrator_voice.gender, narrator_voice.name  # type: ignore
         ),
         narrator_voice,
     )
