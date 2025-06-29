@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { Script } from "@/app/actions/script";
-import { Voice, Age, Gender } from "@/app/actions/voices";
+import { Voice } from "@/app/actions/voices";
 import { ManualCharacter } from "@/app/types";
-import { AgeEnum, GenderEnum } from "@/app/types";
+import AddCharacterModal from "./AddCharacterModal";
 
 interface CharacterVoiceMappingProps {
   script: Script;
@@ -53,81 +53,16 @@ export default function CharacterVoiceMapping({
   onCharacterVoiceChange,
   onAddCharacter,
 }: CharacterVoiceMappingProps) {
-  const [newCharacterName, setNewCharacterName] = useState("");
-  const [newCharacterAge, setNewCharacterAge] = useState<Age | "">("");
-  const [newCharacterGender, setNewCharacterGender] = useState<Gender | "">("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const characterMappings = useMemo(
     () => extractCharacterMappings(script, manualCharacters),
     [script, manualCharacters]
   );
 
-  const handleAddCharacter = () => {
-    if (newCharacterName.trim() && newCharacterAge && newCharacterGender) {
-      const character: ManualCharacter = {
-        name: newCharacterName.trim(),
-        age: newCharacterAge,
-        gender: newCharacterGender,
-      };
-      onAddCharacter(character);
-      setNewCharacterName("");
-      setNewCharacterAge("");
-      setNewCharacterGender("");
-    }
-  };
-
-  const isFormValid =
-    newCharacterName.trim() && newCharacterAge && newCharacterGender;
-
   return (
     <div className="bg-base-200 p-4 rounded">
-      {/* Add Character Form */}
-      <div className="mb-4 p-3 bg-base-300 rounded">
-        <h3 className="text-sm font-medium mb-3">Add New Character</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-          <input
-            type="text"
-            placeholder="Character name"
-            value={newCharacterName}
-            onChange={(e) => setNewCharacterName(e.target.value)}
-            className="input input-sm input-bordered"
-          />
-          <select
-            value={newCharacterAge}
-            onChange={(e) => setNewCharacterAge(e.target.value as Age)}
-            className="select select-sm select-bordered"
-          >
-            <option value="">Select age</option>
-            {AgeEnum.options.map((age) => (
-              <option key={age} value={age}>
-                {age}
-              </option>
-            ))}
-          </select>
-          <select
-            value={newCharacterGender}
-            onChange={(e) => setNewCharacterGender(e.target.value as Gender)}
-            className="select select-sm select-bordered"
-          >
-            <option value="">Select gender</option>
-            {GenderEnum.options.map((gender) => (
-              <option key={gender} value={gender}>
-                {gender}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={handleAddCharacter}
-            disabled={!isFormValid}
-            className="btn btn-sm btn-primary"
-          >
-            Add
-          </button>
-        </div>
-      </div>
-
-      {/* Character Voice Mappings */}
-      <div className="max-h-[14rem] overflow-y-scroll">
+      <div className="max-h-[14rem] overflow-y-scroll mb-4">
         <div className="flex flex-col gap-4">
           {characterMappings.map((mapping) => (
             <div key={mapping.characterName} className="grid grid-cols-2">
@@ -152,6 +87,16 @@ export default function CharacterVoiceMapping({
           ))}
         </div>
       </div>
+
+      <button onClick={() => setIsModalOpen(true)} className="btn w-full">
+        Add New Character
+      </button>
+
+      <AddCharacterModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onAddCharacter={onAddCharacter}
+      />
     </div>
   );
 }
