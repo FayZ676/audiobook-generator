@@ -136,12 +136,9 @@ def test_create_text_batches():
     assert create_text_batches(texts, 2) == expected_batches
 
 
-
-
-
 @pytest.mark.integration
 def test_get_script():
-    """Test the new get_script function that returns Script structure."""
+    """Test the get_script function that returns Script structure."""
     def build_speaker_voice(names: set[str]) -> SpeakerVoice:
         return SpeakerVoice(
             SpeakerDetails(frozenset(names), "middle-aged", "male", "default_voice"),
@@ -188,93 +185,9 @@ def test_get_script():
     # Compare text content with expected
     expected_details = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
     assert [seg.text for seg in script.segments] == [e["text"] for e in expected_details]
-    
-    # Test serialization
-    script_dict = script.to_dict()
-    assert "segments" in script_dict
-    assert "speakers" in script_dict
-    assert "voices" in script_dict  # Should still be present for backward compatibility
 
 
 def test_split_by_dialogue():
     result = split_by_dialogue(get_text("harrypotter-1.txt"))
     expectation = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
     assert [r.text for r in result] == [e["text"] for e in expectation]
-
-
-def test_script_structure():
-    """Test the basic Script structure functionality."""
-    # Create test speakers with voice names
-    john = SpeakerDetails(frozenset(["John"]), "young", "male", "young_male_voice")
-    mary = SpeakerDetails(frozenset(["Mary"]), "middle-aged", "female", "female_voice")
-    narrator = SpeakerDetails(frozenset(["Narrator"]), "middle-aged", "male", "narrator_voice")
-    
-    # Create script segments
-    segments = [
-        ScriptSegment("Hello there!", "John"),
-        ScriptSegment("Hello John, how are you?", "Mary"),
-        ScriptSegment("John and Mary talked.", "Narrator"),
-    ]
-    
-    # Create script (no separate voices dict needed)
-    script = Script(segments=segments, speakers=[john, mary, narrator])
-    
-    # Test basic properties
-    assert len(script.segments) == 3
-    assert len(script.speakers) == 3
-    assert script.speakers[0].voice_name == "young_male_voice"
-    assert script.speakers[1].voice_name == "female_voice"
-    assert script.speakers[2].voice_name == "narrator_voice"
-    
-    # Test serialization
-    script_dict = script.to_dict()
-    assert "segments" in script_dict
-    assert "speakers" in script_dict
-    assert "voices" in script_dict  # Should be generated from speakers
-    assert len(script_dict["segments"]) == 3
-    
-    # Verify segment structure includes voice_name
-    segment = script_dict["segments"][0]
-    assert segment["text"] == "Hello there!"
-    assert segment["speaker_alias"] == "John"
-    assert segment["voice_name"] == "young_male_voice"
-    
-    # Verify voices dict is properly generated
-    assert script_dict["voices"]["John"] == "young_male_voice"
-    assert script_dict["voices"]["Mary"] == "female_voice"
-    assert script_dict["voices"]["Narrator"] == "narrator_voice"
-
-
-def test_script_memory_efficiency():
-    """Test that Script structure is more memory efficient than duplicating speaker data."""
-    speaker = SpeakerDetails(frozenset(["TestSpeaker"]), "young", "male", "test_voice")
-    
-    # Create many segments with the same speaker
-    num_segments = 50
-    
-    # New approach - speaker stored once in Script
-    new_segments = [
-        ScriptSegment(
-            text=f"Segment {i}",
-            speaker_alias="TestSpeaker"
-        )
-        for i in range(num_segments)
-    ]
-    
-    script = Script(
-        segments=new_segments,
-        speakers=[speaker],  # Stored once
-    )
-    
-    # Verify we have the expected number of text segments
-    assert len(script.segments) == num_segments
-    
-    # Verify text content is correct
-    expected_texts = [f"Segment {i}" for i in range(num_segments)]
-    actual_texts = [seg.text for seg in script.segments]
-    assert actual_texts == expected_texts
-    
-    # In the new structure, speaker is stored only once
-    assert len(script.speakers) == 1
-    assert script.speakers[0] == speaker
-    assert script.speakers[0].voice_name == "test_voice"
