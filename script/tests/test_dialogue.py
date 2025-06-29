@@ -17,7 +17,7 @@ from tta_types.types import Voice
 
 def build_speaker_voice(
     names: set[str],
-    gender: Gender,
+    gender: Gender = "male",
     age: Age = "middle-aged",
     voice_name: str = "default_voice",
     audio_path: str = "foo",
@@ -152,51 +152,19 @@ def test_get_script():
     """Test the get_script function that returns Script structure."""
 
     speakers = {
-        build_speaker_voice(
-            {"Professor McGonagall"},
-            age="old",
-            gender="male",
-        ),
-        build_speaker_voice(
-            {"Albus Dumbledore"},
-            age="old",
-            gender="male",
-        ),
-        build_speaker_voice(
-            {"Mrs. Dursley", "Aunt Petunia"},
-            age="middle-aged",
-            gender="female",
-        ),
-        build_speaker_voice(
-            {"Mr. Dursley", "Uncle Vernon"},
-            age="middle-aged",
-            gender="male",
-        ),
-        build_speaker_voice(
-            {"Hagrid"},
-            age="middle-aged",
-            gender="male",
-        ),
-        build_speaker_voice(
-            {"Dudley"},
-            age="young",
-            gender="male",
-        ),
-        build_speaker_voice(
-            {"Harry Potter"},
-            age="young",
-            gender="male",
-        ),
+        build_speaker_voice({"Professor McGonagall"}),
+        build_speaker_voice({"Albus Dumbledore"}),
+        build_speaker_voice({"Mrs. Dursley", "Aunt Petunia"}),
+        build_speaker_voice({"Mr. Dursley", "Uncle Vernon"}),
+        build_speaker_voice({"Hagrid"}),
+        build_speaker_voice({"Dudley"}),
+        build_speaker_voice({"Harry Potter"}),
     }
 
     script = get_script(
         text=get_text("harrypotter-1.txt"),
         speakers_voices=speakers,
-        narrator_speaker=build_speaker_voice(
-            {"Narrator"},
-            age="young",
-            gender="male",
-        ),
+        narrator_speaker=build_speaker_voice({"Narrator"}),
     )
 
     expected_details = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
