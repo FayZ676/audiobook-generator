@@ -13,8 +13,8 @@ const SpeakerDetailsSchema = z.object({
   age: AgeEnum,
   gender: GenderEnum,
   voice_name: z.string(),
-  audio_path: z.string(),
-  audio_transcript: z.string(),
+  audio_path: z.string().optional().default(""),
+  audio_transcript: z.string().optional().default(""),
 });
 
 const ScriptSegmentSchema = z.object({
@@ -48,9 +48,10 @@ interface UpdateScriptProps {
 
 export type Script = z.infer<typeof ScriptSchema>;
 
-
-
-export async function createScript({ textContent, narrator }: CreateScriptProps) {
+export async function createScript({
+  textContent,
+  narrator,
+}: CreateScriptProps) {
   const { userId } = await auth();
   if (!userId) {
     throw new Error("User not authenticated");
@@ -102,7 +103,7 @@ export async function getScript(): Promise<Script | null> {
     console.error("Validation error:", result.error.format());
     throw new Error("Invalid API response: schema validation failed");
   }
-  
+
   return result.data;
 }
 
@@ -123,19 +124,22 @@ export async function updateScript({ script }: UpdateScriptProps) {
   const userId = await getUserId();
 
   const filename = `${userId}.json`;
-  const response = await fetch(`${process.env.AUDIOBOOK_SERVICE_URL}/script/${filename}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ script }),
-  });
+  const response = await fetch(
+    `${process.env.AUDIOBOOK_SERVICE_URL}/script/${filename}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ script }),
+    }
+  );
 
   if (!response.ok) {
     throw new Error("Failed to update script");
   }
-  
+
   revalidateTag("script");
-  
+
   return response.json();
 }

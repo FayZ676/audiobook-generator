@@ -30,8 +30,8 @@ class SpeakerDetails(BaseModel):
     age: Age
     gender: Gender
     voice_name: str
-    audio_path: str
-    audio_transcript: str
+    audio_path: str = ""
+    audio_transcript: str = ""
 
 
 class ScriptSegment(BaseModel):
