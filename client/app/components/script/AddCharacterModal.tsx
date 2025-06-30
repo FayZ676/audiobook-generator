@@ -18,6 +18,12 @@ export default function AddCharacterModal({
   const [newCharacterAge, setNewCharacterAge] = useState<Age | "">("");
   const [newCharacterGender, setNewCharacterGender] = useState<Gender | "">("");
 
+  const resetForm = () => {
+    setNewCharacterName("");
+    setNewCharacterAge("");
+    setNewCharacterGender("");
+  };
+
   const handleAddCharacter = () => {
     if (newCharacterName.trim() && newCharacterAge && newCharacterGender) {
       const character: ManualCharacter = {
@@ -26,17 +32,13 @@ export default function AddCharacterModal({
         gender: newCharacterGender,
       };
       onAddCharacter(character);
-      setNewCharacterName("");
-      setNewCharacterAge("");
-      setNewCharacterGender("");
+      resetForm();
       onClose();
     }
   };
 
   const handleClose = () => {
-    setNewCharacterName("");
-    setNewCharacterAge("");
-    setNewCharacterGender("");
+    resetForm();
     onClose();
   };
 

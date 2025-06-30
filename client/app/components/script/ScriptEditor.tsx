@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 import { Script, updateScript } from "@/app/actions/script";
-import { Voice, Age, Gender } from "@/app/actions/voices";
+import { Voice } from "@/app/actions/voices";
 import { ManualCharacter } from "@/app/types";
 import Tip from "@/app/components/ui/Tip";
 import CharacterVoiceMapping from "./CharacterVoiceMapping";
@@ -72,56 +72,44 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
     debouncedAutoSave(updatedScript);
   };
 
+  const createSpeakerFromVoice = (characterName: string, voice: Voice | null) => ({
+    names: [characterName],
+    age: voice?.age || "middle-aged" as const,
+    gender: voice?.gender || "male" as const,
+    voice_name: voice?.name || "",
+    audio_path: voice?.audio_path || "",
+    audio_transcript: voice?.audio_transcript || "",
+  });
+
   const handleCharacterVoiceChange = (
     characterName: string,
     voiceName: string
   ) => {
     clearMessages();
-    const selectedVoice = voices.find((voice) => voice.name === voiceName);
-    if (selectedVoice) {
-      // Update the speaker's voice information
-      const updatedSpeakers = editingScript.speakers.map((speaker) => {
-        if (speaker.names.includes(characterName)) {
-          return {
-            ...speaker,
-            voice_name: selectedVoice.name,
-            age: selectedVoice.age,
-            gender: selectedVoice.gender,
-            audio_path: selectedVoice.audio_path,
-            audio_transcript: selectedVoice.audio_transcript,
-          };
-        }
-        return speaker;
-      });
+    const selectedVoice = voices.find((voice) => voice.name === voiceName) || null;
+    
+    const updatedSpeakers = editingScript.speakers.map((speaker) =>
+      speaker.names.includes(characterName)
+        ? createSpeakerFromVoice(characterName, selectedVoice)
+        : speaker
+    );
 
-      const updatedScript = {
-        ...editingScript,
-        speakers: updatedSpeakers,
-      };
-
-      setEditingScript(updatedScript);
-      debouncedAutoSave(updatedScript);
-    }
+    const updatedScript = { ...editingScript, speakers: updatedSpeakers };
+    setEditingScript(updatedScript);
+    debouncedAutoSave(updatedScript);
   };
 
   const handleAddCharacter = (character: ManualCharacter) => {
     clearMessages();
 
-    // Check if character already exists in script speakers
     const existingSpeaker = editingScript.speakers.find((speaker) =>
       speaker.names.includes(character.name)
     );
 
     if (!existingSpeaker) {
-      // Add character to script speakers array
-      const newSpeaker = {
-        names: [character.name],
-        age: character.age,
-        gender: character.gender,
-        voice_name: "",
-        audio_path: "",
-        audio_transcript: "",
-      };
+      const newSpeaker = createSpeakerFromVoice(character.name, null);
+      newSpeaker.age = character.age;
+      newSpeaker.gender = character.gender;
 
       const updatedScript = {
         ...editingScript,
@@ -139,79 +127,21 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
   ) => {
     clearMessages();
     const updatedSegments = [...editingScript.segments];
-
-    // Find the character in script speakers
-    let characterAge: Age = "middle-aged";
-    let characterGender: Gender = "male";
-    let characterVoice = "";
-
-    // Check existing script speakers for this character
-    const existingSpeaker = editingScript.speakers.find((speaker) =>
-      speaker.names.includes(characterName)
-    );
-    if (existingSpeaker) {
-      characterAge = existingSpeaker.age;
-      characterGender = existingSpeaker.gender;
-      characterVoice = existingSpeaker.voice_name;
-    }
-
-    // Update the segment's speaker_alias
     updatedSegments[segmentIndex] = {
       ...updatedSegments[segmentIndex],
       speaker_alias: characterName,
     };
 
-    // Update or add speaker in speakers array
-    const updatedSpeakers = [...editingScript.speakers];
-    const speakerIndex = updatedSpeakers.findIndex((speaker) =>
-      speaker.names.includes(characterName)
-    );
-
-    if (speakerIndex >= 0) {
-      // Update existing speaker
-      updatedSpeakers[speakerIndex] = {
-        ...updatedSpeakers[speakerIndex],
-        names: [characterName],
-        age: characterAge,
-        gender: characterGender,
-        voice_name: characterVoice,
-      };
-    } else {
-      // Add new speaker
-      const selectedVoice = voices.find((v) => v.name === characterVoice);
-      updatedSpeakers.push({
-        names: [characterName],
-        age: characterAge,
-        gender: characterGender,
-        voice_name: characterVoice,
-        audio_path: selectedVoice?.audio_path || "",
-        audio_transcript: selectedVoice?.audio_transcript || "",
-      });
-    }
-
-    const updatedScript = {
-      ...editingScript,
-      segments: updatedSegments,
-      speakers: updatedSpeakers,
-    };
-
+    const updatedScript = { ...editingScript, segments: updatedSegments };
     setEditingScript(updatedScript);
     debouncedAutoSave(updatedScript);
   };
 
-  // Get all available characters from script speakers
-  const getAllCharacters = () => {
-    const scriptCharacters = new Set<string>();
-    editingScript.speakers.forEach((speaker) => {
-      speaker.names.forEach((name) => {
-        if (name && name.trim()) {
-          scriptCharacters.add(name);
-        }
-      });
-    });
-
-    return Array.from(scriptCharacters).sort();
-  };
+  const getAllCharacters = () =>
+    editingScript.speakers
+      .flatMap((speaker) => speaker.names)
+      .filter((name) => name?.trim())
+      .sort();
 
   const availableCharacters = getAllCharacters();
 

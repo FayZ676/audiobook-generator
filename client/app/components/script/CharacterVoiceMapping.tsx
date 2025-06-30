@@ -17,23 +17,12 @@ interface CharacterMapping {
 }
 
 function extractCharacterMappings(script: Script): CharacterMapping[] {
-  const characterMap = new Map<string, string>();
-
-  // Use speakers array with voice_name directly from speaker details
-  script.speakers.forEach((speaker) => {
-    const characterName = speaker.names[0];
-    if (characterName && characterName.trim()) {
-      const voiceName = speaker.voice_name || "";
-      characterMap.set(characterName, voiceName);
-    }
-  });
-
-  return Array.from(characterMap.entries()).map(
-    ([characterName, currentVoice]) => ({
-      characterName,
-      currentVoice,
-    })
-  );
+  return script.speakers
+    .filter((speaker) => speaker.names[0]?.trim())
+    .map((speaker) => ({
+      characterName: speaker.names[0],
+      currentVoice: speaker.voice_name || "",
+    }));
 }
 
 export default function CharacterVoiceMapping({
