@@ -15,7 +15,6 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
   const [editingScript, setEditingScript] = useState<Script>(script);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     setEditingScript(script);
@@ -23,7 +22,6 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
 
   const clearMessages = () => {
     setError(null);
-    setSuccess(null);
   };
 
   const autoSave = async (scriptToSave: Script) => {
@@ -45,8 +43,6 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
 
     try {
       await updateScript({ script: scriptToSave });
-      setSuccess("Saved");
-      setTimeout(() => setSuccess(null), 2000);
     } catch (error) {
       console.error("Error updating script:", error);
       setError("Failed to save script");
@@ -72,10 +68,15 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
     debouncedAutoSave(updatedScript);
   };
 
-  const createSpeakerFromVoice = (characterName: string, voice: Voice | null) => ({
+  const createSpeakerFromVoice = (
+    characterName: string, 
+    voice: Voice | null, 
+    existingAge: "young" | "middle-aged" | "old", 
+    existingGender: "male" | "female"
+  ) => ({
     names: [characterName],
-    age: voice?.age || "middle-aged" as const,
-    gender: voice?.gender || "male" as const,
+    age: voice?.age || existingAge,
+    gender: voice?.gender || existingGender,
     voice_name: voice?.name || "",
     audio_path: voice?.audio_path || "",
     audio_transcript: voice?.audio_transcript || "",
@@ -90,7 +91,7 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
     
     const updatedSpeakers = editingScript.speakers.map((speaker) =>
       speaker.names.includes(characterName)
-        ? createSpeakerFromVoice(characterName, selectedVoice)
+        ? createSpeakerFromVoice(characterName, selectedVoice, speaker.age, speaker.gender)
         : speaker
     );
 
@@ -107,9 +108,7 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
     );
 
     if (!existingSpeaker) {
-      const newSpeaker = createSpeakerFromVoice(character.name, null);
-      newSpeaker.age = character.age;
-      newSpeaker.gender = character.gender;
+      const newSpeaker = createSpeakerFromVoice(character.name, null, character.age, character.gender);
 
       const updatedScript = {
         ...editingScript,
@@ -147,14 +146,12 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      {(error || success || isSaving) && (
-        <div className="mb-4">
-          {isSaving && (
-            <span className="flex items-center loading loading-spinner loading-sm"></span>
-          )}
-          {error && <Tip variant="warning">{error}</Tip>}
-        </div>
-      )}
+      <div className="h-8 flex items-center">
+        {isSaving && (
+          <span className="flex items-center loading loading-spinner loading-sm"></span>
+        )}
+        {error && <Tip variant="warning">{error}</Tip>}
+      </div>
 
       <CharacterVoiceMapping
         script={editingScript}
