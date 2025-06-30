@@ -240,7 +240,6 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
 
       <div className="h-[28rem] overflow-y-scroll bg-base-200 p-4 rounded">
         {editingScript.segments.map((scriptSegment, index) => {
-          // Find speaker details for this segment
           const speaker = editingScript.speakers.find((s) =>
             s.names.includes(scriptSegment.speaker_alias)
           );
