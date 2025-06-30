@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 
-import { Script, updateScript } from "../../actions/script";
-import { Voice } from "../../actions/voices";
-import Tip from "../ui/Tip";
+import { Script, updateScript } from "@/app/actions/script";
+import { Voice } from "@/app/actions/voices";
+import { ManualCharacter } from "@/app/types";
+import Tip from "@/app/components/ui/Tip";
 import CharacterVoiceMapping from "./CharacterVoiceMapping";
 
 interface ScriptEditorProps {
@@ -14,7 +15,6 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
   const [editingScript, setEditingScript] = useState<Script>(script);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     setEditingScript(script);
@@ -22,7 +22,6 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
 
   const clearMessages = () => {
     setError(null);
-    setSuccess(null);
   };
 
   const autoSave = async (scriptToSave: Script) => {
@@ -31,7 +30,9 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
       return;
     }
 
-    const hasEmptyText = scriptToSave.segments.some((segment) => !segment.text.trim());
+    const hasEmptyText = scriptToSave.segments.some(
+      (segment) => !segment.text.trim()
+    );
     if (hasEmptyText) {
       setError("All script segments must have text");
       return;
@@ -42,8 +43,6 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
 
     try {
       await updateScript({ script: scriptToSave });
-      setSuccess("Saved");
-      setTimeout(() => setSuccess(null), 2000);
     } catch (error) {
       console.error("Error updating script:", error);
       setError("Failed to save script");
@@ -69,69 +68,126 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
     debouncedAutoSave(updatedScript);
   };
 
+  const createSpeakerFromVoice = (
+    characterName: string, 
+    voice: Voice | null, 
+    existingAge: "young" | "middle-aged" | "old", 
+    existingGender: "male" | "female"
+  ) => ({
+    names: [characterName],
+    age: voice?.age || existingAge,
+    gender: voice?.gender || existingGender,
+    voice_name: voice?.name || "",
+    audio_path: voice?.audio_path || "",
+    audio_transcript: voice?.audio_transcript || "",
+  });
+
   const handleCharacterVoiceChange = (
     characterName: string,
     voiceName: string
   ) => {
     clearMessages();
-    const selectedVoice = voices.find((voice) => voice.name === voiceName);
-    if (selectedVoice) {
-      // Update the speaker's voice information
-      const updatedSpeakers = editingScript.speakers.map((speaker) => {
-        if (speaker.names.includes(characterName)) {
-          return {
-            ...speaker,
-            voice_name: selectedVoice.name,
-            age: selectedVoice.age,
-            gender: selectedVoice.gender,
-            audio_path: selectedVoice.audio_path,
-            audio_transcript: selectedVoice.audio_transcript,
-          };
-        }
-        return speaker;
-      });
-      
+    const selectedVoice = voices.find((voice) => voice.name === voiceName) || null;
+    
+    const updatedSpeakers = editingScript.speakers.map((speaker) =>
+      speaker.names.includes(characterName)
+        ? createSpeakerFromVoice(characterName, selectedVoice, speaker.age, speaker.gender)
+        : speaker
+    );
+
+    const updatedScript = { ...editingScript, speakers: updatedSpeakers };
+    setEditingScript(updatedScript);
+    debouncedAutoSave(updatedScript);
+  };
+
+  const handleAddCharacter = (character: ManualCharacter) => {
+    clearMessages();
+
+    const existingSpeaker = editingScript.speakers.find((speaker) =>
+      speaker.names.includes(character.name)
+    );
+
+    if (!existingSpeaker) {
+      const newSpeaker = createSpeakerFromVoice(character.name, null, character.age, character.gender);
+
       const updatedScript = {
         ...editingScript,
-        speakers: updatedSpeakers,
+        speakers: [...editingScript.speakers, newSpeaker],
       };
-      
+
       setEditingScript(updatedScript);
       debouncedAutoSave(updatedScript);
     }
   };
 
+  const handleSegmentCharacterChange = (
+    segmentIndex: number,
+    characterName: string
+  ) => {
+    clearMessages();
+    const updatedSegments = [...editingScript.segments];
+    updatedSegments[segmentIndex] = {
+      ...updatedSegments[segmentIndex],
+      speaker_alias: characterName,
+    };
+
+    const updatedScript = { ...editingScript, segments: updatedSegments };
+    setEditingScript(updatedScript);
+    debouncedAutoSave(updatedScript);
+  };
+
+  const getAllCharacters = () =>
+    editingScript.speakers
+      .flatMap((speaker) => speaker.names)
+      .filter((name) => name?.trim())
+      .sort();
+
+  const availableCharacters = getAllCharacters();
+
   return (
     <div className="flex flex-col gap-4">
-      {(error || success || isSaving) && (
-        <div className="mb-4 flex items-center gap-2">
-          {isSaving && (
-            <span className="loading loading-spinner loading-sm"></span>
-          )}
-          {error && <Tip variant="warning">{error}</Tip>}
-        </div>
-      )}
+      <div className="h-8 flex items-center">
+        {isSaving && (
+          <span className="flex items-center loading loading-spinner loading-sm"></span>
+        )}
+        {error && <Tip variant="warning">{error}</Tip>}
+      </div>
 
       <CharacterVoiceMapping
         script={editingScript}
         voices={voices}
         onCharacterVoiceChange={handleCharacterVoiceChange}
+        onAddCharacter={handleAddCharacter}
       />
 
       <div className="h-[28rem] overflow-y-scroll bg-base-200 p-4 rounded">
         {editingScript.segments.map((scriptSegment, index) => {
-          // Find speaker details for this segment
-          const speaker = editingScript.speakers.find(s => 
+          const speaker = editingScript.speakers.find((s) =>
             s.names.includes(scriptSegment.speaker_alias)
           );
-          const characterName = speaker?.names[0] || scriptSegment.speaker_alias;
-          const voiceName = speaker?.voice_name || '';
-          
+          const characterName =
+            speaker?.names[0] || scriptSegment.speaker_alias;
+          const voiceName = speaker?.voice_name || "";
+
           return (
             <div key={index} className="mb-4">
               <div className="flex flex-col gap-2">
-                <div className="flex justify-between">
-                  <div className="text-sm font-medium">{characterName}</div>
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={characterName}
+                      onChange={(e) =>
+                        handleSegmentCharacterChange(index, e.target.value)
+                      }
+                      className="select select-xs select-bordered min-w-[120px]"
+                    >
+                      {availableCharacters.map((char) => (
+                        <option key={char} value={char}>
+                          {char}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                   <div className="text-xs text-base-content/70 px-3">
                     {voiceName}
                   </div>

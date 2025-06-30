@@ -16,7 +16,6 @@ from tta_service.utils import send_async_request, update_status
 from tta_service.routers.job import get_job_status
 
 
-
 router = APIRouter()
 
 
@@ -48,12 +47,12 @@ def delete_script(filename: str):
 def update_script(filename: str, request: UpdateScriptRequest):
     if not s3_client.list_files(SCRIPT_RESULTS_BUCKET, filename):
         return None
-    
+
     # Convert script to JSON and upload to S3
-    script_json = json.dumps(request.script)
-    file_obj = io.BytesIO(script_json.encode('utf-8'))
+    script_json = request.script.model_dump_json()
+    file_obj = io.BytesIO(script_json.encode("utf-8"))
     s3_client.upload_fileobj(SCRIPT_RESULTS_BUCKET, filename, file_obj)
-    
+
     return {"message": "Script updated successfully"}
 
 
@@ -78,9 +77,9 @@ def send_script_request(script_request: BuildScriptRequest):
             "Authorization": f"Bearer {SCRIPT_SERVICE_API_KEY}",
         },
     )
-    
+
     existing_job = get_job_status(script_request.user_id)
-    
+
     update_status(
         AudiobookJob(
             job_id=script_request.user_id,
@@ -88,7 +87,9 @@ def send_script_request(script_request: BuildScriptRequest):
             narration_status=existing_job.narration_status if existing_job else None,
             message=None,
             script_started_at=datetime.now(timezone.utc).isoformat(),
-            narration_started_at=existing_job.narration_started_at if existing_job else None,
+            narration_started_at=(
+                existing_job.narration_started_at if existing_job else None
+            ),
         ),
         pusher_channel="script-channel",
         pusher_event="processing",
