@@ -13,9 +13,6 @@ interface ScriptEditorProps {
 
 export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
   const [editingScript, setEditingScript] = useState<Script>(script);
-  const [manualCharacters, setManualCharacters] = useState<ManualCharacter[]>(
-    []
-  );
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -108,12 +105,31 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
   };
 
   const handleAddCharacter = (character: ManualCharacter) => {
-    // Check if character already exists
-    const existingCharacter = manualCharacters.find(
-      (c) => c.name === character.name
+    clearMessages();
+
+    // Check if character already exists in script speakers
+    const existingSpeaker = editingScript.speakers.find((speaker) =>
+      speaker.names.includes(character.name)
     );
-    if (!existingCharacter) {
-      setManualCharacters((prev) => [...prev, character]);
+
+    if (!existingSpeaker) {
+      // Add character to script speakers array
+      const newSpeaker = {
+        names: [character.name],
+        age: character.age,
+        gender: character.gender,
+        voice_name: "",
+        audio_path: "",
+        audio_transcript: "",
+      };
+
+      const updatedScript = {
+        ...editingScript,
+        speakers: [...editingScript.speakers, newSpeaker],
+      };
+
+      setEditingScript(updatedScript);
+      debouncedAutoSave(updatedScript);
     }
   };
 
@@ -124,12 +140,12 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
     clearMessages();
     const updatedSegments = [...editingScript.segments];
 
-    // Find the character (either from script or manual characters)
+    // Find the character in script speakers
     let characterAge: Age = "middle-aged";
     let characterGender: Gender = "male";
     let characterVoice = "";
 
-    // First check existing script speakers for this character
+    // Check existing script speakers for this character
     const existingSpeaker = editingScript.speakers.find((speaker) =>
       speaker.names.includes(characterName)
     );
@@ -137,20 +153,6 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
       characterAge = existingSpeaker.age;
       characterGender = existingSpeaker.gender;
       characterVoice = existingSpeaker.voice_name;
-    } else {
-      // Check manual characters
-      const manualCharacter = manualCharacters.find(
-        (c) => c.name === characterName
-      );
-      if (manualCharacter) {
-        characterAge = manualCharacter.age;
-        characterGender = manualCharacter.gender;
-        // For manual characters, try to find a suitable voice based on age/gender
-        const suitableVoice = voices.find(
-          (v) => v.age === characterAge && v.gender === characterGender
-        );
-        characterVoice = suitableVoice?.name || "";
-      }
     }
 
     // Update the segment's speaker_alias
@@ -197,7 +199,7 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
     debouncedAutoSave(updatedScript);
   };
 
-  // Get all available characters (from script + manual)
+  // Get all available characters from script speakers
   const getAllCharacters = () => {
     const scriptCharacters = new Set<string>();
     editingScript.speakers.forEach((speaker) => {
@@ -208,14 +210,7 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
       });
     });
 
-    const allCharacters = Array.from(scriptCharacters);
-    manualCharacters.forEach((character) => {
-      if (!allCharacters.includes(character.name)) {
-        allCharacters.push(character.name);
-      }
-    });
-
-    return allCharacters.sort();
+    return Array.from(scriptCharacters).sort();
   };
 
   const availableCharacters = getAllCharacters();
@@ -234,7 +229,6 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
       <CharacterVoiceMapping
         script={editingScript}
         voices={voices}
-        manualCharacters={manualCharacters}
         onCharacterVoiceChange={handleCharacterVoiceChange}
         onAddCharacter={handleAddCharacter}
       />

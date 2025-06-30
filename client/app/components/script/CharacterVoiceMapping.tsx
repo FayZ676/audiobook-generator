@@ -7,7 +7,6 @@ import AddCharacterModal from "./AddCharacterModal";
 interface CharacterVoiceMappingProps {
   script: Script;
   voices: Voice[];
-  manualCharacters: ManualCharacter[];
   onCharacterVoiceChange: (characterName: string, voiceName: string) => void;
   onAddCharacter: (character: ManualCharacter) => void;
 }
@@ -17,10 +16,7 @@ interface CharacterMapping {
   currentVoice: string;
 }
 
-function extractCharacterMappings(
-  script: Script,
-  manualCharacters: ManualCharacter[]
-): CharacterMapping[] {
+function extractCharacterMappings(script: Script): CharacterMapping[] {
   const characterMap = new Map<string, string>();
 
   // Use speakers array with voice_name directly from speaker details
@@ -29,12 +25,6 @@ function extractCharacterMappings(
     if (characterName && characterName.trim()) {
       const voiceName = speaker.voice_name || "";
       characterMap.set(characterName, voiceName);
-    }
-  });
-
-  manualCharacters.forEach((character) => {
-    if (!characterMap.has(character.name)) {
-      characterMap.set(character.name, "");
     }
   });
 
@@ -49,15 +39,14 @@ function extractCharacterMappings(
 export default function CharacterVoiceMapping({
   script,
   voices,
-  manualCharacters,
   onCharacterVoiceChange,
   onAddCharacter,
 }: CharacterVoiceMappingProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const characterMappings = useMemo(
-    () => extractCharacterMappings(script, manualCharacters),
-    [script, manualCharacters]
+    () => extractCharacterMappings(script),
+    [script]
   );
 
   return (
