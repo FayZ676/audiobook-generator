@@ -200,11 +200,12 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
   // Get all available characters (from script + manual)
   const getAllCharacters = () => {
     const scriptCharacters = new Set<string>();
-    editingScript.segments.forEach((segment) => {
-      const characterName = segment.speaker_alias;
-      if (characterName && characterName.trim()) {
-        scriptCharacters.add(characterName);
-      }
+    editingScript.speakers.forEach((speaker) => {
+      speaker.names.forEach((name) => {
+        if (name && name.trim()) {
+          scriptCharacters.add(name);
+        }
+      });
     });
 
     const allCharacters = Array.from(scriptCharacters);
