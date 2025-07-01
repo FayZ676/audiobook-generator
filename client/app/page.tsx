@@ -155,10 +155,9 @@ export default function Home() {
                 </div>
               </div>
 
-              <Link href="/subscription" className="btn btn-primary btn-block mb-4">
+              <Link href="/checkout" className="btn btn-primary btn-block mb-4">
                 Upgrade to Premium
               </Link>
-              <p className="text-xs text-gray-500">Cancel anytime</p>
             </div>
           </div>
         </div>
