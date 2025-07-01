@@ -1,12 +1,15 @@
+"use client";
+
 import React from "react";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 
 import { getVoices } from "../../actions/voices";
 
-import VoiceAddForm from "./VoiceAddForm";
+import VoiceAddModal from "./VoiceAddModal";
 import VoiceList from "./VoiceList";
 
 export default function VoicesDashboard() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const voicesPromise = getVoices();
 
   return (
@@ -16,11 +19,17 @@ export default function VoicesDashboard() {
         <Suspense fallback={<div>Loading voices ...</div>}>
           <VoiceList voicesPromise={voicesPromise} />
         </Suspense>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="btn btn-primary btn-block mt-4"
+        >
+          Add New Voice
+        </button>
       </div>
-      <div>
-        <h2 className="text-md font-semibold mb-4">Clone a new voice</h2>
-        <VoiceAddForm />
-      </div>
+      <VoiceAddModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 }
