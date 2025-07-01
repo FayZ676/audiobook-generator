@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { stripe } from "@/app/lib/stripe";
 
+// @ts-ignore - This comes from Stripe's quickstart guide
 export default async function Return({ searchParams }) {
   const { session_id } = await searchParams;
 
@@ -10,6 +11,7 @@ export default async function Return({ searchParams }) {
 
   const {
     status,
+    // @ts-ignore - This comes from Stripe's quickstart guide
     customer_details: { email: customerEmail },
   } = await stripe.checkout.sessions.retrieve(session_id, {
     expand: ["line_items", "payment_intent"],
