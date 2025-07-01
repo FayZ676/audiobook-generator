@@ -132,9 +132,9 @@ export default function Home() {
         <div className="max-w-sm mx-auto">
           <div className="bg-base-200 p-6 rounded-lg border-2 border-primary">
             <div className="text-center">
-              <h3 className="text-xl font-semibold mb-2">Early Access</h3>
-              <div className="text-3xl font-bold text-primary mb-1">Free</div>
-              <div className="text-sm text-gray-600 mb-6">During Beta</div>
+              <h3 className="text-xl font-semibold mb-2">Premium Plan</h3>
+              <div className="text-3xl font-bold text-primary mb-1">$9.99</div>
+              <div className="text-sm text-gray-600 mb-6">per month</div>
 
               <div className="space-y-3 mb-6">
                 <div className="flex items-center gap-2">
@@ -147,7 +147,7 @@ export default function Home() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-500" />
-                  <span className="text-sm">Script editing tools</span>
+                  <span className="text-sm">Priority processing</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-500" />
@@ -155,10 +155,10 @@ export default function Home() {
                 </div>
               </div>
 
-              <Link href="/project" className="btn btn-primary btn-block mb-4">
-                Start Creating
+              <Link href="/subscription" className="btn btn-primary btn-block mb-4">
+                Upgrade to Premium
               </Link>
-              <p className="text-xs text-gray-500">No credit card required</p>
+              <p className="text-xs text-gray-500">Cancel anytime</p>
             </div>
           </div>
         </div>
