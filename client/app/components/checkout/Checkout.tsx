@@ -17,7 +17,7 @@ export default function Checkout() {
     <div id="checkout">
       <EmbeddedCheckoutProvider
         stripe={stripePromise}
-        // @ts-ignore - This comes from Stripe's quickstart guide
+        // @ts-expect-error - This comes from Stripe's quickstart guide
         options={{ fetchClientSecret }}
       >
         <EmbeddedCheckout />
