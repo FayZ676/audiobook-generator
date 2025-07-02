@@ -6,8 +6,8 @@ from tta_types.types import (
     SpeechRequest,
     SpeechRequestSegment,
     AudiobookJob,
-    ScriptData,
 )
+from tta_types.script import ScriptData
 from tta_service.types import BuildNarrationRequest
 from tta_service.config import (
     s3_client,

@@ -24,36 +24,7 @@ class SpeechRequest(BaseModel):
     voices: list[Voice]
 
 
-class ScriptSegment(BaseModel):
-    text: str
-    speaker_alias: str
 
-
-class ScriptSpeaker(BaseModel):
-    names: list[str]
-    voice_name: str
-
-
-class ScriptData(BaseModel):
-    segments: list[ScriptSegment]
-    speakers: list[ScriptSpeaker]
-    
-    def to_speech_segments(self) -> list[SpeechRequestSegment]:
-        """Convert script data to speech request segments with proper voice mapping."""
-        # Create speaker alias to voice name mapping
-        speaker_alias_to_voice = {}
-        for speaker in self.speakers:
-            for name in speaker.names:
-                speaker_alias_to_voice[name] = speaker.voice_name
-        
-        # Transform segments to speech request segments
-        return [
-            SpeechRequestSegment(
-                text=segment.text,
-                voice_name=speaker_alias_to_voice.get(segment.speaker_alias, segment.speaker_alias)
-            )
-            for segment in self.segments
-        ]
 
 
 class SpeechResponse(BaseModel):
