@@ -1,4 +1,3 @@
-import json
 from datetime import datetime, timezone
 from fastapi import APIRouter, BackgroundTasks, status
 from tta_types.types import (
@@ -8,6 +7,7 @@ from tta_types.types import (
     SpeechRequestSegment,
     AudiobookJob,
 )
+from tta_types.script import ScriptData
 from tta_service.types import BuildNarrationRequest
 from tta_service.config import (
     s3_client,
@@ -49,15 +49,16 @@ def delete_narration(filename: str):
 
 async def send_narration_request(script_path: str, voices: list[Voice], user_id: str):
     script_data = s3_client.get_file(SCRIPT_RESULTS_BUCKET, script_path)
+    parsed_script = ScriptData.model_validate_json(script_data)
+    speech_segments = parsed_script.to_speech_segments()
+
     request = WebhookRequest(
         callback=f"{SERVICE_API_URL}/webhook",
         channel="narration-channel",
         user_id=user_id,
         data=SpeechRequest(
             title=script_path.rstrip(".json"),
-            text=[
-                SpeechRequestSegment.model_validate(d) for d in json.loads(script_data)
-            ],
+            text=speech_segments,
             voices=voices,
         ).model_dump(),
     )

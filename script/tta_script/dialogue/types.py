@@ -26,9 +26,6 @@ class Dialogue:
     text: str
 
 
-
-
-
 @dataclass(frozen=True, eq=True)
 class TextSegment:
     text: str
@@ -47,7 +44,7 @@ class ScriptSegment:
         return f"{self.speaker_alias}: {self.text}"
 
 
-@dataclass(frozen=True, eq=True) 
+@dataclass(frozen=True, eq=True)
 class Script:
     segments: list[ScriptSegment]
     speakers: list[Speaker]  # All unique speakers with voice details
