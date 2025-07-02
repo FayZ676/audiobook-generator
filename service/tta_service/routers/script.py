@@ -48,8 +48,7 @@ def update_script(filename: str, request: UpdateScriptRequest):
     if not s3_client.list_files(SCRIPT_RESULTS_BUCKET, filename):
         return None
 
-    # NOTE: So we only use the UpdateScriptRequest type in order to convert the request to json via to_dict()?
-    script_json_str = request.script.to_dict()
+    script_json_str = request.script.model_dump()
     file_obj = io.BytesIO(json.dumps(script_json_str).encode("utf-8"))
     s3_client.upload_fileobj(SCRIPT_RESULTS_BUCKET, filename, file_obj)
 

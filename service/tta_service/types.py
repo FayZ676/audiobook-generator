@@ -1,10 +1,12 @@
 from tta_types.types import Voice
 from tta_types.script import Age, Gender
 
-# TODO: We shouldn't import types from tta_script directly here.
-from tta_script.dialogue.types import Script
-
 from pydantic import BaseModel
+
+
+class ScriptPayload(BaseModel):
+    segments: list[dict[str, str]]
+    speakers: list[dict]
 
 
 class BuildScriptRequest(BaseModel):
@@ -32,4 +34,4 @@ class FeedbackRequest(BaseModel):
 
 
 class UpdateScriptRequest(BaseModel):
-    script: Script
+    script: ScriptPayload
