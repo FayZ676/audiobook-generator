@@ -48,9 +48,8 @@ def update_script(filename: str, request: UpdateScriptRequest):
     if not s3_client.list_files(SCRIPT_RESULTS_BUCKET, filename):
         return None
 
-    # Convert script to JSON and upload to S3
-    script_json = request.script.model_dump_json()
-    file_obj = io.BytesIO(script_json.encode("utf-8"))
+    script_json_str = request.script.to_dict()
+    file_obj = io.BytesIO(json.dumps(script_json_str).encode("utf-8"))
     s3_client.upload_fileobj(SCRIPT_RESULTS_BUCKET, filename, file_obj)
 
     return {"message": "Script updated successfully"}
