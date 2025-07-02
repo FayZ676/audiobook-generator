@@ -49,15 +49,35 @@ def delete_narration(filename: str):
 
 async def send_narration_request(script_path: str, voices: list[Voice], user_id: str):
     script_data = s3_client.get_file(SCRIPT_RESULTS_BUCKET, script_path)
+    parsed_script = json.loads(script_data)
+
+    # Create speaker alias to voice name mapping
+    speaker_alias_to_voice = {}
+    for speaker in parsed_script.get("speakers", []):
+        for name in speaker.get("names", []):
+            speaker_alias_to_voice[name] = speaker.get("voice_name", name)
+
+    # Create SpeechRequestSegment objects from the segments
+    speech_segments = []
+    for segment in parsed_script.get("segments", []):
+        voice_name = speaker_alias_to_voice.get(
+            segment.get("speaker_alias", ""),
+            segment.get("speaker_alias", "")
+        )
+        speech_segments.append(
+            SpeechRequestSegment(
+                text=segment.get("text", ""),
+                voice_name=voice_name
+            )
+        )
+
     request = WebhookRequest(
         callback=f"{SERVICE_API_URL}/webhook",
         channel="narration-channel",
         user_id=user_id,
         data=SpeechRequest(
             title=script_path.rstrip(".json"),
-            text=[
-                SpeechRequestSegment.model_validate(d) for d in json.loads(script_data)
-            ],
+            text=speech_segments,
             voices=voices,
         ).model_dump(),
     )
