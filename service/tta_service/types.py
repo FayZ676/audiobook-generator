@@ -1,8 +1,6 @@
-from typing import List
-
 from tta_types.types import Voice
-from tta_types.script import SpeakerDetails, Age, Gender
-from tta_script.dialogue.types import ScriptSegment, Script
+from tta_types.script import Age, Gender
+from tta_script.dialogue.types import Script
 
 from pydantic import BaseModel
 
@@ -24,9 +22,6 @@ class AddVoiceRequest(BaseModel):
     age: Age
     gender: Gender
     audio_transcript: str
-
-
-
 
 
 class FeedbackRequest(BaseModel):
