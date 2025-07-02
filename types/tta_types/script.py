@@ -1,3 +1,9 @@
+"""
+Script type adapters for cross-service communication.
+
+This module provides adapters to convert between the canonical script types 
+(defined in script/tta_script/dialogue/types.py) and service-specific formats.
+"""
 from typing import List, Literal
 from pydantic import BaseModel
 from tta_types.types import SpeechRequestSegment
@@ -5,12 +11,6 @@ from tta_types.types import SpeechRequestSegment
 
 Age = Literal["young", "middle-aged", "old"]
 Gender = Literal["male", "female"]
-
-
-class ScriptSegment(BaseModel):
-    """Represents a single segment of script text with speaker information."""
-    text: str
-    speaker_alias: str
 
 
 class ScriptSpeaker(BaseModel):
@@ -30,8 +30,13 @@ class SpeakerDetails(BaseModel):
 
 
 class ScriptData(BaseModel):
-    """Complete script data structure with segments and speakers."""
-    segments: List[ScriptSegment]
+    """
+    Script data adapter for narration service.
+    
+    This adapter handles the JSON format used for script data storage
+    and provides conversion to speech request format.
+    """
+    segments: List[dict]  # Raw segment data from JSON
     speakers: List[ScriptSpeaker]
     
     def to_speech_segments(self) -> List[SpeechRequestSegment]:
@@ -45,33 +50,11 @@ class ScriptData(BaseModel):
         # Transform segments to speech request segments
         return [
             SpeechRequestSegment(
-                text=segment.text,
-                voice_name=speaker_alias_to_voice.get(segment.speaker_alias, segment.speaker_alias)
+                text=segment.get("text", ""),
+                voice_name=speaker_alias_to_voice.get(
+                    segment.get("speaker_alias", ""), 
+                    segment.get("speaker_alias", "")
+                )
             )
             for segment in self.segments
         ]
-    
-    def to_dict(self) -> dict:
-        """Convert to dictionary format for serialization."""
-        return {
-            "segments": [
-                {
-                    "text": segment.text,
-                    "speaker_alias": segment.speaker_alias,
-                }
-                for segment in self.segments
-            ],
-            "speakers": [
-                {
-                    "names": speaker.names,
-                    "voice_name": speaker.voice_name,
-                }
-                for speaker in self.speakers
-            ],
-        }
-
-
-class Script(BaseModel):
-    """Script model with extended speaker details for service layer."""
-    segments: List[ScriptSegment]
-    speakers: List[SpeakerDetails]

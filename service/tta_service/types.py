@@ -1,7 +1,8 @@
 from typing import List
 
 from tta_types.types import Voice
-from tta_types.script import ScriptSegment, Script, SpeakerDetails, Age, Gender
+from tta_types.script import SpeakerDetails, Age, Gender
+from tta_script.dialogue.types import ScriptSegment, Script
 
 from pydantic import BaseModel
 
