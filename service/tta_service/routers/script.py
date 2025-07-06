@@ -12,7 +12,7 @@ from tta_service.config import (
     SCRIPT_API_URL,
     SCRIPT_SERVICE_API_KEY,
 )
-from tta_service.utils import send_async_request, update_status
+from tta_service.utils import send_async_request, update_status_without_pusher
 from tta_service.routers.job import get_job_status
 
 
@@ -79,7 +79,7 @@ def send_script_request(script_request: BuildScriptRequest):
 
     existing_job = get_job_status(script_request.user_id)
 
-    update_status(
+    update_status_without_pusher(
         AudiobookJob(
             job_id=script_request.user_id,
             script_status="processing",
@@ -89,10 +89,7 @@ def send_script_request(script_request: BuildScriptRequest):
             narration_started_at=(
                 existing_job.narration_started_at if existing_job else None
             ),
-        ),
-        pusher_channel="script-channel",
-        pusher_event="processing",
-        pusher_message="",
+        )
     )
 
 
