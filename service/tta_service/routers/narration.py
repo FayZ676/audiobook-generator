@@ -17,7 +17,7 @@ from tta_service.config import (
     SPEECH_API_URL,
     SPEECH_SERVICE_API_KEY,
 )
-from tta_service.utils import send_async_request, update_status_without_pusher
+from tta_service.utils import send_async_request, update_s3_job_status
 from tta_service.routers.job import get_job_status
 
 
@@ -72,7 +72,7 @@ async def send_narration_request(script_path: str, voices: list[Voice], user_id:
         },
     )
 
-    update_status_without_pusher(
+    update_s3_job_status(
         AudiobookJob(
             job_id=user_id,
             narration_status="processing",
