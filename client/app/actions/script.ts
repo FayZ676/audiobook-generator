@@ -71,6 +71,7 @@ export async function createScript({
       },
       body: JSON.stringify(request),
     });
+    revalidateTag("job");
   } catch (error) {
     console.error("Error submitting script:", error);
     throw error;

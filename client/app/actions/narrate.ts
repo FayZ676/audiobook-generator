@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidateTag } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 
 import { getVoices, Voice } from "./voices";
@@ -34,6 +35,7 @@ export async function createNarration() {
       },
       body: JSON.stringify(request),
     });
+    revalidateTag("job");
   } catch (error) {
     console.error("Error submitting script:", error);
     throw error;

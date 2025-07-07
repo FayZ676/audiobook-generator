@@ -1,4 +1,4 @@
-from tta_types.types import Voice
+from tta_types.types import JobStatus, Voice
 from tta_types.script import Age, Gender
 
 from pydantic import BaseModel
@@ -35,3 +35,9 @@ class FeedbackRequest(BaseModel):
 
 class UpdateScriptRequest(BaseModel):
     script: ScriptPayload
+
+
+class PusherEventDetails(BaseModel):
+    channel: str
+    event: JobStatus
+    message: str | None

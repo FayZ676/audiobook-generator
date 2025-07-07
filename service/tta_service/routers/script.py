@@ -89,10 +89,7 @@ def send_script_request(script_request: BuildScriptRequest):
             narration_started_at=(
                 existing_job.narration_started_at if existing_job else None
             ),
-        ),
-        pusher_channel="script-channel",
-        pusher_event="processing",
-        pusher_message="",
+        )
     )
 
 

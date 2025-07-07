@@ -4,7 +4,6 @@ from tta_types.types import (
     Voice,
     WebhookRequest,
     SpeechRequest,
-    SpeechRequestSegment,
     AudiobookJob,
 )
 from tta_types.script import ScriptData
@@ -18,7 +17,6 @@ from tta_service.config import (
     SPEECH_SERVICE_API_KEY,
 )
 from tta_service.utils import send_async_request, update_status
-from tta_service.routers.job import get_job_status
 
 
 router = APIRouter()
@@ -80,8 +78,5 @@ async def send_narration_request(script_path: str, voices: list[Voice], user_id:
             message=None,
             script_started_at=None,
             narration_started_at=datetime.now(timezone.utc).isoformat(),
-        ),
-        pusher_channel="narration-channel",
-        pusher_event="processing",
-        pusher_message="",
+        )
     )
