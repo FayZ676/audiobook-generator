@@ -17,6 +17,7 @@ from tta_service.config import (
     SPEECH_SERVICE_API_KEY,
 )
 from tta_service.utils import send_async_request, update_status
+from tta_service.routers.job import get_job_status
 
 
 router = APIRouter()
@@ -24,6 +25,21 @@ router = APIRouter()
 
 @router.post("/narration", status_code=status.HTTP_202_ACCEPTED)
 async def build_narration(request: BuildNarrationRequest, bg_tasks: BackgroundTasks):
+    existing_job = get_job_status(request.user_id)
+
+    update_status(
+        AudiobookJob(
+            job_id=request.user_id,
+            narration_status="processing",
+            script_status=existing_job.script_status if existing_job else None,
+            message=None,
+            script_started_at=(
+                existing_job.script_started_at if existing_job else None
+            ),
+            narration_started_at=datetime.now(timezone.utc).isoformat(),
+        )
+    )
+
     bg_tasks.add_task(
         send_narration_request, request.script_path, request.voices, request.user_id
     )
@@ -68,15 +84,4 @@ async def send_narration_request(script_path: str, voices: list[Voice], user_id:
             "Content-Type": "application/json",
             "Authorization": f"Bearer {SPEECH_SERVICE_API_KEY}",
         },
-    )
-
-    update_status(
-        AudiobookJob(
-            job_id=user_id,
-            narration_status="processing",
-            script_status=None,
-            message=None,
-            script_started_at=None,
-            narration_started_at=datetime.now(timezone.utc).isoformat(),
-        )
     )
