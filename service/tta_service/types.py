@@ -13,6 +13,7 @@ class BuildScriptRequest(BaseModel):
     user_id: str
     text_content: str
     narrator_voice_name: str
+    character_voice_mappings: dict[str, str] | None = None
 
 
 class BuildNarrationRequest(BaseModel):

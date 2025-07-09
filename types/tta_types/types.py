@@ -31,6 +31,7 @@ class ScriptRequest(BaseModel):
     text_content: str
     narrator_voice_name: str
     voices: list[Voice]
+    character_voice_mappings: dict[str, str] | None = None
 
 
 class ScriptResponse(BaseModel):

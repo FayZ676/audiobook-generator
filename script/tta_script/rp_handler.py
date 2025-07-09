@@ -72,7 +72,9 @@ def handler(event: dict):
     else:
         try:
             speaker_voices = assign_voices(
-                speakers=speaker_details, voices=voices.copy()
+                speakers=speaker_details, 
+                voices=voices.copy(),
+                character_voice_mappings=data.character_voice_mappings
             )
             narrator_speaker = _get_narrator_speaker(data.narrator_voice_name, voices)
             script = get_script(text, speaker_voices, narrator_speaker)
