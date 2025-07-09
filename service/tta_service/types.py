@@ -1,4 +1,4 @@
-from tta_types.types import JobStatus, Voice
+from tta_types.types import JobStatus, Voice, CharacterVoiceMappings
 from tta_types.script import Age, Gender
 
 from pydantic import BaseModel
@@ -13,7 +13,7 @@ class BuildScriptRequest(BaseModel):
     user_id: str
     text_content: str
     narrator_voice_name: str
-    character_voice_mappings: dict[str, str] | None = None
+    character_voice_mappings: CharacterVoiceMappings | None = None
 
 
 class BuildNarrationRequest(BaseModel):

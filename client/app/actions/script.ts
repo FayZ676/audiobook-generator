@@ -31,7 +31,7 @@ interface BuildScriptRequest {
   user_id: string;
   text_content: string;
   narrator_voice_name: string;
-  character_voice_mappings?: Record<string, string>;
+  character_voice_mappings?: CharacterVoiceMappings;
 }
 
 interface DeleteScriptRequest {
@@ -41,7 +41,7 @@ interface DeleteScriptRequest {
 interface CreateScriptProps {
   textContent: string;
   narrator: string;
-  characterVoiceMappings?: Record<string, string>;
+  characterVoiceMappings?: CharacterVoiceMappings;
 }
 
 interface UpdateScriptProps {
@@ -49,6 +49,7 @@ interface UpdateScriptProps {
 }
 
 export type Script = z.infer<typeof ScriptSchema>;
+export type CharacterVoiceMappings = Record<string, string>;
 
 export async function createScript({
   textContent,

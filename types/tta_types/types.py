@@ -1,6 +1,11 @@
-from typing import Literal, Optional
+from typing import Literal, Optional, TypedDict
 
 from pydantic import BaseModel
+
+
+class CharacterVoiceMappings(TypedDict):
+    """Mapping of character names to voice names."""
+    pass  # TypedDict with str keys and str values
 
 
 class Voice(BaseModel):
@@ -31,7 +36,7 @@ class ScriptRequest(BaseModel):
     text_content: str
     narrator_voice_name: str
     voices: list[Voice]
-    character_voice_mappings: dict[str, str] | None = None
+    character_voice_mappings: CharacterVoiceMappings | None = None
 
 
 class ScriptResponse(BaseModel):

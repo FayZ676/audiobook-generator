@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from tta_script.character.types import SpeakerDetails
 
-from tta_types.types import Voice
+from tta_types.types import Voice, CharacterVoiceMappings
 
 
 @dataclass(eq=True, frozen=True)
@@ -25,7 +25,7 @@ class Speaker:
 def assign_voices(
     speakers: set[SpeakerDetails], 
     voices: list[Voice], 
-    character_voice_mappings: dict[str, str] | None = None
+    character_voice_mappings: CharacterVoiceMappings | None = None
 ) -> set[Speaker]:
     character_voice_mappings = character_voice_mappings or {}
     available_voices = voices.copy()
