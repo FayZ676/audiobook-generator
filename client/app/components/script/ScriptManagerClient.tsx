@@ -13,7 +13,6 @@ import { AudiobookJob } from "../../actions/job";
 
 import ScriptControls from "./ScriptControls";
 import ScriptText from "./ScriptText";
-import GenerateScriptForm from "./GenerateScriptForm";
 
 interface ScriptManagerClientProps {
   scriptPromise: Promise<Script | null>;
@@ -42,10 +41,6 @@ export default function ScriptManagerClient({
     },
   });
 
-  if (!script) {
-    return <GenerateScriptForm voicesPromise={voicesPromise} />;
-  }
-
   return (
     <div className="flex flex-col gap-4">
       <ScriptControls
@@ -56,7 +51,7 @@ export default function ScriptManagerClient({
         isEditing={isEditing}
         onEditToggle={setIsEditing}
       />
-      <ScriptText script={script} voices={voices} isEditing={isEditing} />
+      {script && <ScriptText script={script} voices={voices} isEditing={isEditing} />}
     </div>
   );
 }

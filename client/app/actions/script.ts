@@ -31,6 +31,7 @@ interface BuildScriptRequest {
   user_id: string;
   text_content: string;
   narrator_voice_name: string;
+  character_voice_mappings?: Record<string, string>;
 }
 
 interface DeleteScriptRequest {
@@ -40,6 +41,7 @@ interface DeleteScriptRequest {
 interface CreateScriptProps {
   textContent: string;
   narrator: string;
+  characterVoiceMappings?: Record<string, string>;
 }
 
 interface UpdateScriptProps {
@@ -51,6 +53,7 @@ export type Script = z.infer<typeof ScriptSchema>;
 export async function createScript({
   textContent,
   narrator,
+  characterVoiceMappings,
 }: CreateScriptProps) {
   const { userId } = await auth();
   if (!userId) {
@@ -61,6 +64,7 @@ export async function createScript({
     user_id: userId,
     text_content: textContent,
     narrator_voice_name: narrator,
+    character_voice_mappings: characterVoiceMappings,
   };
 
   try {

@@ -3,13 +3,14 @@
 import React, { useState } from "react";
 import { use } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, Edit3, MicVocal, Trash2 } from "lucide-react";
+import { FileText, Edit3, MicVocal, Trash2, Plus } from "lucide-react";
 
 import { createNarration } from "../../actions/narrate";
 import { deleteProject } from "../../actions/audiobook";
 import { Script } from "../../actions/script";
 import { AudiobookJob } from "../../actions/job";
 import { Voice } from "../../actions/voices";
+import GenerateScriptModal from "./GenerateScriptModal";
 
 interface ScriptControlsProps {
   narrationUrlPromise: Promise<string | null>;
@@ -31,6 +32,7 @@ export default function ScriptControls({
   const router = useRouter();
   const [isCreatingNarration, setIsCreatingNarration] = useState(false);
   const [isDeletingProject, setIsDeletingProject] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const narrationUrl = use(narrationUrlPromise);
   const script = use(scriptPromise);
@@ -67,87 +69,112 @@ export default function ScriptControls({
     jobState?.narration_status === "processing";
 
   return (
-    <div className="flex justify-between items-center">
-      <h3 className="font-bold">Script controls</h3>
-      <ul className="menu menu-horizontal bg-base-200 rounded-box">
-        {script && (
-          <>
+    <>
+      <div className="flex justify-between items-center">
+        <h3 className="font-bold">Script controls</h3>
+        <ul className="menu menu-horizontal bg-base-200 rounded-box">
+          <li>
+            <a
+              className={`${
+                isProcessing || isDeletingProject
+                  ? "disabled cursor-not-allowed opacity-50"
+                  : "cursor-pointer"
+              } font-medium`}
+              onClick={
+                isProcessing || isDeletingProject
+                  ? undefined
+                  : () => setIsModalOpen(true)
+              }
+              title="Add New Chapter"
+            >
+              <Plus className="h-5 w-5" />
+            </a>
+          </li>
+          {script && (
+            <>
+              <li>
+                <a
+                  className={!isEditing ? "active" : ""}
+                  onClick={() => onEditToggle(false)}
+                  title="View script"
+                >
+                  <FileText className="h-5 w-5" />
+                </a>
+              </li>
+              <li>
+                <a
+                  className={`${isEditing ? "active" : ""} ${
+                    isProcessing || isDeletingProject || voices.length === 0
+                      ? "disabled cursor-not-allowed opacity-50"
+                      : "cursor-pointer"
+                  }`}
+                  onClick={
+                    isProcessing || isDeletingProject || voices.length === 0
+                      ? undefined
+                      : () => onEditToggle(true)
+                  }
+                  title="Edit script"
+                >
+                  <Edit3 className="h-5 w-5" />
+                </a>
+              </li>
+            </>
+          )}
+          {script && (
             <li>
               <a
-                className={!isEditing ? "active" : ""}
-                onClick={() => onEditToggle(false)}
-                title="View script"
-              >
-                <FileText className="h-5 w-5" />
-              </a>
-            </li>
-            <li>
-              <a
-                className={`${isEditing ? "active" : ""} ${
-                  isProcessing || isDeletingProject || voices.length === 0
+                className={`${
+                  isCreatingNarration || isProcessing || isDeletingProject
                     ? "disabled cursor-not-allowed opacity-50"
                     : "cursor-pointer"
-                }`}
+                } font-medium`}
                 onClick={
-                  isProcessing || isDeletingProject || voices.length === 0
+                  isCreatingNarration || isProcessing || isDeletingProject
                     ? undefined
-                    : () => onEditToggle(true)
+                    : handleCreateNarration
                 }
-                title="Edit script"
+                title={
+                  isCreatingNarration ||
+                  jobState?.narration_status === "processing"
+                    ? "Creating Narration..."
+                    : narrationUrl
+                    ? "Regenerate Narration"
+                    : "Narrate"
+                }
               >
-                <Edit3 className="h-5 w-5" />
+                <MicVocal className="h-5 w-5" />
               </a>
             </li>
-          </>
-        )}
-        {script && (
-          <li>
-            <a
-              className={`${
-                isCreatingNarration || isProcessing || isDeletingProject
-                  ? "disabled cursor-not-allowed opacity-50"
-                  : "cursor-pointer"
-              } font-medium`}
-              onClick={
-                isCreatingNarration || isProcessing || isDeletingProject
-                  ? undefined
-                  : handleCreateNarration
-              }
-              title={
-                isCreatingNarration ||
-                jobState?.narration_status === "processing"
-                  ? "Creating Narration..."
-                  : narrationUrl
-                  ? "Regenerate Narration"
-                  : "Narrate"
-              }
-            >
-              <MicVocal className="h-5 w-5" />
-            </a>
-          </li>
-        )}
-        {(script || narrationUrl) && (
-          <li>
-            <a
-              className={`${
-                isDeletingProject || isProcessing
-                  ? "disabled cursor-not-allowed opacity-50"
-                  : "cursor-pointer"
-              } font-medium`}
-              onClick={
-                isDeletingProject || isProcessing
-                  ? undefined
-                  : handleDeleteProject
-              }
-              title={
-                isDeletingProject ? "Deleting Project..." : "Delete Project"
-              }
-            >
-              <Trash2 className="h-5 w-5" />
-            </a>
-          </li>
-        )}
-      </ul>
-    </div>
+          )}
+          {(script || narrationUrl) && (
+            <li>
+              <a
+                className={`${
+                  isDeletingProject || isProcessing
+                    ? "disabled cursor-not-allowed opacity-50"
+                    : "cursor-pointer"
+                } font-medium`}
+                onClick={
+                  isDeletingProject || isProcessing
+                    ? undefined
+                    : handleDeleteProject
+                }
+                title={
+                  isDeletingProject ? "Deleting Project..." : "Delete Project"
+                }
+              >
+                <Trash2 className="h-5 w-5" />
+              </a>
+            </li>
+          )}
+        </ul>
+      </div>
+      <GenerateScriptModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        voicesPromise={voicesPromise}
+        existingScript={script}
+      />
+    </>
   );
 }
