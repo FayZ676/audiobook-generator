@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-// import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import {
@@ -13,16 +13,15 @@ import {
 
 import FeedbackForm from "./components/ui/FeedbackForm";
 
-// Temporarily using system fonts to avoid Google Fonts network issues in sandboxed environment
-// const geistSans = Geist({
-//   variable: "--font-geist-sans",
-//   subsets: ["latin"],
-// });
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
 
-// const geistMono = Geist_Mono({
-//   variable: "--font-geist-mono",
-//   subsets: ["latin"],
-// });
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: "Audiobook Generator",
@@ -39,7 +38,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body
-          className="antialiased max-w-lg mx-auto font-sans"
+          className={`${geistSans.variable} ${geistMono.variable} antialiased max-w-lg mx-auto`}
         >
           <header className="flex justify-end items-center p-4 gap-4 h-16">
             <SignedOut>
