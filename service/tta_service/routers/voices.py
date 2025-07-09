@@ -4,7 +4,7 @@ from typing import BinaryIO
 from fastapi import APIRouter, HTTPException, status, Form, UploadFile
 from tta_types.types import Voice
 from tta_service.types import Age, Gender
-from tta_service.config import s3_client, VOICES_BUCKET
+from tta_service.config import s3_client, VOICES_BUCKET, pusher_client
 
 
 router = APIRouter()
@@ -83,7 +83,7 @@ def add_voice(
             filename=name_normalized,
         ),
     )
-
+    pusher_client.trigger("voices-channel", "complete", {"message": "Voice added"})
     return
 
 
