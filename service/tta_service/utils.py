@@ -1,8 +1,9 @@
 import io
 import requests
 from fastapi import HTTPException, status
-from tta_types.types import AudiobookJob, JobStatus
+from tta_types.types import AudiobookJob
 from tta_service.config import s3_client, pusher_client, JOB_STATUS_BUCKET
+from tta_service.types import PusherEventDetails
 
 
 def send_async_request(url: str, payload: dict, headers: dict):
@@ -24,12 +25,10 @@ def send_async_request(url: str, payload: dict, headers: dict):
 
 def update_status(
     job_details: AudiobookJob,
-    pusher_channel: str,
-    pusher_event: JobStatus,
-    pusher_message: str | None,
+    pusher: PusherEventDetails | None = None,
 ):
     if not s3_client.list_files(JOB_STATUS_BUCKET, job_details.job_id):
-        create_status(job_details, pusher_channel, pusher_event, pusher_message)
+        create_status(job_details)
     else:
         file = io.BytesIO(job_details.model_dump_json().encode("utf-8"))
         file.name = f"{job_details.job_id}.json"
@@ -38,15 +37,11 @@ def update_status(
             file.name,
             file,
         )
-    pusher_client.trigger(pusher_channel, pusher_event, {"message": pusher_message})
+    if pusher:
+        pusher_client.trigger(pusher.channel, pusher.event, {"message": pusher.message})
 
 
-def create_status(
-    job_details: AudiobookJob,
-    pusher_channel: str,
-    pusher_event: str,
-    pusher_message: str | None,
-):
+def create_status(job_details: AudiobookJob):
     file = io.BytesIO(job_details.model_dump_json().encode("utf-8"))
     file.name = f"{job_details.job_id}.json"
     s3_client.upload_fileobj(
@@ -54,4 +49,3 @@ def create_status(
         file.name,
         file,
     )
-    pusher_client.trigger(pusher_channel, pusher_event, {"message": pusher_message})

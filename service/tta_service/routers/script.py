@@ -21,6 +21,21 @@ router = APIRouter()
 
 @router.post("/script", status_code=status.HTTP_202_ACCEPTED)
 async def build_script(request: BuildScriptRequest, bg_tasks: BackgroundTasks):
+    existing_job = get_job_status(request.user_id)
+
+    update_status(
+        AudiobookJob(
+            job_id=request.user_id,
+            script_status="processing",
+            narration_status=existing_job.narration_status if existing_job else None,
+            message=None,
+            script_started_at=datetime.now(timezone.utc).isoformat(),
+            narration_started_at=(
+                existing_job.narration_started_at if existing_job else None
+            ),
+        )
+    )
+
     bg_tasks.add_task(
         send_script_request,
         request,
@@ -48,9 +63,8 @@ def update_script(filename: str, request: UpdateScriptRequest):
     if not s3_client.list_files(SCRIPT_RESULTS_BUCKET, filename):
         return None
 
-    # Convert script to JSON and upload to S3
-    script_json = request.script.model_dump_json()
-    file_obj = io.BytesIO(script_json.encode("utf-8"))
+    script_json_str = request.script.model_dump()
+    file_obj = io.BytesIO(json.dumps(script_json_str).encode("utf-8"))
     s3_client.upload_fileobj(SCRIPT_RESULTS_BUCKET, filename, file_obj)
 
     return {"message": "Script updated successfully"}
@@ -76,24 +90,6 @@ def send_script_request(script_request: BuildScriptRequest):
             "Content-Type": "application/json",
             "Authorization": f"Bearer {SCRIPT_SERVICE_API_KEY}",
         },
-    )
-
-    existing_job = get_job_status(script_request.user_id)
-
-    update_status(
-        AudiobookJob(
-            job_id=script_request.user_id,
-            script_status="processing",
-            narration_status=existing_job.narration_status if existing_job else None,
-            message=None,
-            script_started_at=datetime.now(timezone.utc).isoformat(),
-            narration_started_at=(
-                existing_job.narration_started_at if existing_job else None
-            ),
-        ),
-        pusher_channel="script-channel",
-        pusher_event="processing",
-        pusher_message="",
     )
 
 
