@@ -32,10 +32,6 @@ export default function VoiceAddModal({ isOpen, onClose }: VoiceAddModalProps) {
     }
   };
 
-  const handleRecordingComplete = (recordedFile: File) => {
-    setAudioFile(recordedFile);
-  };
-
   const handleAudioInputModeChange = (mode: "upload" | "record") => {
     setAudioInputMode(mode);
     setAudioFile(null);
