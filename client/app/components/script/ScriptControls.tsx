@@ -3,41 +3,49 @@
 import React, { useState } from "react";
 import { use } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, Edit3, MicVocal, Trash2, Plus } from "lucide-react";
+import { MicVocal, Trash2, Plus } from "lucide-react";
 
 import { createNarration } from "../../actions/narrate";
 import { deleteProject } from "../../actions/audiobook";
 import { Script } from "../../actions/script";
 import { AudiobookJob } from "../../actions/job";
-import { Voice } from "../../actions/voices";
 import GenerateScriptModal from "./GenerateScriptModal";
 
 interface ScriptControlsProps {
   narrationUrlPromise: Promise<string | null>;
-  scriptPromise: Promise<Script | null>;
+  hasScripts: boolean;
+  firstScriptFilename?: string;
   jobStatePromise: Promise<AudiobookJob | null>;
-  voicesPromise: Promise<Voice[]>;
-  isEditing: boolean;
-  onEditToggle: (editing: boolean) => void;
 }
 
 export default function ScriptControls({
   narrationUrlPromise,
-  scriptPromise,
+  hasScripts,
+  firstScriptFilename,
   jobStatePromise,
-  voicesPromise,
-  isEditing,
-  onEditToggle,
 }: ScriptControlsProps) {
   const router = useRouter();
   const [isCreatingNarration, setIsCreatingNarration] = useState(false);
   const [isDeletingProject, setIsDeletingProject] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [existingScript, setExistingScript] = useState<Script | null>(null);
 
   const narrationUrl = use(narrationUrlPromise);
-  const script = use(scriptPromise);
   const jobState = use(jobStatePromise);
-  const voices = use(voicesPromise);
+
+  // Load the first script for character voice mapping when modal opens
+  const handleOpenModal = async () => {
+    if (hasScripts && firstScriptFilename) {
+      try {
+        const { getUserScript } = await import("../../actions/script");
+        const script = await getUserScript(firstScriptFilename);
+        setExistingScript(script);
+      } catch (error) {
+        console.error("Error loading existing script:", error);
+      }
+    }
+    setIsModalOpen(true);
+  };
 
   const handleCreateNarration = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -83,7 +91,7 @@ export default function ScriptControls({
               onClick={
                 isProcessing || isDeletingProject
                   ? undefined
-                  : () => setIsModalOpen(true)
+                  : handleOpenModal
               }
               title="Add New Chapter"
             >
@@ -92,44 +100,8 @@ export default function ScriptControls({
           </li>
           <li>
             <a
-              className={`${!isEditing ? "active" : ""} ${
-                !script
-                  ? "disabled cursor-not-allowed opacity-50"
-                  : "cursor-pointer"
-              }`}
-              onClick={script ? () => onEditToggle(false) : undefined}
-              title="View script"
-            >
-              <FileText className="h-5 w-5" />
-            </a>
-          </li>
-          <li>
-            <a
-              className={`${isEditing ? "active" : ""} ${
-                !script ||
-                isProcessing ||
-                isDeletingProject ||
-                voices.length === 0
-                  ? "disabled cursor-not-allowed opacity-50"
-                  : "cursor-pointer"
-              }`}
-              onClick={
-                !script ||
-                isProcessing ||
-                isDeletingProject ||
-                voices.length === 0
-                  ? undefined
-                  : () => onEditToggle(true)
-              }
-              title="Edit script"
-            >
-              <Edit3 className="h-5 w-5" />
-            </a>
-          </li>
-          <li>
-            <a
               className={`${
-                !script ||
+                !hasScripts ||
                 isCreatingNarration ||
                 isProcessing ||
                 isDeletingProject
@@ -137,7 +109,7 @@ export default function ScriptControls({
                   : "cursor-pointer"
               } font-medium`}
               onClick={
-                !script ||
+                !hasScripts ||
                 isCreatingNarration ||
                 isProcessing ||
                 isDeletingProject
@@ -145,8 +117,8 @@ export default function ScriptControls({
                   : handleCreateNarration
               }
               title={
-                !script
-                  ? "No script available"
+                !hasScripts
+                  ? "No scripts available"
                   : isCreatingNarration ||
                     jobState?.narration_status === "processing"
                   ? "Creating Narration..."
@@ -161,17 +133,17 @@ export default function ScriptControls({
           <li>
             <a
               className={`${
-                (!script && !narrationUrl) || isDeletingProject || isProcessing
+                (!hasScripts && !narrationUrl) || isDeletingProject || isProcessing
                   ? "disabled cursor-not-allowed opacity-50"
                   : "cursor-pointer"
               } font-medium`}
               onClick={
-                (!script && !narrationUrl) || isDeletingProject || isProcessing
+                (!hasScripts && !narrationUrl) || isDeletingProject || isProcessing
                   ? undefined
                   : handleDeleteProject
               }
               title={
-                !script && !narrationUrl
+                !hasScripts && !narrationUrl
                   ? "Nothing to delete"
                   : isDeletingProject
                   ? "Deleting Project..."
@@ -186,7 +158,7 @@ export default function ScriptControls({
       <GenerateScriptModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        existingScript={script}
+        existingScript={existingScript}
       />
     </>
   );

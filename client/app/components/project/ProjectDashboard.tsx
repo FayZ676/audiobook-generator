@@ -1,6 +1,6 @@
 import React from "react";
 
-import { getScript } from "../../actions/script";
+import { listUserScripts } from "../../actions/script";
 import { getNarration } from "../../actions/narrate";
 import { getJobState } from "../../actions/job";
 import { getVoices } from "../../actions/voices";
@@ -10,7 +10,7 @@ import NarrationSection from "@/app/components/narration/NarrationSection";
 import JobStateSection from "./JobStateSection";
 
 export default function ProjectDashboard() {
-  const scriptPromise = getScript();
+  const scriptsPromise = listUserScripts();
   const narrationUrlPromise = getNarration();
   const jobStatePromise = getJobState();
   const voicesPromise = getVoices();
@@ -19,11 +19,11 @@ export default function ProjectDashboard() {
     <div className="flex flex-col gap-4">
       <JobStateSection 
         jobStatePromise={jobStatePromise} 
-        scriptPromise={scriptPromise}
+        scriptsPromise={scriptsPromise}
       />
       <NarrationSection narrationUrlPromise={narrationUrlPromise} />
       <ScriptManager
-        scriptPromise={scriptPromise}
+        scriptsPromise={scriptsPromise}
         voicesPromise={voicesPromise}
         narrationUrlPromise={narrationUrlPromise}
         jobStatePromise={jobStatePromise}

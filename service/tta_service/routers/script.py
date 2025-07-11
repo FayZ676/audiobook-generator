@@ -51,21 +51,54 @@ def get_script(filename: str):
     return json.loads(script)
 
 
-@router.delete("/script/{filename}")
-def delete_script(filename: str):
-    if not s3_client.list_files(SCRIPT_RESULTS_BUCKET, filename):
+@router.get("/scripts/{user_id}")
+def list_user_scripts(user_id: str):
+    """List all scripts for a user"""
+    prefix = f"{user_id}/"
+    files = s3_client.list_files(SCRIPT_RESULTS_BUCKET, prefix)
+    
+    scripts = []
+    for file_key in files:
+        if file_key.endswith('.json'):
+            # Extract filename without user_id prefix and .json suffix
+            filename = file_key[len(prefix):-5]  # Remove prefix and .json
+            scripts.append({
+                "filename": filename,
+                "s3_key": file_key
+            })
+    
+    return scripts
+
+
+@router.get("/script/{user_id}/{filename}")
+def get_user_script(user_id: str, filename: str):
+    """Get a specific script for a user"""
+    s3_key = f"{user_id}/{filename}.json"
+    if not s3_client.list_files(SCRIPT_RESULTS_BUCKET, s3_key):
+        return None
+    script = s3_client.get_file(f"{SCRIPT_RESULTS_BUCKET}", s3_key)
+    return json.loads(script)
+
+
+@router.delete("/script/{user_id}/{filename}")
+def delete_user_script(user_id: str, filename: str):
+    """Delete a specific script for a user"""
+    s3_key = f"{user_id}/{filename}.json"
+    if not s3_client.list_files(SCRIPT_RESULTS_BUCKET, s3_key):
         return
-    s3_client.delete_file(f"{SCRIPT_RESULTS_BUCKET}", filename)
+    s3_client.delete_file(f"{SCRIPT_RESULTS_BUCKET}", s3_key)
 
 
-@router.put("/script/{filename}")
-def update_script(filename: str, request: UpdateScriptRequest):
-    if not s3_client.list_files(SCRIPT_RESULTS_BUCKET, filename):
+@router.put("/script/{user_id}/{filename}")
+def update_user_script(user_id: str, filename: str, request: UpdateScriptRequest):
+    """Update a specific script for a user"""
+    s3_key = f"{user_id}/{filename}.json"
+    if not s3_client.list_files(SCRIPT_RESULTS_BUCKET, s3_key):
         return None
 
     script_json_str = request.script.model_dump()
     file_obj = io.BytesIO(json.dumps(script_json_str).encode("utf-8"))
-    s3_client.upload_fileobj(SCRIPT_RESULTS_BUCKET, filename, file_obj)
+    s3_client.upload_fileobj(SCRIPT_RESULTS_BUCKET, s3_key, file_obj)
 
     return {"message": "Script updated successfully"}
 
@@ -79,6 +112,7 @@ def send_script_request(script_request: BuildScriptRequest):
         data=ScriptRequest(
             text_content=script_request.text_content,
             voices=voices,
+            filename=script_request.filename,
             character_voice_mappings=script_request.character_voice_mappings,
         ).model_dump(),
     )

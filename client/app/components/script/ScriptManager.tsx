@@ -1,20 +1,24 @@
 import React, { Suspense } from "react";
 
-import { Script } from "../../actions/script";
 import { Voice } from "../../actions/voices";
 import { AudiobookJob } from "../../actions/job";
 
 import ScriptManagerClient from "./ScriptManagerClient";
 
+interface ScriptInfo {
+  filename: string;
+  s3_key: string;
+}
+
 interface ScriptManagerProps {
-  scriptPromise: Promise<Script | null>;
+  scriptsPromise: Promise<ScriptInfo[]>;
   voicesPromise: Promise<Voice[]>;
   narrationUrlPromise: Promise<string | null>;
   jobStatePromise: Promise<AudiobookJob | null>;
 }
 
 export default function ScriptManager({
-  scriptPromise,
+  scriptsPromise,
   voicesPromise,
   narrationUrlPromise,
   jobStatePromise,
@@ -23,13 +27,13 @@ export default function ScriptManager({
     <Suspense
       fallback={
         <div>
-          Loading script{" "}
+          Loading scripts{" "}
           <span className="loading loading-dots loading-xs"></span>
         </div>
       }
     >
       <ScriptManagerClient
-        scriptPromise={scriptPromise}
+        scriptsPromise={scriptsPromise}
         voicesPromise={voicesPromise}
         narrationUrlPromise={narrationUrlPromise}
         jobStatePromise={jobStatePromise}

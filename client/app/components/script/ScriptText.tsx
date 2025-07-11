@@ -8,17 +8,19 @@ interface ScriptTextProps {
   script: Script;
   voices: Voice[];
   isEditing: boolean;
+  filename?: string;
 }
 
 export default function ScriptText({
   script,
   voices,
   isEditing,
+  filename,
 }: ScriptTextProps) {
   return (
     <div className="flex flex-col gap-4">
       {isEditing ? (
-        <ScriptEditor script={script} voices={voices} />
+        <ScriptEditor script={script} voices={voices} filename={filename} />
       ) : (
         <div className="h-[32rem] overflow-y-scroll bg-base-200 p-4 rounded">
           {script.segments.map((scriptSegment, index) => {

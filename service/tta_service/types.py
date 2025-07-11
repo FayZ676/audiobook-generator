@@ -12,6 +12,7 @@ class ScriptPayload(BaseModel):
 class BuildScriptRequest(BaseModel):
     user_id: str
     text_content: str
+    filename: str
     character_voice_mappings: CharacterVoiceMappings | None = None
 
 

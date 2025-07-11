@@ -36,10 +36,12 @@ def _to_json_fileobject(filename: str, script_data: Script) -> BinaryIO:
     return file_obj
 
 
-def _upload_script_result(user_id: str, script_data: Script):
-    script_file = _to_json_fileobject(user_id, script_data)
-    s3_client.upload_fileobj(f"{SCRIPT_RESULTS_BUCKET}", script_file.name, script_file)
-    return str(script_file.name)
+def _upload_script_result(user_id: str, filename: str, script_data: Script):
+    script_file = _to_json_fileobject(filename, script_data)
+    # Store in user-specific directory: user_id/filename.json
+    s3_key = f"{user_id}/{script_file.name}"
+    s3_client.upload_fileobj(f"{SCRIPT_RESULTS_BUCKET}", s3_key, script_file)
+    return s3_key
 
 
 
@@ -63,7 +65,7 @@ def handler(event: dict):
                 character_voice_mappings=data.character_voice_mappings
             )
             script = get_script(text, speaker_voices)
-            script_filename = _upload_script_result(request.user_id, script)
+            script_filename = _upload_script_result(request.user_id, data.filename, script)
             status = "complete"
             message = ""
             data = ScriptResponse(filename=script_filename).model_dump()

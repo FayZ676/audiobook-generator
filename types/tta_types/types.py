@@ -35,6 +35,7 @@ class SpeechResponse(BaseModel):
 class ScriptRequest(BaseModel):
     text_content: str
     voices: list[Voice]
+    filename: str
     character_voice_mappings: CharacterVoiceMappings | None = None
 
 

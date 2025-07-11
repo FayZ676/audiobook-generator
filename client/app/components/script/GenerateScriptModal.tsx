@@ -19,7 +19,18 @@ export default function GenerateScriptModal({
   existingScript,
 }: GenerateScriptModalProps) {
   const [textContent, setTextContent] = useState<string>("");
+  const [filename, setFilename] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const extractCharacterVoiceMappings = (script: Script) => {
+    const mappings: Record<string, string> = {};
+    script.speakers.forEach((speaker) => {
+      speaker.names.forEach((name) => {
+        mappings[name] = speaker.voice_name;
+      });
+    });
+    return mappings;
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -28,19 +39,29 @@ export default function GenerateScriptModal({
       try {
         const content = await selectedFile.text();
         setTextContent(content);
+        
+        // Extract filename without extension
+        const fileNameWithoutExt = selectedFile.name.replace(/\.[^/.]+$/, "");
+        setFilename(fileNameWithoutExt);
       } catch (error) {
         console.error("Error reading file:", error);
         setTextContent("");
+        setFilename("");
       }
     }
   };
 
   async function handleCreateScript() {
-    if (textContent) {
+    if (textContent && filename) {
       setIsSubmitting(true);
       try {
-        await createScript({ textContent });
+        await createScript({ 
+          textContent, 
+          filename,
+          characterVoiceMappings: existingScript ? extractCharacterVoiceMappings(existingScript) : undefined
+        });
         setTextContent("");
+        setFilename("");
         onClose();
       } catch (error) {
         console.error("Error creating script:", error);
@@ -53,6 +74,7 @@ export default function GenerateScriptModal({
   const handleClose = () => {
     if (!isSubmitting) {
       setTextContent("");
+      setFilename("");
       onClose();
     }
   };
@@ -91,7 +113,7 @@ export default function GenerateScriptModal({
             Cancel
           </button>
           <button
-            disabled={!textContent || isSubmitting}
+            disabled={!textContent || !filename || isSubmitting}
             onClick={async () => {
               await handleCreateScript();
             }}

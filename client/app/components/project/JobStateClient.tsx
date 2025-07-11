@@ -9,22 +9,26 @@ import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
 import { NARRATION_CHANNEL, SCRIPT_CHANNEL } from "@/app/lib/pusher-channels";
 
 import { AudiobookJob } from "../../actions/job";
-import { Script } from "../../actions/script";
 import Tip from "../ui/Tip";
 import NarrationProgress from "../narration/NarrationProgress";
 
+interface ScriptInfo {
+  filename: string;
+  s3_key: string;
+}
+
 interface JobStateSectionProps {
   jobStatePromise: Promise<AudiobookJob | null>;
-  scriptPromise: Promise<Script | null>;
+  scriptsPromise: Promise<ScriptInfo[]>;
 }
 
 export default function JobStateClient({
   jobStatePromise,
-  scriptPromise,
+  scriptsPromise,
 }: JobStateSectionProps) {
   const router = useRouter();
   const jobState = use(jobStatePromise);
-  const script = use(scriptPromise);
+  const scripts = use(scriptsPromise);
 
   usePusherSubscriptions({
     channels: [NARRATION_CHANNEL, SCRIPT_CHANNEL],
@@ -56,17 +60,10 @@ export default function JobStateClient({
       {jobState?.narration_status &&
         jobState?.narration_status === "processing" && (
           <>
-            {script ? (
-              <NarrationProgress
-                script={script}
-                narrationStartedAt={jobState.narration_started_at}
-              />
-            ) : (
-              <>
-                Generating narration{" "}
-                <span className="loading loading-dots loading-xs"></span>
-              </>
-            )}
+            <div>
+              Generating narration{" "}
+              <span className="loading loading-dots loading-xs"></span>
+            </div>
           </>
         )}
       {jobState?.script_status && jobState?.script_status === "failed" && (

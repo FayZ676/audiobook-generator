@@ -9,9 +9,10 @@ import CharacterVoiceMapping from "./CharacterVoiceMapping";
 interface ScriptEditorProps {
   script: Script;
   voices: Voice[];
+  filename?: string;
 }
 
-export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
+export default function ScriptEditor({ script, voices, filename }: ScriptEditorProps) {
   const [editingScript, setEditingScript] = useState<Script>(script);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +43,12 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
     clearMessages();
 
     try {
-      await updateScript({ script: scriptToSave });
+      if (filename) {
+        await updateScript(filename, scriptToSave);
+      } else {
+        // Fallback for backward compatibility
+        await updateScript("default", scriptToSave);
+      }
     } catch (error) {
       console.error("Error updating script:", error);
       setError("Failed to save script");
