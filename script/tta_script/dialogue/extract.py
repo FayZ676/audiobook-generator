@@ -18,11 +18,8 @@ def get_script(
 ) -> Script:
     segments = split_by_dialogue(text)
     narrator_speaker = next(
-        (s for s in speakers_voices if "Narrator" in s.character.names),
-        None
+        s for s in speakers_voices if "Narrator" in s.character.names
     )
-    if not narrator_speaker:
-        raise ValueError("No narrator speaker found in the provided speakers.")
     
     dialogue = build_dialogue(segments, speakers_voices, narrator_speaker)
 
