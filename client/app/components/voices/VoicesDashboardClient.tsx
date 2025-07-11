@@ -23,11 +23,9 @@ export default function VoicesDashboardClient({
       <div>
         <Suspense
           fallback={
-            <div>
+            <div className="flex items-center gap-2">
               Loading voices{" "}
-              <span className="animate-spin">
-                <LoaderCircle />
-              </span>
+              <span className="loading loading-dots loading-xs"></span>
             </div>
           }
         >
