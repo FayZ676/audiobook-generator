@@ -29,7 +29,6 @@ class SpeechResponse(BaseModel):
 
 class ScriptRequest(BaseModel):
     text_content: str
-    narrator_voice_name: str
     voices: list[Voice]
 
 
