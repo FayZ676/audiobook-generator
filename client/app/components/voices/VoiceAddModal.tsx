@@ -9,6 +9,8 @@ import { addVoice, type Age, type Gender } from "../../actions/voices";
 import Tip from "../ui/Tip";
 import AudioRecorder from "../AudioRecorder";
 
+import { Mic, Upload } from "lucide-react";
+
 interface VoiceAddModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -36,24 +38,21 @@ export default function VoiceAddModal({ isOpen, onClose }: VoiceAddModalProps) {
     setAudioInputMode(mode);
     setAudioFile(null);
 
-    if (mode === "record") {
+    if (mode === "upload") {
       const fileInput = document.getElementById(
         "audio-file-input"
       ) as HTMLInputElement;
       if (fileInput) {
         fileInput.value = "";
+        fileInput.click();
       }
+    } else if (mode === "record") {
+      modalRef.current?.showModal();
     }
-
-    modalRef.current?.showModal();
   };
 
   const closeModal = () => {
     modalRef.current?.close();
-  };
-
-  const handleModalFileSelect = () => {
-    closeModal();
   };
 
   const handleModalRecordingComplete = (recordedFile: File) => {
@@ -169,20 +168,31 @@ export default function VoiceAddModal({ isOpen, onClose }: VoiceAddModalProps) {
             Audio Sample
           </label>
           <Tip variant="info">Keep your audio file under 12 seconds.</Tip>
+
+          <input
+            id="audio-file-input"
+            name="audio_file"
+            type="file"
+            accept="audio/*"
+            onChange={handleFileChange}
+            className="hidden"
+            required
+          />
+
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
               onClick={() => handleAudioInputModeChange("upload")}
-              className="btn btn-primary"
+              className="btn"
             >
-              Upload Audio
+              <Upload className="h-4 w-4 mr-2" />
             </button>
             <button
               type="button"
               onClick={() => handleAudioInputModeChange("record")}
-              className="btn btn-primary"
+              className="btn"
             >
-              Record Audio
+              <Mic className="h-4 w-4 mr-2" />
             </button>
           </div>
 
@@ -239,16 +249,11 @@ export default function VoiceAddModal({ isOpen, onClose }: VoiceAddModalProps) {
             <div className="flex flex-col gap-4">
               <Tip variant="info">Select an audio file under 12 seconds.</Tip>
               <input
-                id="audio-file-input"
+                id="modal-audio-file-input"
                 name="audio_file"
                 type="file"
                 accept="audio/*"
-                onChange={(e) => {
-                  handleFileChange(e);
-                  if (e.target.files && e.target.files[0]) {
-                    handleModalFileSelect();
-                  }
-                }}
+                onChange={handleFileChange}
                 className="file-input file-input-bordered w-full"
                 required
               />
