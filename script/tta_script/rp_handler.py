@@ -42,20 +42,6 @@ def _upload_script_result(user_id: str, script_data: Script):
     return str(script_file.name)
 
 
-def _get_narrator_speaker(narrator_name: str, voices: list[Voice]):
-    narrator_voice = next(
-        (voice for voice in voices if voice.name == narrator_name), None
-    )
-    if not narrator_voice:
-        raise ValueError(f"Could not find a voice for the narrator '{narrator_name}'.")
-    narrator_speaker = Speaker(
-        SpeakerDetails(
-            frozenset({"Narrator"}), narrator_voice.age, narrator_voice.gender  # type: ignore
-        ),
-        narrator_voice,
-    )
-    return narrator_speaker
-
 
 def handler(event: dict):
     request = WebhookRequest.model_validate(event["input"])
@@ -76,8 +62,7 @@ def handler(event: dict):
                 voices=voices.copy(),
                 character_voice_mappings=data.character_voice_mappings
             )
-            narrator_speaker = _get_narrator_speaker(data.narrator_voice_name, voices)
-            script = get_script(text, speaker_voices, narrator_speaker)
+            script = get_script(text, speaker_voices)
             script_filename = _upload_script_result(request.user_id, script)
             status = "complete"
             message = ""

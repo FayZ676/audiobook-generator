@@ -44,18 +44,17 @@ export default function GenerateScriptModal({
     if (textContent && narrator) {
       setIsSubmitting(true);
       try {
-        // Extract character voice mappings from existing script if available
-        const characterVoiceMappings = existingScript?.speakers.reduce((acc, speaker) => {
-          if (speaker.names[0] && speaker.voice_name) {
-            acc[speaker.names[0]] = speaker.voice_name;
-          }
-          return acc;
-        }, {} as Record<string, string>) || {};
+        const characterVoiceMappings =
+          existingScript?.speakers.reduce((acc, speaker) => {
+            if (speaker.names[0] && speaker.voice_name) {
+              acc[speaker.names[0]] = speaker.voice_name;
+            }
+            return acc;
+          }, {} as Record<string, string>) || {};
 
-        await createScript({ 
-          textContent, 
-          narrator,
-          characterVoiceMappings 
+        await createScript({
+          textContent,
+          characterVoiceMappings,
         });
         setTextContent("");
         setNarrator("");
@@ -84,7 +83,7 @@ export default function GenerateScriptModal({
         <h3 className="font-bold text-lg mb-4">
           {existingScript ? "Add New Chapter" : "Generate Script"}
         </h3>
-        
+
         <div className="flex flex-col gap-4">
           <label htmlFor="filename-input" className="font-medium">
             Text File

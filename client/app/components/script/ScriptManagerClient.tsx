@@ -51,7 +51,9 @@ export default function ScriptManagerClient({
         isEditing={isEditing}
         onEditToggle={setIsEditing}
       />
-      {script && <ScriptText script={script} voices={voices} isEditing={isEditing} />}
+      {script && (
+        <ScriptText script={script} voices={voices} isEditing={isEditing} />
+      )}
     </div>
   );
 }

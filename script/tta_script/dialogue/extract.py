@@ -9,20 +9,15 @@ from tta_script.dialogue.types import (
     ScriptSegment,
     Script,
 )
-from tta_script.character.types import SpeakerDetails
 from tta_script.voices import Speaker
 from tta_script.models.text import generate_text
 
 
-
-
 def get_script(
-    text: str, speakers_voices: set[Speaker], narrator_speaker: Speaker
+    text: str, speakers_voices: set[Speaker]
 ) -> Script:
     segments = split_by_dialogue(text)
-    all_speakers = speakers_voices.copy()
-    all_speakers.add(narrator_speaker)
-    dialogue = build_dialogue(segments, all_speakers, narrator_speaker)
+    dialogue = build_dialogue(segments, speakers_voices)
 
     script_segments = [
         ScriptSegment(text=d.text, speaker_alias=d.speaker.first_alias())
@@ -36,13 +31,15 @@ def get_script(
 def build_dialogue(
     segments: list[TextSegment],
     speakers: set[Speaker],
-    narrator_speaker: Speaker,
 ):
+    narrator_speaker = next(
+        s for s in speakers if "Narrator" in s.character.names
+    )
     label_dict = {
         label.index: label.speaker for label in label_dialogue(segments, speakers)
     }
     dialogue: list[Dialogue] = []
-    
+
     for i, seg in enumerate(segments):
         if seg.dialogue:
             label_speaker = label_dict.get(i)
@@ -82,9 +79,7 @@ def create_text_batches(texts: list[TextSegment], batch_size: int):
     return batches
 
 
-def label(
-    texts: dict[int, TextSegment], speakers: set[Speaker], max_retries: int = 3
-):
+def label(texts: dict[int, TextSegment], speakers: set[Speaker], max_retries: int = 3):
     prompt = label_prompt.substitute(
         text="\n".join([f"{i}. {d}" for i, d in texts.items()]),
         speakers="\n".join([f"- {s.first_alias()}" for s in speakers]),
@@ -102,8 +97,11 @@ def label(
 
 
 def split_by_dialogue(text: str) -> list[TextSegment]:
+    def clean_text(text: str) -> str:
+        return text.strip().replace("\n", " ").replace("“", '"').replace("”", '"')
+
     result: list[TextSegment] = []
-    paragraphs = [p.strip().replace("\n", " ") for p in text.split("\n\n") if p.strip()]
+    paragraphs = [clean_text(p) for p in text.split("\n\n") if p.strip()]
     for paragraph in paragraphs:
         if paragraph.count('"') % 2 != 0:
             # TODO: Handle with LLM.
