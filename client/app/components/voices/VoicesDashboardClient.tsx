@@ -7,6 +7,7 @@ import { Voice } from "../../actions/voices";
 
 import VoiceAddModal from "./VoiceAddModal";
 import VoiceList from "./VoiceList";
+import { LoaderCircle } from "lucide-react";
 
 interface VoicesDashboardClientProps {
   voicesPromise: Promise<Voice[]>;
@@ -20,7 +21,16 @@ export default function VoicesDashboardClient({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <Suspense fallback={<div>Loading voices ...</div>}>
+        <Suspense
+          fallback={
+            <div>
+              Loading voices{" "}
+              <span className="animate-spin">
+                <LoaderCircle />
+              </span>
+            </div>
+          }
+        >
           <VoiceList voicesPromise={voicesPromise} />
         </Suspense>
         <button
