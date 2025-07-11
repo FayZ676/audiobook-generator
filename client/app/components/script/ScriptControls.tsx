@@ -172,7 +172,6 @@ export default function ScriptControls({
       <GenerateScriptModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        voicesPromise={voicesPromise}
         existingScript={script}
       />
     </>

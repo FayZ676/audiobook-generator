@@ -1,29 +1,24 @@
 "use client";
 
 import React from "react";
-import { useState, Suspense } from "react";
+import { useState } from "react";
 
 import { createScript, Script } from "../../actions/script";
-import { Voice } from "../../actions/voices";
 
-import NarratorVoiceOptionsDropdown from "../voices/NarratorVoiceOptionsDropdown";
 import Tip from "../ui/Tip";
 
 interface GenerateScriptModalProps {
   isOpen: boolean;
   onClose: () => void;
-  voicesPromise: Promise<Voice[]>;
   existingScript?: Script | null;
 }
 
 export default function GenerateScriptModal({
   isOpen,
   onClose,
-  voicesPromise,
   existingScript,
 }: GenerateScriptModalProps) {
   const [textContent, setTextContent] = useState<string>("");
-  const [narrator, setNarrator] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,23 +36,11 @@ export default function GenerateScriptModal({
   };
 
   async function handleCreateScript() {
-    if (textContent && narrator) {
+    if (textContent) {
       setIsSubmitting(true);
       try {
-        const characterVoiceMappings =
-          existingScript?.speakers.reduce((acc, speaker) => {
-            if (speaker.names[0] && speaker.voice_name) {
-              acc[speaker.names[0]] = speaker.voice_name;
-            }
-            return acc;
-          }, {} as Record<string, string>) || {};
-
-        await createScript({
-          textContent,
-          characterVoiceMappings,
-        });
+        await createScript({ textContent });
         setTextContent("");
-        setNarrator("");
         onClose();
       } catch (error) {
         console.error("Error creating script:", error);
@@ -70,7 +53,6 @@ export default function GenerateScriptModal({
   const handleClose = () => {
     if (!isSubmitting) {
       setTextContent("");
-      setNarrator("");
       onClose();
     }
   };
@@ -98,23 +80,6 @@ export default function GenerateScriptModal({
             className="bg-base-300 p-2 rounded"
             disabled={isSubmitting}
           />
-          <label htmlFor="narrator-input" className="font-medium">
-            Narrator Voice Name
-          </label>
-          <Suspense
-            fallback={
-              <select className="bg-base-300 p-2 rounded" disabled>
-                <option>Loading voices...</option>
-              </select>
-            }
-          >
-            <NarratorVoiceOptionsDropdown
-              voicesPromise={voicesPromise}
-              value={narrator}
-              onChange={setNarrator}
-              disabled={isSubmitting}
-            />
-          </Suspense>
         </div>
 
         <div className="modal-action">
@@ -126,7 +91,7 @@ export default function GenerateScriptModal({
             Cancel
           </button>
           <button
-            disabled={!textContent || !narrator || isSubmitting}
+            disabled={!textContent || isSubmitting}
             onClick={async () => {
               await handleCreateScript();
             }}
