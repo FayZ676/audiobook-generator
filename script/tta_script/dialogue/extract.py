@@ -17,11 +17,7 @@ def get_script(
     text: str, speakers_voices: set[Speaker]
 ) -> Script:
     segments = split_by_dialogue(text)
-    narrator_speaker = next(
-        s for s in speakers_voices if "Narrator" in s.character.names
-    )
-    
-    dialogue = build_dialogue(segments, speakers_voices, narrator_speaker)
+    dialogue = build_dialogue(segments, speakers_voices)
 
     script_segments = [
         ScriptSegment(text=d.text, speaker_alias=d.speaker.first_alias())
@@ -32,11 +28,18 @@ def get_script(
     return Script(segments=script_segments, speakers=unique_speakers)
 
 
+def find_narrator_speaker(speakers: set[Speaker]) -> Speaker:
+    """Find the narrator speaker from a set of speakers."""
+    return next(
+        s for s in speakers if "Narrator" in s.character.names
+    )
+
+
 def build_dialogue(
     segments: list[TextSegment],
     speakers: set[Speaker],
-    narrator_speaker: Speaker,
 ):
+    narrator_speaker = find_narrator_speaker(speakers)
     label_dict = {
         label.index: label.speaker for label in label_dialogue(segments, speakers)
     }
