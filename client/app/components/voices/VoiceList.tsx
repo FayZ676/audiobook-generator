@@ -18,7 +18,6 @@ interface VoiceListProps {
 
 export default function VoiceList({ voicesPromise }: VoiceListProps) {
   const router = useRouter();
-
   const voices = use(voicesPromise);
 
   usePusherSubscriptions({
