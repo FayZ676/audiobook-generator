@@ -30,7 +30,6 @@ const ScriptSchema = z.object({
 interface BuildScriptRequest {
   user_id: string;
   text_content: string;
-  narrator_voice_name: string;
 }
 
 interface DeleteScriptRequest {
@@ -39,7 +38,6 @@ interface DeleteScriptRequest {
 
 interface CreateScriptProps {
   textContent: string;
-  narrator: string;
 }
 
 interface UpdateScriptProps {
@@ -50,7 +48,6 @@ export type Script = z.infer<typeof ScriptSchema>;
 
 export async function createScript({
   textContent,
-  narrator,
 }: CreateScriptProps) {
   const { userId } = await auth();
   if (!userId) {
@@ -60,7 +57,6 @@ export async function createScript({
   const request: BuildScriptRequest = {
     user_id: userId,
     text_content: textContent,
-    narrator_voice_name: narrator,
   };
 
   try {

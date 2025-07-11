@@ -14,12 +14,10 @@ from tta_script.models.text import generate_text
 
 
 def get_script(
-    text: str, speakers_voices: set[Speaker], narrator_speaker: Speaker
+    text: str, speakers_voices: set[Speaker]
 ) -> Script:
     segments = split_by_dialogue(text)
-    all_speakers = speakers_voices.copy()
-    all_speakers.add(narrator_speaker)
-    dialogue = build_dialogue(segments, all_speakers, narrator_speaker)
+    dialogue = build_dialogue(segments, speakers_voices)
 
     script_segments = [
         ScriptSegment(text=d.text, speaker_alias=d.speaker.first_alias())
@@ -33,8 +31,10 @@ def get_script(
 def build_dialogue(
     segments: list[TextSegment],
     speakers: set[Speaker],
-    narrator_speaker: Speaker,
 ):
+    narrator_speaker = next(
+        s for s in speakers if "Narrator" in s.character.names
+    )
     label_dict = {
         label.index: label.speaker for label in label_dialogue(segments, speakers)
     }

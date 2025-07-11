@@ -78,7 +78,6 @@ def send_script_request(script_request: BuildScriptRequest):
         user_id=script_request.user_id,
         data=ScriptRequest(
             text_content=script_request.text_content,
-            narrator_voice_name=script_request.narrator_voice_name,
             voices=voices,
         ).model_dump(),
     )

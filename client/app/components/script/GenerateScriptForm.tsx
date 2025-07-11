@@ -1,23 +1,14 @@
 "use client";
 
 import React from "react";
-import { useState, Suspense } from "react";
+import { useState } from "react";
 
 import { createScript } from "../../actions/script";
-import { Voice } from "../../actions/voices";
 
-import NarratorVoiceOptionsDropdown from "../voices/NarratorVoiceOptionsDropdown";
 import Tip from "../ui/Tip";
 
-interface GenerateScriptFormProps {
-  voicesPromise: Promise<Voice[]>;
-}
-
-export default function GenerateScriptForm({
-  voicesPromise,
-}: GenerateScriptFormProps) {
+export default function GenerateScriptForm() {
   const [textContent, setTextContent] = useState<string>("");
-  const [narrator, setNarrator] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,12 +26,11 @@ export default function GenerateScriptForm({
   };
 
   async function handleCreateScript() {
-    if (textContent && narrator) {
+    if (textContent) {
       setIsSubmitting(true);
       try {
-        await createScript({ textContent, narrator });
+        await createScript({ textContent });
         setTextContent("");
-        setNarrator("");
       } catch (error) {
         console.error("Error creating script:", error);
       } finally {
@@ -63,25 +53,8 @@ export default function GenerateScriptForm({
         onChange={handleFileChange}
         className="bg-base-300 p-2 rounded"
       />
-      <label htmlFor="narrator-input" className="font-medium">
-        Narrator Voice Name
-      </label>
-      <Suspense
-        fallback={
-          <select className="bg-base-300 p-2 rounded" disabled>
-            <option>Loading voices...</option>
-          </select>
-        }
-      >
-        <NarratorVoiceOptionsDropdown
-          voicesPromise={voicesPromise}
-          value={narrator}
-          onChange={setNarrator}
-          disabled={isSubmitting}
-        />
-      </Suspense>
       <button
-        disabled={!textContent || !narrator || isSubmitting}
+        disabled={!textContent || isSubmitting}
         onClick={async () => {
           await handleCreateScript();
         }}

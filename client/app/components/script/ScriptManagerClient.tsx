@@ -43,7 +43,7 @@ export default function ScriptManagerClient({
   });
 
   if (!script) {
-    return <GenerateScriptForm voicesPromise={voicesPromise} />;
+    return <GenerateScriptForm />;
   }
 
   return (
