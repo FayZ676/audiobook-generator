@@ -7,9 +7,7 @@ import { createScript } from "../../actions/script";
 
 import Tip from "../ui/Tip";
 
-interface GenerateScriptFormProps {}
-
-export default function GenerateScriptForm({}: GenerateScriptFormProps) {
+export default function GenerateScriptForm() {
   const [textContent, setTextContent] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
