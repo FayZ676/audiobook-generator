@@ -14,7 +14,7 @@ router = APIRouter()
 def get_voices(user_id: str):
     paths = [
         "metadata/",
-        f"metadata/{user_id}/",
+        f"{user_id}/metadata/",
     ]
     voices_metadata = [
         file for path in paths for file in s3_client.list_files(VOICES_BUCKET, path)
