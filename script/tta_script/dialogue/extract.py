@@ -14,12 +14,17 @@ from tta_script.models.text import generate_text
 
 
 def get_script(
-    text: str, speakers_voices: set[Speaker], narrator_speaker: Speaker
+    text: str, speakers_voices: set[Speaker]
 ) -> Script:
     segments = split_by_dialogue(text)
-    all_speakers = speakers_voices.copy()
-    all_speakers.add(narrator_speaker)
-    dialogue = build_dialogue(segments, all_speakers, narrator_speaker)
+    narrator_speaker = next(
+        (s for s in speakers_voices if "Narrator" in s.character.names),
+        None
+    )
+    if not narrator_speaker:
+        raise ValueError("No narrator speaker found in the provided speakers.")
+    
+    dialogue = build_dialogue(segments, speakers_voices, narrator_speaker)
 
     script_segments = [
         ScriptSegment(text=d.text, speaker_alias=d.speaker.first_alias())

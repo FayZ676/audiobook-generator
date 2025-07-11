@@ -159,12 +159,12 @@ def test_get_script():
         build_speaker_voice({"Hagrid"}),
         build_speaker_voice({"Dudley"}),
         build_speaker_voice({"Harry Potter"}),
+        build_speaker_voice({"Narrator"}),
     }
 
     script = get_script(
         text=get_text("harrypotter-1.txt"),
         speakers_voices=speakers,
-        narrator_speaker=build_speaker_voice({"Narrator"}),
     )
 
     expected_details = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
