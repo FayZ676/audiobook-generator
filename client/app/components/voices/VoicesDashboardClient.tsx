@@ -20,7 +20,14 @@ export default function VoicesDashboardClient({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <Suspense fallback={<div>Loading voices ...</div>}>
+        <Suspense
+          fallback={
+            <div className="flex items-center gap-2">
+              Loading voices{" "}
+              <span className="loading loading-dots loading-xs"></span>
+            </div>
+          }
+        >
           <VoiceList voicesPromise={voicesPromise} />
         </Suspense>
         <button
