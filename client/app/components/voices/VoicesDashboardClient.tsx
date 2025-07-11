@@ -7,7 +7,6 @@ import { Voice } from "../../actions/voices";
 
 import VoiceAddModal from "./VoiceAddModal";
 import VoiceList from "./VoiceList";
-import { LoaderCircle } from "lucide-react";
 
 interface VoicesDashboardClientProps {
   voicesPromise: Promise<Voice[]>;
