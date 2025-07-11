@@ -95,7 +95,7 @@ export default function GenerateScriptModal({
             onClick={async () => {
               await handleCreateScript();
             }}
-            className="btn btn-primary"
+            className="btn"
           >
             {isSubmitting ? "Building Script..." : "Build Script"}
           </button>
