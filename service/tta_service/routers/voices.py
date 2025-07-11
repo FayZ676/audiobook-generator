@@ -29,7 +29,7 @@ def get_voices(user_id: str):
 
 @router.get("/voices/{user_id}/{voice_name}")
 def get_voice(user_id: str, voice_name: str):
-    paths = [f"metadata/{voice_name}.json", f"metadata/{user_id}/{voice_name}.json"]
+    paths = [f"metadata/{voice_name}.json", f"{user_id}/metadata/{voice_name}.json"]
     for path in paths:
         try:
             file_content_bytes = s3_client.get_file(VOICES_BUCKET, path)
