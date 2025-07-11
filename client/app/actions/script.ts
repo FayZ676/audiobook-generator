@@ -6,26 +6,30 @@ import { getUserId } from "./user";
 
 import { z } from "zod";
 
-import { uploadTextFile } from "./file";
 import { AgeEnum, GenderEnum } from "../types";
 
 const SpeakerDetailsSchema = z.object({
   names: z.array(z.string()),
   age: AgeEnum,
   gender: GenderEnum,
+  voice_name: z.string(),
+  audio_path: z.string().optional().default(""),
+  audio_transcript: z.string().optional().default(""),
 });
 
 const ScriptSegmentSchema = z.object({
-  voice_name: z.string(),
-  speaker: SpeakerDetailsSchema,
   text: z.string(),
+  speaker_alias: z.string(),
 });
 
-const ScriptResponseSchema = z.array(ScriptSegmentSchema);
+const ScriptSchema = z.object({
+  segments: z.array(ScriptSegmentSchema),
+  speakers: z.array(SpeakerDetailsSchema),
+});
 
 interface BuildScriptRequest {
   user_id: string;
-  filename: string;
+  text_content: string;
   narrator_voice_name: string;
 }
 
@@ -34,7 +38,7 @@ interface DeleteScriptRequest {
 }
 
 interface CreateScriptProps {
-  file: File;
+  textContent: string;
   narrator: string;
 }
 
@@ -42,18 +46,20 @@ interface UpdateScriptProps {
   script: Script;
 }
 
-export type Script = z.infer<typeof ScriptResponseSchema>;
+export type Script = z.infer<typeof ScriptSchema>;
 
-export async function createScript({ file, narrator }: CreateScriptProps) {
+export async function createScript({
+  textContent,
+  narrator,
+}: CreateScriptProps) {
   const { userId } = await auth();
   if (!userId) {
     throw new Error("User not authenticated");
   }
 
-  const filename = await uploadTextFile(file);
   const request: BuildScriptRequest = {
     user_id: userId,
-    filename: filename,
+    text_content: textContent,
     narrator_voice_name: narrator,
   };
 
@@ -65,6 +71,7 @@ export async function createScript({ file, narrator }: CreateScriptProps) {
       },
       body: JSON.stringify(request),
     });
+    revalidateTag("job");
   } catch (error) {
     console.error("Error submitting script:", error);
     throw error;
@@ -92,11 +99,12 @@ export async function getScript(): Promise<Script | null> {
   if (rawData === null) {
     return null;
   }
-  const result = ScriptResponseSchema.safeParse(rawData);
+  const result = ScriptSchema.safeParse(rawData);
   if (!result.success) {
     console.error("Validation error:", result.error.format());
     throw new Error("Invalid API response: schema validation failed");
   }
+
   return result.data;
 }
 
@@ -117,19 +125,22 @@ export async function updateScript({ script }: UpdateScriptProps) {
   const userId = await getUserId();
 
   const filename = `${userId}.json`;
-  const response = await fetch(`${process.env.AUDIOBOOK_SERVICE_URL}/script/${filename}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ script }),
-  });
+  const response = await fetch(
+    `${process.env.AUDIOBOOK_SERVICE_URL}/script/${filename}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ script }),
+    }
+  );
 
   if (!response.ok) {
     throw new Error("Failed to update script");
   }
-  
+
   revalidateTag("script");
-  
+
   return response.json();
 }

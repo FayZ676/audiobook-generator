@@ -3,10 +3,11 @@ import io
 import json
 from typing import BinaryIO
 
-from tta_script.dialogue.types import DialogueDetails
-from tta_script.dialogue.extract import get_dialogue_details
+from tta_script.dialogue.types import Script
+from tta_script.dialogue.extract import get_script
 from tta_script.character.extract import get_speaker_details
-from tta_script.voices import assign_voices, SpeakerVoice, SpeakerDetails
+from tta_script.character.types import SpeakerDetails
+from tta_script.voices import assign_voices, Speaker
 
 from tta_types.types import (
     Voice,
@@ -22,32 +23,21 @@ import runpod
 
 
 SCRIPT_RESULTS_BUCKET = os.environ.get("SCRIPT_RESULTS_BUCKET", "")
-TEXT_FILES_BUCKET = os.environ.get("TEXT_FILES_BUCKET", "")
 
 
 s3_client = S3Client()
 
 
-def _to_json_fileobject(
-    filename: str, dialogue_details: list[DialogueDetails]
-) -> BinaryIO:
-    json_bytes = json.dumps([d.to_dict() for d in dialogue_details], indent=4).encode(
-        "utf-8"
-    )
+def _to_json_fileobject(filename: str, script_data: Script) -> BinaryIO:
+    json_data = script_data.to_dict()
+    json_bytes = json.dumps(json_data, indent=4).encode("utf-8")
     file_obj = io.BytesIO(json_bytes)
     file_obj.name = f"{filename}.json"
     return file_obj
 
 
-def _get_textfile_content(textfile_name: str) -> str:
-    file: bytes = s3_client.get_file(TEXT_FILES_BUCKET, textfile_name)
-    if not file:
-        raise ValueError("File not found")
-    return file.decode("utf-8")
-
-
-def _upload_script_result(user_id: str, script: list[DialogueDetails]):
-    script_file = _to_json_fileobject(user_id, script)
+def _upload_script_result(user_id: str, script_data: Script):
+    script_file = _to_json_fileobject(user_id, script_data)
     s3_client.upload_fileobj(f"{SCRIPT_RESULTS_BUCKET}", script_file.name, script_file)
     return str(script_file.name)
 
@@ -58,7 +48,7 @@ def _get_narrator_speaker(narrator_name: str, voices: list[Voice]):
     )
     if not narrator_voice:
         raise ValueError(f"Could not find a voice for the narrator '{narrator_name}'.")
-    narrator_speaker = SpeakerVoice(
+    narrator_speaker = Speaker(
         SpeakerDetails(
             frozenset({"Narrator"}), narrator_voice.age, narrator_voice.gender  # type: ignore
         ),
@@ -71,7 +61,7 @@ def handler(event: dict):
     request = WebhookRequest.model_validate(event["input"])
     data = ScriptRequest.model_validate(request.data)
 
-    text = _get_textfile_content(data.textfile_name)
+    text = data.text_content
     speaker_details = get_speaker_details(text)
     voices = data.voices
 
@@ -80,13 +70,12 @@ def handler(event: dict):
         message = "Not enough voices available for the number of speakers in the text."
         data = {}
     else:
-        # NOTE: Is it possible for the narrator to have the same voice as a speaker since they are two agnostic steps?
         try:
             speaker_voices = assign_voices(
                 speakers=speaker_details, voices=voices.copy()
             )
             narrator_speaker = _get_narrator_speaker(data.narrator_voice_name, voices)
-            script = get_dialogue_details(text, speaker_voices, narrator_speaker)
+            script = get_script(text, speaker_voices, narrator_speaker)
             script_filename = _upload_script_result(request.user_id, script)
             status = "complete"
             message = ""

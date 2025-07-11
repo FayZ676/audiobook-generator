@@ -1,19 +1,17 @@
-from typing import Literal
-
-from tta_types.types import Voice
+from tta_types.types import JobStatus, Voice
+from tta_types.script import Age, Gender
 
 from pydantic import BaseModel
 
 
-type Age = Literal["young", "middle-aged", "old"]
-
-
-type Gender = Literal["male", "female"]
+class ScriptPayload(BaseModel):
+    segments: list[dict[str, str]]
+    speakers: list[dict]
 
 
 class BuildScriptRequest(BaseModel):
     user_id: str
-    filename: str
+    text_content: str
     narrator_voice_name: str
 
 
@@ -36,4 +34,10 @@ class FeedbackRequest(BaseModel):
 
 
 class UpdateScriptRequest(BaseModel):
-    script: list
+    script: ScriptPayload
+
+
+class PusherEventDetails(BaseModel):
+    channel: str
+    event: JobStatus
+    message: str | None

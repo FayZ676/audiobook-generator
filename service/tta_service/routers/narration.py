@@ -1,13 +1,12 @@
-import json
 from datetime import datetime, timezone
 from fastapi import APIRouter, BackgroundTasks, status
 from tta_types.types import (
     Voice,
     WebhookRequest,
     SpeechRequest,
-    SpeechRequestSegment,
     AudiobookJob,
 )
+from tta_types.script import ScriptData
 from tta_service.types import BuildNarrationRequest
 from tta_service.config import (
     s3_client,
@@ -26,6 +25,21 @@ router = APIRouter()
 
 @router.post("/narration", status_code=status.HTTP_202_ACCEPTED)
 async def build_narration(request: BuildNarrationRequest, bg_tasks: BackgroundTasks):
+    existing_job = get_job_status(request.user_id)
+
+    update_status(
+        AudiobookJob(
+            job_id=request.user_id,
+            narration_status="processing",
+            script_status=existing_job.script_status if existing_job else None,
+            message=None,
+            script_started_at=(
+                existing_job.script_started_at if existing_job else None
+            ),
+            narration_started_at=datetime.now(timezone.utc).isoformat(),
+        )
+    )
+
     bg_tasks.add_task(
         send_narration_request, request.script_path, request.voices, request.user_id
     )
@@ -49,15 +63,16 @@ def delete_narration(filename: str):
 
 async def send_narration_request(script_path: str, voices: list[Voice], user_id: str):
     script_data = s3_client.get_file(SCRIPT_RESULTS_BUCKET, script_path)
+    parsed_script = ScriptData.model_validate_json(script_data)
+    speech_segments = parsed_script.to_speech_segments()
+
     request = WebhookRequest(
         callback=f"{SERVICE_API_URL}/webhook",
         channel="narration-channel",
         user_id=user_id,
         data=SpeechRequest(
             title=script_path.rstrip(".json"),
-            text=[
-                SpeechRequestSegment.model_validate(d) for d in json.loads(script_data)
-            ],
+            text=speech_segments,
             voices=voices,
         ).model_dump(),
     )
@@ -69,18 +84,4 @@ async def send_narration_request(script_path: str, voices: list[Voice], user_id:
             "Content-Type": "application/json",
             "Authorization": f"Bearer {SPEECH_SERVICE_API_KEY}",
         },
-    )
-
-    update_status(
-        AudiobookJob(
-            job_id=user_id,
-            narration_status="processing",
-            script_status=None,
-            message=None,
-            script_started_at=None,
-            narration_started_at=datetime.now(timezone.utc).isoformat(),
-        ),
-        pusher_channel="narration-channel",
-        pusher_event="processing",
-        pusher_message="",
     )
