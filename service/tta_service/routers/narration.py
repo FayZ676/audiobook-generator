@@ -37,6 +37,7 @@ async def build_narration(request: BuildNarrationRequest, bg_tasks: BackgroundTa
                 existing_job.script_started_at if existing_job else None
             ),
             narration_started_at=datetime.now(timezone.utc).isoformat(),
+            current_script_filename=request.script_path.split('/')[-1].replace('.json', ''),
         )
     )
 

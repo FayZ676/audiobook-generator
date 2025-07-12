@@ -51,7 +51,8 @@ export default function ScriptControls({
     e.preventDefault();
     setIsCreatingNarration(true);
     try {
-      await createNarration();
+      // Use the first script filename for narration
+      await createNarration(firstScriptFilename || undefined);
     } catch (error) {
       console.error("Error creating narration:", error);
     } finally {

@@ -13,7 +13,7 @@ interface NarrationRequest {
 
 export type NarrationUrl = string;
 
-export async function createNarration() {
+export async function createNarration(filename?: string) {
   const { userId } = await auth();
   if (!userId) {
     throw new Error("User not authenticated");
@@ -21,9 +21,13 @@ export async function createNarration() {
 
   const voices = await getVoices();
 
+  // Use the new multi-chapter path format if filename is provided,
+  // otherwise fall back to old format for backward compatibility
+  const scriptPath = filename ? `${userId}/${filename}.json` : `${userId}.json`;
+
   const request: NarrationRequest = {
     user_id: userId,
-    script_path: `${userId}.json`,
+    script_path: scriptPath,
     voices: voices,
   };
 

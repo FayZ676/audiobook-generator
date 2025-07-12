@@ -98,7 +98,12 @@ export default function JobStateClient({
       {jobState?.narration_status &&
         jobState?.narration_status === "processing" && (
           <>
-            {scripts && scripts.length > 0 ? (
+            {jobState.current_script_filename ? (
+              <NarrationProgressWrapper
+                filename={jobState.current_script_filename}
+                narrationStartedAt={jobState.narration_started_at}
+              />
+            ) : scripts && scripts.length > 0 ? (
               <NarrationProgressWrapper
                 filename={scripts[0].filename}
                 narrationStartedAt={jobState.narration_started_at}
