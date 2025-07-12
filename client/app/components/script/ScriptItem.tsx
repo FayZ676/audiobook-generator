@@ -79,13 +79,6 @@ export default function ScriptItem({
     }
   };
 
-  const isProcessing =
-    jobState?.script_status === "processing" ||
-    jobState?.narration_status === "processing";
-  const isCurrentlyNarrating =
-    jobState?.current_script_filename === scriptInfo.filename &&
-    jobState?.narration_status === "processing";
-
   return (
     <>
       <div className="collapse-title">{scriptInfo.filename}</div>
