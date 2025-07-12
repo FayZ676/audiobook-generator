@@ -10,7 +10,7 @@ import { handleRevalidateTag } from "@/app/actions/revalidate";
 import { Voice } from "../../actions/voices";
 import { AudiobookJob } from "../../actions/job";
 
-import ScriptControls from "./ScriptControls";
+import ProjectControls from "./ProjectControls";
 import ScriptList from "./ScriptList";
 
 interface ScriptInfo {
@@ -53,7 +53,7 @@ export default function ScriptManagerClient({
         voicesPromise={voicesPromise}
         jobStatePromise={jobStatePromise}
       />
-      <ScriptControls
+      <ProjectControls
         narrationUrlPromise={narrationUrlPromise}
         hasScripts={scripts.length > 0}
         firstScriptFilename={firstScript?.filename}

@@ -10,19 +10,19 @@ import { Script } from "../../actions/script";
 import { AudiobookJob } from "../../actions/job";
 import GenerateScriptModal from "./GenerateScriptModal";
 
-interface ScriptControlsProps {
+interface ProjectControlsProps {
   narrationUrlPromise: Promise<string | null>;
   hasScripts: boolean;
   firstScriptFilename?: string;
   jobStatePromise: Promise<AudiobookJob | null>;
 }
 
-export default function ScriptControls({
+export default function ProjectControls({
   narrationUrlPromise,
   hasScripts,
   firstScriptFilename,
   jobStatePromise,
-}: ScriptControlsProps) {
+}: ProjectControlsProps) {
   const router = useRouter();
   const [isDeletingProject, setIsDeletingProject] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -65,7 +65,6 @@ export default function ScriptControls({
   return (
     <>
       <div className="flex justify-between items-center">
-        <h3 className="font-bold">Project controls</h3>
         <ul className="menu menu-horizontal bg-base-200 rounded-box">
           <li>
             <a
@@ -75,9 +74,7 @@ export default function ScriptControls({
                   : "cursor-pointer"
               } font-medium`}
               onClick={
-                isProcessing || isDeletingProject
-                  ? undefined
-                  : handleOpenModal
+                isProcessing || isDeletingProject ? undefined : handleOpenModal
               }
               title="Add New Chapter"
             >
@@ -87,12 +84,16 @@ export default function ScriptControls({
           <li>
             <a
               className={`${
-                (!hasScripts && !narrationUrl) || isDeletingProject || isProcessing
+                (!hasScripts && !narrationUrl) ||
+                isDeletingProject ||
+                isProcessing
                   ? "disabled cursor-not-allowed opacity-50"
                   : "cursor-pointer"
               } font-medium`}
               onClick={
-                (!hasScripts && !narrationUrl) || isDeletingProject || isProcessing
+                (!hasScripts && !narrationUrl) ||
+                isDeletingProject ||
+                isProcessing
                   ? undefined
                   : handleDeleteProject
               }
