@@ -170,25 +170,24 @@ export async function getUserScript(filename: string): Promise<Script | null> {
 }
 
 export async function deleteScript(filename: string) {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("User not authenticated");
-  }
+  const userId = await getUserId();
+
+  const request: DeleteScriptRequest = {
+    filename: filename,
+  };
 
   await fetch(`${process.env.AUDIOBOOK_SERVICE_URL}/script/${userId}/${filename}`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
     },
+    body: JSON.stringify(request),
   });
   revalidateTag("script");
 }
 
 export async function updateScript(filename: string, script: Script) {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("User not authenticated");
-  }
+  const userId = await getUserId();
 
   const response = await fetch(
     `${process.env.AUDIOBOOK_SERVICE_URL}/script/${userId}/${filename}`,
