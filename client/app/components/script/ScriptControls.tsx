@@ -3,9 +3,8 @@
 import React, { useState } from "react";
 import { use } from "react";
 import { useRouter } from "next/navigation";
-import { MicVocal, Trash2, Plus } from "lucide-react";
+import { Trash2, Plus } from "lucide-react";
 
-import { createNarration } from "../../actions/narrate";
 import { deleteProject } from "../../actions/audiobook";
 import { Script } from "../../actions/script";
 import { AudiobookJob } from "../../actions/job";
@@ -25,7 +24,6 @@ export default function ScriptControls({
   jobStatePromise,
 }: ScriptControlsProps) {
   const router = useRouter();
-  const [isCreatingNarration, setIsCreatingNarration] = useState(false);
   const [isDeletingProject, setIsDeletingProject] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [existingScript, setExistingScript] = useState<Script | null>(null);
@@ -45,19 +43,6 @@ export default function ScriptControls({
       }
     }
     setIsModalOpen(true);
-  };
-
-  const handleCreateNarration = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsCreatingNarration(true);
-    try {
-      // Use the first script filename for narration
-      await createNarration(firstScriptFilename || undefined);
-    } catch (error) {
-      console.error("Error creating narration:", error);
-    } finally {
-      setIsCreatingNarration(false);
-    }
   };
 
   const handleDeleteProject = async (e: React.MouseEvent) => {
@@ -80,7 +65,7 @@ export default function ScriptControls({
   return (
     <>
       <div className="flex justify-between items-center">
-        <h3 className="font-bold">Script controls</h3>
+        <h3 className="font-bold">Project controls</h3>
         <ul className="menu menu-horizontal bg-base-200 rounded-box">
           <li>
             <a
@@ -97,38 +82,6 @@ export default function ScriptControls({
               title="Add New Chapter"
             >
               <Plus className="h-5 w-5" />
-            </a>
-          </li>
-          <li>
-            <a
-              className={`${
-                !hasScripts ||
-                isCreatingNarration ||
-                isProcessing ||
-                isDeletingProject
-                  ? "disabled cursor-not-allowed opacity-50"
-                  : "cursor-pointer"
-              } font-medium`}
-              onClick={
-                !hasScripts ||
-                isCreatingNarration ||
-                isProcessing ||
-                isDeletingProject
-                  ? undefined
-                  : handleCreateNarration
-              }
-              title={
-                !hasScripts
-                  ? "No scripts available"
-                  : isCreatingNarration ||
-                    jobState?.narration_status === "processing"
-                  ? "Creating Narration..."
-                  : narrationUrl
-                  ? "Regenerate Narration"
-                  : "Narrate"
-              }
-            >
-              <MicVocal className="h-5 w-5" />
             </a>
           </li>
           <li>
