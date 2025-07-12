@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { MicVocal, Trash2 } from "lucide-react";
 import { Script, getUserScript, deleteScript } from "../../actions/script";
 import { createNarration } from "../../actions/narrate";
 import { Voice } from "../../actions/voices";
 import { AudiobookJob } from "../../actions/job";
 import ScriptText from "./ScriptText";
+import ScriptControls from "./ScriptControls";
 
 interface ScriptInfo {
   filename: string;
@@ -88,41 +88,7 @@ export default function ScriptItem({
 
   return (
     <>
-      <div className="collapse-title text-xl font-medium flex justify-between items-center">
-        <span>{scriptInfo.filename}</span>
-        <div className="flex gap-2">
-          <button
-            onClick={handleCreateNarration}
-            className={`btn btn-ghost btn-sm ${
-              isProcessing || creatingNarration
-                ? "loading cursor-not-allowed opacity-50"
-                : "hover:bg-primary hover:text-primary-content"
-            }`}
-            disabled={isProcessing || creatingNarration}
-            title={
-              isCurrentlyNarrating
-                ? "Creating Narration..."
-                : creatingNarration
-                ? "Creating Narration..."
-                : "Create Narration"
-            }
-          >
-            <MicVocal className="h-4 w-4" />
-          </button>
-          <button
-            onClick={handleDeleteScript}
-            className={`btn btn-ghost btn-sm ${
-              isProcessing
-                ? "cursor-not-allowed opacity-50"
-                : "text-error hover:bg-error hover:text-error-content"
-            }`}
-            disabled={isProcessing}
-            title="Delete script"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
+      <div className="collapse-title">{scriptInfo.filename}</div>
       <div className="collapse-content">
         {loadingScript ? (
           <div className="flex justify-center py-4">
@@ -131,12 +97,16 @@ export default function ScriptItem({
         ) : selectedScript && isSelected ? (
           <div className="space-y-4">
             <div className="flex justify-end">
-              <button
-                onClick={() => setIsEditing(!isEditing)}
-                className="btn btn-sm"
-              >
-                {isEditing ? "View Mode" : "Edit Mode"}
-              </button>
+              <ScriptControls
+                filename={scriptInfo.filename}
+                jobState={jobState}
+                creatingNarration={creatingNarration}
+                isEditing={isEditing}
+                showEditToggle={true}
+                onCreateNarration={handleCreateNarration}
+                onDeleteScript={handleDeleteScript}
+                onToggleEdit={() => setIsEditing(!isEditing)}
+              />
             </div>
             <ScriptText
               script={selectedScript}
