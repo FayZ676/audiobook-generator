@@ -33,42 +33,50 @@ export default function ScriptControls({
     jobState?.narration_status === "processing";
 
   return (
-    <div className="flex gap-2">
+    <ul className="menu menu-horizontal bg-base-200 rounded-box">
       {showEditToggle && onToggleEdit && (
-        <button onClick={onToggleEdit} className="btn btn-sm">
-          {isEditing ? "View Mode" : "Edit Mode"}
-        </button>
+        <li>
+          <a
+            onClick={onToggleEdit}
+            className="cursor-pointer font-medium"
+            title={isEditing ? "Switch to View Mode" : "Switch to Edit Mode"}
+          >
+            {isEditing ? "View Mode" : "Edit Mode"}
+          </a>
+        </li>
       )}
-      <button
-        onClick={onCreateNarration}
-        className={`btn btn-ghost btn-sm ${
-          isProcessing || creatingNarration
-            ? "loading cursor-not-allowed opacity-50"
-            : "hover:bg-primary hover:text-primary-content"
-        }`}
-        disabled={isProcessing || creatingNarration}
-        title={
-          isCurrentlyNarrating
-            ? "Creating Narration..."
-            : creatingNarration
-            ? "Creating Narration..."
-            : "Create Narration"
-        }
-      >
-        <MicVocal className="h-4 w-4" />
-      </button>
-      <button
-        onClick={onDeleteScript}
-        className={`btn btn-ghost btn-sm ${
-          isProcessing
-            ? "cursor-not-allowed opacity-50"
-            : "text-error hover:bg-error hover:text-error-content"
-        }`}
-        disabled={isProcessing}
-        title="Delete script"
-      >
-        <Trash2 className="h-4 w-4" />
-      </button>
-    </div>
+      <li>
+        <a
+          onClick={onCreateNarration}
+          className={`${
+            isProcessing || creatingNarration
+              ? "disabled cursor-not-allowed opacity-50"
+              : "cursor-pointer"
+          } font-medium`}
+          title={
+            isCurrentlyNarrating
+              ? "Creating Narration..."
+              : creatingNarration
+              ? "Creating Narration..."
+              : "Create Narration"
+          }
+        >
+          <MicVocal className="h-5 w-5" />
+        </a>
+      </li>
+      <li>
+        <a
+          onClick={onDeleteScript}
+          className={`${
+            isProcessing
+              ? "disabled cursor-not-allowed opacity-50"
+              : "cursor-pointer text-error"
+          } font-medium`}
+          title="Delete script"
+        >
+          <Trash2 className="h-5 w-5" />
+        </a>
+      </li>
+    </ul>
   );
 }
