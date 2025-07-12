@@ -48,15 +48,15 @@ export default function ScriptManagerClient({
 
   return (
     <div className="flex flex-col gap-4">
+      <ScriptList
+        scriptsPromise={scriptsPromise}
+        voicesPromise={voicesPromise}
+        jobStatePromise={jobStatePromise}
+      />
       <ScriptControls
         narrationUrlPromise={narrationUrlPromise}
         hasScripts={scripts.length > 0}
         firstScriptFilename={firstScript?.filename}
-        jobStatePromise={jobStatePromise}
-      />
-      <ScriptList
-        scriptsPromise={scriptsPromise}
-        voicesPromise={voicesPromise}
         jobStatePromise={jobStatePromise}
       />
     </div>
