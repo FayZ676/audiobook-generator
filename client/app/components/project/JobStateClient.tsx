@@ -9,8 +9,46 @@ import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
 import { NARRATION_CHANNEL, SCRIPT_CHANNEL } from "@/app/lib/pusher-channels";
 
 import { AudiobookJob } from "../../actions/job";
+import { getUserScript, Script } from "../../actions/script";
 import Tip from "../ui/Tip";
 import NarrationProgress from "../narration/NarrationProgress";
+
+interface ScriptInfo {
+  filename: string;
+  s3_key: string;
+}
+
+interface NarrationProgressWrapperProps {
+  filename: string;
+  narrationStartedAt?: string | null;
+}
+
+function NarrationProgressWrapper({ 
+  filename, 
+  narrationStartedAt 
+}: NarrationProgressWrapperProps) {
+  const [script, setScript] = React.useState<Script | null>(null);
+  
+  React.useEffect(() => {
+    getUserScript(filename).then(setScript).catch(() => setScript(null));
+  }, [filename]);
+
+  if (!script) {
+    return (
+      <div>
+        Generating narration{" "}
+        <span className="loading loading-dots loading-xs"></span>
+      </div>
+    );
+  }
+
+  return (
+    <NarrationProgress
+      script={script}
+      narrationStartedAt={narrationStartedAt}
+    />
+  );
+}
 
 interface ScriptInfo {
   filename: string;
@@ -60,10 +98,17 @@ export default function JobStateClient({
       {jobState?.narration_status &&
         jobState?.narration_status === "processing" && (
           <>
-            <div>
-              Generating narration{" "}
-              <span className="loading loading-dots loading-xs"></span>
-            </div>
+            {scripts && scripts.length > 0 ? (
+              <NarrationProgressWrapper
+                filename={scripts[0].filename}
+                narrationStartedAt={jobState.narration_started_at}
+              />
+            ) : (
+              <div>
+                Generating narration{" "}
+                <span className="loading loading-dots loading-xs"></span>
+              </div>
+            )}
           </>
         )}
       {jobState?.script_status && jobState?.script_status === "failed" && (
