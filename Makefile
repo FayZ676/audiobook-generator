@@ -1,10 +1,8 @@
 init:
-	python -m venv .venv
-	source .venv/bin/activate && \
-	cd speech && make install && \
-	cd ../script && make install && \
+	cd script && make install && \
+	cd ../speech && make install && \
 	cd ../service && make install && \
-	python -m spacy download en_core_web_trf
+	cd ../client && make install
 
 lint_all:
 	pylint --rcfile=.pylintrc src

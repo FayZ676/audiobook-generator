@@ -1,7 +1,8 @@
 install:
 	python -m venv .venv
 	source .venv/bin/activate && \
-	pip install -e ../types -e ../aws -e .
+	pip install -e ../types -e ../aws -e . && \
+	python -m spacy download en_core_web_trf
 
 run:
 	@chmod +x ./run.sh
