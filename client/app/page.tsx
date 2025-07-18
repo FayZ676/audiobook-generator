@@ -1,9 +1,6 @@
 import Link from "next/link";
-import { Play, Mic, Edit } from "lucide-react";
-import WaitlistForm from "./components/landing/WaitlistForm";
-import DemoAudio from "./components/landing/DemoAudio";
 
-import { PricingTable } from "@clerk/nextjs";
+import { Waitlist } from "@clerk/nextjs";
 
 export default function Home() {
   return (
@@ -28,121 +25,13 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Demo Section */}
-      <div id="demo" className="py-16 px-4">
-        <h2 className="text-3xl font-bold text-center mb-12">
-          Experience the Magic
-        </h2>
-
-        {/* Audiobook Sample Demo */}
-        <div className="mb-12">
-          <div className="flex items-center gap-2 mb-4">
-            <Play className="h-6 w-6 text-primary" />
-            <h3 className="text-xl font-semibold">
-              Capture Your Character&apos;s Voice
-            </h3>
-          </div>
-          <div className="bg-base-200 p-6 rounded-lg">
-            <p className="text-sm text-gray-600 mb-4">
-              Listen to how different AI voices bring characters to life:
-            </p>
-            <div className="space-y-3">
-              <DemoAudio
-                speaker="Narrator"
-                voiceType="Professional Voice"
-                text="The story begins on a cold winter evening, when our protagonist discovers something extraordinary."
-                colorClass="border-blue-500"
-              />
-              <DemoAudio
-                speaker="Alice"
-                voiceType="Young Female"
-                text="I can't believe what I'm seeing! This changes everything we thought we knew."
-                colorClass="border-green-500"
-              />
-              <DemoAudio
-                speaker="Bob"
-                voiceType="Middle-aged Male"
-                text="Now hold on just a minute. We need to think this through carefully before we act."
-                colorClass="border-purple-500"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Voice Cloning Demo */}
-        <div className="mb-12">
-          <div className="flex items-center gap-2 mb-4">
-            <Mic className="h-6 w-6 text-primary" />
-            <h3 className="text-xl font-semibold">
-              Full Control of Your Voices
-            </h3>
-          </div>
-          <div className="bg-base-200 p-6 rounded-lg">
-            <p className="text-sm text-gray-600 mb-4">
-              Clone any voice with just a 12-second audio sample:
-            </p>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-base-100 rounded">
-                <div>
-                  <div className="font-medium">Emma Watson</div>
-                  <div className="text-xs text-gray-500">Young • Female</div>
-                </div>
-                <button className="btn btn-sm btn-outline">Play Sample</button>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-base-100 rounded">
-                <div>
-                  <div className="font-medium">Morgan Freeman</div>
-                  <div className="text-xs text-gray-500">Mature • Male</div>
-                </div>
-                <button className="btn btn-sm btn-outline">Play Sample</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Script Editing Demo */}
-        <div className="mb-12">
-          <div className="flex items-center gap-2 mb-4">
-            <Edit className="h-6 w-6 text-primary" />
-            <h3 className="text-xl font-semibold">Full Control of Your Text</h3>
-          </div>
-          <div className="bg-base-200 p-6 rounded-lg">
-            <p className="text-sm text-gray-600 mb-4">
-              Edit your script with real-time voice assignment:
-            </p>
-            <div className="space-y-3">
-              <DemoAudio
-                speaker="Narrator"
-                voiceType="Professional Voice"
-                text="It was a dark and stormy night when Alice discovered the mysterious letter..."
-                colorClass="border-primary"
-              />
-              <DemoAudio
-                speaker="Alice"
-                voiceType="Young Female"
-                text="What could this mean? I must find out the truth!"
-                colorClass="border-green-500"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Pricing Section */}
-      <div className="py-16 px-4 bg-base-100">
-        <PricingTable />
-      </div>
-
       {/* Waitlist Section */}
       <div className="py-16 px-4">
         <div className="text-center">
           <h2 className="text-3xl font-bold mb-4">Join the Waitlist</h2>
-          <p className="text-gray-600 mb-8 max-w-md mx-auto">
-            Be the first to know when new features are released and get priority
-            access to advanced capabilities.
-          </p>
-
-          <WaitlistForm />
+          <div className="flex justify-center">
+            <Waitlist />
+          </div>
         </div>
       </div>
     </div>
