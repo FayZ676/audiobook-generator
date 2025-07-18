@@ -11,8 +11,6 @@ import {
   UserButton,
 } from "@clerk/nextjs";
 
-import FeedbackForm from "./components/ui/FeedbackForm";
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -46,7 +44,6 @@ export default function RootLayout({
               {/* <SignUpButton /> */}
             </SignedOut>
             <SignedIn>
-              <FeedbackForm />
               <UserButton />
             </SignedIn>
           </header>
