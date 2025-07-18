@@ -32,3 +32,9 @@ aws_stack_update:
 
 aws_stack_describe:
 	aws cloudformation describe-stacks --stack-name audiobook-generator
+
+clerk_invite:
+	curl https://api.clerk.com/v1/invitations -X POST \
+	-d '{"email_address": "$(CLERK_EMAIL)", "redirect_url": "$(CLERK_REDIRECT_URL)", "ignore_existing": true, "expires_in_days": 30}' \
+	-H "Authorization:Bearer $(CLERK_API_KEY)" \
+	-H 'Content-Type:application/json'

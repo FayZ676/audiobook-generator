@@ -3,6 +3,8 @@ import { Play, Mic, Edit, Check } from "lucide-react";
 import WaitlistForm from "./components/landing/WaitlistForm";
 import DemoAudio from "./components/landing/DemoAudio";
 
+import { PricingTable } from "@clerk/nextjs";
+
 export default function Home() {
   return (
     <div className="flex flex-col">
@@ -128,40 +130,7 @@ export default function Home() {
 
       {/* Pricing Section */}
       <div className="py-16 px-4 bg-base-100">
-        <h2 className="text-3xl font-bold text-center mb-12">Simple Pricing</h2>
-        <div className="max-w-sm mx-auto">
-          <div className="bg-base-200 p-6 rounded-lg border-2 border-primary">
-            <div className="text-center">
-              <h3 className="text-xl font-semibold mb-2">Early Access</h3>
-              <div className="text-3xl font-bold text-primary mb-1">Free</div>
-              <div className="text-sm text-gray-600 mb-6">During Beta</div>
-
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-500" />
-                  <span className="text-sm">Unlimited voice cloning</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-500" />
-                  <span className="text-sm">Multi-speaker audiobooks</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-500" />
-                  <span className="text-sm">Script editing tools</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-500" />
-                  <span className="text-sm">High-quality output</span>
-                </div>
-              </div>
-
-              <Link href="/project" className="btn btn-primary btn-block mb-4">
-                Start Creating
-              </Link>
-              <p className="text-xs text-gray-500">No credit card required</p>
-            </div>
-          </div>
-        </div>
+        <PricingTable />
       </div>
 
       {/* Waitlist Section */}
