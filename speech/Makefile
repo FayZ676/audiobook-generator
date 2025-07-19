@@ -6,7 +6,7 @@ download_checkpoint:
 
 install: download_vocos_model download_checkpoint
 	python -m venv .venv
-	source .venv/bin/activate && \
+	(source .venv/bin/activate || . .venv/bin/activate) && \
 	pip install -e ../aws -e ../types -e .
 
 docker_build:
