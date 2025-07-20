@@ -17,7 +17,6 @@ from tta_types.types import (
     SpeechRequestSegment,
     WebhookResponse,
     Response,
-    count_words,
 )
 from tta_aws.s3 import S3Client
 
@@ -113,7 +112,7 @@ def handler(event: dict):
         BytesIO(audio),
     )
     # Calculate total word count from all text segments
-    total_word_count = sum(count_words(segment.text) for segment in data.text)
+    total_word_count = sum(len(segment.text.split()) for segment in data.text)
     requests.post(
         url=request.callback,
         json=WebhookResponse(

@@ -3,11 +3,6 @@ from typing import Literal, Optional
 from pydantic import BaseModel
 
 
-def count_words(text: str) -> int:
-    """Count the number of words in a text string."""
-    return len(text.split())
-
-
 class Voice(BaseModel):
     name: str
     age: str
