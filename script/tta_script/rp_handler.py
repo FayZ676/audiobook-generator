@@ -59,9 +59,10 @@ def handler(event: dict):
             )
             script = get_script(text, speaker_voices)
             script_filename = _upload_script_result(request.user_id, script)
+            word_count = len(text.split())
             status = "complete"
             message = ""
-            data = Response(filename=script_filename).model_dump()
+            data = Response(filename=script_filename, request_word_count=word_count).model_dump()
         except ValueError as e:
             status = "failed"
             message = str(e)

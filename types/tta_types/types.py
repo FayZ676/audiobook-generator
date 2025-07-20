@@ -31,6 +31,7 @@ class ScriptRequest(BaseModel):
 
 class Response(BaseModel):
     filename: str
+    request_word_count: int
 
 
 class WebhookRequest(BaseModel):

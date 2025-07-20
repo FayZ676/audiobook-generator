@@ -111,6 +111,8 @@ def handler(event: dict):
         f"{data.title}.mp3",
         BytesIO(audio),
     )
+    # Calculate total word count from all text segments
+    total_word_count = sum(len(segment.text.split()) for segment in data.text)
     requests.post(
         url=request.callback,
         json=WebhookResponse(
@@ -118,7 +120,7 @@ def handler(event: dict):
             channel=request.channel,
             status="complete",
             message="",
-            data=Response(filename=f"{data.title}.mp3").model_dump(),
+            data=Response(filename=f"{data.title}.mp3", request_word_count=total_word_count).model_dump(),
         ).model_dump(),
         timeout=120,
     )
