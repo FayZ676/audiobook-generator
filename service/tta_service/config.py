@@ -8,6 +8,7 @@ SCRIPT_RESULTS_BUCKET = os.environ.get("SCRIPT_RESULTS_BUCKET", "")
 SPEECH_RESULTS_BUCKET = os.environ.get("SPEECH_RESULTS_BUCKET", "")
 JOB_STATUS_BUCKET = os.environ.get("JOB_STATUS_BUCKET", "")
 FEEDBACK_BUCKET = os.environ.get("FEEDBACK_BUCKET", "")
+LOGS_BUCKET = os.environ.get("LOGS_BUCKET", "")
 
 SERVICE_API_URL = os.environ.get("SERVICE_API_URL", "")
 

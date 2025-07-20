@@ -1,8 +1,9 @@
 import io
+import json
 import requests
 from fastapi import HTTPException, status
 from tta_types.types import AudiobookJob
-from tta_service.config import s3_client, pusher_client, JOB_STATUS_BUCKET
+from tta_service.config import s3_client, pusher_client, JOB_STATUS_BUCKET, LOGS_BUCKET
 from tta_service.types import PusherEventDetails
 
 
@@ -46,6 +47,17 @@ def create_status(job_details: AudiobookJob):
     file.name = f"{job_details.job_id}.json"
     s3_client.upload_fileobj(
         JOB_STATUS_BUCKET,
+        file.name,
+        file,
+    )
+
+
+def update_logs(log_entry: dict, job_id: str):
+    """Store log entry in the logs bucket."""
+    file = io.BytesIO(json.dumps(log_entry).encode("utf-8"))
+    file.name = f"{job_id}_log.json"
+    s3_client.upload_fileobj(
+        LOGS_BUCKET,
         file.name,
         file,
     )
