@@ -16,7 +16,7 @@ from tta_types.types import (
     SpeechRequest,
     SpeechRequestSegment,
     WebhookResponse,
-    SpeechResponse,
+    Response,
 )
 from tta_aws.s3 import S3Client
 
@@ -118,7 +118,7 @@ def handler(event: dict):
             channel=request.channel,
             status="complete",
             message="",
-            data=SpeechResponse(filename=f"{data.title}.mp3").model_dump(),
+            data=Response(filename=f"{data.title}.mp3").model_dump(),
         ).model_dump(),
         timeout=120,
     )

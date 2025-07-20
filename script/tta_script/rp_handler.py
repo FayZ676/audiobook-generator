@@ -6,14 +6,12 @@ from typing import BinaryIO
 from tta_script.dialogue.types import Script
 from tta_script.dialogue.extract import get_script
 from tta_script.character.extract import get_speaker_details
-from tta_script.character.types import SpeakerDetails
-from tta_script.voices import assign_voices, Speaker
+from tta_script.voices import assign_voices
 
 from tta_types.types import (
-    Voice,
     WebhookResponse,
     WebhookRequest,
-    ScriptResponse,
+    Response,
     ScriptRequest,
 )
 from tta_aws.s3 import S3Client
@@ -42,7 +40,6 @@ def _upload_script_result(user_id: str, script_data: Script):
     return str(script_file.name)
 
 
-
 def handler(event: dict):
     request = WebhookRequest.model_validate(event["input"])
     data = ScriptRequest.model_validate(request.data)
@@ -64,7 +61,7 @@ def handler(event: dict):
             script_filename = _upload_script_result(request.user_id, script)
             status = "complete"
             message = ""
-            data = ScriptResponse(filename=script_filename).model_dump()
+            data = Response(filename=script_filename).model_dump()
         except ValueError as e:
             status = "failed"
             message = str(e)

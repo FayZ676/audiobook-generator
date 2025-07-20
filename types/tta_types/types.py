@@ -23,16 +23,13 @@ class SpeechRequest(BaseModel):
     text: list[SpeechRequestSegment]
     voices: list[Voice]
 
-class SpeechResponse(BaseModel):
-    filename: str
-
 
 class ScriptRequest(BaseModel):
     text_content: str
     voices: list[Voice]
 
 
-class ScriptResponse(BaseModel):
+class Response(BaseModel):
     filename: str
 
 
