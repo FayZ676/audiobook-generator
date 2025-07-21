@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 from typing import Literal
 from tta_types.types import WebhookResponse, AudiobookJob
-from tta_service.utils import update_status, update_logs
+from tta_service.utils import update_status, add_log
 from tta_service.routers.job import get_job_status
 from tta_service.types import PusherEventDetails
 
@@ -70,6 +70,6 @@ async def webhook(response: WebhookResponse):
         request_word_count = response.data["request_word_count"]
         job_type = "script" if response.channel == "script-channel" else "speech"
         cost = calculate_cost(request_word_count, response.channel)
-        
+
         log_entry = LogEntry(job_type=job_type, cost=cost)
-        update_logs(log_entry.model_dump(), response.user_id)
+        add_log(log_entry.model_dump(), response.user_id)

@@ -52,7 +52,7 @@ def create_status(job_details: AudiobookJob):
     )
 
 
-def update_logs(log_entry: dict, job_id: str):
+def add_log(log_entry: dict, job_id: str):
     """Store log entry in the logs bucket."""
     file = io.BytesIO(json.dumps(log_entry).encode("utf-8"))
     file.name = f"{job_id}_log.json"
