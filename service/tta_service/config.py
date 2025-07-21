@@ -23,6 +23,9 @@ PUSHER_KEY = os.environ.get("PUSHER_KEY", "")
 PUSHER_SECRET = os.environ.get("PUSHER_SECRET", "")
 PUSHER_CLUSTER = os.environ.get("PUSHER_CLUSTER", "")
 
+# TODO: Specify somehow how this is calculated.
+SCRIPT_COST_PER_WORD = 0.00009
+SPEECH_COST_PER_WORD = 0.00042
 
 s3_client = S3Client()
 

@@ -34,9 +34,12 @@ class Response(BaseModel):
     request_word_count: int
 
 
+JobType = Literal["script", "speech"]
+
+
 class WebhookRequest(BaseModel):
     callback: str
-    channel: str
+    channel: JobType
     user_id: str
     data: dict
 
@@ -46,7 +49,7 @@ JobStatus = Literal["processing", "complete", "failed"]
 
 class WebhookResponse(BaseModel):
     user_id: str
-    channel: str
+    channel: JobType
     status: JobStatus
     message: Optional[str]
     data: dict

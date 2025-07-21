@@ -83,7 +83,7 @@ def add_voice(
             filename=name_normalized,
         ),
     )
-    pusher_client.trigger("voices-channel", "complete", {"message": "Voice added"})
+    pusher_client.trigger("voices", "complete", {"message": "Voice added"})
     return
 
 

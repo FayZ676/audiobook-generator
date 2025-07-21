@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
 
-import { NARRATION_CHANNEL } from "@/app/lib/pusher-channels";
+import { SPEECH_CHANNEL } from "@/app/lib/pusher-channels";
 
 import { handleRevalidateTag } from "@/app/actions/revalidate";
 
@@ -24,7 +24,7 @@ export default function NarrationClient({
   const narrationUrl = use(narrationUrlPromise);
 
   usePusherSubscriptions({
-    channels: [NARRATION_CHANNEL],
+    channels: [SPEECH_CHANNEL],
     onUpdate: () => {
       handleRevalidateTag("narration");
       router.refresh();

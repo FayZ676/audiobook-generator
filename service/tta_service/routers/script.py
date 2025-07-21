@@ -74,7 +74,7 @@ def send_script_request(script_request: BuildScriptRequest):
     voices = _get_voices(script_request.user_id)
     request = WebhookRequest(
         callback=f"{SERVICE_API_URL}/webhook",
-        channel="script-channel",
+        channel="script",
         user_id=script_request.user_id,
         data=ScriptRequest(
             text_content=script_request.text_content,

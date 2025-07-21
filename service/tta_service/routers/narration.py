@@ -68,7 +68,7 @@ async def send_narration_request(script_path: str, voices: list[Voice], user_id:
 
     request = WebhookRequest(
         callback=f"{SERVICE_API_URL}/webhook",
-        channel="narration-channel",
+        channel="speech",
         user_id=user_id,
         data=SpeechRequest(
             title=script_path.rstrip(".json"),

@@ -120,7 +120,9 @@ def handler(event: dict):
             channel=request.channel,
             status="complete",
             message="",
-            data=Response(filename=f"{data.title}.mp3", request_word_count=total_word_count).model_dump(),
+            data=Response(
+                filename=f"{data.title}.mp3", request_word_count=total_word_count
+            ).model_dump(),
         ).model_dump(),
         timeout=120,
     )
