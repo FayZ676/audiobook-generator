@@ -1,8 +1,11 @@
+from datetime import datetime
+
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 from typing import Literal
 from tta_types.types import WebhookResponse, AudiobookJob
-from tta_service.utils import update_status, add_log
+from tta_service.utils import update_status, add_file
+from tta_service.config import JOB_STATUS_BUCKET
 from tta_service.routers.job import get_job_status
 from tta_service.types import PusherEventDetails
 
@@ -64,12 +67,16 @@ async def webhook(response: WebhookResponse):
             message=response.message,
         ),
     )
-
-    # Log cost information when job is complete
+    # If the job is complete, log the cost and add to S3
     if response.status == "complete" and "request_word_count" in response.data:
         request_word_count = response.data["request_word_count"]
         job_type = "script" if response.channel == "script-channel" else "speech"
         cost = calculate_cost(request_word_count, response.channel)
 
         log_entry = LogEntry(job_type=job_type, cost=cost)
-        add_log(log_entry.model_dump(), response.user_id)
+        current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
+        add_file(
+            data=log_entry.model_dump(),
+            filename=f"{response.user_id}_{current_datetime}_log.json",
+            bucket_name=JOB_STATUS_BUCKET,
+        )
