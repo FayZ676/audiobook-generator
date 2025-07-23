@@ -6,6 +6,7 @@ from tta_types.types import WebhookResponse, AudiobookJob, JobType
 from tta_service.utils import update_status, add_file
 from tta_service.config import (
     JOB_STATUS_BUCKET,
+    LOGS_BUCKET,
     SCRIPT_COST_PER_WORD,
     SPEECH_COST_PER_WORD,
 )
@@ -38,7 +39,7 @@ def log_job_completion(user_id: str, job_type: JobType, request_word_count: int)
     add_file(
         data=log_entry.model_dump(),
         filename=f"{user_id}/{current_datetime}.json",
-        bucket_name=JOB_STATUS_BUCKET,
+        bucket_name=LOGS_BUCKET,
     )
 
 
