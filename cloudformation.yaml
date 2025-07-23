@@ -24,7 +24,7 @@ Resources:
   LogsBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: tta-logs
+      BucketName: tta-log-files
 
   # Need to manually create access keys for the user.
   SpeechServiceUser:
