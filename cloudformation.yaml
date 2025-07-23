@@ -49,17 +49,12 @@ Resources:
             Resource:
               - !Sub "arn:aws:s3:::${SpeechResultsBucket}/*"
               - !Sub "arn:aws:s3:::${VoicesBucket}/*"
-              - !Sub "arn:aws:s3:::${TextFilesBucket}/*"
               - !Sub "arn:aws:s3:::${ScriptResultsBucket}/*"
               - !Sub "arn:aws:s3:::${JobStatusBucket}/*"
               - !Sub "arn:aws:s3:::${LogsBucket}/*"
-              - !Sub "arn:aws:s3:::${ModelFilesBucket}/*"
               - !Sub "arn:aws:s3:::${SpeechResultsBucket}"
               - !Sub "arn:aws:s3:::${VoicesBucket}"
-              - !Sub "arn:aws:s3:::${TextFilesBucket}"
               - !Sub "arn:aws:s3:::${ScriptResultsBucket}"
               - !Sub "arn:aws:s3:::${JobStatusBucket}"
-              - !Sub "arn:aws:s3:::${LogsBucket}"
-              - !Sub "arn:aws:s3:::${ModelFilesBucket}"
       Users:
         - !Ref SpeechServiceUser
