@@ -5,7 +5,6 @@ from pydantic import BaseModel
 from tta_types.types import WebhookResponse, AudiobookJob, JobType
 from tta_service.utils import update_status, add_file
 from tta_service.config import (
-    JOB_STATUS_BUCKET,
     LOGS_BUCKET,
     SCRIPT_COST_PER_WORD,
     SPEECH_COST_PER_WORD,
