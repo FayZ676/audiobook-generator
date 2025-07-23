@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from tta_types.types import WebhookResponse, AudiobookJob, JobType
 from tta_service.utils import update_status, add_file
@@ -22,11 +22,13 @@ router = APIRouter()
 
 
 def calculate_cost(request_word_count: int, job_type: JobType) -> float:
-    return (
-        request_word_count * SCRIPT_COST_PER_WORD
-        if job_type == "script"
-        else request_word_count * SPEECH_COST_PER_WORD
-    )
+    match job_type:
+        case "script":
+            return request_word_count * SCRIPT_COST_PER_WORD
+        case "speech":
+            return request_word_count * SPEECH_COST_PER_WORD
+        case _:
+            raise HTTPException(status_code=400, detail=f"Unknown job type: {job_type}")
 
 
 def log_job_completion(user_id: str, job_type: JobType, request_word_count: int):
