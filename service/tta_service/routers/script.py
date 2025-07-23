@@ -21,6 +21,7 @@ router = APIRouter()
 
 @router.post("/script", status_code=status.HTTP_202_ACCEPTED)
 async def build_script(request: BuildScriptRequest, bg_tasks: BackgroundTasks):
+    # TODO: Check total usage. If request exceeds limit, return an error. Otherwise proceed.
     existing_job = get_job_status(request.user_id)
 
     update_status(

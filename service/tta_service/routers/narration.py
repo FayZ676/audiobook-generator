@@ -25,6 +25,7 @@ router = APIRouter()
 
 @router.post("/narration", status_code=status.HTTP_202_ACCEPTED)
 async def build_narration(request: BuildNarrationRequest, bg_tasks: BackgroundTasks):
+    # TODO: Check total usage. If request exceeds limit, return an error. Otherwise proceed.
     existing_job = get_job_status(request.user_id)
 
     update_status(
