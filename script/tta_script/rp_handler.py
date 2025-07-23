@@ -42,16 +42,16 @@ def _upload_script_result(user_id: str, script_data: Script):
 
 def handler(event: dict):
     request = WebhookRequest.model_validate(event["input"])
-    data = ScriptRequest.model_validate(request.data)
+    request_data = ScriptRequest.model_validate(request.data)
 
-    text = data.text_content
+    text = request_data.text_content
     speaker_details = get_speaker_details(text)
-    voices = data.voices
+    voices = request_data.voices
 
     if len(speaker_details) > len(voices):
         status = "failed"
         message = "Not enough voices available for the number of speakers in the text."
-        data = {}
+        data = Response(filename="", request_word_count=0)
     else:
         try:
             speaker_voices = assign_voices(
@@ -62,11 +62,11 @@ def handler(event: dict):
             word_count = len(text.split())
             status = "complete"
             message = ""
-            data = Response(filename=script_filename, request_word_count=word_count).model_dump()
-        except ValueError as e:
+            data = Response(filename=script_filename, request_word_count=word_count)
+        except Exception as e:
             status = "failed"
             message = str(e)
-            data = {}
+            data = Response(filename="", request_word_count=0)
 
     requests.post(
         request.callback,

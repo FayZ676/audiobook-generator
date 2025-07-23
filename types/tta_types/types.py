@@ -52,7 +52,7 @@ class WebhookResponse(BaseModel):
     channel: JobType
     status: JobStatus
     message: Optional[str]
-    data: dict
+    data: Response
 
 
 class WebhookResponseResultData(BaseModel):

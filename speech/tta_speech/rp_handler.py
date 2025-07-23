@@ -122,8 +122,8 @@ def handler(event: dict):
             message="",
             data=Response(
                 filename=f"{data.title}.mp3", request_word_count=total_word_count
-            ).model_dump(),
-        ).model_dump(),
+            ),
+        ).model_dump,
         timeout=120,
     )
 

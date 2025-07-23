@@ -18,6 +18,9 @@ class LogEntry(BaseModel):
     cost: float
 
 
+router = APIRouter()
+
+
 def calculate_cost(request_word_count: int, job_type: JobType) -> float:
     return (
         request_word_count * SCRIPT_COST_PER_WORD
@@ -26,7 +29,17 @@ def calculate_cost(request_word_count: int, job_type: JobType) -> float:
     )
 
 
-router = APIRouter()
+def log_job_completion(user_id: str, job_type: JobType, request_word_count: int):
+    log_entry = LogEntry(
+        job_type=job_type,
+        cost=calculate_cost(request_word_count, job_type),
+    )
+    current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
+    add_file(
+        data=log_entry.model_dump(),
+        filename=f"{user_id}/{current_datetime}.json",
+        bucket_name=JOB_STATUS_BUCKET,
+    )
 
 
 @router.post("/webhook")
@@ -61,16 +74,10 @@ async def webhook(response: WebhookResponse):
             message=response.message,
         ),
     )
-    # If the job is complete, log the cost and add to S3
-    if response.status == "complete" and "request_word_count" in response.data:
-        request_word_count = response.data["request_word_count"]
-        job_type = "script" if response.channel == "script" else "speech"
-        cost = calculate_cost(request_word_count, response.channel)
 
-        log_entry = LogEntry(job_type=job_type, cost=cost)
-        current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
-        add_file(
-            data=log_entry.model_dump(),
-            filename=f"{response.user_id}_{current_datetime}_log.json",
-            bucket_name=JOB_STATUS_BUCKET,
+    if response.status == "complete":
+        log_job_completion(
+            user_id=response.user_id,
+            job_type=response.channel,
+            request_word_count=response.data.request_word_count,
         )

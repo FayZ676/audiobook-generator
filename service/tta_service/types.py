@@ -37,6 +37,6 @@ class UpdateScriptRequest(BaseModel):
 
 
 class PusherEventDetails(BaseModel):
-    channel: str
+    channel: str  # TODO: Specify types for this
     event: JobStatus
     message: str | None

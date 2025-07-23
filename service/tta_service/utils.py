@@ -52,6 +52,6 @@ def add_file(data: dict, filename: str, bucket_name: str):
     file.name = filename
     s3_client.upload_fileobj(
         bucket_name,
-        file.name,
+        filename,
         file,
     )
