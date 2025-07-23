@@ -48,18 +48,23 @@ def log_job_completion(user_id: str, job_type: JobType, request_word_count: int)
 async def webhook(response: WebhookResponse):
     existing_job = get_job_status(response.user_id)
 
-    if response.channel == "script":
-        script_status = response.status
-        script_started_at = existing_job.script_started_at if existing_job else None
-        narration_status = None
-        narration_started_at = None
-    else:  # NOTE: "speech" is the only other option
-        script_status = None
-        script_started_at = None
-        narration_status = response.status
-        narration_started_at = (
-            existing_job.narration_started_at if existing_job else None
-        )
+    match response.channel:
+        case "script":
+            script_status = response.status
+            script_started_at = existing_job.script_started_at if existing_job else None
+            narration_status = None
+            narration_started_at = None
+        case "speech":
+            script_status = None
+            script_started_at = None
+            narration_status = response.status
+            narration_started_at = (
+                existing_job.narration_started_at if existing_job else None
+            )
+        case _:
+            raise HTTPException(
+                status_code=400, detail=f"Unknown channel: {response.channel}"
+            )
 
     update_status(
         job_details=AudiobookJob(
