@@ -22,18 +22,14 @@ async function validateRequest(request: Request) {
 
 export async function POST(request: Request) {
   const payload = await validateRequest(request);
-  console.log(payload);
-  // @ts-expect-error TypeScript does not know about the subscriptionItem.active event.
+  // @ts-expect-error TS doesn't know about subscriptionItem.active event.
   if (payload.type === "subscriptionItem.active") {
     try {
-      // @ts-expect-error TypeScript does not know about the payload structure.
+      // @ts-expect-error TS doesn't know about payload structure.
       await sendSubscriptionEvent(payload.data.payer.user_id, payload.type);
     } catch (error) {
       console.error("Error sending subscription created event:", error);
-      return Response.json(
-        { error: "Failed to process subscription event" },
-        { status: 500 }
-      );
+      return Response.error();
     }
   }
   return Response.json({ message: "Webhook received" });
