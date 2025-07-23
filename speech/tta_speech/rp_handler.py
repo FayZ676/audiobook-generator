@@ -23,7 +23,6 @@ from tta_aws.s3 import S3Client
 
 SPEECH_RESULTS_BUCKET = os.environ.get("SPEECH_RESULTS_BUCKET", "")
 VOICES_BUCKET = os.environ.get("VOICES_BUCKET", "")
-MODEL_FILES_BUCKET = os.environ.get("MODEL_FILES_BUCKET", "tta-model-files")
 
 
 s3 = S3Client()
