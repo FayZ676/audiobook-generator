@@ -1,54 +1,26 @@
+from fastapi import APIRouter, HTTPException
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from tta_types.types import WebhookResponse, AudiobookJob, JobType
-from tta_service.utils import update_status, add_file
-from tta_service.config import (
-    LOGS_BUCKET,
-    SCRIPT_COST_PER_WORD,
-    SPEECH_COST_PER_WORD,
+from tta_types.types import WebhookResponse, AudiobookJob
+from tta_service.utils import (
+    update_status,
+    add_file,
+    calculate_cost,
+    calculate_user_total_cost,
 )
 from tta_service.routers.job import get_job_status
-from tta_service.types import PusherEventDetails
-
-
-class LogEntry(BaseModel):
-    job_type: JobType
-    cost: float
+from tta_service.types import PusherEventDetails, LogEntry
+from tta_service.config import LOGS_BUCKET
 
 
 router = APIRouter()
-
-
-def calculate_cost(request_word_count: int, job_type: JobType) -> float:
-    match job_type:
-        case "script":
-            return request_word_count * SCRIPT_COST_PER_WORD
-        case "speech":
-            return request_word_count * SPEECH_COST_PER_WORD
-        case _:
-            raise HTTPException(status_code=400, detail=f"Unknown job type: {job_type}")
-
-
-def log_job_completion(user_id: str, job_type: JobType, request_word_count: int):
-    log_entry = LogEntry(
-        job_type=job_type,
-        cost=calculate_cost(request_word_count, job_type),
-    )
-    current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
-    add_file(
-        data=log_entry.model_dump(),
-        filename=f"{user_id}/{current_datetime}.json",
-        bucket_name=LOGS_BUCKET,
-    )
 
 
 @router.post("/webhook")
 async def webhook(response: WebhookResponse):
     existing_job = get_job_status(response.user_id)
 
-    match response.channel:
+    match response.event:
         case "script":
             script_status = response.status
             script_started_at = existing_job.script_started_at if existing_job else None
@@ -63,7 +35,7 @@ async def webhook(response: WebhookResponse):
             )
         case _:
             raise HTTPException(
-                status_code=400, detail=f"Unknown channel: {response.channel}"
+                status_code=400, detail=f"Unknown channel: {response.event}"
             )
 
     update_status(
@@ -76,15 +48,26 @@ async def webhook(response: WebhookResponse):
             narration_started_at=narration_started_at,
         ),
         pusher=PusherEventDetails(
-            channel=response.channel,
+            channel=response.event,
             event=response.status,
             message=response.message,
         ),
     )
 
     if response.status == "complete":
-        log_job_completion(
+        cost = calculate_cost(response.data.request_word_count, response.event)
+        total = calculate_user_total_cost(
             user_id=response.user_id,
-            job_type=response.channel,
-            request_word_count=response.data.request_word_count,
+            event=response.event,
+            current_cost=cost,
+        )
+        log_entry = LogEntry(
+            event=response.event,
+            total_cost=total,
+            cost=response.data.request_word_count,
+        )
+        add_file(
+            data=log_entry.model_dump(),
+            filename=f"{response.user_id}/{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+            bucket_name=LOGS_BUCKET,
         )

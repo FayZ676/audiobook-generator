@@ -4,6 +4,7 @@ from tta_types.types import (
     Voice,
     WebhookRequest,
     SpeechRequest,
+    SpeechRequestSegment,
     AudiobookJob,
 )
 from tta_types.script import ScriptData
@@ -15,8 +16,10 @@ from tta_service.config import (
     SERVICE_API_URL,
     SPEECH_API_URL,
     SPEECH_SERVICE_API_KEY,
+    SPEECH_COST_PER_WORD,
+    USAGE_LIMIT,
 )
-from tta_service.utils import send_async_request, update_status
+from tta_service.utils import send_async_request, update_status, validate_usage
 from tta_service.routers.job import get_job_status
 
 
@@ -25,9 +28,14 @@ router = APIRouter()
 
 @router.post("/narration", status_code=status.HTTP_202_ACCEPTED)
 async def build_narration(request: BuildNarrationRequest, bg_tasks: BackgroundTasks):
-    # TODO: Check total usage. If request exceeds limit, return an error. Otherwise proceed.
+    speech_segments = build_speech_segments(request.script_path)
+    validate_usage(
+        user_id=request.user_id,
+        word_count=sum(len(segment.text.split()) for segment in speech_segments),
+        cost_per_word=SPEECH_COST_PER_WORD,
+        usage_limit=USAGE_LIMIT,
+    )
     existing_job = get_job_status(request.user_id)
-
     update_status(
         AudiobookJob(
             job_id=request.user_id,
@@ -40,9 +48,12 @@ async def build_narration(request: BuildNarrationRequest, bg_tasks: BackgroundTa
             narration_started_at=datetime.now(timezone.utc).isoformat(),
         )
     )
-
     bg_tasks.add_task(
-        send_narration_request, request.script_path, request.voices, request.user_id
+        send_narration_request,
+        request.script_path,
+        request.voices,
+        request.user_id,
+        speech_segments,
     )
     return request.script_path
 
@@ -62,14 +73,22 @@ def delete_narration(filename: str):
     return s3_client.delete_file(SPEECH_RESULTS_BUCKET, filename)
 
 
-async def send_narration_request(script_path: str, voices: list[Voice], user_id: str):
+def build_speech_segments(script_path: str) -> list[SpeechRequestSegment]:
+    """Builds speech segments from the script data."""
     script_data = s3_client.get_file(SCRIPT_RESULTS_BUCKET, script_path)
     parsed_script = ScriptData.model_validate_json(script_data)
-    speech_segments = parsed_script.to_speech_segments()
+    return parsed_script.to_speech_segments()
 
+
+async def send_narration_request(
+    script_path: str,
+    voices: list[Voice],
+    user_id: str,
+    speech_segments: list[SpeechRequestSegment],
+):
     request = WebhookRequest(
         callback=f"{SERVICE_API_URL}/webhook",
-        channel="speech",
+        event="speech",
         user_id=user_id,
         data=SpeechRequest(
             title=script_path.rstrip(".json"),

@@ -116,7 +116,7 @@ def handler(event: dict):
         url=request.callback,
         json=WebhookResponse(
             user_id=request.user_id,
-            channel=request.channel,
+            event=request.event,
             status="complete",
             message="",
             data=Response(

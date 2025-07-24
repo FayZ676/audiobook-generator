@@ -72,7 +72,7 @@ def handler(event: dict):
         request.callback,
         json=WebhookResponse(
             user_id=request.user_id,
-            channel=request.channel,
+            event=request.event,
             status=status,
             message=message,
             data=data,
