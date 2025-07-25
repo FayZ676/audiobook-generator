@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { apiCallJson, apiCallVoid } from "../lib/api";
 
 import { auth } from "@clerk/nextjs/server";
 
@@ -22,7 +23,7 @@ export async function getJobState(): Promise<AudiobookJob | null> {
   }
 
   try {
-    const response = await fetch(
+    const data = await apiCallJson(
       `${process.env.AUDIOBOOK_SERVICE_URL}/job/status/${userId}`,
       {
         method: "GET",
@@ -35,12 +36,6 @@ export async function getJobState(): Promise<AudiobookJob | null> {
         },
       }
     );
-    if (!response.ok) {
-      throw new Error(
-        `Error retrieving job status: ${response.status} ${response.statusText}`
-      );
-    }
-    const data = await response.json();
     const jobState = data ? AudiobookJobSchema.parse(data) : null;
     return jobState;
   } catch (error) {
@@ -51,7 +46,7 @@ export async function getJobState(): Promise<AudiobookJob | null> {
 
 export async function deleteJob(filename: string): Promise<void> {
   try {
-    const response = await fetch(
+    await apiCallVoid(
       `${process.env.AUDIOBOOK_SERVICE_URL}/job/status/${filename}`,
       {
         method: "DELETE",
@@ -60,11 +55,6 @@ export async function deleteJob(filename: string): Promise<void> {
         },
       }
     );
-    if (!response.ok) {
-      throw new Error(
-        `Error deleting job: ${response.status} ${response.statusText}`
-      );
-    }
   } catch (error) {
     console.error("Error deleting job:", error);
     throw error;

@@ -1,8 +1,10 @@
 "use server";
 
+import { apiCallVoid } from "../lib/api";
+
 export async function sendSubscriptionEvent(userId: string) {
   try {
-    const response = await fetch(
+    await apiCallVoid(
       `${process.env.AUDIOBOOK_SERVICE_URL}/events`,
       {
         method: "POST",
@@ -20,12 +22,6 @@ export async function sendSubscriptionEvent(userId: string) {
         }),
       }
     );
-
-    if (!response.ok) {
-      throw new Error(
-        `Failed to send subscription event: ${response.statusText}`
-      );
-    }
 
     return { success: true };
   } catch (error) {

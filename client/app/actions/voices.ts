@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { revalidateTag } from "next/cache";
+import { apiCallJson, apiCallVoid, apiCall } from "../lib/api";
 
 import { getUserId } from "./user";
 
@@ -25,7 +26,7 @@ export type Voice = z.infer<typeof VoiceSchema>;
 export async function getVoices(): Promise<Voice[]> {
   try {
     const userId = await getUserId();
-    const response = await fetch(
+    const data = await apiCallJson(
       `${process.env.AUDIOBOOK_SERVICE_URL}/voices/${userId}`,
       {
         cache: "force-cache",
@@ -34,10 +35,6 @@ export async function getVoices(): Promise<Voice[]> {
         },
       }
     );
-    if (!response.ok) {
-      throw new Error("Failed to fetch voices");
-    }
-    const data = await response.json();
     return VoicesSchema.parse(data);
   } catch (error) {
     console.error("Error fetching voices:", error);
@@ -61,17 +58,13 @@ export async function addVoice(formData: {
     form.append("audio_transcript", formData.audio_transcript);
     form.append("audio_file", formData.audio_file);
 
-    const response = await fetch(
+    await apiCall(
       `${process.env.AUDIOBOOK_SERVICE_URL}/voices`,
       {
         method: "POST",
         body: form,
       }
     );
-
-    if (!response.ok) {
-      throw new Error("Failed to add voice");
-    }
 
     revalidateTag("voices");
   } catch (error) {
@@ -86,23 +79,23 @@ export async function getVoiceAudioUrl(
   try {
     const userId = await getUserId();
     const normalizedVoiceName = voiceName.toLowerCase().replace(" ", "_");
-    const response = await fetch(
-      `${process.env.AUDIOBOOK_SERVICE_URL}/voices/${userId}/${normalizedVoiceName}/audio`,
-      {
-        cache: "no-store",
-      }
-    );
-
-    if (!response.ok) {
-      if (response.status === 404) {
+    
+    try {
+      const audioUrl = await apiCallJson(
+        `${process.env.AUDIOBOOK_SERVICE_URL}/voices/${userId}/${normalizedVoiceName}/audio`,
+        {
+          cache: "no-store",
+        }
+      );
+      console.log("Fetched voice audio URL:", audioUrl);
+      return audioUrl;
+    } catch (error) {
+      // Handle 404 case - voice audio not found
+      if (error instanceof Error && error.message.includes("404")) {
         return null;
       }
-      throw new Error("Failed to fetch voice audio URL");
+      throw error;
     }
-
-    const audioUrl = await response.json();
-    console.log("Fetched voice audio URL:", audioUrl);
-    return audioUrl;
   } catch (error) {
     console.error("Error fetching voice audio URL:", error);
     return null;
