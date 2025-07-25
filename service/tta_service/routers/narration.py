@@ -87,7 +87,7 @@ async def send_narration_request(
     speech_segments: list[SpeechRequestSegment],
 ):
     request = WebhookRequest(
-        callback=f"{SERVICE_API_URL}/webhook",
+        callback=f"{SERVICE_API_URL}/events",
         event="speech",
         user_id=user_id,
         data=SpeechRequest(

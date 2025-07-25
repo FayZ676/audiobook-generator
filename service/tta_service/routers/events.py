@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from datetime import datetime
 
-from tta_types.types import WebhookResponse, AudiobookJob
+from tta_types.types import WebhookResponse, AudiobookJob, EventType
 from tta_service.utils import (
     update_status,
     add_file,
@@ -16,8 +16,19 @@ from tta_service.config import LOGS_BUCKET
 router = APIRouter()
 
 
-@router.post("/webhook")
-async def webhook(response: WebhookResponse):
+def save_log_entry(user_id: str, event: EventType, request_word_count: int):
+    cost = calculate_cost(request_word_count, event)
+    total = calculate_user_total_cost(user_id=user_id, event=event, current_cost=cost)
+    log_entry = LogEntry(event=event, total_cost=total, cost=cost)
+    add_file(
+        data=log_entry.model_dump(),
+        filename=f"{user_id}/{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+        bucket_name=LOGS_BUCKET,
+    )
+
+
+@router.post("/events")
+async def events(response: WebhookResponse):
     existing_job = get_job_status(response.user_id)
 
     match response.event:
@@ -33,9 +44,12 @@ async def webhook(response: WebhookResponse):
             narration_started_at = (
                 existing_job.narration_started_at if existing_job else None
             )
+        case "subscription_reset":
+            save_log_entry(response.user_id, "subscription_reset", 0)
+            return
         case _:
             raise HTTPException(
-                status_code=400, detail=f"Unknown channel: {response.event}"
+                status_code=400, detail=f"Unknown event: {response.event}"
             )
 
     update_status(
@@ -48,26 +62,11 @@ async def webhook(response: WebhookResponse):
             narration_started_at=narration_started_at,
         ),
         pusher=PusherEventDetails(
-            channel=response.event,
-            event=response.status,
-            message=response.message,
+            channel=response.event, event=response.status, message=response.message
         ),
     )
 
     if response.status == "complete":
-        cost = calculate_cost(response.data.request_word_count, response.event)
-        total = calculate_user_total_cost(
-            user_id=response.user_id,
-            event=response.event,
-            current_cost=cost,
-        )
-        log_entry = LogEntry(
-            event=response.event,
-            total_cost=total,
-            cost=response.data.request_word_count,
-        )
-        add_file(
-            data=log_entry.model_dump(),
-            filename=f"{response.user_id}/{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
-            bucket_name=LOGS_BUCKET,
+        save_log_entry(
+            response.user_id, response.event, response.data.request_word_count
         )

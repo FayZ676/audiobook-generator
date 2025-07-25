@@ -82,7 +82,7 @@ def update_script(filename: str, request: UpdateScriptRequest):
 def send_script_request(script_request: BuildScriptRequest):
     voices = _get_voices(script_request.user_id)
     request = WebhookRequest(
-        callback=f"{SERVICE_API_URL}/webhook",
+        callback=f"{SERVICE_API_URL}/events",
         event="script",
         user_id=script_request.user_id,
         data=ScriptRequest(
