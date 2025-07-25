@@ -26,7 +26,7 @@ export async function apiCall(
 /**
  * Helper for JSON API calls
  */
-export async function apiCallJson<T = any>(
+export async function apiCallJson<T = unknown>(
   url: string,
   options: RequestInit = {}
 ): Promise<T> {

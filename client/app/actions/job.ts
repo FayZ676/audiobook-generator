@@ -23,7 +23,7 @@ export async function getJobState(): Promise<AudiobookJob | null> {
   }
 
   try {
-    const data = await apiCallJson(
+    const data = await apiCallJson<unknown>(
       `${process.env.AUDIOBOOK_SERVICE_URL}/job/status/${userId}`,
       {
         method: "GET",

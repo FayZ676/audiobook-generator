@@ -82,7 +82,7 @@ export async function getScript(): Promise<Script | null> {
   }
 
   const filename = `${userId}.json`;
-  const rawData = await apiCallJson(
+  const rawData = await apiCallJson<unknown>(
     `${process.env.AUDIOBOOK_SERVICE_URL}/script/${filename}`,
     {
       cache: "force-cache",
@@ -120,7 +120,7 @@ export async function updateScript({ script }: UpdateScriptProps) {
   const userId = await getUserId();
 
   const filename = `${userId}.json`;
-  const data = await apiCallJson(
+  const data = await apiCallJson<unknown>(
     `${process.env.AUDIOBOOK_SERVICE_URL}/script/${filename}`,
     {
       method: "PUT",

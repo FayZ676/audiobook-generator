@@ -52,7 +52,7 @@ export async function getNarration(): Promise<NarrationUrl | null> {
 
   const filename = `${userId}.mp3`;
   try {
-    const narrationUrl = await apiCallJson(
+    const narrationUrl = await apiCallJson<NarrationUrl>(
       `${process.env.AUDIOBOOK_SERVICE_URL}/narration/${filename}`,
       {
         cache: "force-cache",

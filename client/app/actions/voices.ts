@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { revalidateTag } from "next/cache";
-import { apiCallJson, apiCallVoid, apiCall } from "../lib/api";
+import { apiCallJson, apiCall } from "../lib/api";
 
 import { getUserId } from "./user";
 
@@ -26,7 +26,7 @@ export type Voice = z.infer<typeof VoiceSchema>;
 export async function getVoices(): Promise<Voice[]> {
   try {
     const userId = await getUserId();
-    const data = await apiCallJson(
+    const data = await apiCallJson<unknown>(
       `${process.env.AUDIOBOOK_SERVICE_URL}/voices/${userId}`,
       {
         cache: "force-cache",
@@ -78,7 +78,7 @@ export async function getVoiceAudioUrl(
     const normalizedVoiceName = voiceName.toLowerCase().replace(" ", "_");
 
     try {
-      const audioUrl = await apiCallJson(
+      const audioUrl = await apiCallJson<string>(
         `${process.env.AUDIOBOOK_SERVICE_URL}/voices/${userId}/${normalizedVoiceName}/audio`,
         {
           cache: "no-store",
