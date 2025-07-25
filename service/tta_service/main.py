@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 
-from service.tta_service.routers import events
-from tta_service.routers import script, narration, voices, job
+from tta_service.routers import script, narration, voices, job, events
 
 
 app = FastAPI()
