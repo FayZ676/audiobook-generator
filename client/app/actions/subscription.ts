@@ -1,6 +1,6 @@
 "use server";
 
-export async function sendSubscriptionEvent(userId: string, eventType: string) {
+export async function sendSubscriptionEvent(userId: string) {
   try {
     const response = await fetch(
       `${process.env.AUDIOBOOK_SERVICE_URL}/events`,

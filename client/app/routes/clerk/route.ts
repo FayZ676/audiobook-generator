@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   if (payload.type === "subscriptionItem.active") {
     try {
       // @ts-expect-error TS doesn't know about payload structure.
-      await sendSubscriptionEvent(payload.data.payer.user_id, payload.type);
+      await sendSubscriptionEvent(payload.data.payer.user_id);
     } catch (error) {
       console.error("Error sending subscription created event:", error);
       return Response.error();
