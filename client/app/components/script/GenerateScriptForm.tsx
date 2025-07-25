@@ -10,6 +10,7 @@ import Tip from "../ui/Tip";
 export default function GenerateScriptForm() {
   const [textContent, setTextContent] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -18,9 +19,12 @@ export default function GenerateScriptForm() {
       try {
         const content = await selectedFile.text();
         setTextContent(content);
+        setError(null);
       } catch (error) {
-        console.error("Error reading file:", error);
         setTextContent("");
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        setError(errorMessage ? errorMessage : "Something went wrong.");
       }
     }
   };
@@ -28,11 +32,14 @@ export default function GenerateScriptForm() {
   async function handleCreateScript() {
     if (textContent) {
       setIsSubmitting(true);
+      setError(null);
       try {
         await createScript({ textContent });
         setTextContent("");
       } catch (error) {
-        console.error("Error creating script:", error);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        setError(errorMessage ? errorMessage : "Something went wrong.");
       } finally {
         setIsSubmitting(false);
       }
@@ -45,6 +52,7 @@ export default function GenerateScriptForm() {
         Text File
       </label>
       <Tip variant="info">Only supporting .txt files.</Tip>
+      {error && <Tip variant="warning">{error}</Tip>}
       <input
         id="file-input"
         name="file"

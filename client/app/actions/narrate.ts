@@ -28,13 +28,25 @@ export async function createNarration() {
   };
 
   try {
-    await fetch(`${process.env.AUDIOBOOK_SERVICE_URL}/narration`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(request),
-    });
+    const response = await fetch(
+      `${process.env.AUDIOBOOK_SERVICE_URL}/narration`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(request),
+      }
+    );
+
+    if (response.status === 402) {
+      throw new Error("Insufficient bandwidth for request.");
+    }
+
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+
     revalidateTag("job");
   } catch (error) {
     console.error("Error submitting script:", error);

@@ -46,9 +46,7 @@ interface UpdateScriptProps {
 
 export type Script = z.infer<typeof ScriptSchema>;
 
-export async function createScript({
-  textContent,
-}: CreateScriptProps) {
+export async function createScript({ textContent }: CreateScriptProps) {
   const { userId } = await auth();
   if (!userId) {
     throw new Error("User not authenticated");
@@ -60,13 +58,25 @@ export async function createScript({
   };
 
   try {
-    await fetch(`${process.env.AUDIOBOOK_SERVICE_URL}/script`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(request),
-    });
+    const response = await fetch(
+      `${process.env.AUDIOBOOK_SERVICE_URL}/script`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(request),
+      }
+    );
+
+    if (response.status === 402) {
+      throw new Error("Insufficient bandwidth for request.");
+    }
+
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+
     revalidateTag("job");
   } catch (error) {
     console.error("Error submitting script:", error);
