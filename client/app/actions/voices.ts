@@ -58,13 +58,10 @@ export async function addVoice(formData: {
     form.append("audio_transcript", formData.audio_transcript);
     form.append("audio_file", formData.audio_file);
 
-    await apiCall(
-      `${process.env.AUDIOBOOK_SERVICE_URL}/voices`,
-      {
-        method: "POST",
-        body: form,
-      }
-    );
+    await apiCall(`${process.env.AUDIOBOOK_SERVICE_URL}/voices`, {
+      method: "POST",
+      body: form,
+    });
 
     revalidateTag("voices");
   } catch (error) {
@@ -79,7 +76,7 @@ export async function getVoiceAudioUrl(
   try {
     const userId = await getUserId();
     const normalizedVoiceName = voiceName.toLowerCase().replace(" ", "_");
-    
+
     try {
       const audioUrl = await apiCallJson(
         `${process.env.AUDIOBOOK_SERVICE_URL}/voices/${userId}/${normalizedVoiceName}/audio`,

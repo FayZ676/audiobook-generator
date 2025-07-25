@@ -71,9 +71,12 @@ export async function getNarration(): Promise<NarrationUrl | null> {
 
 export async function deleteNarration(filename: string) {
   try {
-    await apiCallVoid(`${process.env.AUDIOBOOK_SERVICE_URL}/narration/${filename}`, {
-      method: "DELETE",
-    });
+    await apiCallVoid(
+      `${process.env.AUDIOBOOK_SERVICE_URL}/narration/${filename}`,
+      {
+        method: "DELETE",
+      }
+    );
   } catch (error) {
     console.error("Error deleting narration:", error);
     throw error;
