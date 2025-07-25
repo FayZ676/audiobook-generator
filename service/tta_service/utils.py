@@ -80,7 +80,8 @@ def calculate_cost(request_word_count: int, job_type: EventType) -> float:
 def get_user_total_cost(user_id: str) -> float:
     """Get the current total cost for a user from their most recent log entry."""
     try:
-        most_recent_log = s3_client.get_most_recent_file(LOGS_BUCKET, f"{user_id}/")
+        all_logs = s3_client.list_files(LOGS_BUCKET, f"{user_id}/")
+        most_recent_log = sorted(all_logs)[-1] if all_logs else None
         if not most_recent_log:
             return 0.0
 

@@ -43,11 +43,3 @@ class S3Client:
 
         separator = "&" if "?" in presigned_url else "?"
         return f"{presigned_url}{separator}v={cache_bust_param}"
-
-    def get_most_recent_file(self, bucket_name: str, prefix: str) -> str | None:
-        """Get the most recent file key for a given prefix, or None if no files exist."""
-        file_keys = self.list_files(bucket_name, prefix)
-        if not file_keys:
-            return None
-
-        return sorted(file_keys)[-1]
