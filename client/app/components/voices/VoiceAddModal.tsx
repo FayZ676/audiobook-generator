@@ -198,20 +198,19 @@ export default function VoiceAddModal({ isOpen, onClose }: VoiceAddModalProps) {
               ✓ Audio ready: {audioFile.name}
             </div>
           )}
-
+        </div>
+        <div className="modal-action">
           <button
             disabled={!isFormValid || isSubmitting}
             onClick={async () => {
               await handleAddVoice();
             }}
-            className="btn btn-block"
+            className="btn"
           >
             {isSubmitting
               ? "Adding Voice & Generating Transcript..."
               : "Add Voice"}
           </button>
-        </div>
-        <div className="modal-action">
           <button onClick={handleClose} className="btn btn-ghost">
             Cancel
           </button>
