@@ -12,7 +12,9 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.19.2",
+    "@types/fluent-ffmpeg": "^2.1.27",
     "daisyui": "^5.0.43",
+    "fluent-ffmpeg": "^2.1.3",
     "lucide-react": "^0.516.0",
     "next": "15.3.2",
     "pusher": "^5.2.0",
