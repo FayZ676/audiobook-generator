@@ -1,7 +1,11 @@
+import os
 import io
 import json
 import requests
+
 from fastapi import HTTPException, status
+from openai import OpenAI
+
 from tta_types.types import AudiobookJob, EventType
 from tta_service.config import (
     s3_client,
@@ -12,6 +16,9 @@ from tta_service.config import (
     SPEECH_COST_PER_WORD,
 )
 from tta_service.types import PusherEventDetails, LogEntry
+
+
+openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", ""))
 
 
 def send_async_request(url: str, payload: dict, headers: dict):
@@ -120,3 +127,12 @@ def validate_usage(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
             detail=f"Request would exceed usage limit. Current: ${current_total:.4f}, Estimated: ${estimated_cost:.4f}, Limit: ${usage_limit:.2f}",
         )
+
+
+def transcribe_audio(audio: bytes):
+    audio_file = io.BytesIO(audio)
+    audio_file.name = "audio.mp3"
+    transcription = openai_client.audio.transcriptions.create(
+        model="gpt-4o-transcribe", file=audio_file
+    )
+    return transcription.text

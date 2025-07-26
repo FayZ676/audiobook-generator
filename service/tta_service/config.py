@@ -26,7 +26,7 @@ PUSHER_CLUSTER = os.environ.get("PUSHER_CLUSTER", "")
 SCRIPT_COST_PER_WORD = 0.00009
 SPEECH_COST_PER_WORD = 0.00042
 
-USAGE_LIMIT = float(os.environ.get("USAGE_LIMIT", 20.0))
+USAGE_LIMIT = 20.0
 
 s3_client = S3Client()
 

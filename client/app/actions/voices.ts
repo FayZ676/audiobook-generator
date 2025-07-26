@@ -47,19 +47,17 @@ export async function addVoice(formData: {
   name: string;
   age: Age;
   gender: Gender;
-  audio_transcript: string;
   audio_file: File;
 }): Promise<void> {
   try {
     // Convert audio file to MP3 if needed
     const mp3File = await convertToMp3(formData.audio_file);
-    
+
     const form = new FormData();
     form.append("user_id", await getUserId());
     form.append("name", formData.name);
     form.append("age", formData.age);
     form.append("gender", formData.gender);
-    form.append("audio_transcript", formData.audio_transcript);
     form.append("audio_file", mp3File);
 
     await apiCall(`${process.env.AUDIOBOOK_SERVICE_URL}/voices`, {

@@ -1,10 +1,13 @@
 import io
 import json
 from typing import BinaryIO
+
 from fastapi import APIRouter, HTTPException, status, Form, UploadFile
+
 from tta_types.types import Voice
 from tta_service.types import Age, Gender
 from tta_service.config import s3_client, VOICES_BUCKET, pusher_client
+from tta_service.utils import transcribe_audio
 
 
 router = APIRouter()
@@ -52,7 +55,6 @@ def add_voice(
     name: str = Form(...),
     age: Age = Form(...),
     gender: Gender = Form(...),
-    audio_transcript: str = Form(...),
     audio_file: UploadFile = Form(...),
 ):
     def to_json_fileobject(voice: Voice, filename: str) -> BinaryIO:
@@ -62,6 +64,9 @@ def add_voice(
 
     if not audio_file.filename:
         raise ValueError("Audio file with name is required")
+
+    audio_transcript = transcribe_audio(audio_file.file.read())
+    audio_file.file.seek(0)
 
     name_normalized = name.lower().replace(" ", "_")
     path = s3_client.upload_fileobj(

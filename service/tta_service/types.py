@@ -30,7 +30,6 @@ class AddVoiceRequest(BaseModel):
     name: str
     age: Age
     gender: Gender
-    audio_transcript: str
 
 
 class FeedbackRequest(BaseModel):

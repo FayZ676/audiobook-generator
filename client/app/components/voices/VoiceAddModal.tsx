@@ -20,7 +20,6 @@ export default function VoiceAddModal({ isOpen, onClose }: VoiceAddModalProps) {
   const [name, setName] = useState("");
   const [age, setAge] = useState<Age | "">("");
   const [gender, setGender] = useState<Gender | "">("");
-  const [audioTranscript, setAudioTranscript] = useState("");
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [audioInputMode, setAudioInputMode] = useState<"upload" | "record">(
@@ -61,21 +60,19 @@ export default function VoiceAddModal({ isOpen, onClose }: VoiceAddModalProps) {
   };
 
   async function handleAddVoice() {
-    if (name && age && gender && audioTranscript && audioFile) {
+    if (name && age && gender && audioFile) {
       setIsSubmitting(true);
       try {
         await addVoice({
           name,
           age: age as Age,
           gender: gender as Gender,
-          audio_transcript: audioTranscript,
           audio_file: audioFile,
         });
 
         setName("");
         setAge("");
         setGender("");
-        setAudioTranscript("");
         setAudioFile(null);
 
         const fileInput = document.getElementById(
@@ -100,7 +97,7 @@ export default function VoiceAddModal({ isOpen, onClose }: VoiceAddModalProps) {
     onClose();
   };
 
-  const isFormValid = name && age && gender && audioTranscript && audioFile;
+  const isFormValid = name && age && gender && audioFile;
 
   return (
     <div className={`modal ${isOpen ? "modal-open" : ""}`}>
@@ -202,20 +199,6 @@ export default function VoiceAddModal({ isOpen, onClose }: VoiceAddModalProps) {
             </div>
           )}
 
-          <label htmlFor="transcript-input" className="font-medium">
-            Audio Transcript
-          </label>
-          <textarea
-            id="transcript-input"
-            name="audio_transcript"
-            className="bg-base-300 p-2 rounded"
-            value={audioTranscript}
-            onChange={(e) => setAudioTranscript(e.target.value)}
-            placeholder="Enter the transcript of the audio file"
-            rows={3}
-            required
-          />
-
           <button
             disabled={!isFormValid || isSubmitting}
             onClick={async () => {
@@ -223,7 +206,9 @@ export default function VoiceAddModal({ isOpen, onClose }: VoiceAddModalProps) {
             }}
             className="btn btn-block"
           >
-            {isSubmitting ? "Adding Voice..." : "Add Voice"}
+            {isSubmitting
+              ? "Adding Voice & Generating Transcript..."
+              : "Add Voice"}
           </button>
         </div>
         <div className="modal-action">
