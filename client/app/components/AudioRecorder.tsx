@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useRef, useCallback } from "react";
 import { Mic, Square, Play, Pause } from "lucide-react";
 
@@ -15,7 +17,6 @@ export default function AudioRecorder({
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [hasRecording, setHasRecording] = useState(false);
-  const [isConverting, setIsConverting] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -82,39 +83,21 @@ export default function AudioRecorder({
         }
       };
 
-      mediaRecorder.onstop = async () => {
+      mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunksRef.current, { 
           type: 'audio/webm;codecs=opus' 
         });
         
-        const webmFile = new File(
+        const audioFile = new File(
           [audioBlob], 
           `recording-${Date.now()}.webm`, 
           { type: 'audio/webm;codecs=opus' }
         );
 
-        try {
-          setIsConverting(true);
-          
-          // Dynamic import to avoid issues in different environments
-          const { convertWebmToMp3 } = await import('../utils/audio-conversion');
-          const mp3File = await convertWebmToMp3(webmFile);
-          
-          const url = URL.createObjectURL(mp3File);
-          setAudioUrl(url);
-          setHasRecording(true);
-          onRecordingComplete(mp3File);
-        } catch (error) {
-          console.error('Error converting audio to MP3:', error);
-          console.warn('Falling back to WebM format');
-          // Fallback to original WebM file
-          const url = URL.createObjectURL(audioBlob);
-          setAudioUrl(url);
-          setHasRecording(true);
-          onRecordingComplete(webmFile);
-        } finally {
-          setIsConverting(false);
-        }
+        const url = URL.createObjectURL(audioBlob);
+        setAudioUrl(url);
+        setHasRecording(true);
+        onRecordingComplete(audioFile);
       };
 
       mediaRecorder.start(1000); // Collect data every second
@@ -170,7 +153,7 @@ export default function AudioRecorder({
       </div>
 
       <div className="flex items-center gap-2">
-        {!isRecording && !hasRecording && !isConverting && (
+        {!isRecording && !hasRecording && (
           <button
             onClick={startRecording}
             className="btn btn-primary btn-sm"
@@ -214,7 +197,7 @@ export default function AudioRecorder({
           </>
         )}
 
-        {hasRecording && !isRecording && !isConverting && (
+        {hasRecording && !isRecording && (
           <button
             onClick={clearRecording}
             className="btn btn-ghost btn-sm"
@@ -225,10 +208,10 @@ export default function AudioRecorder({
         )}
       </div>
 
-      {(isRecording || isConverting) && (
+      {isRecording && (
         <div className="flex items-center gap-2 text-sm text-primary">
           <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-          {isConverting ? 'Converting to MP3...' : isPaused ? 'Recording paused' : 'Recording...'}
+          {isPaused ? 'Recording paused' : 'Recording...'}
         </div>
       )}
 
