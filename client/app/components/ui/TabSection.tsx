@@ -9,7 +9,7 @@ export default function TabSection() {
 
   const tabs = [
     { name: "Project", href: "/project" },
-    { name: "Voices", href: "/voices" },
+    { name: "Voices", href: "/project/voices" },
   ];
 
   return (
