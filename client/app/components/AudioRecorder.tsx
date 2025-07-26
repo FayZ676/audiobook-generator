@@ -1,7 +1,6 @@
-"use client";
-
 import React, { useState, useRef, useCallback } from "react";
 import { Mic, Square, Play, Pause } from "lucide-react";
+import { convertWebmToMp3 } from "../utils/audio-conversion";
 
 interface AudioRecorderProps {
   onRecordingComplete: (audioFile: File) => void;
@@ -17,6 +16,7 @@ export default function AudioRecorder({
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [hasRecording, setHasRecording] = useState(false);
+  const [isConverting, setIsConverting] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -83,21 +83,33 @@ export default function AudioRecorder({
         }
       };
 
-      mediaRecorder.onstop = () => {
+      mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { 
           type: 'audio/webm;codecs=opus' 
         });
         
-        const audioFile = new File(
+        const webmFile = new File(
           [audioBlob], 
           `recording-${Date.now()}.webm`, 
           { type: 'audio/webm;codecs=opus' }
         );
 
-        const url = URL.createObjectURL(audioBlob);
-        setAudioUrl(url);
-        setHasRecording(true);
-        onRecordingComplete(audioFile);
+        try {
+          setIsConverting(true);
+          
+          // Convert WebM to MP3
+          const mp3File = await convertWebmToMp3(webmFile);
+          
+          const url = URL.createObjectURL(mp3File);
+          setAudioUrl(url);
+          setHasRecording(true);
+          onRecordingComplete(mp3File);
+        } catch (error) {
+          console.error('Error converting audio to MP3:', error);
+          alert('Failed to convert audio to MP3. Please try again.');
+        } finally {
+          setIsConverting(false);
+        }
       };
 
       mediaRecorder.start(1000); // Collect data every second
@@ -153,7 +165,7 @@ export default function AudioRecorder({
       </div>
 
       <div className="flex items-center gap-2">
-        {!isRecording && !hasRecording && (
+        {!isRecording && !hasRecording && !isConverting && (
           <button
             onClick={startRecording}
             className="btn btn-primary btn-sm"
@@ -197,7 +209,7 @@ export default function AudioRecorder({
           </>
         )}
 
-        {hasRecording && !isRecording && (
+        {hasRecording && !isRecording && !isConverting && (
           <button
             onClick={clearRecording}
             className="btn btn-ghost btn-sm"
@@ -208,10 +220,10 @@ export default function AudioRecorder({
         )}
       </div>
 
-      {isRecording && (
+      {(isRecording || isConverting) && (
         <div className="flex items-center gap-2 text-sm text-primary">
           <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-          {isPaused ? 'Recording paused' : 'Recording...'}
+          {isConverting ? 'Converting to MP3...' : isPaused ? 'Recording paused' : 'Recording...'}
         </div>
       )}
 

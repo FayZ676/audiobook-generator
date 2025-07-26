@@ -13,6 +13,7 @@
   "dependencies": {
     "@clerk/nextjs": "^6.19.2",
     "daisyui": "^5.0.43",
+    "lamejs": "^1.2.1",
     "lucide-react": "^0.516.0",
     "next": "15.3.2",
     "pusher": "^5.2.0",
