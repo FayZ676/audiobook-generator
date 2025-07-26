@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { convertWebmToMp3 } from '../app/utils/audio-conversion';
 
-// Mock lamejs
-vi.mock('lamejs', () => ({
+// Mock lamejs-fixed
+vi.mock('lamejs-fixed', () => ({
   Mp3Encoder: vi.fn().mockImplementation(() => ({
     encodeBuffer: vi.fn().mockReturnValue(new Int8Array([1, 2, 3, 4])),
     flush: vi.fn().mockReturnValue(new Int8Array([5, 6, 7, 8]))

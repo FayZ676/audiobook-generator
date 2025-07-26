@@ -1,6 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
 import { Mic, Square, Play, Pause } from "lucide-react";
-import { convertWebmToMp3 } from "../utils/audio-conversion";
 
 interface AudioRecorderProps {
   onRecordingComplete: (audioFile: File) => void;
@@ -97,7 +96,8 @@ export default function AudioRecorder({
         try {
           setIsConverting(true);
           
-          // Convert WebM to MP3
+          // Dynamic import to avoid issues in different environments
+          const { convertWebmToMp3 } = await import('../utils/audio-conversion');
           const mp3File = await convertWebmToMp3(webmFile);
           
           const url = URL.createObjectURL(mp3File);
@@ -106,7 +106,12 @@ export default function AudioRecorder({
           onRecordingComplete(mp3File);
         } catch (error) {
           console.error('Error converting audio to MP3:', error);
-          alert('Failed to convert audio to MP3. Please try again.');
+          console.warn('Falling back to WebM format');
+          // Fallback to original WebM file
+          const url = URL.createObjectURL(audioBlob);
+          setAudioUrl(url);
+          setHasRecording(true);
+          onRecordingComplete(webmFile);
         } finally {
           setIsConverting(false);
         }
