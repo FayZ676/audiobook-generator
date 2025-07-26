@@ -8,6 +8,7 @@ from tta_types.types import Voice
 from tta_service.types import Age, Gender
 from tta_service.config import s3_client, VOICES_BUCKET, pusher_client
 from tta_service.utils import transcribe_audio
+from tta_service.audio_utils import convert_audio_to_mp3, is_mp3_format
 
 
 router = APIRouter()
@@ -65,14 +66,20 @@ def add_voice(
     if not audio_file.filename:
         raise ValueError("Audio file with name is required")
 
-    audio_transcript = transcribe_audio(audio_file.file.read())
-    audio_file.file.seek(0)
+    if is_mp3_format(audio_file.filename):
+        mp3_file = audio_file.file
+    else:
+        mp3_file = convert_audio_to_mp3(audio_file.file)
+
+    mp3_file.seek(0)
+    audio_transcript = transcribe_audio(mp3_file.read())
+    mp3_file.seek(0)
 
     name_normalized = name.lower().replace(" ", "_")
     path = s3_client.upload_fileobj(
         VOICES_BUCKET,
-        f"{user_id}/audio/{name_normalized}.{audio_file.filename.split(".")[-1]}",
-        audio_file.file,
+        f"{user_id}/audio/{name_normalized}.mp3",
+        mp3_file,
     )
     s3_client.upload_fileobj(
         VOICES_BUCKET,

@@ -3,7 +3,6 @@
 import { z } from "zod";
 import { revalidateTag } from "next/cache";
 import { apiCallJson, apiCall } from "../lib/api";
-import { convertToMp3 } from "../utils/server-audio-conversion";
 
 import { getUserId } from "./user";
 
@@ -50,15 +49,12 @@ export async function addVoice(formData: {
   audio_file: File;
 }): Promise<void> {
   try {
-    // Convert audio file to MP3 if needed
-    const mp3File = await convertToMp3(formData.audio_file);
-
     const form = new FormData();
     form.append("user_id", await getUserId());
     form.append("name", formData.name);
     form.append("age", formData.age);
     form.append("gender", formData.gender);
-    form.append("audio_file", mp3File);
+    form.append("audio_file", formData.audio_file);
 
     await apiCall(`${process.env.AUDIOBOOK_SERVICE_URL}/voices`, {
       method: "POST",
