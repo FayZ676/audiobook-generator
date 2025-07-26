@@ -7,7 +7,7 @@ VOICES_BUCKET = os.environ.get("VOICES_BUCKET", "")
 SCRIPT_RESULTS_BUCKET = os.environ.get("SCRIPT_RESULTS_BUCKET", "")
 SPEECH_RESULTS_BUCKET = os.environ.get("SPEECH_RESULTS_BUCKET", "")
 JOB_STATUS_BUCKET = os.environ.get("JOB_STATUS_BUCKET", "")
-FEEDBACK_BUCKET = os.environ.get("FEEDBACK_BUCKET", "")
+LOGS_BUCKET = os.environ.get("LOGS_BUCKET", "")
 
 SERVICE_API_URL = os.environ.get("SERVICE_API_URL", "")
 
@@ -22,6 +22,11 @@ PUSHER_KEY = os.environ.get("PUSHER_KEY", "")
 PUSHER_SECRET = os.environ.get("PUSHER_SECRET", "")
 PUSHER_CLUSTER = os.environ.get("PUSHER_CLUSTER", "")
 
+# TODO: Specify somehow how this is calculated.
+SCRIPT_COST_PER_WORD = 0.00009
+SPEECH_COST_PER_WORD = 0.00042
+
+USAGE_LIMIT = float(os.environ.get("USAGE_LIMIT", 20.0))
 
 s3_client = S3Client()
 

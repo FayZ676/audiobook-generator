@@ -23,7 +23,6 @@ from tta_aws.s3 import S3Client
 
 SPEECH_RESULTS_BUCKET = os.environ.get("SPEECH_RESULTS_BUCKET", "")
 VOICES_BUCKET = os.environ.get("VOICES_BUCKET", "")
-MODEL_FILES_BUCKET = os.environ.get("MODEL_FILES_BUCKET", "tta-model-files")
 
 
 s3 = S3Client()
@@ -117,11 +116,13 @@ def handler(event: dict):
         url=request.callback,
         json=WebhookResponse(
             user_id=request.user_id,
-            channel=request.channel,
+            event=request.event,
             status="complete",
             message="",
-            data=Response(filename=f"{data.title}.mp3", request_word_count=total_word_count).model_dump(),
-        ).model_dump(),
+            data=Response(
+                filename=f"{data.title}.mp3", request_word_count=total_word_count
+            ),
+        ).model_dump,
         timeout=120,
     )
 

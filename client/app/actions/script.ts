@@ -3,6 +3,7 @@
 import { revalidateTag } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { getUserId } from "./user";
+import { apiCallVoid, apiCallJson } from "../lib/api";
 
 import { z } from "zod";
 
@@ -46,9 +47,7 @@ interface UpdateScriptProps {
 
 export type Script = z.infer<typeof ScriptSchema>;
 
-export async function createScript({
-  textContent,
-}: CreateScriptProps) {
+export async function createScript({ textContent }: CreateScriptProps) {
   const { userId } = await auth();
   if (!userId) {
     throw new Error("User not authenticated");
@@ -60,13 +59,14 @@ export async function createScript({
   };
 
   try {
-    await fetch(`${process.env.AUDIOBOOK_SERVICE_URL}/script`, {
+    await apiCallVoid(`${process.env.AUDIOBOOK_SERVICE_URL}/script`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(request),
     });
+
     revalidateTag("job");
   } catch (error) {
     console.error("Error submitting script:", error);
@@ -82,7 +82,7 @@ export async function getScript(): Promise<Script | null> {
   }
 
   const filename = `${userId}.json`;
-  const response = await fetch(
+  const rawData = await apiCallJson<unknown>(
     `${process.env.AUDIOBOOK_SERVICE_URL}/script/${filename}`,
     {
       cache: "force-cache",
@@ -91,7 +91,6 @@ export async function getScript(): Promise<Script | null> {
       },
     }
   );
-  const rawData = await response.json();
   if (rawData === null) {
     return null;
   }
@@ -108,7 +107,7 @@ export async function deleteScript(filename: string) {
   const request: DeleteScriptRequest = {
     filename: filename,
   };
-  await fetch(`${process.env.AUDIOBOOK_SERVICE_URL}/script/${filename}`, {
+  await apiCallVoid(`${process.env.AUDIOBOOK_SERVICE_URL}/script/${filename}`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
@@ -121,7 +120,7 @@ export async function updateScript({ script }: UpdateScriptProps) {
   const userId = await getUserId();
 
   const filename = `${userId}.json`;
-  const response = await fetch(
+  const data = await apiCallJson<unknown>(
     `${process.env.AUDIOBOOK_SERVICE_URL}/script/${filename}`,
     {
       method: "PUT",
@@ -132,11 +131,7 @@ export async function updateScript({ script }: UpdateScriptProps) {
     }
   );
 
-  if (!response.ok) {
-    throw new Error("Failed to update script");
-  }
-
   revalidateTag("script");
 
-  return response.json();
+  return data;
 }

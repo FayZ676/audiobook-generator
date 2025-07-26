@@ -1,7 +1,13 @@
-from tta_types.types import JobStatus, Voice
+from tta_types.types import JobStatus, Voice, EventType
 from tta_types.script import Age, Gender
 
 from pydantic import BaseModel
+
+
+class LogEntry(BaseModel):
+    event: EventType
+    cost: float
+    total_cost: float
 
 
 class ScriptPayload(BaseModel):
@@ -37,6 +43,6 @@ class UpdateScriptRequest(BaseModel):
 
 
 class PusherEventDetails(BaseModel):
-    channel: str
+    channel: str  # TODO: Specify types for this
     event: JobStatus
     message: str | None

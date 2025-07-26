@@ -2,6 +2,7 @@
 
 import { revalidateTag } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
+import { apiCallVoid, apiCallJson } from "../lib/api";
 
 import { getVoices, Voice } from "./voices";
 
@@ -28,13 +29,14 @@ export async function createNarration() {
   };
 
   try {
-    await fetch(`${process.env.AUDIOBOOK_SERVICE_URL}/narration`, {
+    await apiCallVoid(`${process.env.AUDIOBOOK_SERVICE_URL}/narration`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(request),
     });
+
     revalidateTag("job");
   } catch (error) {
     console.error("Error submitting script:", error);
@@ -50,7 +52,7 @@ export async function getNarration(): Promise<NarrationUrl | null> {
 
   const filename = `${userId}.mp3`;
   try {
-    const response = await fetch(
+    const narrationUrl = await apiCallJson<NarrationUrl>(
       `${process.env.AUDIOBOOK_SERVICE_URL}/narration/${filename}`,
       {
         cache: "force-cache",
@@ -60,7 +62,6 @@ export async function getNarration(): Promise<NarrationUrl | null> {
         },
       }
     );
-    const narrationUrl = await response.json();
     return narrationUrl;
   } catch (error) {
     console.error("Error fetching narration:", error);
@@ -70,9 +71,12 @@ export async function getNarration(): Promise<NarrationUrl | null> {
 
 export async function deleteNarration(filename: string) {
   try {
-    await fetch(`${process.env.AUDIOBOOK_SERVICE_URL}/narration/${filename}`, {
-      method: "DELETE",
-    });
+    await apiCallVoid(
+      `${process.env.AUDIOBOOK_SERVICE_URL}/narration/${filename}`,
+      {
+        method: "DELETE",
+      }
+    );
   } catch (error) {
     console.error("Error deleting narration:", error);
     throw error;

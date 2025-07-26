@@ -1,15 +1,12 @@
 import { Protect } from "@clerk/nextjs";
 
+import Subscribe from "./subscribe";
+
 export default function ProjectLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <Protect
-      plan={"creator"}
-      fallback={
-        <div className="text-center">Subscribe to access this content.</div>
-      }
-    >
+    <Protect plan={"creator"} fallback={<Subscribe />}>
       {children}
     </Protect>
   );

@@ -11,8 +11,10 @@ from tta_service.config import (
     SERVICE_API_URL,
     SCRIPT_API_URL,
     SCRIPT_SERVICE_API_KEY,
+    SCRIPT_COST_PER_WORD,
+    USAGE_LIMIT,
 )
-from tta_service.utils import send_async_request, update_status
+from tta_service.utils import send_async_request, update_status, validate_usage
 from tta_service.routers.job import get_job_status
 
 
@@ -21,6 +23,13 @@ router = APIRouter()
 
 @router.post("/script", status_code=status.HTTP_202_ACCEPTED)
 async def build_script(request: BuildScriptRequest, bg_tasks: BackgroundTasks):
+    validate_usage(
+        user_id=request.user_id,
+        word_count=len(request.text_content.split()),
+        cost_per_word=SCRIPT_COST_PER_WORD,
+        usage_limit=USAGE_LIMIT,
+    )
+
     existing_job = get_job_status(request.user_id)
 
     update_status(
@@ -73,8 +82,8 @@ def update_script(filename: str, request: UpdateScriptRequest):
 def send_script_request(script_request: BuildScriptRequest):
     voices = _get_voices(script_request.user_id)
     request = WebhookRequest(
-        callback=f"{SERVICE_API_URL}/webhook",
-        channel="script-channel",
+        callback=f"{SERVICE_API_URL}/events",
+        event="script",
         user_id=script_request.user_id,
         data=ScriptRequest(
             text_content=script_request.text_content,
