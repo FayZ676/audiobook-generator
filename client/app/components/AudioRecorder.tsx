@@ -3,6 +3,8 @@
 import React, { useState, useRef, useCallback } from "react";
 import { Mic, Square } from "lucide-react";
 
+import Tip from "@/app/components/ui/Tip";
+
 interface AudioRecorderProps {
   onRecordingComplete: (audioFile: File) => void;
   maxDuration?: number; // in seconds
@@ -127,6 +129,11 @@ export default function AudioRecorder({
 
   return (
     <div className="flex flex-col gap-3 bg-base-100">
+      <Tip variant="info">
+        <span className="italic font-bold">Read the following:</span> I chase
+        the quiet stories—rooftop gardens at dawn, old songs on street corners.
+        Every question is a doorway to something deeper.
+      </Tip>
       <div className="flex gap-2 flex-wrap">
         {!isRecording && !hasRecording && (
           <button
