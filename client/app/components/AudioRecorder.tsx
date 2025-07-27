@@ -164,10 +164,10 @@ export default function AudioRecorder({
         {hasRecording && !isRecording && (
           <button
             onClick={clearRecording}
-            className="btn btn-outline btn-sm flex-1 min-w-0"
+            className="btn btn-sm flex-1"
             type="button"
           >
-            Clear & Re-record
+            Retry
           </button>
         )}
       </div>

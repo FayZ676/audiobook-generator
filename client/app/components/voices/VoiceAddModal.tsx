@@ -9,7 +9,7 @@ import { addVoice, type Age, type Gender } from "../../actions/voices";
 import Tip from "../ui/Tip";
 import AudioRecorder from "../AudioRecorder";
 
-import { Mic, Upload } from "lucide-react";
+import { Mic, Upload, Check } from "lucide-react";
 
 interface VoiceAddModalProps {
   isOpen: boolean;
@@ -189,8 +189,8 @@ export default function VoiceAddModal({ isOpen, onClose }: VoiceAddModalProps) {
           </div>
 
           {audioFile && (
-            <div className="text-sm text-success">
-              ✓ Audio ready: {audioFile.name}
+            <div className="flex gap-1 items-center text-sm text-success">
+              <Check size={16} /> Audio recording ready
             </div>
           )}
         </div>
