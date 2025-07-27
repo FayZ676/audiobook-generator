@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { CirclePlay, LoaderCircle } from "lucide-react";
+import { CirclePlay, LoaderCircle, Pause } from "lucide-react";
 
 import { getVoiceAudioUrl } from "../../actions/voices";
 
@@ -60,18 +60,15 @@ export default function VoiceAudio({ voiceName }: VoiceAudioProps) {
   return (
     <div className="flex items-center gap-2">
       {!audioUrl && !loading && (
-        <button
-          onClick={loadAudioUrl}
-          className="p-1 rounded-full transition-transform duration-200 hover:-translate-y-0.5"
-        >
-          <CirclePlay size={20} />
+        <button onClick={loadAudioUrl} className="btn btn-success btn-sm">
+          <CirclePlay size={16} />
         </button>
       )}
 
       {loading && (
-        <div className="p-1">
-          <LoaderCircle size={20} className="animate-spin" />
-        </div>
+        <button className="btn btn-disabled btn-sm">
+          <LoaderCircle size={16} className="animate-spin" />
+        </button>
       )}
 
       {error && <span className="text-sm text-red-500">{error}</span>}
@@ -80,11 +77,11 @@ export default function VoiceAudio({ voiceName }: VoiceAudioProps) {
         <>
           <button
             onClick={handlePlayPause}
-            className={`p-1 rounded-full transition-transform duration-200 hover:-translate-y-0.5 ${
-              isPlaying ? "animate-spin" : ""
+            className={`btn btn-sm ${
+              isPlaying ? "btn-warning" : "btn-success"
             }`}
           >
-            <CirclePlay size={20} />
+            {isPlaying ? <Pause size={16} /> : <CirclePlay size={16} />}
           </button>
           <audio
             id={`audio-${voiceName}`}

@@ -96,3 +96,22 @@ export async function getVoiceAudioUrl(
     return null;
   }
 }
+
+export async function deleteVoice(voiceName: string): Promise<void> {
+  try {
+    const userId = await getUserId();
+    const normalizedVoiceName = voiceName.toLowerCase().replace(/\s+/g, "_");
+
+    await apiCall(
+      `${process.env.AUDIOBOOK_SERVICE_URL}/voices/${userId}/${normalizedVoiceName}`,
+      {
+        method: "DELETE",
+      }
+    );
+
+    revalidateTag("voices");
+  } catch (error) {
+    console.error("Error deleting voice:", error);
+    throw error;
+  }
+}

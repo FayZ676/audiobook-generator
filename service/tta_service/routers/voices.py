@@ -125,5 +125,33 @@ def get_voice_audio_url(user_id: str, voice_name: str):
     )
 
 
+@router.delete("/voices/{user_id}/{voice_name}")
+def delete_voice(user_id: str, voice_name: str):
+    """Delete a user-created voice"""
+    name_normalized = voice_name.lower().replace(" ", "_")
+
+    metadata_path = f"{user_id}/metadata/{name_normalized}.json"
+    audio_path = f"{user_id}/audio/{name_normalized}.mp3"
+
+    try:
+        s3_client.get_file(VOICES_BUCKET, metadata_path)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to check voice existence: {str(e)}",
+        ) from e
+
+    try:
+        s3_client.delete_file(VOICES_BUCKET, metadata_path)
+        s3_client.delete_file(VOICES_BUCKET, audio_path)
+        pusher_client.trigger("voices", "complete", {"message": "Voice deleted"})
+        return {"message": "Voice deleted successfully"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete voice: {str(e)}",
+        ) from e
+
+
 @router.patch("/voices/{voice_id}")
 def update_voice(name: str | None = None, age: str | None = None): ...
