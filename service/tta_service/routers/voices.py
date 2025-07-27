@@ -76,9 +76,10 @@ def add_voice(
     mp3_file.seek(0)
 
     name_normalized = name.lower().replace(" ", "_")
-    path = s3_client.upload_fileobj(
+    path = f"{user_id}/audio/{name_normalized}.mp3"
+    s3_client.upload_fileobj(
         VOICES_BUCKET,
-        f"{user_id}/audio/{name_normalized}.mp3",
+        path,
         mp3_file,
     )
     s3_client.upload_fileobj(

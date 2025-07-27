@@ -44,11 +44,10 @@ def normalize_audio_volume(audio_path: str, headroom: float = 0.1) -> str:
 def _prepare_input(
     request: list[SpeechRequestSegment], voices: list[Voice], voice_save_path: str
 ) -> InputData:
-    def download_audio(audio_name: str):
-        print(f"Downloading audio {audio_name}")
-        audio = s3.get_file(VOICES_BUCKET, f"audio/{audio_name}.mp3")
+    def download_audio(audio_path: str):
+        audio = s3.get_file(VOICES_BUCKET, audio_path)
         audio_file = BytesIO(audio)
-        temp_audio_path = f"{voice_save_path}/{audio_name}"
+        temp_audio_path = f"{voice_save_path}/{audio_path.split('/')[-1]}"
         with open(temp_audio_path, "wb") as f:
             f.write(audio_file.read())
         return temp_audio_path
@@ -62,7 +61,7 @@ def _prepare_input(
     def voices_from_names(voice_names: list[str]):
         return {
             voice.name: voice_to_dict(
-                path=download_audio(voice.name.lower().replace(" ", "_")),
+                path=download_audio(voice.audio_path),
                 transcript=voice.audio_transcript,
             )
             for voice in voices
@@ -89,9 +88,8 @@ def _build_audio(audio_segments: list[tuple[bytes, int | None]]) -> bytes:
 
 def handler(event: dict):
     request = WebhookRequest.model_validate(event["input"])
-    voice_save_path = "/tmp"
     data = SpeechRequest.model_validate(request.data)
-    text_input = _prepare_input(data.text, data.voices, voice_save_path)
+    text_input = _prepare_input(data.text, data.voices, voice_save_path="/tmp")
     result = infer(
         InferenceParams(
             gen_text=text_input.text,
