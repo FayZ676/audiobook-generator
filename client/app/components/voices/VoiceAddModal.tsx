@@ -50,10 +50,6 @@ export default function VoiceAddModal({ isOpen, onClose }: VoiceAddModalProps) {
     }
   };
 
-  const closeModal = () => {
-    modalRef.current?.close();
-  };
-
   const handleModalRecordingComplete = (recordedFile: File) => {
     setAudioFile(recordedFile);
   };
