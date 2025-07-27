@@ -8,6 +8,7 @@ from tta_script.text_utils import (
     near_quotes,
     reduce_names,
     get_chunks,
+    normalize_quotes,
 )
 from tta_script.character.prompts import alias, ages, genders
 from tta_script.character.types import (
@@ -54,7 +55,7 @@ def get_speaker_names(text: str) -> set[str]:
     paragraphs = [
         remove_dialogue(p.replace("\n", " "))
         for p in text.split("\n\n")
-        if p.count('"') % 2 == 0 and p.count('"') > 0
+        if normalize_quotes(p).count('"') % 2 == 0 and normalize_quotes(p).count('"') > 0
     ]
     ner = NER()
     names = reduce_names(

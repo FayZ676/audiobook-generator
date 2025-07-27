@@ -1,6 +1,11 @@
 import re
 
 
+def normalize_quotes(text: str) -> str:
+    """Convert curly quotes to straight quotes for consistent processing."""
+    return text.replace("\u201c", '"').replace("\u201d", '"')
+
+
 HONORIFICS = [
     "Dr",
     "Dr.",
@@ -50,7 +55,8 @@ def get_chunks(text: str, max_words: int) -> list[str]:
 
 
 def remove_dialogue(text: str) -> str:
-    return re.sub(r'"[^"]*"', '"<speech>"', text)
+    normalized_text = normalize_quotes(text)
+    return re.sub(r'"[^"]*"', '"<speech>"', normalized_text)
 
 
 def reduce_names(names: set[str]):
@@ -67,17 +73,18 @@ def reduce_names(names: set[str]):
 
 
 def near_quotes(name: str, text: str):
+    normalized_text = normalize_quotes(text)
     name_parts = [part for part in name.split() if part not in HONORIFICS]
     for part in name_parts:
         start_pos = 0
         window_size = 20
-        while start_pos < len(text):
-            name_pos = text.find(part, start_pos)
+        while start_pos < len(normalized_text):
+            name_pos = normalized_text.find(part, start_pos)
             if name_pos == -1:
                 break
             window_start = max(0, name_pos - window_size)
-            window_end = min(len(text), name_pos + len(part) + window_size)
-            window = text[window_start:window_end]
+            window_end = min(len(normalized_text), name_pos + len(part) + window_size)
+            window = normalized_text[window_start:window_end]
             if '"' in window:
                 return True
             start_pos = name_pos + len(part)
