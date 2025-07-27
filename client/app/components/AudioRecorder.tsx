@@ -100,10 +100,14 @@ export default function AudioRecorder({
         onRecordingComplete(audioFile);
       };
 
-      mediaRecorder.start(1000); // Collect data every second
       setIsRecording(true);
       setRecordingTime(0);
-      startTimer();
+
+      // NOTE: Wait 500ms before starting recording to avoid capturing button click
+      setTimeout(() => {
+        mediaRecorder.start(1000); // NOTE: Collect data every second
+        startTimer();
+      }, 500);
     } catch (error) {
       console.error("Error starting recording:", error);
       alert(
