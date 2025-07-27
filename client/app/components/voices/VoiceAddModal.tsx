@@ -202,9 +202,7 @@ export default function VoiceAddModal({ isOpen, onClose }: VoiceAddModalProps) {
             }}
             className="btn"
           >
-            {isSubmitting
-              ? "Adding Voice & Generating Transcript..."
-              : "Add Voice"}
+            {isSubmitting ? "Adding Voice" : "Add Voice"}
           </button>
           <button onClick={handleClose} className="btn btn-ghost">
             Cancel
