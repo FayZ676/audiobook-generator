@@ -56,7 +56,6 @@ export default function VoiceAddModal({ isOpen, onClose }: VoiceAddModalProps) {
 
   const handleModalRecordingComplete = (recordedFile: File) => {
     setAudioFile(recordedFile);
-    closeModal();
   };
 
   async function handleAddVoice() {
@@ -220,15 +219,6 @@ export default function VoiceAddModal({ isOpen, onClose }: VoiceAddModalProps) {
 
       <dialog id="audio-modal" className="modal" ref={modalRef}>
         <div className="modal-box">
-          <form method="dialog">
-            <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
-              ✕
-            </button>
-          </form>
-          <h3 className="font-bold text-lg mb-4">
-            {audioInputMode === "upload" ? "Upload Audio File" : "Record Audio"}
-          </h3>
-
           {audioInputMode === "upload" ? (
             <div className="flex flex-col gap-4">
               <Tip variant="info">Select an audio file under 12 seconds.</Tip>

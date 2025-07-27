@@ -1,19 +1,18 @@
 "use client";
 
 import React, { useState, useRef, useCallback } from "react";
-import { Mic, Square, Play, Pause } from "lucide-react";
+import { Mic, Square } from "lucide-react";
 
 interface AudioRecorderProps {
   onRecordingComplete: (audioFile: File) => void;
   maxDuration?: number; // in seconds
 }
 
-export default function AudioRecorder({ 
-  onRecordingComplete, 
-  maxDuration = 12 
+export default function AudioRecorder({
+  onRecordingComplete,
+  maxDuration = 12,
 }: AudioRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [hasRecording, setHasRecording] = useState(false);
@@ -34,12 +33,11 @@ export default function AudioRecorder({
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      setIsPaused(false);
       stopTimer();
-      
+
       // Stop all tracks to release microphone
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
       }
     }
@@ -60,20 +58,20 @@ export default function AudioRecorder({
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          sampleRate: 44100
-        } 
+          sampleRate: 44100,
+        },
       });
-      
+
       streamRef.current = stream;
-      
+
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
+        mimeType: "audio/webm;codecs=opus",
       });
-      
+
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
@@ -84,14 +82,14 @@ export default function AudioRecorder({
       };
 
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { 
-          type: 'audio/webm;codecs=opus' 
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: "audio/webm;codecs=opus",
         });
-        
+
         const audioFile = new File(
-          [audioBlob], 
-          `recording-${Date.now()}.webm`, 
-          { type: 'audio/webm;codecs=opus' }
+          [audioBlob],
+          `recording-${Date.now()}.webm`,
+          { type: "audio/webm;codecs=opus" }
         );
 
         const url = URL.createObjectURL(audioBlob);
@@ -102,29 +100,13 @@ export default function AudioRecorder({
 
       mediaRecorder.start(1000); // Collect data every second
       setIsRecording(true);
-      setIsPaused(false);
       setRecordingTime(0);
       startTimer();
-      
     } catch (error) {
-      console.error('Error starting recording:', error);
-      alert('Unable to access microphone. Please check your permissions and try again.');
-    }
-  };
-
-  const pauseRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.pause();
-      setIsPaused(true);
-      stopTimer();
-    }
-  };
-
-  const resumeRecording = () => {
-    if (mediaRecorderRef.current && isPaused) {
-      mediaRecorderRef.current.resume();
-      setIsPaused(false);
-      startTimer();
+      console.error("Error starting recording:", error);
+      alert(
+        "Unable to access microphone. Please check your permissions and try again."
+      );
     }
   };
 
@@ -140,23 +122,16 @@ export default function AudioRecorder({
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   return (
-    <div className="flex flex-col gap-3 p-3 border border-base-300 rounded bg-base-100">
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">Audio Recorder</span>
-        <span className={`text-sm ${recordingTime >= maxDuration - 3 ? 'text-warning' : 'text-base-content'}`}>
-          {formatTime(recordingTime)} / {formatTime(maxDuration)}
-        </span>
-      </div>
-
-      <div className="flex items-center gap-2">
+    <div className="flex flex-col gap-3 bg-base-100">
+      <div className="flex gap-2 flex-wrap">
         {!isRecording && !hasRecording && (
           <button
             onClick={startRecording}
-            className="btn btn-primary btn-sm"
+            className="btn btn-primary btn-sm flex-1 min-w-0"
             type="button"
           >
             <Mic className="h-4 w-4" />
@@ -165,42 +140,20 @@ export default function AudioRecorder({
         )}
 
         {isRecording && (
-          <>
-            {!isPaused ? (
-              <button
-                onClick={pauseRecording}
-                className="btn btn-warning btn-sm"
-                type="button"
-              >
-                <Pause className="h-4 w-4" />
-                Pause
-              </button>
-            ) : (
-              <button
-                onClick={resumeRecording}
-                className="btn btn-success btn-sm"
-                type="button"
-              >
-                <Play className="h-4 w-4" />
-                Resume
-              </button>
-            )}
-            
-            <button
-              onClick={stopRecording}
-              className="btn btn-error btn-sm"
-              type="button"
-            >
-              <Square className="h-4 w-4" />
-              Stop
-            </button>
-          </>
+          <button
+            onClick={stopRecording}
+            className="btn btn-error btn-sm flex-1 min-w-0"
+            type="button"
+          >
+            <Square className="h-4 w-4" />
+            Stop Recording
+          </button>
         )}
 
         {hasRecording && !isRecording && (
           <button
             onClick={clearRecording}
-            className="btn btn-ghost btn-sm"
+            className="btn btn-outline btn-sm flex-1 min-w-0"
             type="button"
           >
             Clear & Re-record
@@ -208,12 +161,24 @@ export default function AudioRecorder({
         )}
       </div>
 
-      {isRecording && (
-        <div className="flex items-center gap-2 text-sm text-primary">
-          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-          {isPaused ? 'Recording paused' : 'Recording...'}
-        </div>
-      )}
+      <div className="flex justify-between items-center">
+        {isRecording && (
+          <div className="flex items-center gap-2 text-sm text-primary">
+            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+            Recording...
+          </div>
+        )}
+
+        <span
+          className={`text-sm ${
+            recordingTime >= maxDuration - 3
+              ? "text-warning"
+              : "text-base-content"
+          }`}
+        >
+          {formatTime(recordingTime)} / {formatTime(maxDuration)}
+        </span>
+      </div>
 
       {audioUrl && (
         <div className="mt-2">
