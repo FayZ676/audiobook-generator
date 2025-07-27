@@ -73,7 +73,7 @@ export async function getVoiceAudioUrl(
 ): Promise<string | null> {
   try {
     const userId = await getUserId();
-    const normalizedVoiceName = voiceName.toLowerCase().replace(" ", "_");
+    const normalizedVoiceName = voiceName.toLowerCase().replace(/\s+/g, "_");
 
     try {
       const audioUrl = await apiCallJson<string>(
