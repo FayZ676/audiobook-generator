@@ -1,6 +1,11 @@
 import re
 
 
+def normalize_quotes(text: str) -> str:
+    """Convert curly quotes to straight quotes for consistent processing."""
+    return text.replace("\u201c", '"').replace("\u201d", '"')
+
+
 HONORIFICS = [
     "Dr",
     "Dr.",

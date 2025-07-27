@@ -51,11 +51,10 @@ def get_speaker_details(text: str):
 
 
 def get_speaker_names(text: str) -> set[str]:
-    paragraphs = [
-        remove_dialogue(p.replace("\n", " "))
-        for p in text.split("\n\n")
-        if p.count('"') % 2 == 0 and p.count('"') > 0
-    ]
+    paragraphs = []
+    for p in text.split("\n\n"):
+        if p.count('"') % 2 == 0 and p.count('"') > 0:
+            paragraphs.append(remove_dialogue(p.replace("\n", " ")))
     ner = NER()
     names = reduce_names(
         {name for paragraph in paragraphs for name in ner.find_names(paragraph)}
