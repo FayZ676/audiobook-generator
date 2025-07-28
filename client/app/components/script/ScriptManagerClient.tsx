@@ -4,7 +4,7 @@ import React, { useState, use } from "react";
 import { useRouter } from "next/navigation";
 
 import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
-import { SCRIPT_CHANNEL } from "@/app/lib/pusher-channels";
+import { useUserChannels } from "@/app/lib/pusher-channels";
 import { handleRevalidateTag } from "@/app/actions/revalidate";
 
 import { Script } from "../../actions/script";
@@ -33,9 +33,10 @@ export default function ScriptManagerClient({
 
   const script = use(scriptPromise);
   const voices = use(voicesPromise);
+  const userChannels = useUserChannels();
 
   usePusherSubscriptions({
-    channels: [SCRIPT_CHANNEL],
+    channels: userChannels ? [userChannels.SCRIPT_CHANNEL] : null,
     onUpdate: () => {
       handleRevalidateTag("script");
       router.refresh();

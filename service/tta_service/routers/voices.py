@@ -96,7 +96,7 @@ def add_voice(
             filename=name_normalized,
         ),
     )
-    pusher_client.trigger("voices", "complete", {"message": "Voice added"})
+    pusher_client.trigger(f"{user_id}-voices", "complete", {"message": "Voice added"})
     return
 
 
@@ -144,7 +144,9 @@ def delete_voice(user_id: str, voice_name: str):
     try:
         s3_client.delete_file(VOICES_BUCKET, metadata_path)
         s3_client.delete_file(VOICES_BUCKET, audio_path)
-        pusher_client.trigger("voices", "complete", {"message": "Voice deleted"})
+        pusher_client.trigger(
+            f"{user_id}-voices", "complete", {"message": "Voice deleted"}
+        )
         return {"message": "Voice deleted successfully"}
     except Exception as e:
         raise HTTPException(

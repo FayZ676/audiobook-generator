@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { handleRevalidateTag } from "@/app/actions/revalidate";
 import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
-import { SPEECH_CHANNEL, SCRIPT_CHANNEL } from "@/app/lib/pusher-channels";
+import { useUserChannels } from "@/app/lib/pusher-channels";
 
 import { AudiobookJob } from "../../actions/job";
 import { Script } from "../../actions/script";
@@ -25,9 +25,12 @@ export default function JobStateClient({
   const router = useRouter();
   const jobState = use(jobStatePromise);
   const script = use(scriptPromise);
+  const userChannels = useUserChannels();
 
   usePusherSubscriptions({
-    channels: [SPEECH_CHANNEL, SCRIPT_CHANNEL],
+    channels: userChannels
+      ? [userChannels.SPEECH_CHANNEL, userChannels.SCRIPT_CHANNEL]
+      : null,
     onUpdate: () => {
       handleRevalidateTag("job");
       router.refresh();

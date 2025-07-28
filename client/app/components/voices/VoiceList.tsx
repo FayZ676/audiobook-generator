@@ -5,7 +5,7 @@ import { use } from "react";
 import { useRouter } from "next/navigation";
 
 import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
-import { VOICES_CHANNEL } from "@/app/lib/pusher-channels";
+import { useUserChannels } from "@/app/lib/pusher-channels";
 
 import { Voice } from "../../actions/voices";
 import { handleRevalidateTag } from "@/app/actions/revalidate";
@@ -19,9 +19,10 @@ interface VoiceListProps {
 export default function VoiceList({ voicesPromise }: VoiceListProps) {
   const router = useRouter();
   const voices = use(voicesPromise);
+  const userChannels = useUserChannels();
 
   usePusherSubscriptions({
-    channels: [VOICES_CHANNEL],
+    channels: userChannels ? [userChannels.VOICES_CHANNEL] : null,
     onUpdate: () => {
       handleRevalidateTag("voices");
       router.refresh();

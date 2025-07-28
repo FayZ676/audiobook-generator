@@ -7,7 +7,7 @@ interface ChannelConfig {
 }
 
 interface UsePusherSubscriptionsOptions {
-  channels: ChannelConfig[];
+  channels: (ChannelConfig | null)[] | null;
   onUpdate?: (channel: string, event: string, data?: unknown) => void;
 }
 
@@ -16,10 +16,22 @@ export const usePusherSubscriptions = ({
   onUpdate,
 }: UsePusherSubscriptionsOptions) => {
   useEffect(() => {
-    const subscriptions = channels.map(({ channel, events }) => {
+    if (!channels || channels.length === 0) {
+      return;
+    }
+
+    const validChannels = channels.filter(
+      (channel): channel is ChannelConfig => channel !== null
+    );
+
+    if (validChannels.length === 0) {
+      return;
+    }
+
+    const subscriptions = validChannels.map(({ channel, events }) => {
       const channelInstance = pusherClient.subscribe(channel);
 
-      events.forEach((event) => {
+      events.forEach((event: string) => {
         const handler = (data?: unknown) => {
           onUpdate?.(channel, event, data);
         };
@@ -31,7 +43,7 @@ export const usePusherSubscriptions = ({
 
     return () => {
       subscriptions.forEach(({ channel, channelInstance, events }) => {
-        events.forEach((event) => {
+        events.forEach((event: string) => {
           channelInstance.unbind(event);
         });
         pusherClient.unsubscribe(channel);

@@ -62,7 +62,9 @@ async def events(response: WebhookResponse):
             narration_started_at=narration_started_at,
         ),
         pusher=PusherEventDetails(
-            channel=response.event, event=response.status, message=response.message
+            channel=f"{response.user_id}-{response.event}",
+            event=response.status,
+            message=response.message,
         ),
     )
 
