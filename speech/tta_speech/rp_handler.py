@@ -88,41 +88,53 @@ def _build_audio(audio_segments: list[tuple[bytes, int | None]]) -> bytes:
 
 def handler(event: dict):
     request = WebhookRequest.model_validate(event["input"])
-    data = SpeechRequest.model_validate(request.data)
-    text_input = _prepare_input(data.text, data.voices, voice_save_path="/tmp")
-    result = infer(
-        InferenceParams(
-            gen_text=text_input.text,
-            voices=text_input.voices,
-            vocab_file=f"{Path(__file__).parent}/vocab.txt",
-            vocoder_name="vocos",
-            vocoder_local_path=f"{Path(__file__).parent}/vocos",
-            load_vocoder_from_local=True,
-            remove_silence=True,
-            ckpt_file=f"{Path(__file__).parent}/checkpoints/model_1250000.safetensors",
+    request_data = SpeechRequest.model_validate(request.data)
+
+    total_word_count = sum(len(segment.text.split()) for segment in request_data.text)
+    data = Response(filename="", request_word_count=total_word_count)
+    status = "failed"  # NOTE: Default status is failed until we succeed
+
+    try:
+        text_input = _prepare_input(
+            request_data.text, request_data.voices, voice_save_path="/tmp"
         )
-    )
-    audio = _build_audio([result])
-    s3.upload_fileobj(
-        f"{SPEECH_RESULTS_BUCKET}",
-        f"{data.title}.mp3",
-        BytesIO(audio),
-    )
-    # Calculate total word count from all text segments
-    total_word_count = sum(len(segment.text.split()) for segment in data.text)
-    requests.post(
-        url=request.callback,
-        json=WebhookResponse(
-            user_id=request.user_id,
-            event=request.event,
-            status="complete",
-            message="",
-            data=Response(
-                filename=f"{data.title}.mp3", request_word_count=total_word_count
-            ),
-        ).model_dump(),
-        timeout=120,
-    )
+        result = infer(
+            InferenceParams(
+                gen_text=text_input.text,
+                voices=text_input.voices,
+                vocab_file=f"{Path(__file__).parent}/vocab.txt",
+                vocoder_name="vocos",
+                vocoder_local_path=f"{Path(__file__).parent}/vocos",
+                load_vocoder_from_local=True,
+                remove_silence=True,
+                ckpt_file=f"{Path(__file__).parent}/checkpoints/model_1250000.safetensors",
+            )
+        )
+        audio = _build_audio([result])
+        s3.upload_fileobj(
+            f"{SPEECH_RESULTS_BUCKET}",
+            f"{request_data.title}.mp3",
+            BytesIO(audio),
+        )
+        status = "complete"
+        data = Response(
+            filename=f"{request_data.title}.mp3", request_word_count=total_word_count
+        )
+    except Exception as e:
+        raise e from e
+    finally:
+        # Notify the service about the completion or failure
+        requests.post(
+            url=request.callback,
+            json=WebhookResponse(
+                user_id=request.user_id,
+                event=request.event,
+                status=status,
+                message="",
+                data=data,
+            ).model_dump(),
+            timeout=120,
+        )
 
 
 if __name__ == "__main__":
