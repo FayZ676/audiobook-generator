@@ -98,7 +98,7 @@ def label(texts: dict[int, TextSegment], speakers: set[Speaker], max_retries: in
 
 def split_by_dialogue(text: str) -> list[TextSegment]:
     def clean_text(text: str) -> str:
-        return text.strip().replace("\n", " ").replace("“", '"').replace("”", '"')
+        return text.strip().replace("\n", " ")
 
     result: list[TextSegment] = []
     paragraphs = [clean_text(p) for p in text.split("\n\n") if p.strip()]
