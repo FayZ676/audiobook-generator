@@ -7,7 +7,7 @@ export default function ProjectLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <Protect plan={"creator"} fallback={<Subscribe />}>
-      {children}
+      <div className="max-w-xl mx-auto">{children}</div>
     </Protect>
   );
 }

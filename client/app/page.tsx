@@ -6,21 +6,18 @@ export default function Home() {
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
-      <div className="hero min-h-[70vh]">
-        <div className="hero-content text-center">
-          <div className="max-w-md">
+      <div className="hero bg-base-200 min-h-[70vh]">
+        <div className="hero-content flex-col lg:flex-row-reverse">
+          <div></div>
+          <div className="flex flex-col gap-8">
             <h1 className="text-5xl font-bold">
-              The Future of Audiobooks is Here
+              Your Stories Brought to Life<br></br>Exactly as You Imagined
             </h1>
-            <p className="py-6">
-              Turn your text into engaging multi-speaker audiobooks within
-              minutes.
+            <p className="text-xl font-medium">
+              Produce multi-voice audiobooks with complete control. Customize
+              characters, clone voices instantly, edit scripts on the fly ... Or
+              let the studio handle it all for you.
             </p>
-            <div className="flex flex-col gap-4">
-              <Link href="#demo" className="btn btn-primary">
-                See Demo
-              </Link>
-            </div>
           </div>
         </div>
       </div>
