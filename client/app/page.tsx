@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { Waitlist } from "@clerk/nextjs";
 
 export default function Home() {
