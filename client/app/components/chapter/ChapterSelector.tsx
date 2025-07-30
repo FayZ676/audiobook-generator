@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Book, FileText, MicVocal, Trash2 } from "lucide-react";
+import { Book, Trash2 } from "lucide-react";
 
 import { deleteChapter } from "../../actions/chapter";
 
