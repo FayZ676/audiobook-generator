@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import { createChapter } from "../../actions/chapter";
 import Tip from "../ui/Tip";
@@ -13,6 +14,7 @@ interface CreateChapterFormProps {
 export default function CreateChapterForm({
   onChapterCreated,
 }: CreateChapterFormProps) {
+  const router = useRouter();
   const [chapterName, setChapterName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,9 +32,12 @@ export default function CreateChapterForm({
 
     try {
       await createChapter({ chapterName: chapterName.trim() });
+      const trimmedChapterName = chapterName.trim();
       setChapterName("");
       setShowForm(false);
       onChapterCreated?.();
+      // Navigate to the newly created chapter
+      router.push(`/project/${encodeURIComponent(trimmedChapterName)}`);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);

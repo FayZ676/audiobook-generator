@@ -1,15 +1,15 @@
 "use client";
 
-import React, { useState, use, useEffect } from "react";
+import React, { useState, use } from "react";
 import { useRouter } from "next/navigation";
 
 import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
 import { useUserChannels } from "@/app/lib/pusher-channels";
 import { handleRevalidateTag } from "@/app/actions/revalidate";
 
-import { Script } from "../../actions/script";
 import { Voice } from "../../actions/voices";
 import { AudiobookJob } from "../../actions/job";
+import { Script } from "../../actions/script";
 
 import ScriptControls from "../script/ScriptControls";
 import ScriptText from "../script/ScriptText";
@@ -19,9 +19,7 @@ import ChapterSelector from "../chapter/ChapterSelector";
 import CreateChapterForm from "../chapter/CreateChapterForm";
 
 interface ChapterProjectManagerClientProps {
-  scriptPromise: (chapterId: string) => Promise<Script | null>;
   voicesPromise: Promise<Voice[]>;
-  narrationUrlPromise: (chapterId: string) => Promise<string | null>;
   jobStatePromise: Promise<AudiobookJob | null>;
   projectPromise: Promise<{
     name: string;
@@ -29,58 +27,32 @@ interface ChapterProjectManagerClientProps {
     chapters: string[];
   } | null>;
   chaptersPromise: Promise<string[]>;
+  scriptPromise: Promise<Script | null>;
+  narrationPromise: Promise<string | null>;
+  selectedChapter?: string;
 }
 
 export default function ChapterProjectManagerClient({
-  scriptPromise,
   voicesPromise,
-  narrationUrlPromise,
   jobStatePromise,
   projectPromise,
   chaptersPromise,
+  scriptPromise,
+  narrationPromise,
+  selectedChapter,
 }: ChapterProjectManagerClientProps) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
-  const [selectedChapter, setSelectedChapter] = useState<string | null>(null);
-  const [chapters, setChapters] = useState<string[]>([]);
-  const [currentScript, setCurrentScript] = useState<Script | null>(null);
-  const [currentNarrationUrl, setCurrentNarrationUrl] = useState<string | null>(
-    null
-  );
 
   const voices = use(voicesPromise);
   const project = use(projectPromise);
-  const initialChapters = use(chaptersPromise);
+  const chapters = use(chaptersPromise);
+  const currentScript = use(scriptPromise);
+  const currentNarrationUrl = use(narrationPromise);
   const userChannels = useUserChannels();
 
-  useEffect(() => {
-    setChapters(initialChapters);
-    if (initialChapters.length > 0 && !selectedChapter) {
-      setSelectedChapter(initialChapters[0]);
-    }
-  }, [initialChapters, selectedChapter]);
-
-  useEffect(() => {
-    if (selectedChapter) {
-      let isCancelled = false;
-
-      scriptPromise(selectedChapter).then((script) => {
-        if (!isCancelled) {
-          setCurrentScript(script);
-        }
-      });
-
-      narrationUrlPromise(selectedChapter).then((url) => {
-        if (!isCancelled) {
-          setCurrentNarrationUrl(url);
-        }
-      });
-
-      return () => {
-        isCancelled = true;
-      };
-    }
-  }, [selectedChapter]);
+  const effectiveSelectedChapter =
+    selectedChapter || (chapters.length > 0 ? chapters[0] : null);
 
   usePusherSubscriptions({
     channels: userChannels ? [userChannels.SCRIPT_CHANNEL] : null,
@@ -94,14 +66,20 @@ export default function ChapterProjectManagerClient({
   });
 
   const handleChapterSelect = (chapter: string) => {
-    setSelectedChapter(chapter);
+    router.push(`/project/${encodeURIComponent(chapter)}`);
     setIsEditing(false);
   };
 
   const handleChapterCreatedOrDeleted = () => {
     handleRevalidateTag("chapters");
     handleRevalidateTag("project");
-    router.refresh();
+
+    // If we're currently viewing a chapter that doesn't exist anymore, redirect to project home
+    if (selectedChapter && !chapters.includes(selectedChapter)) {
+      router.push("/project");
+    } else {
+      router.refresh();
+    }
   };
 
   if (!project) {
@@ -117,7 +95,7 @@ export default function ChapterProjectManagerClient({
         <div className="lg:col-span-1 space-y-4">
           <ChapterSelector
             chapters={chapters}
-            selectedChapter={selectedChapter}
+            selectedChapter={effectiveSelectedChapter}
             onChapterSelect={handleChapterSelect}
             onChapterDeleted={handleChapterCreatedOrDeleted}
           />
@@ -127,7 +105,7 @@ export default function ChapterProjectManagerClient({
 
         {/* Main Content */}
         <div className="lg:col-span-3">
-          {!selectedChapter ? (
+          {!effectiveSelectedChapter ? (
             <div className="text-center py-12">
               <h4 className="text-lg font-semibold mb-2">
                 No Chapter Selected
@@ -140,35 +118,37 @@ export default function ChapterProjectManagerClient({
             <div className="space-y-4">
               <div className="text-center">
                 <h4 className="text-lg font-semibold mb-2">
-                  {selectedChapter}
+                  {effectiveSelectedChapter}
                 </h4>
                 <p className="text-base-content/60 mb-4">
                   Generate a script for this chapter to get started.
                 </p>
               </div>
-              <GenerateScriptForm chapterName={selectedChapter} />
+              <GenerateScriptForm chapterName={effectiveSelectedChapter!} />
             </div>
           ) : (
             <div className="space-y-4">
               <div className="text-center">
-                <h4 className="text-lg font-semibold">{selectedChapter}</h4>
+                <h4 className="text-lg font-semibold">
+                  {effectiveSelectedChapter}
+                </h4>
               </div>
 
               <ScriptControls
-                narrationUrlPromise={Promise.resolve(currentNarrationUrl)}
-                scriptPromise={Promise.resolve(currentScript)}
+                narrationUrlPromise={narrationPromise}
+                scriptPromise={scriptPromise}
                 jobStatePromise={jobStatePromise}
                 voicesPromise={voicesPromise}
                 isEditing={isEditing}
                 onEditToggle={setIsEditing}
-                chapterName={selectedChapter}
+                chapterName={effectiveSelectedChapter!}
               />
 
               <ScriptText
                 script={currentScript}
                 voices={voices}
                 isEditing={isEditing}
-                chapterName={selectedChapter}
+                chapterName={effectiveSelectedChapter!}
               />
             </div>
           )}

@@ -2,10 +2,16 @@ import React from "react";
 
 import ChapterProjectManager from "../chapter/ChapterProjectManager";
 
-export default function ProjectDashboard() {
+interface ProjectDashboardProps {
+  selectedChapter?: string;
+}
+
+export default function ProjectDashboard({
+  selectedChapter,
+}: ProjectDashboardProps) {
   return (
     <div className="flex flex-col gap-4">
-      <ChapterProjectManager />
+      <ChapterProjectManager selectedChapter={selectedChapter} />
     </div>
   );
 }
