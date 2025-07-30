@@ -52,34 +52,24 @@ export default function ProjectManagerClient({
     return <CreateProjectForm />;
   }
 
-  if (!script) {
-    return (
-      <div className="flex flex-col gap-4">
-        <h3 className="font-bold text-center p-4">{project.name}</h3>
-        <GenerateScriptForm />
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col gap-4">
-      <div className="bg-base-200 p-4 rounded">
-        <h3 className="font-bold">Project: {project.name}</h3>
-        <p className="text-sm text-base-content/70">
-          Created: {new Date(project.created_at).toLocaleDateString()}
-        </p>
-      </div>
-
-      <ScriptControls
-        narrationUrlPromise={narrationUrlPromise}
-        scriptPromise={scriptPromise}
-        jobStatePromise={jobStatePromise}
-        voicesPromise={voicesPromise}
-        isEditing={isEditing}
-        onEditToggle={setIsEditing}
-      />
-
-      <ScriptText script={script} voices={voices} isEditing={isEditing} />
+      <h3 className="font-bold text-center p-4">{project.name}</h3>
+      {!script ? (
+        <GenerateScriptForm />
+      ) : (
+        <>
+          <ScriptControls
+            narrationUrlPromise={narrationUrlPromise}
+            scriptPromise={scriptPromise}
+            jobStatePromise={jobStatePromise}
+            voicesPromise={voicesPromise}
+            isEditing={isEditing}
+            onEditToggle={setIsEditing}
+          />
+          <ScriptText script={script} voices={voices} isEditing={isEditing} />
+        </>
+      )}
     </div>
   );
 }
