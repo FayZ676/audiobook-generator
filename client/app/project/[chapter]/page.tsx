@@ -7,9 +7,9 @@ import TabSection from "@/app/components/ui/TabSection";
 export const dynamic = "force-dynamic";
 
 interface ProjectChapterPageProps {
-  params: {
+  params: Promise<{
     chapter: string;
-  };
+  }>;
 }
 
 export default async function ProjectChapterPage({
