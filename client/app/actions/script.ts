@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidateTag } from "next/cache";
-import { auth } from "@clerk/nextjs/server";
 import { getUserId } from "./user";
 import { apiCallVoid, apiCallJson } from "../lib/api";
 
@@ -31,31 +30,31 @@ const ScriptSchema = z.object({
 interface BuildScriptRequest {
   user_id: string;
   text_content: string;
-}
-
-interface DeleteScriptRequest {
-  filename: string;
+  chapter_name: string;
 }
 
 interface CreateScriptProps {
   textContent: string;
+  chapterName: string;
 }
 
 interface UpdateScriptProps {
   script: Script;
+  chapterName: string;
 }
 
 export type Script = z.infer<typeof ScriptSchema>;
 
-export async function createScript({ textContent }: CreateScriptProps) {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("User not authenticated");
-  }
+export async function createScript({
+  textContent,
+  chapterName: chapterName,
+}: CreateScriptProps) {
+  const userId = await getUserId();
 
   const request: BuildScriptRequest = {
     user_id: userId,
     text_content: textContent,
+    chapter_name: chapterName,
   };
 
   try {
@@ -74,16 +73,11 @@ export async function createScript({ textContent }: CreateScriptProps) {
   }
 }
 
-export async function getScript(): Promise<Script | null> {
-  const { userId } = await auth();
+export async function getScript(chapterName: string): Promise<Script | null> {
+  const userId = await getUserId();
 
-  if (!userId) {
-    throw new Error("User not authenticated");
-  }
-
-  const filename = `${userId}.json`;
   const rawData = await apiCallJson<unknown>(
-    `${process.env.AUDIOBOOK_SERVICE_URL}/script/${filename}`,
+    `${process.env.AUDIOBOOK_SERVICE_URL}/script/${userId}/${chapterName}`,
     {
       cache: "force-cache",
       next: {
@@ -103,25 +97,25 @@ export async function getScript(): Promise<Script | null> {
   return result.data;
 }
 
-export async function deleteScript(filename: string) {
-  const request: DeleteScriptRequest = {
-    filename: filename,
-  };
-  await apiCallVoid(`${process.env.AUDIOBOOK_SERVICE_URL}/script/${filename}`, {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(request),
-  });
-}
-
-export async function updateScript({ script }: UpdateScriptProps) {
+export async function deleteScript(chapterName: string) {
   const userId = await getUserId();
 
-  const filename = `${userId}.json`;
+  await apiCallVoid(
+    `${process.env.AUDIOBOOK_SERVICE_URL}/script/${userId}/${chapterName}`,
+    {
+      method: "DELETE",
+    }
+  );
+}
+
+export async function updateScript({
+  script,
+  chapterName: chapterName,
+}: UpdateScriptProps) {
+  const userId = await getUserId();
+
   const data = await apiCallJson<unknown>(
-    `${process.env.AUDIOBOOK_SERVICE_URL}/script/${filename}`,
+    `${process.env.AUDIOBOOK_SERVICE_URL}/script/${userId}/${chapterName}`,
     {
       method: "PUT",
       headers: {

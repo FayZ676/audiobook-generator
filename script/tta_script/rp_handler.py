@@ -35,9 +35,9 @@ def _to_json_fileobject(filename: str, script_data: Script) -> BinaryIO:
     return file_obj
 
 
-def _upload_script_result(user_id: str, script_data: Script):
+def _upload_script_result(user_id: str, script_data: Script, chapter_name: str):
     script_file = _to_json_fileobject("script.json", script_data)
-    project_script_path = f"{user_id}/script.json"
+    project_script_path = f"{user_id}/{chapter_name}/script.json"
     s3_client.upload_fileobj(f"{PROJECTS_BUCKET}", project_script_path, script_file)
     return str(script_file.name)
 
@@ -60,7 +60,9 @@ def handler(event: dict):
                 speakers=speaker_details, voices=voices.copy()
             )
             script = get_script(text, speaker_voices)
-            script_filename = _upload_script_result(request.user_id, script)
+            script_filename = _upload_script_result(
+                request.user_id, script, request_data.chapter_name
+            )
             word_count = len(text.split())
             status = "complete"
             message = ""

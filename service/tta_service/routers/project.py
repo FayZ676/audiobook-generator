@@ -1,29 +1,21 @@
-import json
 from io import BytesIO
-from fastapi import APIRouter, HTTPException, status
-from tta_service.types import CreateProjectRequest
+from fastapi import APIRouter, status
+from tta_service.types import Project
 from tta_service.config import s3_client, PROJECTS_BUCKET
-from datetime import datetime, timezone
 
 router = APIRouter()
 
 
 @router.post("/project", status_code=status.HTTP_201_CREATED)
-async def create_project(request: CreateProjectRequest):
+async def create_project(request: Project):
     """Create a new project for the user"""
-    # TODO: Should this be a custome type?
-    project_data = {
-        "name": request.project_name,
-        "user_id": request.user_id,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-    }
     project_path = f"{request.user_id}/project.json"
-    project_data_json = json.dumps(project_data)
+    project_data_json = request.model_dump_json()
     file_obj = BytesIO(project_data_json.encode("utf-8"))
     s3_client.upload_fileobj(PROJECTS_BUCKET, project_path, file_obj)
     return {
         "message": "Project created successfully",
-        "project_name": request.project_name,
+        "project_name": request.name,
     }
 
 
@@ -33,8 +25,9 @@ def get_current_project(user_id: str):
     project_path = f"{user_id}/project.json"
     if not s3_client.list_files(PROJECTS_BUCKET, project_path):
         return None
-    project_data = s3_client.get_file(PROJECTS_BUCKET, project_path).decode("utf-8")
-    return json.loads(project_data)
+    project_content = s3_client.get_file(PROJECTS_BUCKET, project_path).decode("utf-8")
+    project = Project.model_validate_json(project_content)
+    return project
 
 
 @router.delete("/project/{user_id}")

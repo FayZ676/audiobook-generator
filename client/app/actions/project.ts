@@ -6,7 +6,7 @@ import { apiCallVoid, apiCallJson } from "../lib/api";
 
 interface CreateProjectRequest {
   user_id: string;
-  project_name: string;
+  name: string;
 }
 
 interface CreateProjectProps {
@@ -18,7 +18,7 @@ export async function createProject({ projectName }: CreateProjectProps) {
 
   const request: CreateProjectRequest = {
     user_id: userId,
-    project_name: projectName,
+    name: projectName,
   };
 
   try {
@@ -52,14 +52,16 @@ export async function deleteProject() {
 
 export async function getCurrentProject(): Promise<{
   name: string;
-  created_at: string;
+  user_id: string;
+  chapters: string[];
 } | null> {
   const userId = await getUserId();
 
   try {
     const project = await apiCallJson<{
       name: string;
-      created_at: string;
+      user_id: string;
+      chapters: string[];
     } | null>(`${process.env.AUDIOBOOK_SERVICE_URL}/project/${userId}`, {
       cache: "force-cache",
       next: {

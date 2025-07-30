@@ -27,7 +27,10 @@ router = APIRouter()
 
 @router.post("/narration", status_code=status.HTTP_202_ACCEPTED)
 async def build_narration(request: BuildNarrationRequest, bg_tasks: BackgroundTasks):
-    speech_segments = build_speech_segments(request.script_path)
+    script_data = s3_client.get_file(
+        PROJECTS_BUCKET, f"{request.user_id}/{request.chapter_name}/script.json"
+    ).decode("utf-8")
+    speech_segments = ScriptData.model_validate_json(script_data).to_speech_segments()
     validate_usage(
         user_id=request.user_id,
         word_count=sum(len(segment.text.split()) for segment in speech_segments),
@@ -49,45 +52,35 @@ async def build_narration(request: BuildNarrationRequest, bg_tasks: BackgroundTa
     )
     bg_tasks.add_task(
         send_narration_request,
-        request.script_path,
-        request.voices,
         request.user_id,
+        request.chapter_name,
+        request.voices,
         speech_segments,
     )
-    return request.script_path
+    return f"{request.user_id}/{request.chapter_name}"
 
 
-@router.get("/narration/{filename}")
-def get_narration(filename: str):
-    project_narration_path = f"{filename.rstrip(".json")}/narration.mp3"
+@router.get("/narration/{user_id}/{chapter_name}")
+def get_narration(user_id: str, chapter_name: str):
+    project_narration_path = f"{user_id}/{chapter_name}/narration.mp3"
     if not s3_client.list_files(PROJECTS_BUCKET, project_narration_path):
         return None
     narration_url = s3_client.presigned_url(PROJECTS_BUCKET, project_narration_path)
     return narration_url
 
 
-@router.delete("/narration/{filename}")
-def delete_narration(filename: str):
-    project_narration_path = f"{filename.rstrip(".json")}/narration.mp3"
+@router.delete("/narration/{user_id}/{chapter_name}")
+def delete_narration(user_id: str, chapter_name: str):
+    project_narration_path = f"{user_id}/{chapter_name}/narration.mp3"
     if not s3_client.list_files(PROJECTS_BUCKET, project_narration_path):
         return
     return s3_client.delete_file(PROJECTS_BUCKET, project_narration_path)
 
 
-def build_speech_segments(script_path: str) -> list[SpeechRequestSegment]:
-    """Builds speech segments from the script data."""
-    project_script_path = f"{script_path.rstrip(".json")}/script.json"
-    script_data = s3_client.get_file(PROJECTS_BUCKET, project_script_path).decode(
-        "utf-8"
-    )
-    parsed_script = ScriptData.model_validate_json(script_data)
-    return parsed_script.to_speech_segments()
-
-
 async def send_narration_request(
-    script_path: str,
-    voices: list[Voice],
     user_id: str,
+    chapter_name: str,
+    voices: list[Voice],
     speech_segments: list[SpeechRequestSegment],
 ):
     request = WebhookRequest(
@@ -95,14 +88,15 @@ async def send_narration_request(
         event="speech",
         user_id=user_id,
         data=SpeechRequest(
-            title=script_path.rstrip(".json"),
+            user_id=user_id,
             text=speech_segments,
             voices=voices,
+            chapter_name=chapter_name,
         ).model_dump(),
     )
     # NOTE: Add /runsync endpoint when testing locally.
     send_async_request(
-        url=f"{SPEECH_API_URL}",
+        url=f"{SPEECH_API_URL}/runsync",
         payload={"input": request.model_dump()},
         headers={
             "Content-Type": "application/json",

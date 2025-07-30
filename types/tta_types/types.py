@@ -19,14 +19,16 @@ class SpeechRequestSegment(BaseModel):
 
 
 class SpeechRequest(BaseModel):
-    title: str
+    user_id: str
     text: list[SpeechRequestSegment]
     voices: list[Voice]
+    chapter_name: str
 
 
 class ScriptRequest(BaseModel):
     text_content: str
     voices: list[Voice]
+    chapter_name: str
 
 
 class Response(BaseModel):

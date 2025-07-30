@@ -7,7 +7,13 @@ import { createScript } from "../../actions/script";
 
 import Tip from "../ui/Tip";
 
-export default function GenerateScriptForm() {
+interface GenerateScriptFormProps {
+  chapterName: string;
+}
+
+export default function GenerateScriptForm({
+  chapterName,
+}: GenerateScriptFormProps) {
   const [textContent, setTextContent] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +40,7 @@ export default function GenerateScriptForm() {
       setIsSubmitting(true);
       setError(null);
       try {
-        await createScript({ textContent });
+        await createScript({ textContent, chapterName });
         setTextContent("");
       } catch (error) {
         const errorMessage =

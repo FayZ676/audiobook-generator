@@ -19,6 +19,7 @@ interface ScriptControlsProps {
   voicesPromise: Promise<Voice[]>;
   isEditing: boolean;
   onEditToggle: (editing: boolean) => void;
+  chapterName: string;
 }
 
 export default function ScriptControls({
@@ -28,6 +29,7 @@ export default function ScriptControls({
   voicesPromise,
   isEditing,
   onEditToggle,
+  chapterName,
 }: ScriptControlsProps) {
   const router = useRouter();
   const [isCreatingNarration, setIsCreatingNarration] = useState(false);
@@ -44,7 +46,7 @@ export default function ScriptControls({
     setIsCreatingNarration(true);
     setError(null);
     try {
-      await createNarration();
+      await createNarration(chapterName);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
