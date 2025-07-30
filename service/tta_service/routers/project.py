@@ -33,7 +33,7 @@ def get_current_project(user_id: str):
     project_path = f"{user_id}/project.json"
     if not s3_client.list_files(PROJECTS_BUCKET, project_path):
         return None
-    project_data = s3_client.get_file(PROJECTS_BUCKET, project_path)
+    project_data = s3_client.get_file(PROJECTS_BUCKET, project_path).decode("utf-8")
     return json.loads(project_data)
 
 

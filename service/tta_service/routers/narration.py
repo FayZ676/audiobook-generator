@@ -76,7 +76,9 @@ def delete_narration(filename: str):
 def build_speech_segments(script_path: str) -> list[SpeechRequestSegment]:
     """Builds speech segments from the script data."""
     project_script_path = f"{script_path.rstrip(".json")}/script.json"
-    script_data = s3_client.get_file(PROJECTS_BUCKET, project_script_path)
+    script_data = s3_client.get_file(PROJECTS_BUCKET, project_script_path).decode(
+        "utf-8"
+    )
     parsed_script = ScriptData.model_validate_json(script_data)
     return parsed_script.to_speech_segments()
 
@@ -99,7 +101,7 @@ async def send_narration_request(
     )
     # NOTE: Add /runsync endpoint when testing locally.
     send_async_request(
-        url=f"{SPEECH_API_URL}",
+        url=f"{SPEECH_API_URL}/runsync",
         payload={"input": request.model_dump()},
         headers={
             "Content-Type": "application/json",

@@ -16,9 +16,9 @@ class S3Client:
         response = self.client.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
         return [obj["Key"] for obj in response.get("Contents", [])]
 
-    def get_file(self, bucket_name: str, file_key: str) -> str:
+    def get_file(self, bucket_name: str, file_key: str) -> bytes:
         response = self.client.get_object(Bucket=bucket_name, Key=file_key)
-        return response["Body"].read().decode("utf-8")
+        return response["Body"].read()
 
     def delete_file(self, bucket_name: str, file_name: str):
         self.client.delete_object(Bucket=bucket_name, Key=file_name)

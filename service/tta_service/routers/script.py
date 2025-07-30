@@ -56,7 +56,9 @@ async def build_script(request: BuildScriptRequest, bg_tasks: BackgroundTasks):
 def get_script(filename: str):
     project_script_path = f"{filename.rstrip(".json")}/script.json"
     if s3_client.list_files(PROJECTS_BUCKET, project_script_path):
-        script = s3_client.get_file(PROJECTS_BUCKET, project_script_path)
+        script = s3_client.get_file(PROJECTS_BUCKET, project_script_path).decode(
+            "utf-8"
+        )
         return json.loads(script)
     return None
 
@@ -91,7 +93,7 @@ def send_script_request(script_request: BuildScriptRequest):
     )
     # NOTE: Add /runsync endpoint when testing locally.
     send_async_request(
-        url=f"{SCRIPT_API_URL}",
+        url=f"{SCRIPT_API_URL}/runsync",
         payload={"input": request.model_dump()},
         headers={
             "Content-Type": "application/json",
@@ -111,7 +113,9 @@ def _get_voices(user_id: str):
     ]
     voices: list[Voice] = []
     for voice_metadata_key in voices_metadata:
-        file_content = s3_client.get_file(VOICES_BUCKET, voice_metadata_key)
+        file_content = s3_client.get_file(VOICES_BUCKET, voice_metadata_key).decode(
+            "utf-8"
+        )
         voice_data = json.loads(file_content)
         voices.append(Voice.model_validate(voice_data))
     return voices

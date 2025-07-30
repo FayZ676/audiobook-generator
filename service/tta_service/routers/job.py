@@ -11,7 +11,7 @@ router = APIRouter()
 def get_job_status(job_id: str):
     if not s3_client.list_files(JOB_STATUS_BUCKET, job_id):
         return None
-    job_status = s3_client.get_file(JOB_STATUS_BUCKET, f"{job_id}.json")
+    job_status = s3_client.get_file(JOB_STATUS_BUCKET, f"{job_id}.json").decode("utf-8")
     return AudiobookJob.model_validate(json.loads(job_status))
 
 

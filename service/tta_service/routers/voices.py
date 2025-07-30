@@ -25,7 +25,9 @@ def get_voices(user_id: str):
     ]
     voices: list[Voice] = []
     for voice_metadata_key in voices_metadata:
-        file_content = s3_client.get_file(VOICES_BUCKET, voice_metadata_key)
+        file_content = s3_client.get_file(VOICES_BUCKET, voice_metadata_key).decode(
+            "utf-8"
+        )
         voice_data = json.loads(file_content)
         voices.append(Voice.model_validate(voice_data))
     return voices
@@ -36,7 +38,7 @@ def get_voice(user_id: str, voice_name: str):
     paths = [f"metadata/{voice_name}.json", f"{user_id}/metadata/{voice_name}.json"]
     for path in paths:
         try:
-            file_content = s3_client.get_file(VOICES_BUCKET, path)
+            file_content = s3_client.get_file(VOICES_BUCKET, path).decode("utf-8")
             voice = json.loads(file_content)
             return Voice.model_validate(voice)
         except Exception as e:

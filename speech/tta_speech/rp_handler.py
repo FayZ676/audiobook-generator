@@ -46,10 +46,9 @@ def _prepare_input(
 ) -> InputData:
     def download_audio(audio_path: str):
         audio = s3.get_file(VOICES_BUCKET, audio_path)
-        audio_file = BytesIO(audio)
         temp_audio_path = f"{voice_save_path}/{audio_path.split('/')[-1]}"
         with open(temp_audio_path, "wb") as f:
-            f.write(audio_file.read())
+            f.write(audio)
         return temp_audio_path
 
     def voice_to_dict(path, transcript):
