@@ -6,11 +6,6 @@ Resources:
     Properties:
       BucketName: tta-voices
 
-  SpeechResultsBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: tta-speech-results
-
   JobStatusBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -47,14 +42,13 @@ Resources:
               - s3:DeleteObject
               - s3:ListBucket
             Resource:
-              - !Sub "arn:aws:s3:::${SpeechResultsBucket}/*"
               - !Sub "arn:aws:s3:::${VoicesBucket}/*"
               - !Sub "arn:aws:s3:::${JobStatusBucket}/*"
               - !Sub "arn:aws:s3:::${LogsBucket}/*"
               - !Sub "arn:aws:s3:::${ProjectsBucket}/*"
-              - !Sub "arn:aws:s3:::${SpeechResultsBucket}"
               - !Sub "arn:aws:s3:::${VoicesBucket}"
               - !Sub "arn:aws:s3:::${JobStatusBucket}"
+              - !Sub "arn:aws:s3:::${LogsBucket}"
               - !Sub "arn:aws:s3:::${ProjectsBucket}"
       Users:
         - !Ref SpeechServiceUser

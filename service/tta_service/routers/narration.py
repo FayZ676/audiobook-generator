@@ -11,7 +11,6 @@ from tta_types.script import ScriptData
 from tta_service.types import BuildNarrationRequest
 from tta_service.config import (
     s3_client,
-    SPEECH_RESULTS_BUCKET,
     SERVICE_API_URL,
     SPEECH_API_URL,
     SPEECH_SERVICE_API_KEY,
@@ -60,17 +59,19 @@ async def build_narration(request: BuildNarrationRequest, bg_tasks: BackgroundTa
 
 @router.get("/narration/{filename}")
 def get_narration(filename: str):
-    if not s3_client.list_files(SPEECH_RESULTS_BUCKET, filename):
+    project_narration_path = f"{filename.rstrip(".json")}/narration.mp3"
+    if not s3_client.list_files(PROJECTS_BUCKET, project_narration_path):
         return None
-    narration_url = s3_client.presigned_url(SPEECH_RESULTS_BUCKET, filename)
+    narration_url = s3_client.presigned_url(PROJECTS_BUCKET, project_narration_path)
     return narration_url
 
 
 @router.delete("/narration/{filename}")
 def delete_narration(filename: str):
-    if not s3_client.list_files(SPEECH_RESULTS_BUCKET, filename):
+    project_narration_path = f"{filename.rstrip(".json")}/narration.mp3"
+    if not s3_client.list_files(PROJECTS_BUCKET, project_narration_path):
         return
-    return s3_client.delete_file(SPEECH_RESULTS_BUCKET, filename)
+    return s3_client.delete_file(PROJECTS_BUCKET, project_narration_path)
 
 
 def build_speech_segments(script_path: str) -> list[SpeechRequestSegment]:
@@ -101,7 +102,7 @@ async def send_narration_request(
     )
     # NOTE: Add /runsync endpoint when testing locally.
     send_async_request(
-        url=f"{SPEECH_API_URL}/runsync",
+        url=f"{SPEECH_API_URL}",
         payload={"input": request.model_dump()},
         headers={
             "Content-Type": "application/json",

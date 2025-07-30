@@ -50,10 +50,9 @@ export async function getNarration(): Promise<NarrationUrl | null> {
     throw new Error("User not authenticated");
   }
 
-  const filename = `${userId}.mp3`;
   try {
     const narrationUrl = await apiCallJson<NarrationUrl>(
-      `${process.env.AUDIOBOOK_SERVICE_URL}/narration/${filename}`,
+      `${process.env.AUDIOBOOK_SERVICE_URL}/narration/${userId}`,
       {
         cache: "force-cache",
         next: {
