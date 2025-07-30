@@ -20,6 +20,11 @@ class BuildScriptRequest(BaseModel):
     text_content: str
 
 
+class CreateProjectRequest(BaseModel):
+    user_id: str
+    project_name: str
+
+
 class BuildNarrationRequest(BaseModel):
     user_id: str
     script_path: str

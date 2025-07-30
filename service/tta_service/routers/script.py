@@ -6,13 +6,13 @@ from tta_types.types import WebhookRequest, ScriptRequest, AudiobookJob, Voice
 from tta_service.types import BuildScriptRequest, UpdateScriptRequest
 from tta_service.config import (
     s3_client,
-    SCRIPT_RESULTS_BUCKET,
     VOICES_BUCKET,
     SERVICE_API_URL,
     SCRIPT_API_URL,
     SCRIPT_SERVICE_API_KEY,
     SCRIPT_COST_PER_WORD,
     USAGE_LIMIT,
+    PROJECTS_BUCKET,
 )
 from tta_service.utils import send_async_request, update_status, validate_usage
 from tta_service.routers.job import get_job_status
@@ -54,27 +54,26 @@ async def build_script(request: BuildScriptRequest, bg_tasks: BackgroundTasks):
 
 @router.get("/script/{filename}")
 def get_script(filename: str):
-    if not s3_client.list_files(SCRIPT_RESULTS_BUCKET, filename):
-        return None
-    script = s3_client.get_file(f"{SCRIPT_RESULTS_BUCKET}", filename)
-    return json.loads(script)
+    project_script_path = f"{filename.rstrip(".json")}/script.json"
+    if s3_client.list_files(PROJECTS_BUCKET, project_script_path):
+        script = s3_client.get_file(PROJECTS_BUCKET, project_script_path)
+        return json.loads(script)
+    return None
 
 
 @router.delete("/script/{filename}")
 def delete_script(filename: str):
-    if not s3_client.list_files(SCRIPT_RESULTS_BUCKET, filename):
-        return
-    s3_client.delete_file(f"{SCRIPT_RESULTS_BUCKET}", filename)
+    project_script_path = f"{filename.rstrip(".json")}/script.json"
+    if s3_client.list_files(PROJECTS_BUCKET, project_script_path):
+        s3_client.delete_file(PROJECTS_BUCKET, project_script_path)
 
 
 @router.put("/script/{filename}")
 def update_script(filename: str, request: UpdateScriptRequest):
-    if not s3_client.list_files(SCRIPT_RESULTS_BUCKET, filename):
-        return None
-
+    project_script_path = f"{filename.rstrip(".json")}/script.json"
     script_json_str = request.script.model_dump()
     file_obj = io.BytesIO(json.dumps(script_json_str).encode("utf-8"))
-    s3_client.upload_fileobj(SCRIPT_RESULTS_BUCKET, filename, file_obj)
+    s3_client.upload_fileobj(PROJECTS_BUCKET, project_script_path, file_obj)
 
     return {"message": "Script updated successfully"}
 
@@ -112,7 +111,7 @@ def _get_voices(user_id: str):
     ]
     voices: list[Voice] = []
     for voice_metadata_key in voices_metadata:
-        file_content_bytes = s3_client.get_file(VOICES_BUCKET, voice_metadata_key)
-        voice_data = json.loads(file_content_bytes.decode("utf-8"))
+        file_content = s3_client.get_file(VOICES_BUCKET, voice_metadata_key)
+        voice_data = json.loads(file_content)
         voices.append(Voice.model_validate(voice_data))
     return voices

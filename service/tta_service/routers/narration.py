@@ -11,13 +11,13 @@ from tta_types.script import ScriptData
 from tta_service.types import BuildNarrationRequest
 from tta_service.config import (
     s3_client,
-    SCRIPT_RESULTS_BUCKET,
     SPEECH_RESULTS_BUCKET,
     SERVICE_API_URL,
     SPEECH_API_URL,
     SPEECH_SERVICE_API_KEY,
     SPEECH_COST_PER_WORD,
     USAGE_LIMIT,
+    PROJECTS_BUCKET,
 )
 from tta_service.utils import send_async_request, update_status, validate_usage
 from tta_service.routers.job import get_job_status
@@ -75,7 +75,8 @@ def delete_narration(filename: str):
 
 def build_speech_segments(script_path: str) -> list[SpeechRequestSegment]:
     """Builds speech segments from the script data."""
-    script_data = s3_client.get_file(SCRIPT_RESULTS_BUCKET, script_path)
+    project_script_path = f"{script_path.rstrip(".json")}/script.json"
+    script_data = s3_client.get_file(PROJECTS_BUCKET, project_script_path)
     parsed_script = ScriptData.model_validate_json(script_data)
     return parsed_script.to_speech_segments()
 

@@ -21,7 +21,7 @@ import requests
 import runpod
 
 
-SCRIPT_RESULTS_BUCKET = os.environ.get("SCRIPT_RESULTS_BUCKET", "")
+PROJECTS_BUCKET = os.environ.get("PROJECTS_BUCKET", "")
 
 
 s3_client = S3Client()
@@ -31,13 +31,14 @@ def _to_json_fileobject(filename: str, script_data: Script) -> BinaryIO:
     json_data = script_data.to_dict()
     json_bytes = json.dumps(json_data, indent=4).encode("utf-8")
     file_obj = io.BytesIO(json_bytes)
-    file_obj.name = f"{filename}.json"
+    file_obj.name = f"{filename}"
     return file_obj
 
 
 def _upload_script_result(user_id: str, script_data: Script):
-    script_file = _to_json_fileobject(user_id, script_data)
-    s3_client.upload_fileobj(f"{SCRIPT_RESULTS_BUCKET}", script_file.name, script_file)
+    script_file = _to_json_fileobject("script.json", script_data)
+    project_script_path = f"{user_id}/script.json"
+    s3_client.upload_fileobj(f"{PROJECTS_BUCKET}", project_script_path, script_file)
     return str(script_file.name)
 
 

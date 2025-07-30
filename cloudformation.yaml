@@ -6,11 +6,6 @@ Resources:
     Properties:
       BucketName: tta-voices
 
-  ScriptResultsBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: tta-script-results
-
   SpeechResultsBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -25,6 +20,11 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: tta-log-files
+
+  ProjectsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: tta-projects
 
   # Need to manually create access keys for the user.
   SpeechServiceUser:
@@ -49,12 +49,12 @@ Resources:
             Resource:
               - !Sub "arn:aws:s3:::${SpeechResultsBucket}/*"
               - !Sub "arn:aws:s3:::${VoicesBucket}/*"
-              - !Sub "arn:aws:s3:::${ScriptResultsBucket}/*"
               - !Sub "arn:aws:s3:::${JobStatusBucket}/*"
               - !Sub "arn:aws:s3:::${LogsBucket}/*"
+              - !Sub "arn:aws:s3:::${ProjectsBucket}/*"
               - !Sub "arn:aws:s3:::${SpeechResultsBucket}"
               - !Sub "arn:aws:s3:::${VoicesBucket}"
-              - !Sub "arn:aws:s3:::${ScriptResultsBucket}"
               - !Sub "arn:aws:s3:::${JobStatusBucket}"
+              - !Sub "arn:aws:s3:::${ProjectsBucket}"
       Users:
         - !Ref SpeechServiceUser
