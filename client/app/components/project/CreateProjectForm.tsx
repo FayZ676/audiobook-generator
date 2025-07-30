@@ -29,18 +29,11 @@ export default function CreateProjectForm() {
   return (
     <div className="flex flex-col gap-4 bg-base-200 p-4 rounded">
       <h3 className="font-bold">Create New Project</h3>
-      <p className="text-sm text-base-content/70">
-        First, create a project to organize your audiobook files.
-      </p>
 
       {error && <Tip variant="warning">{error}</Tip>}
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="project-name-input" className="font-medium">
-          Project Name
-        </label>
         <input
-          id="project-name-input"
           type="text"
           value={projectName}
           onChange={(e) => setProjectName(e.target.value)}
@@ -55,7 +48,7 @@ export default function CreateProjectForm() {
         onClick={handleCreateProject}
         className="btn btn-primary"
       >
-        {isSubmitting ? "Creating Project..." : "Create Project"}
+        {isSubmitting ? "Creating Project..." : "Create"}
       </button>
     </div>
   );
