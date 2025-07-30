@@ -48,7 +48,6 @@ export default function ChapterProjectManagerClient({
   const project = use(projectPromise);
   const chapters = use(chaptersPromise);
   const currentScript = use(scriptPromise);
-  const currentNarrationUrl = use(narrationPromise);
   const userChannels = useUserChannels();
 
   const effectiveSelectedChapter =
