@@ -55,12 +55,7 @@ export default function ProjectManagerClient({
   if (!script) {
     return (
       <div className="flex flex-col gap-4">
-        <div className="bg-base-200 p-4 rounded">
-          <h3 className="font-bold">Project: {project.name}</h3>
-          <p className="text-sm text-base-content/70">
-            Created: {new Date(project.created_at).toLocaleDateString()}
-          </p>
-        </div>
+        <h3 className="font-bold text-center p-4">{project.name}</h3>
         <GenerateScriptForm />
       </div>
     );
