@@ -2,7 +2,7 @@ from io import BytesIO
 
 from fastapi import APIRouter, HTTPException, status
 
-from tta_service.types import CreateChapterRequest, Project
+from tta_service.types import CreateChapterRequest
 from tta_service.config import s3_client, PROJECTS_BUCKET
 
 router = APIRouter()
@@ -11,38 +11,32 @@ router = APIRouter()
 @router.post("/chapter", status_code=status.HTTP_201_CREATED)
 async def create_chapter(request: CreateChapterRequest):
     """Create a new chapter for the user's project"""
-    project_path = f"{request.user_id}/project.json"
-
-    if not s3_client.list_files(PROJECTS_BUCKET, project_path):
+    if not s3_client.list_files(PROJECTS_BUCKET, f"{request.user_id}/project.json"):
         raise HTTPException(status_code=404, detail="Project not found")
 
-    project_content = s3_client.get_file(PROJECTS_BUCKET, project_path).decode("utf-8")
-    project = Project.model_validate_json(project_content)
-
-    if request.chapter_name in project.chapters:
+    chapter_path = f"{request.user_id}/{request.chapter_name}/"
+    if s3_client.list_files(PROJECTS_BUCKET, chapter_path):
         raise HTTPException(status_code=409, detail="Chapter already exists")
-
-    project.chapters.append(request.chapter_name)
-
     s3_client.upload_fileobj(
         PROJECTS_BUCKET,
-        project_path,
-        BytesIO(project.model_dump_json().encode("utf-8")),
+        f"{chapter_path}.chapter",
+        BytesIO(b""),
     )
 
 
 @router.get("/chapters/{user_id}")
 def get_chapters(user_id: str):
-    """Get all chapters for a user's project"""
-    project_path = f"{user_id}/project.json"
+    """Get all chapters for a user's project by listing chapter directories"""
+    user_path = f"{user_id}/"
+    chapters = set()
+    for file_path in s3_client.list_files(PROJECTS_BUCKET, user_path):
+        relative_path = file_path.removeprefix(user_path)
 
-    if not s3_client.list_files(PROJECTS_BUCKET, project_path):
-        return []
+        if "/" in relative_path:
+            chapter_name = relative_path.split("/")[0]
+            chapters.add(chapter_name)
 
-    project_content = s3_client.get_file(PROJECTS_BUCKET, project_path).decode("utf-8")
-    project = Project.model_validate_json(project_content)
-
-    return project.chapters
+    return sorted(list(chapters))
 
 
 @router.delete(
@@ -50,22 +44,6 @@ def get_chapters(user_id: str):
 )
 def delete_chapter(user_id: str, chapter_name: str):
     """Delete a chapter and all its contents"""
-    project_path = f"{user_id}/project.json"
-
-    if not s3_client.list_files(PROJECTS_BUCKET, project_path):
-        raise HTTPException(status_code=404, detail="Project not found")
-
-    project_content = s3_client.get_file(PROJECTS_BUCKET, project_path).decode("utf-8")
-    project = Project.model_validate_json(project_content)
-
-    project.chapters = [ch for ch in project.chapters if ch != chapter_name]
-
-    s3_client.upload_fileobj(
-        PROJECTS_BUCKET,
-        project_path,
-        BytesIO(project.model_dump_json().encode("utf-8")),
-    )
-
     chapter_files = s3_client.list_files(PROJECTS_BUCKET, f"{user_id}/{chapter_name}/")
     for file_path in chapter_files:
         s3_client.delete_file(PROJECTS_BUCKET, file_path)

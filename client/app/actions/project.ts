@@ -53,7 +53,6 @@ export async function deleteProject() {
 export async function getCurrentProject(): Promise<{
   name: string;
   user_id: string;
-  chapters: string[];
 } | null> {
   const userId = await getUserId();
 
@@ -61,7 +60,6 @@ export async function getCurrentProject(): Promise<{
     const project = await apiCallJson<{
       name: string;
       user_id: string;
-      chapters: string[];
     } | null>(`${process.env.AUDIOBOOK_SERVICE_URL}/project/${userId}`, {
       cache: "force-cache",
       next: {

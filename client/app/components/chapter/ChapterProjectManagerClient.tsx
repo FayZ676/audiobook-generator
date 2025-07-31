@@ -23,8 +23,7 @@ interface ChapterProjectManagerClientProps {
   jobStatePromise: Promise<AudiobookJob | null>;
   projectPromise: Promise<{
     name: string;
-    user_id: string;
-    chapters: string[];
+    user_id: string; // NOTE (faizi): We can get this from clerk.
   } | null>;
   chaptersPromise: Promise<string[]>;
   scriptPromise: Promise<Script | null>;

@@ -7,7 +7,6 @@ from pydantic import BaseModel
 class Project(BaseModel):
     user_id: str
     name: str
-    chapters: list[str] = []
 
 
 class LogEntry(BaseModel):

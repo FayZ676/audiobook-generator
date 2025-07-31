@@ -31,7 +31,6 @@ export async function createChapter({ chapterName }: CreateChapterProps) {
     });
 
     revalidateTag("chapters");
-    revalidateTag("project");
   } catch (error) {
     console.error("Error creating chapter:", error);
     throw error;
@@ -73,5 +72,6 @@ export async function deleteChapter(chapterId: string) {
   );
 
   revalidateTag("chapters");
-  revalidateTag("project");
+  revalidateTag("script");
+  revalidateTag("narration");
 }
