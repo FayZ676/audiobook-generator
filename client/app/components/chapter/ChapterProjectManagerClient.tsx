@@ -45,7 +45,6 @@ export default function ChapterProjectManagerClient({
 }: ChapterProjectManagerClientProps) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const voices = use(voicesPromise);
   const project = use(projectPromise);
@@ -70,7 +69,6 @@ export default function ChapterProjectManagerClient({
   const handleChapterSelect = (chapter: string) => {
     router.push(`/project/${encodeURIComponent(chapter)}`);
     setIsEditing(false);
-    setIsSidebarOpen(false);
   };
 
   const handleChapterCreatedOrDeleted = () => {
@@ -164,7 +162,7 @@ export default function ChapterProjectManagerClient({
           <ul className="menu bg-base-200 text-base-content min-h-full w-80 p-4">
             {/* Sidebar content here */}
             <li>
-              <div className="space-y-4">
+              <div className="flex flex-col gap-4">
                 <ChapterSelector
                   chapters={chapters}
                   selectedChapter={selectedChapter}
