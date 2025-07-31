@@ -7,6 +7,8 @@ import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
 import { useUserChannels } from "@/app/lib/pusher-channels";
 import { handleRevalidateTag } from "@/app/actions/revalidate";
 
+import { Menu } from "lucide-react";
+
 import { Voice } from "../../actions/voices";
 import { AudiobookJob } from "../../actions/job";
 import { Script } from "../../actions/script";
@@ -86,13 +88,8 @@ export default function ChapterProjectManagerClient({
       <div className="drawer">
         <input id="my-drawer" type="checkbox" className="drawer-toggle" />
         <div className="drawer-content">
-          <label htmlFor="my-drawer" className="btn btn-primary drawer-button">
-            Open drawer
-          </label>
           {/* Main Content */}
           <div className="flex-1 flex flex-col">
-            <h3 className="font-bold text-lg mx-auto">{project.name}</h3>
-
             {/* Content Area */}
             <div className="flex-1 p-4 space-y-4 overflow-y-auto">
               <JobStateSection
@@ -113,9 +110,11 @@ export default function ChapterProjectManagerClient({
               ) : !currentScript ? (
                 <div className="space-y-4">
                   <div className="text-center">
-                    <h4 className="text-lg font-semibold mb-2">
-                      {selectedChapter}
-                    </h4>
+                    <div className="flex justify-between">
+                      <h4 className="text-lg font-semibold">
+                        {selectedChapter}
+                      </h4>
+                    </div>
                     <p className="text-base-content/60 mb-4">
                       Generate a script for this chapter to get started.
                     </p>
@@ -124,8 +123,16 @@ export default function ChapterProjectManagerClient({
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="text-center">
-                    <h4 className="text-lg font-semibold">{selectedChapter}</h4>
+                  <div className="flex justify-between items-center mb-4">
+                    <div className="flex gap-4 items-center">
+                      <label htmlFor="my-drawer" className="btn drawer-button">
+                        <Menu size={16} />
+                      </label>
+                      <h4 className="text-lg font-semibold">
+                        {selectedChapter}
+                      </h4>
+                    </div>
+                    <h3 className="text-lg font-bold">{project.name}</h3>
                   </div>
 
                   <ScriptControls
