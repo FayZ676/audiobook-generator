@@ -15,14 +15,13 @@ interface ProjectChapterPageProps {
 export default async function ProjectChapterPage({
   params,
 }: ProjectChapterPageProps) {
-  const resolvedParams = await params;
+  // We're now always showing the first chapter, so we don't need to use the params
+  await params; // Still await to satisfy Next.js requirements
 
   return (
     <div className="flex flex-col gap-4">
       <TabSection />
-      <ProjectDashboard
-        selectedChapter={decodeURIComponent(resolvedParams.chapter)}
-      />
+      <ProjectDashboard />
     </div>
   );
 }

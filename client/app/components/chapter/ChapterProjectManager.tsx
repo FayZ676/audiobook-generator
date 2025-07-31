@@ -9,28 +9,20 @@ import { getNarration } from "../../actions/narrate";
 
 import ChapterProjectManagerClient from "../chapter/ChapterProjectManagerClient";
 
-interface ChapterProjectManagerProps {
-  selectedChapter?: string;
-}
-
-export default async function ChapterProjectManager({
-  selectedChapter,
-}: ChapterProjectManagerProps) {
+export default async function ChapterProjectManager() {
   const jobStatePromise = getJobState();
   const voicesPromise = getVoices();
   const projectPromise = getCurrentProject();
   const chaptersPromise = getChapters();
 
   const chapters = await chaptersPromise;
-  const effectiveSelectedChapter =
-    selectedChapter || (chapters.length > 0 ? chapters[0] : null);
+  const firstChapter = chapters.length > 0 ? chapters[0] : null;
 
-  const scriptPromise = effectiveSelectedChapter
-    ? getScript(effectiveSelectedChapter)
+  const scriptPromise = firstChapter
+    ? getScript(firstChapter)
     : Promise.resolve(null);
-
-  const narrationPromise = effectiveSelectedChapter
-    ? getNarration(effectiveSelectedChapter)
+  const narrationPromise = firstChapter
+    ? getNarration(firstChapter)
     : Promise.resolve(null);
 
   return (
@@ -46,10 +38,10 @@ export default async function ChapterProjectManager({
         voicesPromise={voicesPromise}
         jobStatePromise={jobStatePromise}
         projectPromise={projectPromise}
-        chaptersPromise={Promise.resolve(chapters)}
+        chaptersPromise={chaptersPromise}
         scriptPromise={scriptPromise}
         narrationPromise={narrationPromise}
-        selectedChapter={selectedChapter}
+        firstChapter={firstChapter}
       />
     </Suspense>
   );

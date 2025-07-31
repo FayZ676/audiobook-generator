@@ -29,7 +29,7 @@ interface ChapterProjectManagerClientProps {
   chaptersPromise: Promise<string[]>;
   scriptPromise: Promise<Script | null>;
   narrationPromise: Promise<string | null>;
-  selectedChapter?: string;
+  firstChapter: string | null;
 }
 
 export default function ChapterProjectManagerClient({
@@ -39,7 +39,7 @@ export default function ChapterProjectManagerClient({
   chaptersPromise,
   scriptPromise,
   narrationPromise,
-  selectedChapter,
+  firstChapter,
 }: ChapterProjectManagerClientProps) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
@@ -49,9 +49,6 @@ export default function ChapterProjectManagerClient({
   const chapters = use(chaptersPromise);
   const currentScript = use(scriptPromise);
   const userChannels = useUserChannels();
-
-  const effectiveSelectedChapter =
-    selectedChapter || (chapters.length > 0 ? chapters[0] : null);
 
   usePusherSubscriptions({
     channels: userChannels ? [userChannels.SCRIPT_CHANNEL] : null,
@@ -72,13 +69,7 @@ export default function ChapterProjectManagerClient({
   const handleChapterCreatedOrDeleted = () => {
     handleRevalidateTag("chapters");
     handleRevalidateTag("project");
-
-    // If we're currently viewing a chapter that doesn't exist anymore, redirect to project home
-    if (selectedChapter && !chapters.includes(selectedChapter)) {
-      router.push("/project");
-    } else {
-      router.refresh();
-    }
+    router.refresh();
   };
 
   if (!project) {
@@ -94,7 +85,7 @@ export default function ChapterProjectManagerClient({
         <div className="lg:col-span-1 space-y-4">
           <ChapterSelector
             chapters={chapters}
-            selectedChapter={effectiveSelectedChapter}
+            selectedChapter={firstChapter}
             onChapterSelect={handleChapterSelect}
             onChapterDeleted={handleChapterCreatedOrDeleted}
           />
@@ -104,7 +95,7 @@ export default function ChapterProjectManagerClient({
 
         {/* Main Content */}
         <div className="lg:col-span-3">
-          {!effectiveSelectedChapter ? (
+          {!firstChapter ? (
             <div className="text-center py-12">
               <h4 className="text-lg font-semibold mb-2">
                 No Chapter Selected
@@ -116,21 +107,17 @@ export default function ChapterProjectManagerClient({
           ) : !currentScript ? (
             <div className="space-y-4">
               <div className="text-center">
-                <h4 className="text-lg font-semibold mb-2">
-                  {effectiveSelectedChapter}
-                </h4>
+                <h4 className="text-lg font-semibold mb-2">{firstChapter}</h4>
                 <p className="text-base-content/60 mb-4">
                   Generate a script for this chapter to get started.
                 </p>
               </div>
-              <GenerateScriptForm chapterName={effectiveSelectedChapter!} />
+              <GenerateScriptForm chapterName={firstChapter!} />
             </div>
           ) : (
             <div className="space-y-4">
               <div className="text-center">
-                <h4 className="text-lg font-semibold">
-                  {effectiveSelectedChapter}
-                </h4>
+                <h4 className="text-lg font-semibold">{firstChapter}</h4>
               </div>
 
               <ScriptControls
@@ -140,14 +127,14 @@ export default function ChapterProjectManagerClient({
                 voicesPromise={voicesPromise}
                 isEditing={isEditing}
                 onEditToggle={setIsEditing}
-                chapterName={effectiveSelectedChapter!}
+                chapterName={firstChapter!}
               />
 
               <ScriptText
                 script={currentScript}
                 voices={voices}
                 isEditing={isEditing}
-                chapterName={effectiveSelectedChapter!}
+                chapterName={firstChapter!}
               />
             </div>
           )}
