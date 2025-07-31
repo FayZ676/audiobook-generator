@@ -68,6 +68,13 @@ export default function ChapterProjectManagerClient({
   const handleChapterSelect = (chapter: string) => {
     router.push(`/project/${encodeURIComponent(chapter)}`);
     setIsEditing(false);
+
+    const drawerToggle = document.getElementById(
+      "chapter-drawer"
+    ) as HTMLInputElement;
+    if (drawerToggle) {
+      drawerToggle.checked = false;
+    }
   };
 
   const handleChapterCreatedOrDeleted = () => {
@@ -81,29 +88,44 @@ export default function ChapterProjectManagerClient({
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <h3 className="font-bold text-center p-4">{project.name}</h3>
+    <div className="drawer">
+      <input id="chapter-drawer" type="checkbox" className="drawer-toggle" />
 
-      <JobStateSection
-        jobStatePromise={jobStatePromise}
-        scriptPromise={scriptPromise}
-      />
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        {/* Chapter Sidebar */}
-        <div className="lg:col-span-1 space-y-4">
-          <ChapterSelector
-            chapters={chapters}
-            selectedChapter={selectedChapter}
-            onChapterSelect={handleChapterSelect}
-            onChapterDeleted={handleChapterCreatedOrDeleted}
-          />
-
-          <CreateChapterForm onChapterCreated={handleChapterCreatedOrDeleted} />
+      {/* Main Content */}
+      <div className="drawer-content flex flex-col">
+        {/* Navbar with hamburger menu for all screen sizes */}
+        <div className="navbar bg-base-100">
+          <div className="flex-none">
+            <label
+              htmlFor="chapter-drawer"
+              className="btn btn-square btn-ghost drawer-button"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </label>
+          </div>
+          <div className="flex-1">
+            <h3 className="font-bold text-lg">{project.name}</h3>
+          </div>
         </div>
 
-        {/* Main Content */}
-        <div className="lg:col-span-3">
+        <div className="p-4 space-y-4">
+          <JobStateSection
+            jobStatePromise={jobStatePromise}
+            scriptPromise={scriptPromise}
+          />
+
           {!selectedChapter ? (
             <div className="text-center py-12">
               <h4 className="text-lg font-semibold mb-2">
@@ -152,6 +174,26 @@ export default function ChapterProjectManagerClient({
             </div>
           )}
         </div>
+      </div>
+
+      {/* Drawer Sidebar */}
+      <div className="drawer-side">
+        <label
+          htmlFor="chapter-drawer"
+          className="drawer-overlay"
+          aria-label="close sidebar"
+        ></label>
+
+        <aside className="min-h-full w-64 bg-base-200 p-4 space-y-4">
+          <ChapterSelector
+            chapters={chapters}
+            selectedChapter={selectedChapter}
+            onChapterSelect={handleChapterSelect}
+            onChapterDeleted={handleChapterCreatedOrDeleted}
+          />
+
+          <CreateChapterForm onChapterCreated={handleChapterCreatedOrDeleted} />
+        </aside>
       </div>
     </div>
   );
