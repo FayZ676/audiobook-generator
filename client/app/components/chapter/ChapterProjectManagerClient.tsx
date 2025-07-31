@@ -128,11 +128,9 @@ export default function ChapterProjectManagerClient({
                       <label htmlFor="my-drawer" className="btn drawer-button">
                         <Menu size={16} />
                       </label>
-                      <h4 className="text-lg font-semibold">
-                        {selectedChapter}
-                      </h4>
+                      <h3 className="text-lg font-bold">{project.name}</h3>
                     </div>
-                    <h3 className="text-lg font-bold">{project.name}</h3>
+                    <h4 className="text-lg font-semibold">{selectedChapter}</h4>
                   </div>
 
                   <ScriptControls
