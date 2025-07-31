@@ -17,6 +17,7 @@ import GenerateScriptForm from "../script/GenerateScriptForm";
 import CreateProjectForm from "../project/CreateProjectForm";
 import ChapterSelector from "../chapter/ChapterSelector";
 import CreateChapterForm from "../chapter/CreateChapterForm";
+import JobStateSection from "../project/JobStateSection";
 
 interface ChapterProjectManagerClientProps {
   voicesPromise: Promise<Voice[]>;
@@ -78,6 +79,11 @@ export default function ChapterProjectManagerClient({
   return (
     <div className="flex flex-col gap-4">
       <h3 className="font-bold text-center p-4">{project.name}</h3>
+
+      <JobStateSection
+        jobStatePromise={jobStatePromise}
+        scriptPromise={scriptPromise}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* Chapter Sidebar */}
