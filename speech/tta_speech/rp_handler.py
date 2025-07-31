@@ -111,7 +111,7 @@ def handler(event: dict):
         )
         audio = _build_audio([result])
         project_narration_path = (
-            f"{request.user_id}/{request_data.chapter_id}/narration.mp3"
+            f"{request.user_id}/{request_data.chapter_name}/narration.mp3"
         )
         s3.upload_fileobj(
             f"{PROJECTS_BUCKET}",
