@@ -19,6 +19,7 @@ import ChapterSelector from "../chapter/ChapterSelector";
 import CreateChapterForm from "../chapter/CreateChapterForm";
 import JobStateSection from "../project/JobStateSection";
 import NarrationAudio from "../narration/NarrationAudio";
+import VoicesDashboardClient from "../voices/VoicesDashboardClient";
 
 interface ChapterProjectManagerClientProps {
   voicesPromise: Promise<Voice[]>;
@@ -44,6 +45,8 @@ export default function ChapterProjectManagerClient({
 }: ChapterProjectManagerClientProps) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
+  const [isChapterSidebarOpen, setIsChapterSidebarOpen] = useState(false);
+  const [isVoicesSidebarOpen, setIsVoicesSidebarOpen] = useState(false);
 
   const voices = use(voicesPromise);
   const project = use(projectPromise);
@@ -68,13 +71,7 @@ export default function ChapterProjectManagerClient({
   const handleChapterSelect = (chapter: string) => {
     router.push(`/project/${encodeURIComponent(chapter)}`);
     setIsEditing(false);
-
-    const drawerToggle = document.getElementById(
-      "chapter-drawer"
-    ) as HTMLInputElement;
-    if (drawerToggle) {
-      drawerToggle.checked = false;
-    }
+    setIsChapterSidebarOpen(false);
   };
 
   const handleChapterCreatedOrDeleted = () => {
@@ -88,17 +85,43 @@ export default function ChapterProjectManagerClient({
   }
 
   return (
-    <div className="drawer">
-      <input id="chapter-drawer" type="checkbox" className="drawer-toggle" />
+    <div className="flex h-screen">
+      {/* Left Sidebar - Chapters */}
+      <div
+        className={`${
+          isChapterSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } fixed left-0 top-0 z-40 h-full w-64 bg-base-200 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-auto`}
+      >
+        <div className="p-4 space-y-4 h-full overflow-y-auto">
+          <div className="lg:hidden flex justify-between items-center mb-4">
+            <h4 className="font-semibold text-lg">Chapters</h4>
+            <button
+              onClick={() => setIsChapterSidebarOpen(false)}
+              className="btn btn-ghost btn-sm"
+            >
+              ✕
+            </button>
+          </div>
+
+          <ChapterSelector
+            chapters={chapters}
+            selectedChapter={selectedChapter}
+            onChapterSelect={handleChapterSelect}
+            onChapterDeleted={handleChapterCreatedOrDeleted}
+          />
+
+          <CreateChapterForm onChapterCreated={handleChapterCreatedOrDeleted} />
+        </div>
+      </div>
 
       {/* Main Content */}
-      <div className="drawer-content flex flex-col">
-        {/* Navbar with hamburger menu for all screen sizes */}
-        <div className="navbar bg-base-100">
-          <div className="flex-none">
-            <label
-              htmlFor="chapter-drawer"
-              className="btn btn-square btn-ghost drawer-button"
+      <div className="flex-1 flex flex-col">
+        {/* Navbar */}
+        <div className="navbar bg-base-100 border-b">
+          <div className="flex-none lg:hidden">
+            <button
+              onClick={() => setIsChapterSidebarOpen(true)}
+              className="btn btn-square btn-ghost"
             >
               <svg
                 className="w-6 h-6"
@@ -113,88 +136,128 @@ export default function ChapterProjectManagerClient({
                   d="M4 6h16M4 12h16M4 18h16"
                 />
               </svg>
-            </label>
+            </button>
           </div>
           <div className="flex-1">
             <h3 className="font-bold text-lg">{project.name}</h3>
           </div>
+          <div className="flex-none">
+            <button
+              onClick={() => setIsVoicesSidebarOpen(!isVoicesSidebarOpen)}
+              className="btn btn-square btn-ghost"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 16.5c0-1.5 2.5-3 5-3s5 1.5 5 3"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
 
-        <div className="p-4 space-y-4">
-          <JobStateSection
-            jobStatePromise={jobStatePromise}
-            scriptPromise={scriptPromise}
-          />
+        {/* Content Area */}
+        <div className="flex-1 flex">
+          <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+            <JobStateSection
+              jobStatePromise={jobStatePromise}
+              scriptPromise={scriptPromise}
+            />
 
-          {!selectedChapter ? (
-            <div className="text-center py-12">
-              <h4 className="text-lg font-semibold mb-2">
-                No Chapter Selected
-              </h4>
-              <p className="text-base-content/60">
-                Create a new chapter or select an existing one to get started.
-              </p>
-            </div>
-          ) : !currentScript ? (
-            <div className="space-y-4">
-              <div className="text-center">
+            {!selectedChapter ? (
+              <div className="text-center py-12">
                 <h4 className="text-lg font-semibold mb-2">
-                  {selectedChapter}
+                  No Chapter Selected
                 </h4>
-                <p className="text-base-content/60 mb-4">
-                  Generate a script for this chapter to get started.
+                <p className="text-base-content/60">
+                  Create a new chapter or select an existing one to get started.
                 </p>
               </div>
-              <GenerateScriptForm chapterName={selectedChapter!} />
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="text-center">
-                <h4 className="text-lg font-semibold">{selectedChapter}</h4>
+            ) : !currentScript ? (
+              <div className="space-y-4">
+                <div className="text-center">
+                  <h4 className="text-lg font-semibold mb-2">
+                    {selectedChapter}
+                  </h4>
+                  <p className="text-base-content/60 mb-4">
+                    Generate a script for this chapter to get started.
+                  </p>
+                </div>
+                <GenerateScriptForm chapterName={selectedChapter!} />
               </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="text-center">
+                  <h4 className="text-lg font-semibold">{selectedChapter}</h4>
+                </div>
 
-              <ScriptControls
-                narrationUrlPromise={narrationPromise}
-                scriptPromise={scriptPromise}
-                jobStatePromise={jobStatePromise}
-                voicesPromise={voicesPromise}
-                isEditing={isEditing}
-                onEditToggle={setIsEditing}
-                chapterName={selectedChapter!}
-              />
+                <ScriptControls
+                  narrationUrlPromise={narrationPromise}
+                  scriptPromise={scriptPromise}
+                  jobStatePromise={jobStatePromise}
+                  voicesPromise={voicesPromise}
+                  isEditing={isEditing}
+                  onEditToggle={setIsEditing}
+                  chapterName={selectedChapter!}
+                />
 
-              {narrationUrl && <NarrationAudio narrationUrl={narrationUrl} />}
+                {narrationUrl && <NarrationAudio narrationUrl={narrationUrl} />}
 
-              <ScriptText
-                script={currentScript}
-                voices={voices}
-                isEditing={isEditing}
-                chapterName={selectedChapter!}
-              />
+                <ScriptText
+                  script={currentScript}
+                  voices={voices}
+                  isEditing={isEditing}
+                  chapterName={selectedChapter!}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Right Sidebar - Voices */}
+          <div
+            className={`${
+              isVoicesSidebarOpen ? "translate-x-0" : "translate-x-full"
+            } fixed right-0 top-0 z-30 h-full w-80 bg-base-200 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-auto`}
+          >
+            <div className="p-4 h-full overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="font-semibold text-lg">Voices</h4>
+                <button
+                  onClick={() => setIsVoicesSidebarOpen(false)}
+                  className="btn btn-ghost btn-sm lg:hidden"
+                >
+                  ✕
+                </button>
+              </div>
+              <VoicesDashboardClient voicesPromise={voicesPromise} />
             </div>
-          )}
+          </div>
         </div>
       </div>
 
-      {/* Drawer Sidebar */}
-      <div className="drawer-side">
-        <label
-          htmlFor="chapter-drawer"
-          className="drawer-overlay"
-          aria-label="close sidebar"
-        ></label>
-
-        <aside className="min-h-full w-64 bg-base-200 p-4 space-y-4">
-          <ChapterSelector
-            chapters={chapters}
-            selectedChapter={selectedChapter}
-            onChapterSelect={handleChapterSelect}
-            onChapterDeleted={handleChapterCreatedOrDeleted}
-          />
-
-          <CreateChapterForm onChapterCreated={handleChapterCreatedOrDeleted} />
-        </aside>
-      </div>
+      {/* Overlay for mobile */}
+      {(isChapterSidebarOpen || isVoicesSidebarOpen) && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
+          onClick={() => {
+            setIsChapterSidebarOpen(false);
+            setIsVoicesSidebarOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }

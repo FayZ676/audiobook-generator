@@ -9,9 +9,5 @@ interface ProjectDashboardProps {
 export default function ProjectDashboard({
   currentChapter,
 }: ProjectDashboardProps) {
-  return (
-    <div className="flex flex-col gap-4">
-      <ChapterProjectManager currentChapter={currentChapter} />
-    </div>
-  );
+  return <ChapterProjectManager currentChapter={currentChapter} />;
 }

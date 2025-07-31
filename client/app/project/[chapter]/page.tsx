@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 
 import { getChapters } from "../../actions/chapter";
 import ProjectDashboard from "@/app/components/project/ProjectDashboard";
-import TabSection from "@/app/components/ui/TabSection";
 
 // Force dynamic rendering since this page uses authentication
 export const dynamic = "force-dynamic";
@@ -26,10 +25,5 @@ export default async function ProjectChapterPage({
     redirect("/project");
   }
 
-  return (
-    <div className="flex flex-col gap-4">
-      <TabSection />
-      <ProjectDashboard currentChapter={currentChapter} />
-    </div>
-  );
+  return <ProjectDashboard currentChapter={currentChapter} />;
 }
