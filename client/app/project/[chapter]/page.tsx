@@ -1,5 +1,7 @@
 import React from "react";
+import { redirect } from "next/navigation";
 
+import { getChapters } from "../../actions/chapter";
 import ProjectDashboard from "@/app/components/project/ProjectDashboard";
 import TabSection from "@/app/components/ui/TabSection";
 
@@ -15,13 +17,19 @@ interface ProjectChapterPageProps {
 export default async function ProjectChapterPage({
   params,
 }: ProjectChapterPageProps) {
-  // We're now always showing the first chapter, so we don't need to use the params
-  await params; // Still await to satisfy Next.js requirements
+  const { chapter } = await params;
+  const currentChapter = decodeURIComponent(chapter);
+
+  // Validate that the chapter exists
+  const chapters = await getChapters();
+  if (!chapters.includes(currentChapter)) {
+    redirect("/project");
+  }
 
   return (
     <div className="flex flex-col gap-4">
       <TabSection />
-      <ProjectDashboard />
+      <ProjectDashboard currentChapter={currentChapter} />
     </div>
   );
 }

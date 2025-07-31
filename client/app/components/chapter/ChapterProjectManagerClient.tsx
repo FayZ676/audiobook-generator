@@ -28,7 +28,7 @@ interface ChapterProjectManagerClientProps {
   chaptersPromise: Promise<string[]>;
   scriptPromise: Promise<Script | null>;
   narrationPromise: Promise<string | null>;
-  firstChapter: string | null;
+  selectedChapter: string | null;
 }
 
 export default function ChapterProjectManagerClient({
@@ -38,7 +38,7 @@ export default function ChapterProjectManagerClient({
   chaptersPromise,
   scriptPromise,
   narrationPromise,
-  firstChapter,
+  selectedChapter,
 }: ChapterProjectManagerClientProps) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
@@ -84,7 +84,7 @@ export default function ChapterProjectManagerClient({
         <div className="lg:col-span-1 space-y-4">
           <ChapterSelector
             chapters={chapters}
-            selectedChapter={firstChapter}
+            selectedChapter={selectedChapter}
             onChapterSelect={handleChapterSelect}
             onChapterDeleted={handleChapterCreatedOrDeleted}
           />
@@ -94,7 +94,7 @@ export default function ChapterProjectManagerClient({
 
         {/* Main Content */}
         <div className="lg:col-span-3">
-          {!firstChapter ? (
+          {!selectedChapter ? (
             <div className="text-center py-12">
               <h4 className="text-lg font-semibold mb-2">
                 No Chapter Selected
@@ -106,17 +106,19 @@ export default function ChapterProjectManagerClient({
           ) : !currentScript ? (
             <div className="space-y-4">
               <div className="text-center">
-                <h4 className="text-lg font-semibold mb-2">{firstChapter}</h4>
+                <h4 className="text-lg font-semibold mb-2">
+                  {selectedChapter}
+                </h4>
                 <p className="text-base-content/60 mb-4">
                   Generate a script for this chapter to get started.
                 </p>
               </div>
-              <GenerateScriptForm chapterName={firstChapter!} />
+              <GenerateScriptForm chapterName={selectedChapter!} />
             </div>
           ) : (
             <div className="space-y-4">
               <div className="text-center">
-                <h4 className="text-lg font-semibold">{firstChapter}</h4>
+                <h4 className="text-lg font-semibold">{selectedChapter}</h4>
               </div>
 
               <ScriptControls
@@ -126,14 +128,14 @@ export default function ChapterProjectManagerClient({
                 voicesPromise={voicesPromise}
                 isEditing={isEditing}
                 onEditToggle={setIsEditing}
-                chapterName={firstChapter!}
+                chapterName={selectedChapter!}
               />
 
               <ScriptText
                 script={currentScript}
                 voices={voices}
                 isEditing={isEditing}
-                chapterName={firstChapter!}
+                chapterName={selectedChapter!}
               />
             </div>
           )}
