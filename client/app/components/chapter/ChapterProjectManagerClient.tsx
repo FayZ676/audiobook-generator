@@ -18,6 +18,7 @@ import CreateProjectForm from "../project/CreateProjectForm";
 import ChapterSelector from "../chapter/ChapterSelector";
 import CreateChapterForm from "../chapter/CreateChapterForm";
 import JobStateSection from "../project/JobStateSection";
+import NarrationAudio from "../narration/NarrationAudio";
 
 interface ChapterProjectManagerClientProps {
   voicesPromise: Promise<Voice[]>;
@@ -48,10 +49,13 @@ export default function ChapterProjectManagerClient({
   const project = use(projectPromise);
   const chapters = use(chaptersPromise);
   const currentScript = use(scriptPromise);
+  const narrationUrl = use(narrationPromise);
   const userChannels = useUserChannels();
 
   usePusherSubscriptions({
-    channels: userChannels ? [userChannels.SCRIPT_CHANNEL] : null,
+    channels: userChannels
+      ? [userChannels.SCRIPT_CHANNEL, userChannels.SPEECH_CHANNEL]
+      : null,
     onUpdate: () => {
       handleRevalidateTag("script");
       handleRevalidateTag("narration");
@@ -136,6 +140,8 @@ export default function ChapterProjectManagerClient({
                 onEditToggle={setIsEditing}
                 chapterName={selectedChapter!}
               />
+
+              {narrationUrl && <NarrationAudio narrationUrl={narrationUrl} />}
 
               <ScriptText
                 script={currentScript}
