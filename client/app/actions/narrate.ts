@@ -55,9 +55,7 @@ export async function getNarration(): Promise<NarrationUrl | null> {
     const narrationUrl = await apiCallJson<NarrationUrl>(
       `${process.env.AUDIOBOOK_SERVICE_URL}/narration/${filename}`,
       {
-        cache: "force-cache",
         next: {
-          revalidate: 3600,
           tags: ["narration"],
         },
       }
