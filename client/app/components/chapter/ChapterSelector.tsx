@@ -4,13 +4,11 @@ import React from "react";
 
 interface ChapterSelectorProps {
   chapters: string[];
-  selectedChapter: string | null;
   onChapterSelect: (chapter: string) => void;
 }
 
 export default function ChapterSelector({
   chapters,
-  selectedChapter,
   onChapterSelect,
 }: ChapterSelectorProps) {
   if (chapters.length === 0) {

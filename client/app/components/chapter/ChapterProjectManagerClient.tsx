@@ -190,7 +190,6 @@ export default function ChapterProjectManagerClient({
               <div className="flex flex-col p-0 hover:bg-transparent">
                 <ChapterSelector
                   chapters={chapters}
-                  selectedChapter={selectedChapter}
                   onChapterSelect={handleChapterSelect}
                 />
                 <CreateChapterForm
