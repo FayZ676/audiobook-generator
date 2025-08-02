@@ -14,11 +14,11 @@ class S3Client:
 
     def list_files(self, bucket_name: str, prefix: str):
         response = self.client.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
-        return [obj["Key"] for obj in response.get("Contents", [])]
+        return [str(obj["Key"]) for obj in response.get("Contents", [])]
 
     def get_file(self, bucket_name: str, file_key: str) -> bytes:
         response = self.client.get_object(Bucket=bucket_name, Key=file_key)
-        return bytes(response["Body"].read())
+        return response["Body"].read()
 
     def delete_file(self, bucket_name: str, file_name: str):
         self.client.delete_object(Bucket=bucket_name, Key=file_name)

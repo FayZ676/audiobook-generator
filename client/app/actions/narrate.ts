@@ -1,31 +1,29 @@
 "use server";
 
 import { revalidateTag } from "next/cache";
-import { auth } from "@clerk/nextjs/server";
+
+import { getUserId } from "./user";
 import { apiCallVoid, apiCallJson } from "../lib/api";
 
 import { getVoices, Voice } from "./voices";
 
 interface NarrationRequest {
   user_id: string;
-  script_path: string;
   voices: Voice[];
+  chapter_name: string;
 }
 
 export type NarrationUrl = string;
 
-export async function createNarration() {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("User not authenticated");
-  }
+export async function createNarration(chapterName: string) {
+  const userId = await getUserId();
 
   const voices = await getVoices();
 
   const request: NarrationRequest = {
     user_id: userId,
-    script_path: `${userId}.json`,
     voices: voices,
+    chapter_name: chapterName,
   };
 
   try {
@@ -44,16 +42,14 @@ export async function createNarration() {
   }
 }
 
-export async function getNarration(): Promise<NarrationUrl | null> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error("User not authenticated");
-  }
+export async function getNarration(
+  chapterName: string
+): Promise<NarrationUrl | null> {
+  const userId = await getUserId();
 
-  const filename = `${userId}.mp3`;
   try {
     const narrationUrl = await apiCallJson<NarrationUrl>(
-      `${process.env.AUDIOBOOK_SERVICE_URL}/narration/${filename}`,
+      `${process.env.AUDIOBOOK_SERVICE_URL}/narration/${userId}/${chapterName}`,
       {
         cache: "force-cache",
         next: {
@@ -69,10 +65,12 @@ export async function getNarration(): Promise<NarrationUrl | null> {
   }
 }
 
-export async function deleteNarration(filename: string) {
+export async function deleteNarration(chapterName: string) {
+  const userId = await getUserId();
+
   try {
     await apiCallVoid(
-      `${process.env.AUDIOBOOK_SERVICE_URL}/narration/${filename}`,
+      `${process.env.AUDIOBOOK_SERVICE_URL}/narration/${userId}/${chapterName}`,
       {
         method: "DELETE",
       }

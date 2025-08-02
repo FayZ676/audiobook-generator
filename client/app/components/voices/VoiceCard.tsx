@@ -37,32 +37,32 @@ export default function VoiceCard({ voice }: VoiceCardProps) {
   };
 
   return (
-    <div className="flex p-2">
-      <div className="flex w-full justify-between items-center">
-        <span className="font-medium">{voice.name}</span>
-        <div className="flex ml-auto gap-4 text-sm text-gray-600 items-center">
+    <div className="flex justify-between items-center p-2">
+      <div className="flex flex-col gap-1">
+        <span className="truncate max-w-50">{voice.name}</span>
+        <div className="text-sm text-gray-500 flex gap-2">
           <span>{voice.gender}</span>
           <span>{voice.age}</span>
-          <div className="flex items-center gap-2">
-            <VoiceAudio voiceName={voice.name} />
-            {isUserCreated && (
-              <button
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className={`btn btn-sm ${
-                  isDeleting ? "btn-disabled" : "btn-error"
-                }`}
-                title="Delete voice"
-              >
-                {isDeleting ? (
-                  <LoaderCircle size={16} className="animate-spin" />
-                ) : (
-                  <Trash2 size={16} />
-                )}
-              </button>
-            )}
-          </div>
         </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <VoiceAudio voiceName={voice.name} />
+        {isUserCreated && (
+          <button
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className={`btn btn-sm btn-outline ${
+              isDeleting ? "btn-disabled" : "btn-error"
+            }`}
+            title="Delete voice"
+          >
+            {isDeleting ? (
+              <LoaderCircle size={14} className="animate-spin" />
+            ) : (
+              <Trash2 size={14} />
+            )}
+          </button>
+        )}
       </div>
     </div>
   );

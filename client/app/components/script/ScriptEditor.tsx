@@ -9,9 +9,14 @@ import CharacterVoiceMapping from "./CharacterVoiceMapping";
 interface ScriptEditorProps {
   script: Script;
   voices: Voice[];
+  chapterName: string;
 }
 
-export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
+export default function ScriptEditor({
+  script,
+  voices,
+  chapterName,
+}: ScriptEditorProps) {
   const [editingScript, setEditingScript] = useState<Script>(script);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +47,7 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
     clearMessages();
 
     try {
-      await updateScript({ script: scriptToSave });
+      await updateScript({ script: scriptToSave, chapterName });
     } catch (error) {
       console.error("Error updating script:", error);
       setError("Failed to save script");
@@ -69,9 +74,9 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
   };
 
   const createSpeakerFromVoice = (
-    characterName: string, 
-    voice: Voice | null, 
-    existingAge: "young" | "middle-aged" | "old", 
+    characterName: string,
+    voice: Voice | null,
+    existingAge: "young" | "middle-aged" | "old",
     existingGender: "male" | "female"
   ) => ({
     names: [characterName],
@@ -87,11 +92,17 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
     voiceName: string
   ) => {
     clearMessages();
-    const selectedVoice = voices.find((voice) => voice.name === voiceName) || null;
-    
+    const selectedVoice =
+      voices.find((voice) => voice.name === voiceName) || null;
+
     const updatedSpeakers = editingScript.speakers.map((speaker) =>
       speaker.names.includes(characterName)
-        ? createSpeakerFromVoice(characterName, selectedVoice, speaker.age, speaker.gender)
+        ? createSpeakerFromVoice(
+            characterName,
+            selectedVoice,
+            speaker.age,
+            speaker.gender
+          )
         : speaker
     );
 
@@ -108,7 +119,12 @@ export default function ScriptEditor({ script, voices }: ScriptEditorProps) {
     );
 
     if (!existingSpeaker) {
-      const newSpeaker = createSpeakerFromVoice(character.name, null, character.age, character.gender);
+      const newSpeaker = createSpeakerFromVoice(
+        character.name,
+        null,
+        character.age,
+        character.gender
+      );
 
       const updatedScript = {
         ...editingScript,

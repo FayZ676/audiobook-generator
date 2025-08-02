@@ -2,14 +2,13 @@
 
 import React, { useState } from "react";
 import { use } from "react";
-import { useRouter } from "next/navigation";
 import { FileText, Edit3, MicVocal, Trash2 } from "lucide-react";
 
 import { createNarration } from "../../actions/narrate";
-import { deleteProject } from "../../actions/audiobook";
 import { Script } from "../../actions/script";
 import { AudiobookJob } from "../../actions/job";
 import { Voice } from "../../actions/voices";
+import { deleteChapter } from "../../actions/chapter";
 import Tip from "../ui/Tip";
 
 interface ScriptControlsProps {
@@ -19,6 +18,8 @@ interface ScriptControlsProps {
   voicesPromise: Promise<Voice[]>;
   isEditing: boolean;
   onEditToggle: (editing: boolean) => void;
+  chapterName: string;
+  onChapterDeleted?: () => void;
 }
 
 export default function ScriptControls({
@@ -28,10 +29,10 @@ export default function ScriptControls({
   voicesPromise,
   isEditing,
   onEditToggle,
+  chapterName,
+  onChapterDeleted,
 }: ScriptControlsProps) {
-  const router = useRouter();
   const [isCreatingNarration, setIsCreatingNarration] = useState(false);
-  const [isDeletingProject, setIsDeletingProject] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const narrationUrl = use(narrationUrlPromise);
@@ -44,7 +45,7 @@ export default function ScriptControls({
     setIsCreatingNarration(true);
     setError(null);
     try {
-      await createNarration();
+      await createNarration(chapterName);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -54,18 +55,21 @@ export default function ScriptControls({
     }
   };
 
-  const handleDeleteProject = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsDeletingProject(true);
+  const handleDeleteChapter = async () => {
+    if (
+      !confirm(
+        `Are you sure you want to delete "${chapterName}"? This will permanently delete all scripts and narrations for this chapter.`
+      )
+    ) {
+      return;
+    }
+
     try {
-      await deleteProject();
-      router.refresh();
+      await deleteChapter(chapterName);
+      onChapterDeleted?.();
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      setError(errorMessage ? errorMessage : "Something went wrong.");
-    } finally {
-      setIsDeletingProject(false);
+      console.error("Error deleting chapter:", error);
+      setError("Failed to delete chapter");
     }
   };
 
@@ -93,12 +97,12 @@ export default function ScriptControls({
               <li>
                 <a
                   className={`${isEditing ? "active" : ""} ${
-                    isProcessing || isDeletingProject || voices.length === 0
+                    isProcessing || voices.length === 0
                       ? "disabled cursor-not-allowed opacity-50"
                       : "cursor-pointer"
                   }`}
                   onClick={
-                    isProcessing || isDeletingProject || voices.length === 0
+                    isProcessing || voices.length === 0
                       ? undefined
                       : () => onEditToggle(true)
                   }
@@ -113,12 +117,12 @@ export default function ScriptControls({
             <li>
               <a
                 className={`${
-                  isCreatingNarration || isProcessing || isDeletingProject
+                  isCreatingNarration || isProcessing
                     ? "disabled cursor-not-allowed opacity-50"
                     : "cursor-pointer"
                 } font-medium`}
                 onClick={
-                  isCreatingNarration || isProcessing || isDeletingProject
+                  isCreatingNarration || isProcessing
                     ? undefined
                     : (e) => {
                         setError(null);
@@ -138,27 +142,15 @@ export default function ScriptControls({
               </a>
             </li>
           )}
-          {(script || narrationUrl) && (
-            <li>
-              <a
-                className={`${
-                  isDeletingProject || isProcessing
-                    ? "disabled cursor-not-allowed opacity-50"
-                    : "cursor-pointer"
-                } font-medium`}
-                onClick={
-                  isDeletingProject || isProcessing
-                    ? undefined
-                    : handleDeleteProject
-                }
-                title={
-                  isDeletingProject ? "Deleting Project..." : "Delete Project"
-                }
-              >
-                <Trash2 className="h-5 w-5" />
-              </a>
-            </li>
-          )}
+          <li>
+            <a
+              className="cursor-pointer text-error hover:bg-error/10"
+              onClick={handleDeleteChapter}
+              title="Delete chapter"
+            >
+              <Trash2 className="h-5 w-5" />
+            </a>
+          </li>
         </ul>
       </div>
     </div>

@@ -92,8 +92,8 @@ def get_user_total_cost(user_id: str) -> float:
         if not most_recent_log:
             return 0.0
 
-        log_data = s3_client.get_file(LOGS_BUCKET, most_recent_log)
-        log_entry = LogEntry.model_validate_json(log_data.decode("utf-8"))
+        log_data = s3_client.get_file(LOGS_BUCKET, most_recent_log).decode("utf-8")
+        log_entry = LogEntry.model_validate_json(log_data)
         return log_entry.total_cost
     except (UnicodeDecodeError, json.JSONDecodeError, ValueError):
         return 0.0

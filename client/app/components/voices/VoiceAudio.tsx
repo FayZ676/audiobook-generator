@@ -61,13 +61,13 @@ export default function VoiceAudio({ voiceName }: VoiceAudioProps) {
     <div className="flex items-center gap-2">
       {!audioUrl && !loading && (
         <button onClick={loadAudioUrl} className="btn btn-success btn-sm">
-          <CirclePlay size={16} />
+          <CirclePlay size={14} />
         </button>
       )}
 
       {loading && (
         <button className="btn btn-disabled btn-sm">
-          <LoaderCircle size={16} className="animate-spin" />
+          <LoaderCircle size={14} className="animate-spin" />
         </button>
       )}
 
@@ -81,7 +81,7 @@ export default function VoiceAudio({ voiceName }: VoiceAudioProps) {
               isPlaying ? "btn-warning" : "btn-success"
             }`}
           >
-            {isPlaying ? <Pause size={16} /> : <CirclePlay size={16} />}
+            {isPlaying ? <Pause size={14} /> : <CirclePlay size={14} />}
           </button>
           <audio
             id={`audio-${voiceName}`}

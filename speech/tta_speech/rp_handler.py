@@ -21,7 +21,7 @@ from tta_types.types import (
 from tta_aws.s3 import S3Client
 
 
-SPEECH_RESULTS_BUCKET = os.environ.get("SPEECH_RESULTS_BUCKET", "")
+PROJECTS_BUCKET = os.environ.get("PROJECTS_BUCKET", "")
 VOICES_BUCKET = os.environ.get("VOICES_BUCKET", "")
 
 
@@ -46,10 +46,9 @@ def _prepare_input(
 ) -> InputData:
     def download_audio(audio_path: str):
         audio = s3.get_file(VOICES_BUCKET, audio_path)
-        audio_file = BytesIO(audio)
         temp_audio_path = f"{voice_save_path}/{audio_path.split('/')[-1]}"
         with open(temp_audio_path, "wb") as f:
-            f.write(audio_file.read())
+            f.write(audio)
         return temp_audio_path
 
     def voice_to_dict(path, transcript):
@@ -111,14 +110,17 @@ def handler(event: dict):
             )
         )
         audio = _build_audio([result])
+        project_narration_path = (
+            f"{request.user_id}/{request_data.chapter_name}/narration.mp3"
+        )
         s3.upload_fileobj(
-            f"{SPEECH_RESULTS_BUCKET}",
-            f"{request_data.title}.mp3",
+            f"{PROJECTS_BUCKET}",
+            project_narration_path,
             BytesIO(audio),
         )
         status = "complete"
         data = Response(
-            filename=f"{request_data.title}.mp3", request_word_count=total_word_count
+            filename=project_narration_path, request_word_count=total_word_count
         )
     except Exception as e:
         raise e from e

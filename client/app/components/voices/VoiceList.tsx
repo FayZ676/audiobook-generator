@@ -31,14 +31,11 @@ export default function VoiceList({ voicesPromise }: VoiceListProps) {
 
   return (
     voices.length > 0 && (
-      <div className="max-h-64 overflow-y-scroll bg-base-200 rounded p-4">
-        <ul className="grid grid-cols-1 gap-2">
-          {voices.map((voice) => (
-            <li key={voice.name}>
-              <VoiceCard voice={voice} />
-            </li>
-          ))}
-        </ul>
+      <div className="flex flex-col max-h-80 overflow-y-scroll">
+        <h4>Voices</h4>
+        {voices.map((voice) => (
+          <VoiceCard key={voice.name} voice={voice} />
+        ))}
       </div>
     )
   );

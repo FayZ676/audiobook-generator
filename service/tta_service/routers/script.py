@@ -6,13 +6,13 @@ from tta_types.types import WebhookRequest, ScriptRequest, AudiobookJob, Voice
 from tta_service.types import BuildScriptRequest, UpdateScriptRequest
 from tta_service.config import (
     s3_client,
-    SCRIPT_RESULTS_BUCKET,
     VOICES_BUCKET,
     SERVICE_API_URL,
     SCRIPT_API_URL,
     SCRIPT_SERVICE_API_KEY,
     SCRIPT_COST_PER_WORD,
     USAGE_LIMIT,
+    PROJECTS_BUCKET,
 )
 from tta_service.utils import send_async_request, update_status, validate_usage
 from tta_service.routers.job import get_job_status
@@ -52,31 +52,30 @@ async def build_script(request: BuildScriptRequest, bg_tasks: BackgroundTasks):
     return request.text_content
 
 
-@router.get("/script/{filename}")
-def get_script(filename: str):
-    if not s3_client.list_files(SCRIPT_RESULTS_BUCKET, filename):
-        return None
-    script = s3_client.get_file(f"{SCRIPT_RESULTS_BUCKET}", filename)
-    return json.loads(script)
+@router.get("/script/{user_id}/{chapter_name}")
+def get_script(user_id: str, chapter_name: str):
+    project_script_path = f"{user_id}/{chapter_name}/script.json"
+    if s3_client.list_files(PROJECTS_BUCKET, project_script_path):
+        script = s3_client.get_file(PROJECTS_BUCKET, project_script_path).decode(
+            "utf-8"
+        )
+        return json.loads(script)
+    return None
 
 
-@router.delete("/script/{filename}")
-def delete_script(filename: str):
-    if not s3_client.list_files(SCRIPT_RESULTS_BUCKET, filename):
-        return
-    s3_client.delete_file(f"{SCRIPT_RESULTS_BUCKET}", filename)
+@router.delete("/script/{user_id}/{chapter_name}")
+def delete_script(user_id: str, chapter_name: str):
+    project_script_path = f"{user_id}/{chapter_name}/script.json"
+    if s3_client.list_files(PROJECTS_BUCKET, project_script_path):
+        s3_client.delete_file(PROJECTS_BUCKET, project_script_path)
 
 
-@router.put("/script/{filename}")
-def update_script(filename: str, request: UpdateScriptRequest):
-    if not s3_client.list_files(SCRIPT_RESULTS_BUCKET, filename):
-        return None
-
-    script_json_str = request.script.model_dump()
-    file_obj = io.BytesIO(json.dumps(script_json_str).encode("utf-8"))
-    s3_client.upload_fileobj(SCRIPT_RESULTS_BUCKET, filename, file_obj)
-
-    return {"message": "Script updated successfully"}
+@router.put("/script/{user_id}/{chapter_name}")
+def update_script(user_id: str, chapter_name: str, request: UpdateScriptRequest):
+    file_obj = io.BytesIO(json.dumps(request.script.model_dump()).encode("utf-8"))
+    s3_client.upload_fileobj(
+        PROJECTS_BUCKET, f"{user_id}/{chapter_name}/script.json", file_obj
+    )
 
 
 def send_script_request(script_request: BuildScriptRequest):
@@ -88,11 +87,12 @@ def send_script_request(script_request: BuildScriptRequest):
         data=ScriptRequest(
             text_content=script_request.text_content,
             voices=voices,
+            chapter_name=script_request.chapter_name,
         ).model_dump(),
     )
     # NOTE: Add /runsync endpoint when testing locally.
     send_async_request(
-        url=f"{SCRIPT_API_URL}",
+        url=f"{SCRIPT_API_URL}/runsync",
         payload={"input": request.model_dump()},
         headers={
             "Content-Type": "application/json",
@@ -112,7 +112,9 @@ def _get_voices(user_id: str):
     ]
     voices: list[Voice] = []
     for voice_metadata_key in voices_metadata:
-        file_content_bytes = s3_client.get_file(VOICES_BUCKET, voice_metadata_key)
-        voice_data = json.loads(file_content_bytes.decode("utf-8"))
+        file_content = s3_client.get_file(VOICES_BUCKET, voice_metadata_key).decode(
+            "utf-8"
+        )
+        voice_data = json.loads(file_content)
         voices.append(Voice.model_validate(voice_data))
     return voices

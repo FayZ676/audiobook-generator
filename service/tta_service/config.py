@@ -4,10 +4,9 @@ from tta_aws.s3 import S3Client
 
 
 VOICES_BUCKET = os.environ.get("VOICES_BUCKET", "")
-SCRIPT_RESULTS_BUCKET = os.environ.get("SCRIPT_RESULTS_BUCKET", "")
-SPEECH_RESULTS_BUCKET = os.environ.get("SPEECH_RESULTS_BUCKET", "")
 JOB_STATUS_BUCKET = os.environ.get("JOB_STATUS_BUCKET", "")
 LOGS_BUCKET = os.environ.get("LOGS_BUCKET", "")
+PROJECTS_BUCKET = os.environ.get("PROJECTS_BUCKET", "")
 
 SERVICE_API_URL = os.environ.get("SERVICE_API_URL", "")
 

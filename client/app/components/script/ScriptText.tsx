@@ -8,27 +8,34 @@ interface ScriptTextProps {
   script: Script;
   voices: Voice[];
   isEditing: boolean;
+  chapterName: string;
 }
 
 export default function ScriptText({
   script,
   voices,
   isEditing,
+  chapterName,
 }: ScriptTextProps) {
   return (
     <div className="flex flex-col gap-4">
       {isEditing ? (
-        <ScriptEditor script={script} voices={voices} />
+        <ScriptEditor
+          script={script}
+          voices={voices}
+          chapterName={chapterName}
+        />
       ) : (
         <div className="h-[32rem] overflow-y-scroll bg-base-200 p-4 rounded">
           {script.segments.map((scriptSegment, index) => {
             // Find speaker details for this segment
-            const speaker = script.speakers.find(s => 
+            const speaker = script.speakers.find((s) =>
               s.names.includes(scriptSegment.speaker_alias)
             );
-            const speakerName = speaker?.names[0] || scriptSegment.speaker_alias;
-            const voiceName = speaker?.voice_name || '';
-            
+            const speakerName =
+              speaker?.names[0] || scriptSegment.speaker_alias;
+            const voiceName = speaker?.voice_name || "";
+
             return (
               <div key={index} className="mb-4">
                 <p>

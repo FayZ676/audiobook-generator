@@ -4,6 +4,11 @@ from tta_types.script import Age, Gender
 from pydantic import BaseModel
 
 
+class Project(BaseModel):
+    user_id: str
+    name: str
+
+
 class LogEntry(BaseModel):
     event: EventType
     cost: float
@@ -18,12 +23,18 @@ class ScriptPayload(BaseModel):
 class BuildScriptRequest(BaseModel):
     user_id: str
     text_content: str
+    chapter_name: str
+
+
+class CreateChapterRequest(BaseModel):
+    user_id: str
+    chapter_name: str
 
 
 class BuildNarrationRequest(BaseModel):
     user_id: str
-    script_path: str
     voices: list[Voice]
+    chapter_name: str
 
 
 class AddVoiceRequest(BaseModel):
