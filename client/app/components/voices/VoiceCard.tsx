@@ -38,7 +38,7 @@ export default function VoiceCard({ voice }: VoiceCardProps) {
 
   return (
     <div className="flex justify-between items-center">
-      <span className="font-small truncate max-w-24">{voice.name}</span>
+      <span className="font-small truncate max-w-32">{voice.name}</span>
       <div className="flex ml-auto gap-4 text-sm text-gray-600 items-center">
         <span>{voice.gender === "male" ? "M" : "F"}</span>
         <span>

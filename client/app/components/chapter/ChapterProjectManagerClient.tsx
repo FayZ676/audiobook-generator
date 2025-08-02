@@ -175,18 +175,6 @@ export default function ChapterProjectManagerClient({
           <ul className="flex flex-col gap-4 menu bg-base-200 text-base-content min-h-full w-80 p-4">
             {/* Sidebar content here */}
             <li>
-              <button
-                onClick={handleDeleteProject}
-                disabled={isDeletingProject}
-                className="btn btn-outline btn-error btn-block"
-                title={
-                  isDeletingProject ? "Deleting Project..." : "Delete Project"
-                }
-              >
-                Delete Project
-              </button>
-            </li>
-            <li>
               <div className="flex flex-col p-0 hover:bg-transparent">
                 <ChapterSelector
                   chapters={chapters}
@@ -198,9 +186,21 @@ export default function ChapterProjectManagerClient({
               </div>
             </li>
             <li>
-              <div className="p-0 hover:bg-transparent">
+              <div className="flex flex-col p-0 hover:bg-transparent">
                 <VoicesDashboardClient voicesPromise={voicesPromise} />
               </div>
+            </li>
+            <li className="mt-auto">
+              <button
+                onClick={handleDeleteProject}
+                disabled={isDeletingProject}
+                className="btn btn-outline btn-error btn-block"
+                title={
+                  isDeletingProject ? "Deleting Project..." : "Delete Project"
+                }
+              >
+                Delete Project
+              </button>
             </li>
           </ul>
         </div>
