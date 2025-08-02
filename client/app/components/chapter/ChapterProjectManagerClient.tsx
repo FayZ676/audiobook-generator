@@ -172,25 +172,26 @@ export default function ChapterProjectManagerClient({
             aria-label="close sidebar"
             className="drawer-overlay"
           ></label>
-          <ul className="menu bg-base-200 text-base-content min-h-full w-80 p-4">
+          <ul className="flex flex-col gap-4 menu bg-base-200 text-base-content min-h-full w-80 p-4">
             {/* Sidebar content here */}
             <li>
-              <div className="flex flex-col gap-4">
-                <button
-                  onClick={handleDeleteProject}
-                  disabled={isDeletingProject}
-                  className="btn btn-outline btn-error btn-block"
-                  title={
-                    isDeletingProject ? "Deleting Project..." : "Delete Project"
-                  }
-                >
-                  Delete Project
-                </button>
+              <button
+                onClick={handleDeleteProject}
+                disabled={isDeletingProject}
+                className="btn btn-outline btn-error btn-block"
+                title={
+                  isDeletingProject ? "Deleting Project..." : "Delete Project"
+                }
+              >
+                Delete Project
+              </button>
+            </li>
+            <li>
+              <div className="flex flex-col p-0 hover:bg-transparent">
                 <ChapterSelector
                   chapters={chapters}
                   selectedChapter={selectedChapter}
                   onChapterSelect={handleChapterSelect}
-                  onChapterDeleted={handleChapterCreatedOrDeleted}
                 />
                 <CreateChapterForm
                   onChapterCreated={handleChapterCreatedOrDeleted}
@@ -198,7 +199,9 @@ export default function ChapterProjectManagerClient({
               </div>
             </li>
             <li>
-              <VoicesDashboardClient voicesPromise={voicesPromise} />
+              <div className="p-0 hover:bg-transparent">
+                <VoicesDashboardClient voicesPromise={voicesPromise} />
+              </div>
             </li>
           </ul>
         </div>

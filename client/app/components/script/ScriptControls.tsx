@@ -2,12 +2,13 @@
 
 import React, { useState } from "react";
 import { use } from "react";
-import { FileText, Edit3, MicVocal } from "lucide-react";
+import { FileText, Edit3, MicVocal, Trash2 } from "lucide-react";
 
 import { createNarration } from "../../actions/narrate";
 import { Script } from "../../actions/script";
 import { AudiobookJob } from "../../actions/job";
 import { Voice } from "../../actions/voices";
+import { deleteChapter } from "../../actions/chapter";
 import Tip from "../ui/Tip";
 
 interface ScriptControlsProps {
@@ -18,6 +19,7 @@ interface ScriptControlsProps {
   isEditing: boolean;
   onEditToggle: (editing: boolean) => void;
   chapterName: string;
+  onChapterDeleted?: () => void;
 }
 
 export default function ScriptControls({
@@ -28,6 +30,7 @@ export default function ScriptControls({
   isEditing,
   onEditToggle,
   chapterName,
+  onChapterDeleted,
 }: ScriptControlsProps) {
   const [isCreatingNarration, setIsCreatingNarration] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +52,24 @@ export default function ScriptControls({
       setError(errorMessage ? errorMessage : "Something went wrong.");
     } finally {
       setIsCreatingNarration(false);
+    }
+  };
+
+  const handleDeleteChapter = async () => {
+    if (
+      !confirm(
+        `Are you sure you want to delete "${chapterName}"? This will permanently delete all scripts and narrations for this chapter.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await deleteChapter(chapterName);
+      onChapterDeleted?.();
+    } catch (error) {
+      console.error("Error deleting chapter:", error);
+      setError("Failed to delete chapter");
     }
   };
 
@@ -121,6 +142,15 @@ export default function ScriptControls({
               </a>
             </li>
           )}
+          <li>
+            <a
+              className="cursor-pointer text-error hover:bg-error/10"
+              onClick={handleDeleteChapter}
+              title="Delete chapter"
+            >
+              <Trash2 className="h-5 w-5" />
+            </a>
+          </li>
         </ul>
       </div>
     </div>

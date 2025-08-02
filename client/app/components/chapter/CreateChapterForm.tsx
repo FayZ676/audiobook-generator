@@ -51,7 +51,7 @@ export default function CreateChapterForm({
     return (
       <button
         onClick={() => setShowForm(true)}
-        className="btn btn-primary btn-sm"
+        className="btn btn-block"
         disabled={isCreating}
       >
         <Plus className="h-4 w-4" />
