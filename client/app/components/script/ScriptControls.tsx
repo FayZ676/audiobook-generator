@@ -2,11 +2,9 @@
 
 import React, { useState } from "react";
 import { use } from "react";
-import { useRouter } from "next/navigation";
-import { FileText, Edit3, MicVocal, Trash2 } from "lucide-react";
+import { FileText, Edit3, MicVocal } from "lucide-react";
 
 import { createNarration } from "../../actions/narrate";
-import { deleteProject } from "../../actions/audiobook";
 import { Script } from "../../actions/script";
 import { AudiobookJob } from "../../actions/job";
 import { Voice } from "../../actions/voices";
@@ -31,9 +29,7 @@ export default function ScriptControls({
   onEditToggle,
   chapterName,
 }: ScriptControlsProps) {
-  const router = useRouter();
   const [isCreatingNarration, setIsCreatingNarration] = useState(false);
-  const [isDeletingProject, setIsDeletingProject] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const narrationUrl = use(narrationUrlPromise);
@@ -53,21 +49,6 @@ export default function ScriptControls({
       setError(errorMessage ? errorMessage : "Something went wrong.");
     } finally {
       setIsCreatingNarration(false);
-    }
-  };
-
-  const handleDeleteProject = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsDeletingProject(true);
-    try {
-      await deleteProject();
-      router.refresh();
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      setError(errorMessage ? errorMessage : "Something went wrong.");
-    } finally {
-      setIsDeletingProject(false);
     }
   };
 
@@ -95,12 +76,12 @@ export default function ScriptControls({
               <li>
                 <a
                   className={`${isEditing ? "active" : ""} ${
-                    isProcessing || isDeletingProject || voices.length === 0
+                    isProcessing || voices.length === 0
                       ? "disabled cursor-not-allowed opacity-50"
                       : "cursor-pointer"
                   }`}
                   onClick={
-                    isProcessing || isDeletingProject || voices.length === 0
+                    isProcessing || voices.length === 0
                       ? undefined
                       : () => onEditToggle(true)
                   }
@@ -115,12 +96,12 @@ export default function ScriptControls({
             <li>
               <a
                 className={`${
-                  isCreatingNarration || isProcessing || isDeletingProject
+                  isCreatingNarration || isProcessing
                     ? "disabled cursor-not-allowed opacity-50"
                     : "cursor-pointer"
                 } font-medium`}
                 onClick={
-                  isCreatingNarration || isProcessing || isDeletingProject
+                  isCreatingNarration || isProcessing
                     ? undefined
                     : (e) => {
                         setError(null);
@@ -137,27 +118,6 @@ export default function ScriptControls({
                 }
               >
                 <MicVocal className="h-5 w-5" />
-              </a>
-            </li>
-          )}
-          {(script || narrationUrl) && (
-            <li>
-              <a
-                className={`${
-                  isDeletingProject || isProcessing
-                    ? "disabled cursor-not-allowed opacity-50"
-                    : "cursor-pointer"
-                } font-medium`}
-                onClick={
-                  isDeletingProject || isProcessing
-                    ? undefined
-                    : handleDeleteProject
-                }
-                title={
-                  isDeletingProject ? "Deleting Project..." : "Delete Project"
-                }
-              >
-                <Trash2 className="h-5 w-5" />
               </a>
             </li>
           )}

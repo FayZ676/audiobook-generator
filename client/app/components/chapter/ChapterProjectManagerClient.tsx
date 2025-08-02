@@ -12,6 +12,7 @@ import { Menu } from "lucide-react";
 import { Voice } from "../../actions/voices";
 import { AudiobookJob } from "../../actions/job";
 import { Script } from "../../actions/script";
+import { deleteProject } from "../../actions/audiobook";
 
 import ScriptControls from "../script/ScriptControls";
 import ScriptText from "../script/ScriptText";
@@ -47,6 +48,7 @@ export default function ChapterProjectManagerClient({
 }: ChapterProjectManagerClientProps) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
+  const [isDeletingProject, setIsDeletingProject] = useState(false);
 
   const voices = use(voicesPromise);
   const project = use(projectPromise);
@@ -76,6 +78,12 @@ export default function ChapterProjectManagerClient({
   const handleChapterCreatedOrDeleted = () => {
     handleRevalidateTag("chapters");
     handleRevalidateTag("project");
+    router.refresh();
+  };
+
+  const handleDeleteProject = async () => {
+    setIsDeletingProject(true);
+    await deleteProject();
     router.refresh();
   };
 
@@ -168,6 +176,16 @@ export default function ChapterProjectManagerClient({
             {/* Sidebar content here */}
             <li>
               <div className="flex flex-col gap-4">
+                <button
+                  onClick={handleDeleteProject}
+                  disabled={isDeletingProject}
+                  className="btn btn-outline btn-error btn-block"
+                  title={
+                    isDeletingProject ? "Deleting Project..." : "Delete Project"
+                  }
+                >
+                  Delete Project
+                </button>
                 <ChapterSelector
                   chapters={chapters}
                   selectedChapter={selectedChapter}
