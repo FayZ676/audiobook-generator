@@ -31,7 +31,7 @@ export default function VoiceList({ voicesPromise }: VoiceListProps) {
 
   return (
     voices.length > 0 && (
-      <div className="flex flex-col gap-1 max-h-80 overflow-y-scroll">
+      <div className="flex flex-col max-h-80 overflow-y-scroll">
         <h4>Voices</h4>
         {voices.map((voice) => (
           <VoiceCard key={voice.name} voice={voice} />

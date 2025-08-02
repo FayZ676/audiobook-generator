@@ -37,36 +37,32 @@ export default function VoiceCard({ voice }: VoiceCardProps) {
   };
 
   return (
-    <div className="flex justify-between items-center">
-      <span className="font-small truncate max-w-32">{voice.name}</span>
-      <div className="flex ml-auto gap-4 text-sm text-gray-600 items-center">
-        <span>{voice.gender === "male" ? "M" : "F"}</span>
-        <span>
-          {voice.age === "middle-aged"
-            ? "MA"
-            : voice.age === "young"
-            ? "Y"
-            : "O"}
-        </span>
-        <div className="flex items-center gap-2">
-          <VoiceAudio voiceName={voice.name} />
-          {isUserCreated && (
-            <button
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className={`btn btn-xs ${
-                isDeleting ? "btn-disabled" : "btn-error"
-              }`}
-              title="Delete voice"
-            >
-              {isDeleting ? (
-                <LoaderCircle size={14} className="animate-spin" />
-              ) : (
-                <Trash2 size={14} />
-              )}
-            </button>
-          )}
+    <div className="flex justify-between items-center p-2">
+      <div className="flex flex-col gap-1">
+        <span className="truncate max-w-50">{voice.name}</span>
+        <div className="text-sm text-gray-500 flex gap-2">
+          <span>{voice.gender}</span>
+          <span>{voice.age}</span>
         </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <VoiceAudio voiceName={voice.name} />
+        {isUserCreated && (
+          <button
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className={`btn btn-sm btn-outline ${
+              isDeleting ? "btn-disabled" : "btn-error"
+            }`}
+            title="Delete voice"
+          >
+            {isDeleting ? (
+              <LoaderCircle size={14} className="animate-spin" />
+            ) : (
+              <Trash2 size={14} />
+            )}
+          </button>
+        )}
       </div>
     </div>
   );
