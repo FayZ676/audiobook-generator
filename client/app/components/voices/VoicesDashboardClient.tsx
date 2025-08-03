@@ -3,6 +3,8 @@
 import React from "react";
 import { Suspense, useState } from "react";
 
+import { Plus } from "lucide-react";
+
 import { Voice } from "../../actions/voices";
 
 import VoiceAddModal from "./VoiceAddModal";
@@ -33,7 +35,8 @@ export default function VoicesDashboardClient({
         onClick={() => setIsModalOpen(true)}
         className="btn btn-block mt-4"
       >
-        Add New Voice
+        <Plus className="h-4 w-4" />
+        Add Voice
       </button>
       <VoiceAddModal
         isOpen={isModalOpen}

@@ -172,7 +172,7 @@ export default function ChapterProjectManagerClient({
             aria-label="close sidebar"
             className="drawer-overlay"
           ></label>
-          <ul className="flex flex-col gap-4 menu bg-base-200 text-base-content min-h-full w-90 p-4">
+          <ul className="flex flex-col gap-8 menu bg-base-200 text-base-content min-h-full w-90 p-4">
             {/* Sidebar content here */}
             <li>
               <div className="flex flex-col p-0 hover:bg-transparent">
