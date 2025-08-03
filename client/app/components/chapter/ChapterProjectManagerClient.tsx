@@ -14,7 +14,7 @@ import { AudiobookJob } from "../../actions/job";
 import { Script } from "../../actions/script";
 import { deleteProject } from "../../actions/audiobook";
 
-import ScriptControls from "../script/ScriptControls";
+import ChapterControls from "./ChapterControls";
 import ScriptText from "../script/ScriptText";
 import GenerateScriptForm from "../script/GenerateScriptForm";
 import CreateProjectForm from "../project/CreateProjectForm";
@@ -141,7 +141,7 @@ export default function ChapterProjectManagerClient({
                     <h4 className="text-lg font-semibold">{selectedChapter}</h4>
                   </div>
 
-                  <ScriptControls
+                  <ChapterControls
                     narrationUrlPromise={narrationPromise}
                     scriptPromise={scriptPromise}
                     jobStatePromise={jobStatePromise}
