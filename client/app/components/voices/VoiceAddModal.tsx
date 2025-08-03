@@ -9,7 +9,7 @@ import { addVoice, type Age, type Gender } from "../../actions/voices";
 import Tip from "../ui/Tip";
 import AudioRecorder from "../AudioRecorder";
 
-import { Mic, Upload, Check, Plus } from "lucide-react";
+import { Mic, Upload, Check } from "lucide-react";
 
 interface VoiceAddModalProps {
   isOpen: boolean;
