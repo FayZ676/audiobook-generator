@@ -22,35 +22,6 @@ import CreateChapterForm from "../chapter/CreateChapterForm";
 import JobStateSection from "../project/JobStateSection";
 import VoicesDashboardClient from "../voices/VoicesDashboardClient";
 
-function ProjectHeader({ projectName }: { projectName: string }) {
-  return (
-    <div className="flex gap-4 items-center">
-      <label htmlFor="my-drawer" className="btn drawer-button">
-        <Menu size={16} />
-      </label>
-      <h3 className="text-lg font-bold">{projectName}</h3>
-    </div>
-  );
-}
-
-function EmptyState({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description: string;
-  children?: React.ReactNode;
-}) {
-  return (
-    <div className="text-center py-12">
-      <h4 className="text-lg font-semibold mb-4">{title}</h4>
-      <p className="text-base-content/60 mb-6">{description}</p>
-      {children}
-    </div>
-  );
-}
-
 interface ChapterProjectManagerClientProps {
   voicesPromise: Promise<Voice[]>;
   jobStatePromise: Promise<AudiobookJob | null>;
@@ -136,27 +107,21 @@ export default function ChapterProjectManagerClient({
 
               <div className="space-y-4">
                 <div className="flex justify-between items-center mb-4">
-                  <ProjectHeader projectName={project.name} />
+                  <div className="flex gap-4 items-center">
+                    <label htmlFor="my-drawer" className="btn drawer-button">
+                      <Menu size={16} />
+                    </label>
+                    <h3 className="text-lg font-bold">{project.name}</h3>
+                  </div>
+
                   {selectedChapter && (
                     <h4 className="text-lg font-semibold">{selectedChapter}</h4>
                   )}
                 </div>
 
                 {hasNoSelectedChapter && hasNoChapters && (
-                  <EmptyState
-                    title="No Chapters Yet"
-                    description="Create your first chapter to get started."
-                  >
-                    <CreateChapterForm
-                      onChapterCreated={handleChapterCreatedOrDeleted}
-                    />
-                  </EmptyState>
-                )}
-
-                {hasNoSelectedChapter && !hasNoChapters && (
-                  <EmptyState
-                    title="No Chapter Selected"
-                    description="Select a chapter from the sidebar to get started."
+                  <CreateChapterForm
+                    onChapterCreated={handleChapterCreatedOrDeleted}
                   />
                 )}
 
