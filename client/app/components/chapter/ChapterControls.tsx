@@ -74,16 +74,16 @@ export default function ChapterControls({
       {error && <Tip variant="warning">{error}</Tip>}
 
       {script && (
-        <label className="toggle toggle-xl text-base-content">
+        <label className="flex cursor-pointer gap-2">
+          <span className="label-text">View</span>
           <input
             type="checkbox"
-            defaultChecked
             checked={isEditing}
             onChange={(e) => onEditToggle(e.target.checked)}
             disabled={isProcessing || voices.length === 0}
+            className="toggle"
           />
-          <Scroll size={16} />
-          <Pencil size={16} />
+          <span className="label-text">Edit</span>
         </label>
       )}
 
