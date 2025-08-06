@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { use } from "react";
+import { Trash2, MicVocal } from "lucide-react";
 
 import { createNarration } from "../../actions/narrate";
 import { Script } from "../../actions/script";
@@ -96,11 +97,15 @@ export default function ChapterControls({
             }}
             disabled={isCreatingNarration || isProcessing}
           >
-            {isCreatingNarration || jobState?.narration_status === "processing"
-              ? "Creating..."
-              : narrationUrl
-              ? "Regenerate"
-              : "Narrate"}
+            <MicVocal size={16} className="md:hidden" />
+            <span className="hidden md:inline">
+              {isCreatingNarration ||
+              jobState?.narration_status === "processing"
+                ? "Creating..."
+                : narrationUrl
+                ? "Regenerate"
+                : "Narrate"}
+            </span>
           </button>
         )}
 
@@ -109,6 +114,7 @@ export default function ChapterControls({
           onClick={handleDeleteChapter}
           title="Delete chapter"
         >
+          <Trash2 size={16} className="md:hidden" />
           <span className="hidden md:inline">Delete</span>
         </button>
       </div>
