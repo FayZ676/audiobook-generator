@@ -89,26 +89,18 @@ export default function ChapterControls({
       <div className="flex gap-2">
         {script && (
           <button
-            className={`btn btn-info btn-outline ${
-              isCreatingNarration || isProcessing ? "btn-disabled" : ""
-            }`}
-            onClick={
-              isCreatingNarration || isProcessing
-                ? undefined
-                : (e) => {
-                    setError(null);
-                    handleCreateNarration(e);
-                  }
-            }
-            title={
-              isCreatingNarration || jobState?.narration_status === "processing"
-                ? "Creating Narration..."
-                : narrationUrl
-                ? "Regenerate Narration"
-                : "Narrate"
-            }
+            className="btn btn-info btn-outline"
+            onClick={(e) => {
+              setError(null);
+              handleCreateNarration(e);
+            }}
+            disabled={isCreatingNarration || isProcessing}
           >
-            Narrate
+            {isCreatingNarration || jobState?.narration_status === "processing"
+              ? "Creating..."
+              : narrationUrl
+              ? "Regenerate"
+              : "Narrate"}
           </button>
         )}
 
