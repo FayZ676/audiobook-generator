@@ -175,7 +175,7 @@ export default function ChapterProjectManagerClient({
           <ul className="flex flex-col gap-8 menu bg-base-200 text-base-content min-h-full w-90 p-4">
             {/* Sidebar content here */}
             <li>
-              <div className="flex flex-col p-0 hover:bg-transparent">
+              <div className="flex flex-col p-0 hover:bg-transparent active:!bg-transparent active:!text-base-content">
                 <ChapterSelector
                   chapters={chapters}
                   onChapterSelect={handleChapterSelect}
@@ -186,7 +186,7 @@ export default function ChapterProjectManagerClient({
               </div>
             </li>
             <li>
-              <div className="flex flex-col p-0 hover:bg-transparent">
+              <div className="flex flex-col p-0 hover:bg-transparent active:!bg-transparent active:!text-base-content">
                 <VoicesDashboardClient voicesPromise={voicesPromise} />
               </div>
             </li>
