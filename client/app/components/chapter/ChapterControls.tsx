@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { use } from "react";
-import { Scroll, Pencil, MicVocal, Trash2 } from "lucide-react";
+import { MicVocal, Trash2 } from "lucide-react";
 
 import { createNarration } from "../../actions/narrate";
 import { Script } from "../../actions/script";
