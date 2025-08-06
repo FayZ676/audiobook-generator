@@ -1,6 +1,7 @@
 import os
 import io
 import json
+import logging
 from typing import BinaryIO
 
 from tta_script.dialogue.types import Script
@@ -23,6 +24,9 @@ import runpod
 
 PROJECTS_BUCKET = os.environ.get("PROJECTS_BUCKET", "")
 
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 s3_client = S3Client()
 
@@ -68,6 +72,7 @@ def handler(event: dict):
             message = ""
             data = Response(filename=script_filename, request_word_count=word_count)
         except Exception as e:
+            logger.exception("Exception occurred during script processing: %s", str(e))
             status = "failed"
             message = str(e)
             data = Response(filename="", request_word_count=0)
