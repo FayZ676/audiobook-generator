@@ -33,7 +33,7 @@ export default function VoicesDashboardClient({
       </Suspense>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="btn btn-block mt-4"
+        className="btn btn-block mt-4 text-xs text-gray-500"
       >
         <Plus className="h-4 w-4" />
         Add Voice
