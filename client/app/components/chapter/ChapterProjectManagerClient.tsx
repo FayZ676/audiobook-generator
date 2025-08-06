@@ -141,6 +141,10 @@ export default function ChapterProjectManagerClient({
                     <h4 className="text-lg font-semibold">{selectedChapter}</h4>
                   </div>
 
+                  {narrationUrl && (
+                    <NarrationAudio narrationUrl={narrationUrl} />
+                  )}
+
                   <ChapterControls
                     narrationUrlPromise={narrationPromise}
                     scriptPromise={scriptPromise}
@@ -150,10 +154,6 @@ export default function ChapterProjectManagerClient({
                     onEditToggle={setIsEditing}
                     chapterName={selectedChapter!}
                   />
-
-                  {narrationUrl && (
-                    <NarrationAudio narrationUrl={narrationUrl} />
-                  )}
 
                   <ScriptText
                     script={currentScript}

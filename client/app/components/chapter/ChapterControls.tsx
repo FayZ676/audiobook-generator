@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { use } from "react";
-import { MicVocal, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 
 import { createNarration } from "../../actions/narrate";
 import { Script } from "../../actions/script";
@@ -75,25 +75,23 @@ export default function ChapterControls({
 
       {script && (
         <label className="flex cursor-pointer gap-2">
-          <span className="label-text">View</span>
+          <span className="label-text text-gray-400">view</span>
           <input
             type="checkbox"
             checked={isEditing}
             onChange={(e) => onEditToggle(e.target.checked)}
             disabled={isProcessing || voices.length === 0}
-            className="toggle"
+            className="toggle toggle-lg"
           />
-          <span className="label-text">Edit</span>
+          <span className="label-text text-gray-400">edit</span>
         </label>
       )}
 
       <div className="flex gap-2">
         {script && (
           <button
-            className={`btn btn-sm ${
-              isCreatingNarration || isProcessing
-                ? "btn-disabled"
-                : "btn-primary"
+            className={`btn btn-info btn-outline ${
+              isCreatingNarration || isProcessing ? "btn-disabled" : ""
             }`}
             onClick={
               isCreatingNarration || isProcessing
@@ -111,16 +109,16 @@ export default function ChapterControls({
                 : "Narrate"
             }
           >
-            <MicVocal className="h-4 w-4" />
+            Narrate
           </button>
         )}
 
         <button
-          className="btn btn-sm btn-error"
+          className="btn btn-error btn-outline"
           onClick={handleDeleteChapter}
           title="Delete chapter"
         >
-          <Trash2 className="h-4 w-4" />
+          <span className="hidden md:inline">Delete</span>
         </button>
       </div>
     </div>
