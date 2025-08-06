@@ -161,12 +161,7 @@ export default function ChapterProjectManagerClient({
                 )}
 
                 {selectedChapter && hasNoScript && (
-                  <div className="text-center">
-                    <p className="text-base-content/60 mb-4">
-                      Generate a script for this chapter to get started.
-                    </p>
-                    <GenerateScriptForm chapterName={selectedChapter} />
-                  </div>
+                  <GenerateScriptForm chapterName={selectedChapter} />
                 )}
 
                 {selectedChapter && !hasNoScript && (
