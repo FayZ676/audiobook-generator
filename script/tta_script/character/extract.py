@@ -27,42 +27,40 @@ def get_traits(chunk: str, names: list[str]) -> tuple[dict[str, str], dict[str, 
     return ages, genders
 
 
-def get_speaker_details(text: str, previous_speakers: list = None):
+def get_speaker_details(text: str, previous_speakers: list[SpeakerDetails]):
     """
     Extract speaker details from the provided text using NER to identify names and LLMs to determine their traits.
-    
+
     Args:
         text: The text to extract speakers from
         previous_speakers: List of previously found speakers (from types.script.SpeakerDetails) to avoid re-finding
     """
     if previous_speakers is None:
         previous_speakers = []
-    
+
     # Convert previous speakers to script format and collect their names
     previous_speaker_names = set()
     details: set[SpeakerDetails] = set()
-    
+
     # Add previous speakers to result set
     for prev_speaker in previous_speakers:
-        if hasattr(prev_speaker, 'names'):
+        if hasattr(prev_speaker, "names"):
             previous_speaker_names.update(prev_speaker.names)
             script_speaker = SpeakerDetails(
-                frozenset(prev_speaker.names),
-                prev_speaker.age,
-                prev_speaker.gender
+                frozenset(prev_speaker.names), prev_speaker.age, prev_speaker.gender
             )
             details.add(script_speaker)
-    
+
     # Extract new speakers from text
     for chunk in get_chunks(text, 100000):
         names = list(get_aliases(chunk, get_speaker_names(chunk)))
-        
+
         # Only process names that don't overlap with previous speakers
         new_names = []
         for name_tuple in names:
             if not any(name in previous_speaker_names for name in name_tuple):
                 new_names.append(name_tuple)
-        
+
         if new_names:
             ages, genders = get_traits(chunk, [name[0] for name in new_names])
             details.update(
@@ -74,7 +72,7 @@ def get_speaker_details(text: str, previous_speakers: list = None):
                     if name and age and gender
                 }
             )
-    
+
     # NOTE: We are hardcoding the narrator SpeakerDetails here. We do something similar in `get_script`. Is this necessary?
     details.add(SpeakerDetails(frozenset(["Narrator"]), "middle-aged", "male"))
     return details
