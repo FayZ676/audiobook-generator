@@ -38,45 +38,42 @@ def get_speaker_details(text: str, previous_speakers: list = None):
     if previous_speakers is None:
         previous_speakers = []
     
-    # Convert previous speakers to script format for comparison
+    # Convert previous speakers to script format and collect their names
     previous_speaker_names = set()
+    details: set[SpeakerDetails] = set()
+    
+    # Add previous speakers to result set
     for prev_speaker in previous_speakers:
         if hasattr(prev_speaker, 'names'):
             previous_speaker_names.update(prev_speaker.names)
-    
-    details: set[SpeakerDetails] = set()
-    for chunk in get_chunks(text, 100000):
-        names = list(get_aliases(chunk, get_speaker_names(chunk)))
-        
-        # Filter out names that are already in previous speakers
-        filtered_names = []
-        for name_tuple in names:
-            # Check if any name in this tuple overlaps with previous speakers
-            if not any(name in previous_speaker_names for name in name_tuple):
-                filtered_names.append(name_tuple)
-        
-        if filtered_names:
-            ages, genders = get_traits(chunk, [name[0] for name in filtered_names])
-            details.update(
-                {
-                    # TODO: We need to make sure that age and gender are typed correctly.
-                    SpeakerDetails(frozenset(name), age, gender)
-                    for name, age, gender in zip(
-                        filtered_names, list(ages.values()), list(genders.values())
-                    )
-                    if name and age and gender
-                }
-            )
-    
-    # Add previous speakers back to the result set (converted to script format)
-    for prev_speaker in previous_speakers:
-        if hasattr(prev_speaker, 'names'):
             script_speaker = SpeakerDetails(
                 frozenset(prev_speaker.names),
                 prev_speaker.age,
                 prev_speaker.gender
             )
             details.add(script_speaker)
+    
+    # Extract new speakers from text
+    for chunk in get_chunks(text, 100000):
+        names = list(get_aliases(chunk, get_speaker_names(chunk)))
+        
+        # Only process names that don't overlap with previous speakers
+        new_names = []
+        for name_tuple in names:
+            if not any(name in previous_speaker_names for name in name_tuple):
+                new_names.append(name_tuple)
+        
+        if new_names:
+            ages, genders = get_traits(chunk, [name[0] for name in new_names])
+            details.update(
+                {
+                    SpeakerDetails(frozenset(name), age, gender)
+                    for name, age, gender in zip(
+                        new_names, list(ages.values()), list(genders.values())
+                    )
+                    if name and age and gender
+                }
+            )
     
     # NOTE: We are hardcoding the narrator SpeakerDetails here. We do something similar in `get_script`. Is this necessary?
     details.add(SpeakerDetails(frozenset(["Narrator"]), "middle-aged", "male"))
