@@ -1,6 +1,6 @@
 import React from "react";
 
-import ProjectDashboard from "@/app/components/chapter/ProjectDashboard";
+import ProjectDashboard from "@/app/components/project/ProjectDashboard";
 
 // Force dynamic rendering since this page uses authentication
 export const dynamic = "force-dynamic";

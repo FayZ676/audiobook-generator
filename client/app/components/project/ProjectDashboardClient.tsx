@@ -14,12 +14,12 @@ import { AudiobookJob } from "../../actions/job";
 import { Script } from "../../actions/script";
 import { deleteProject } from "../../actions/audiobook";
 
-import ChapterContent from "./ChapterContent";
+import ChapterContent from "../chapter/ChapterContent";
 import GenerateScriptForm from "../script/GenerateScriptForm";
-import CreateProjectForm from "../project/CreateProjectForm";
+import CreateProjectForm from "./CreateProjectForm";
 import ChapterSelector from "../chapter/ChapterSelector";
 import CreateChapterForm from "../chapter/CreateChapterForm";
-import JobStateSection from "../project/JobStateSection";
+import JobStateSection from "./JobStateSection";
 import VoicesDashboardClient from "../voices/VoicesDashboardClient";
 
 interface ProjectDashboardClientProps {

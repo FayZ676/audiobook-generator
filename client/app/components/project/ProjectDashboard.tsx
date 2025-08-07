@@ -7,7 +7,7 @@ import { getChapters } from "../../actions/chapter";
 import { getScript } from "../../actions/script";
 import { getNarration } from "../../actions/narrate";
 
-import ProjectDashboardClient from "../chapter/ProjectDashboardClient";
+import ProjectDashboardClient from "./ProjectDashboardClient";
 
 interface ProjectDashboardProps {
   currentChapter?: string;
