@@ -81,7 +81,7 @@ export default function ChapterProjectManagerClient({
   usePusherSubscriptions({
     channels: userChannels
       ? [userChannels.SCRIPT_CHANNEL, userChannels.SPEECH_CHANNEL]
-      : null,
+      : [],
     onUpdate: handleRevalidate,
   });
 
