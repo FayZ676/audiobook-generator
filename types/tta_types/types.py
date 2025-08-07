@@ -1,6 +1,7 @@
 from typing import Literal, Optional
 
 from pydantic import BaseModel
+from tta_types.script import SpeakerDetails
 
 
 class Voice(BaseModel):
@@ -29,6 +30,7 @@ class ScriptRequest(BaseModel):
     text_content: str
     voices: list[Voice]
     chapter_name: str
+    previous_speakers: Optional[list[SpeakerDetails]] = None
 
 
 class Response(BaseModel):

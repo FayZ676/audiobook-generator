@@ -51,7 +51,7 @@ def handler(event: dict):
     request_data = ScriptRequest.model_validate(request.data)
 
     text = normalize_quotes(request_data.text_content)
-    speaker_details = get_speaker_details(text)
+    speaker_details = get_speaker_details(text, request_data.previous_speakers)
     voices = request_data.voices
 
     if len(speaker_details) > len(voices):

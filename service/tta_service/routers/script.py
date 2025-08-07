@@ -3,6 +3,7 @@ import json
 from datetime import datetime, timezone
 from fastapi import APIRouter, BackgroundTasks, status
 from tta_types.types import WebhookRequest, ScriptRequest, AudiobookJob, Voice
+from tta_types.script import SpeakerDetails
 from tta_service.types import BuildScriptRequest, UpdateScriptRequest
 from tta_service.config import (
     s3_client,
@@ -80,6 +81,8 @@ def update_script(user_id: str, chapter_name: str, request: UpdateScriptRequest)
 
 def send_script_request(script_request: BuildScriptRequest):
     voices = _get_voices(script_request.user_id)
+    previous_speakers = _get_previous_speakers(script_request.user_id)
+    
     request = WebhookRequest(
         callback=f"{SERVICE_API_URL}/events",
         event="script",
@@ -88,6 +91,7 @@ def send_script_request(script_request: BuildScriptRequest):
             text_content=script_request.text_content,
             voices=voices,
             chapter_name=script_request.chapter_name,
+            previous_speakers=previous_speakers,
         ).model_dump(),
     )
     # NOTE: Add /runsync endpoint when testing locally.
@@ -118,3 +122,36 @@ def _get_voices(user_id: str):
         voice_data = json.loads(file_content)
         voices.append(Voice.model_validate(voice_data))
     return voices
+
+
+def _get_previous_speakers(user_id: str) -> list[SpeakerDetails]:
+    """Extract speakers from all existing scripts for the user"""
+    previous_speakers: list[SpeakerDetails] = []
+    
+    # List all script files for the user
+    user_prefix = f"{user_id}/"
+    script_files = s3_client.list_files(PROJECTS_BUCKET, user_prefix)
+    
+    for script_file in script_files:
+        if script_file.endswith("/script.json"):
+            try:
+                script_content = s3_client.get_file(PROJECTS_BUCKET, script_file).decode("utf-8")
+                script_data = json.loads(script_content)
+                
+                # Extract speakers from script data
+                if "speakers" in script_data:
+                    for speaker_dict in script_data["speakers"]:
+                        speaker_details = SpeakerDetails(
+                            names=speaker_dict.get("names", []),
+                            age=speaker_dict.get("age", "middle-aged"),
+                            gender=speaker_dict.get("gender", "male"),
+                            voice_name=speaker_dict.get("voice_name", ""),
+                        )
+                        # Avoid duplicates
+                        if speaker_details not in previous_speakers:
+                            previous_speakers.append(speaker_details)
+            except (json.JSONDecodeError, KeyError):
+                # Skip malformed script files
+                continue
+    
+    return previous_speakers
