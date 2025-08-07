@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Trash2, LoaderCircle } from "lucide-react";
 
 import { Voice, deleteVoice } from "../../actions/voices";
-import VoiceAudio from "./VoiceAudio";
+import AudioPlayer from "../audio/AudioPlayer";
 
 interface VoiceCardProps {
   voice: Voice;
@@ -46,7 +46,7 @@ export default function VoiceCard({ voice }: VoiceCardProps) {
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <VoiceAudio voiceName={voice.name} />
+        <AudioPlayer voiceName={voice.name} />
         {isUserCreated && (
           <button
             onClick={handleDelete}

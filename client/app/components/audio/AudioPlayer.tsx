@@ -5,11 +5,11 @@ import { CirclePlay, LoaderCircle, Pause } from "lucide-react";
 
 import { getVoiceAudioUrl } from "../../actions/voices";
 
-interface VoiceAudioProps {
+interface AudioPlayerProps {
   voiceName: string;
 }
 
-export default function VoiceAudio({ voiceName }: VoiceAudioProps) {
+export default function AudioPlayer({ voiceName }: AudioPlayerProps) {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

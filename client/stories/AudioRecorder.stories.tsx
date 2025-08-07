@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import AudioRecorder from "../app/components/AudioRecorder";
+import AudioRecorder from "../app/components/audio/AudioRecorder";
 
 const meta: Meta<typeof AudioRecorder> = {
   title: "Components/AudioRecorder",

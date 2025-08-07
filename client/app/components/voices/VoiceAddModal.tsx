@@ -7,7 +7,7 @@ import { AgeEnum, GenderEnum } from "../../types";
 
 import { addVoice, type Age, type Gender } from "../../actions/voices";
 import Tip from "../ui/Tip";
-import AudioRecorder from "../AudioRecorder";
+import AudioRecorder from "../audio/AudioRecorder";
 
 import { Mic, Upload, Check } from "lucide-react";
 
