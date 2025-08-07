@@ -55,21 +55,6 @@ export default function ChapterProjectManagerClient({
   const narrationUrl = use(narrationPromise);
   const userChannels = useUserChannels();
 
-  if (!selectedChapter && project && chapters.length > 0) {
-    router.push(`/project/${encodeURIComponent(chapters[0])}`);
-    return null;
-  }
-
-  // If a specific chapter is selected but it doesn't exist, redirect to project page
-  if (
-    selectedChapter &&
-    chapters.length > 0 &&
-    !chapters.includes(selectedChapter)
-  ) {
-    router.push("/project");
-    return null;
-  }
-
   const handleRevalidate = () => {
     handleRevalidateTag("script");
     handleRevalidateTag("narration");
@@ -84,6 +69,21 @@ export default function ChapterProjectManagerClient({
       : [],
     onUpdate: handleRevalidate,
   });
+
+  if (!selectedChapter && project && chapters.length > 0) {
+    router.push(`/project/${encodeURIComponent(chapters[0])}`);
+    return null;
+  }
+
+  // If a specific chapter is selected but it doesn't exist, redirect to project page
+  if (
+    selectedChapter &&
+    chapters.length > 0 &&
+    !chapters.includes(selectedChapter)
+  ) {
+    router.push("/project");
+    return null;
+  }
 
   const handleChapterSelect = (chapter: string) => {
     router.push(`/project/${encodeURIComponent(chapter)}`);
