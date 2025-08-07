@@ -8,7 +8,7 @@ Gender = Literal["male", "female"]
 
 
 class SpeakerDetails(BaseModel):
-    """Extended speaker information including demographic and audio details."""
+    """Speaker details for cross-service communication (API/service layer)"""
 
     names: list[str]
     age: Age

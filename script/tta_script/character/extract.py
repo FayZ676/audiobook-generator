@@ -14,8 +14,9 @@ from tta_script.character.types import (
     AgesResponse,
     AliasResponse,
     GendersResponse,
-    SpeakerDetails,
+    CharacterDetails,
 )
+from tta_types.types import SpeakerDetails
 
 
 def get_traits(chunk: str, names: list[str]) -> tuple[dict[str, str], dict[str, str]]:
@@ -27,26 +28,28 @@ def get_traits(chunk: str, names: list[str]) -> tuple[dict[str, str], dict[str, 
     return ages, genders
 
 
-def get_speaker_details(text: str, previous_speakers: list[SpeakerDetails]):
+def get_speaker_details(
+    text: str, previous_speakers: list[SpeakerDetails]
+) -> list[CharacterDetails]:
     """
     Extract speaker details from the provided text using NER to identify names and LLMs to determine their traits.
 
     Args:
         text: The text to extract speakers from
-        previous_speakers: List of previously found speakers (from types.script.SpeakerDetails) to avoid re-finding
+        previous_speakers: List of previously found speakers (from types.SpeakerDetails) to convert and include
     """
     if previous_speakers is None:
         previous_speakers = []
 
     # Convert previous speakers to script format and collect their names
     previous_speaker_names = set()
-    details: set[SpeakerDetails] = set()
+    details: set[CharacterDetails] = set()
 
     # Add previous speakers to result set
     for prev_speaker in previous_speakers:
         if hasattr(prev_speaker, "names"):
             previous_speaker_names.update(prev_speaker.names)
-            script_speaker = SpeakerDetails(
+            script_speaker = CharacterDetails(
                 frozenset(prev_speaker.names), prev_speaker.age, prev_speaker.gender
             )
             details.add(script_speaker)
@@ -65,7 +68,7 @@ def get_speaker_details(text: str, previous_speakers: list[SpeakerDetails]):
             ages, genders = get_traits(chunk, [name[0] for name in new_names])
             details.update(
                 {
-                    SpeakerDetails(frozenset(name), age, gender)
+                    CharacterDetails(frozenset(name), age, gender)
                     for name, age, gender in zip(
                         new_names, list(ages.values()), list(genders.values())
                     )
@@ -73,9 +76,9 @@ def get_speaker_details(text: str, previous_speakers: list[SpeakerDetails]):
                 }
             )
 
-    # NOTE: We are hardcoding the narrator SpeakerDetails here. We do something similar in `get_script`. Is this necessary?
-    details.add(SpeakerDetails(frozenset(["Narrator"]), "middle-aged", "male"))
-    return details
+    # NOTE: We are hardcoding the narrator CharacterDetails here. We do something similar in `get_script`. Is this necessary?
+    details.add(CharacterDetails(frozenset(["Narrator"]), "middle-aged", "male"))
+    return list(details)
 
 
 def get_speaker_names(text: str) -> set[str]:

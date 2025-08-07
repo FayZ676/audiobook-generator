@@ -9,7 +9,7 @@ Gender = Literal["male", "female"]
 
 
 @dataclass(eq=True, frozen=True)
-class SpeakerDetails:
+class CharacterDetails:
     names: frozenset[str]
     age: Age
     gender: Gender
