@@ -2,8 +2,14 @@ import io
 import json
 from datetime import datetime, timezone
 from fastapi import APIRouter, BackgroundTasks, status
-from tta_types.types import WebhookRequest, ScriptRequest, AudiobookJob, Voice
-from tta_types.script import SpeakerDetails, ScriptData
+from tta_types.types import (
+    WebhookRequest,
+    ScriptRequest,
+    AudiobookJob,
+    Voice,
+    SpeakerDetails,
+)
+from tta_types.script import ScriptData
 from tta_service.types import BuildScriptRequest, UpdateScriptRequest
 from tta_service.config import (
     s3_client,

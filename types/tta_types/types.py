@@ -1,9 +1,21 @@
-from typing import Literal, Optional, TYPE_CHECKING
+from typing import Literal, Optional
 
 from pydantic import BaseModel
 
-if TYPE_CHECKING:
-    from tta_types.script import SpeakerDetails
+
+Age = Literal["young", "middle-aged", "old"]
+Gender = Literal["male", "female"]
+
+
+class SpeakerDetails(BaseModel):
+    """Extended speaker information including demographic and audio details."""
+
+    names: list[str]
+    age: Age
+    gender: Gender
+    voice_name: str
+    audio_path: str = ""
+    audio_transcript: str = ""
 
 
 class Voice(BaseModel):
@@ -32,7 +44,7 @@ class ScriptRequest(BaseModel):
     text_content: str
     voices: list[Voice]
     chapter_name: str
-    previous_speakers: Optional[list["SpeakerDetails"]] = None
+    previous_speakers: list[SpeakerDetails]
 
 
 class Response(BaseModel):
@@ -78,16 +90,3 @@ class AudiobookJob(BaseModel):
     message: Optional[str]
     script_started_at: Optional[str] = None
     narration_started_at: Optional[str] = None
-
-
-# Rebuild models with forward references after all imports
-def _rebuild_models():
-    """Rebuild models to resolve forward references"""
-    try:
-        from tta_types.script import SpeakerDetails  # Import here to avoid circular imports
-        ScriptRequest.model_rebuild()
-    except ImportError:
-        # SpeakerDetails not available, which is fine for some use cases
-        pass
-
-_rebuild_models()
