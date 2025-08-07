@@ -2,7 +2,7 @@ import React from "react";
 import { redirect } from "next/navigation";
 
 import { getChapters } from "../../actions/chapter";
-import ProjectDashboard from "@/app/components/project/ProjectDashboard";
+import ChapterProjectManager from "@/app/components/chapter/ChapterProjectManager";
 
 // Force dynamic rendering since this page uses authentication
 export const dynamic = "force-dynamic";
@@ -25,5 +25,5 @@ export default async function ProjectChapterPage({
     redirect("/project");
   }
 
-  return <ProjectDashboard currentChapter={currentChapter} />;
+  return <ChapterProjectManager currentChapter={currentChapter} />;
 }
