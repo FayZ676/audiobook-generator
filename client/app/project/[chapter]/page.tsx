@@ -1,6 +1,6 @@
 import React from "react";
 
-import ChapterProjectManager from "@/app/components/chapter/ChapterProjectManager";
+import ProjectDashboard from "@/app/components/chapter/ProjectDashboard";
 
 // Force dynamic rendering since this page uses authentication
 export const dynamic = "force-dynamic";
@@ -17,5 +17,5 @@ export default async function ProjectChapterPage({
   const { chapter } = await params;
   const currentChapter = decodeURIComponent(chapter);
 
-  return <ChapterProjectManager currentChapter={currentChapter} />;
+  return <ProjectDashboard currentChapter={currentChapter} />;
 }

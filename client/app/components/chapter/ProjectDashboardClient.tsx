@@ -22,7 +22,7 @@ import CreateChapterForm from "../chapter/CreateChapterForm";
 import JobStateSection from "../project/JobStateSection";
 import VoicesDashboardClient from "../voices/VoicesDashboardClient";
 
-interface ChapterProjectManagerClientProps {
+interface ProjectDashboardClientProps {
   voicesPromise: Promise<Voice[]>;
   jobStatePromise: Promise<AudiobookJob | null>;
   projectPromise: Promise<{
@@ -35,7 +35,7 @@ interface ChapterProjectManagerClientProps {
   selectedChapter: string | null;
 }
 
-export default function ChapterProjectManagerClient({
+export default function ProjectDashboardClient({
   voicesPromise,
   jobStatePromise,
   projectPromise,
@@ -43,7 +43,7 @@ export default function ChapterProjectManagerClient({
   scriptPromise,
   narrationPromise,
   selectedChapter,
-}: ChapterProjectManagerClientProps) {
+}: ProjectDashboardClientProps) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [isDeletingProject, setIsDeletingProject] = useState(false);
@@ -104,7 +104,6 @@ export default function ChapterProjectManagerClient({
     return <CreateProjectForm />;
   }
 
-  const hasNoChapters = chapters.length === 0;
   const hasNoSelectedChapter = !selectedChapter;
   const hasNoScript = !currentScript;
 
@@ -134,7 +133,7 @@ export default function ChapterProjectManagerClient({
                   )}
                 </div>
 
-                {hasNoSelectedChapter && hasNoChapters && (
+                {hasNoSelectedChapter && chapters.length === 0 && (
                   <CreateChapterForm
                     onChapterCreated={handleChapterCreatedOrDeleted}
                   />

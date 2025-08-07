@@ -7,15 +7,15 @@ import { getChapters } from "../../actions/chapter";
 import { getScript } from "../../actions/script";
 import { getNarration } from "../../actions/narrate";
 
-import ChapterProjectManagerClient from "../chapter/ChapterProjectManagerClient";
+import ProjectDashboardClient from "../chapter/ProjectDashboardClient";
 
-interface ChapterProjectManagerProps {
+interface ProjectDashboardProps {
   currentChapter?: string;
 }
 
-export default async function ChapterProjectManager({
+export default async function ProjectDashboard({
   currentChapter,
-}: ChapterProjectManagerProps) {
+}: ProjectDashboardProps) {
   const jobStatePromise = getJobState();
   const voicesPromise = getVoices();
   const projectPromise = getCurrentProject();
@@ -39,7 +39,7 @@ export default async function ChapterProjectManager({
         </div>
       }
     >
-      <ChapterProjectManagerClient
+      <ProjectDashboardClient
         voicesPromise={voicesPromise}
         jobStatePromise={jobStatePromise}
         projectPromise={projectPromise}
