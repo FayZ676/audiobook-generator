@@ -134,9 +134,11 @@ export default function AudioRecorder({
   return (
     <div className="flex flex-col gap-3 bg-base-100">
       <Tip variant="info">
-        <span className="italic font-bold">Read the following:</span> I chase
-        the quiet stories—rooftop gardens at dawn, old songs on street corners.
-        Every question is a doorway to something deeper.
+        <div className="prose prose-sm max-w-none">
+          <p><strong><em>Read the following:</em></strong> I chase
+          the quiet stories—rooftop gardens at dawn, old songs on street corners.
+          Every question is a doorway to something deeper.</p>
+        </div>
       </Tip>
       <div className="flex gap-2 flex-wrap">
         {!isRecording && !hasRecording && (

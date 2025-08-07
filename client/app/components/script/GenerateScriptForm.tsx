@@ -54,9 +54,9 @@ export default function GenerateScriptForm({
 
   return (
     <div className="flex flex-col gap-4 bg-base-200 p-4 rounded">
-      <label htmlFor="filename-input" className="font-medium">
-        Upload Text
-      </label>
+      <div className="prose prose-base max-w-none">
+        <label htmlFor="filename-input">Upload Text</label>
+      </div>
       <Tip variant="info">Only files with .txt extensions are supported.</Tip>
       {error && <Tip variant="warning">{error}</Tip>}
       <input

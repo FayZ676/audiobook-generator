@@ -125,11 +125,15 @@ export default function ProjectDashboardClient({
                     <label htmlFor="my-drawer" className="btn drawer-button">
                       <Menu size={16} />
                     </label>
-                    <h3 className="text-lg font-bold">{project.name}</h3>
+                    <div className="prose prose-lg max-w-none">
+                      <h3>{project.name}</h3>
+                    </div>
                   </div>
 
                   {selectedChapter && (
-                    <h4 className="text-lg font-semibold">{selectedChapter}</h4>
+                    <div className="prose prose-lg max-w-none">
+                      <h4>{selectedChapter}</h4>
+                    </div>
                   )}
                 </div>
 
