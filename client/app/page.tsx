@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import { Waitlist } from "@clerk/nextjs";
 
 export default function Home() {
@@ -6,9 +8,10 @@ export default function Home() {
       {/* Hero */}
       <div className="hero bg-base-200 min-h-[70vh]">
         <div className="hero-content flex-col lg:flex-row-reverse">
-          <img
+          <Image
             src="dashboard.png"
             className="min-w-[300px] rounded-lg shadow-2xl"
+            alt="Dashboard Screenshot"
           />
           <div className="flex flex-col gap-8">
             <h1 className="text-5xl font-bold">
