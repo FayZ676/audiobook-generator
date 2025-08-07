@@ -21,9 +21,7 @@ export default async function ChapterProjectManager({
   const projectPromise = getCurrentProject();
   const chaptersPromise = getChapters();
 
-  const chapters = await chaptersPromise;
-  const selectedChapter =
-    currentChapter || (chapters.length > 0 ? chapters[0] : null);
+  const selectedChapter = currentChapter || null;
 
   const scriptPromise = selectedChapter
     ? getScript(selectedChapter)
