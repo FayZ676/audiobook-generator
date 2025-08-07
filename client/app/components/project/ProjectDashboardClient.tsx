@@ -19,7 +19,7 @@ import GenerateScriptForm from "../script/GenerateScriptForm";
 import CreateProjectForm from "./CreateProjectForm";
 import ChapterSelector from "../chapter/ChapterSelector";
 import CreateChapterForm from "../chapter/CreateChapterForm";
-import JobStateSection from "./JobStateSection";
+import JobStateSection from "../job/JobStateSection";
 import VoicesDashboardClient from "../voices/VoicesDashboardClient";
 
 interface ProjectDashboardClientProps {
