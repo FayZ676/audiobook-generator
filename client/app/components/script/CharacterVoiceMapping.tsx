@@ -18,10 +18,10 @@ interface CharacterMapping {
 
 function extractCharacterMappings(script: Script): CharacterMapping[] {
   return script.speakers
-    .filter((speaker) => speaker.names[0]?.trim())
+    .filter((speaker) => speaker.character.names[0]?.trim())
     .map((speaker) => ({
-      characterName: speaker.names[0],
-      currentVoice: speaker.voice_name || "",
+      characterName: speaker.character.names[0],
+      currentVoice: speaker.voice.name || "",
     }));
 }
 

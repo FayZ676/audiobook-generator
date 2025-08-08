@@ -8,13 +8,23 @@ import { z } from "zod";
 
 import { AgeEnum, GenderEnum } from "../types";
 
-const SpeakerDetailsSchema = z.object({
+const CharacterSchema = z.object({
   names: z.array(z.string()),
   age: AgeEnum,
   gender: GenderEnum,
-  voice_name: z.string(),
-  audio_path: z.string().optional().default(""),
-  audio_transcript: z.string().optional().default(""),
+});
+
+const VoiceSchema = z.object({
+  name: z.string(),
+  age: AgeEnum,
+  gender: GenderEnum,
+  audio_path: z.string(),
+  audio_transcript: z.string(),
+});
+
+const SpeakerSchema = z.object({
+  character: CharacterSchema,
+  voice: VoiceSchema,
 });
 
 const ScriptSegmentSchema = z.object({
@@ -24,7 +34,7 @@ const ScriptSegmentSchema = z.object({
 
 const ScriptSchema = z.object({
   segments: z.array(ScriptSegmentSchema),
-  speakers: z.array(SpeakerDetailsSchema),
+  speakers: z.array(SpeakerSchema),
 });
 
 interface BuildScriptRequest {

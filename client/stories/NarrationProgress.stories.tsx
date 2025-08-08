@@ -16,20 +16,32 @@ const sampleScript: Script = {
   ],
   speakers: [
     {
-      names: ["Narrator"],
-      age: "middle-aged",
-      gender: "male",
-      voice_name: "narrator",
-      audio_path: "",
-      audio_transcript: "",
+      character: {
+        names: ["Narrator"],
+        age: "middle-aged",
+        gender: "male",
+      },
+      voice: {
+        name: "narrator",
+        age: "middle-aged",
+        gender: "male",
+        audio_path: "",
+        audio_transcript: "",
+      },
     },
     {
-      names: ["Sir Galahad"],
-      age: "young",
-      gender: "male",
-      voice_name: "knight",
-      audio_path: "",
-      audio_transcript: "",
+      character: {
+        names: ["Sir Galahad"],
+        age: "young",
+        gender: "male",
+      },
+      voice: {
+        name: "knight",
+        age: "young",
+        gender: "male",
+        audio_path: "",
+        audio_transcript: "",
+      },
     },
   ],
 };
