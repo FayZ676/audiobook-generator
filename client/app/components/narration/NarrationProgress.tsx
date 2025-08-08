@@ -54,17 +54,17 @@ export default function NarrationProgress({
   return (
     <div className="space-y-2">
       <div className="flex justify-between items-center">
-        <span className="text-sm font-medium">
+        <span className="font-medium">
           {isFinishing ? "Adding finishing touches" : "Generating narration"}
         </span>
-        <span className="text-xs text-gray-500">{Math.round(progress)}%</span>
+        <span className="text-gray-500">{Math.round(progress)}%</span>
       </div>
 
       <progress className="progress w-full" value={progress} max="100">
         {Math.round(progress)}%
       </progress>
 
-      <div className="text-xs text-gray-500">
+      <div className="text-gray-500">
         Estimated {estimatedMins} minute{estimatedMins !== 1 ? "s" : ""}
       </div>
     </div>

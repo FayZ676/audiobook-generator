@@ -174,14 +174,14 @@ export default function AudioRecorder({
 
       <div className="flex justify-between items-center">
         {isRecording && (
-          <div className="flex items-center gap-2 text-sm text-primary">
+          <div className="flex items-center gap-2 text-primary">
             <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
             Recording...
           </div>
         )}
 
         <span
-          className={`text-sm ${
+          className={`${
             recordingTime >= maxDuration - 3
               ? "text-warning"
               : "text-base-content"

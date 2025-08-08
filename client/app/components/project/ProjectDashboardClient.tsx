@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, use } from "react";
+import React, { useState, use, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
@@ -70,20 +70,17 @@ export default function ProjectDashboardClient({
     onUpdate: handleRevalidate,
   });
 
-  if (!selectedChapter && project && chapters.length > 0) {
-    router.push(`/project/${encodeURIComponent(chapters[0])}`);
-    return null;
-  }
-
-  // If a specific chapter is selected but it doesn't exist, redirect to project page
-  if (
-    selectedChapter &&
-    chapters.length > 0 &&
-    !chapters.includes(selectedChapter)
-  ) {
-    router.push("/project");
-    return null;
-  }
+  useEffect(() => {
+    if (!selectedChapter && project && chapters.length > 0) {
+      router.push(`/project/${encodeURIComponent(chapters[0])}`);
+    } else if (
+      selectedChapter &&
+      chapters.length > 0 &&
+      !chapters.includes(selectedChapter)
+    ) {
+      router.push("/project");
+    }
+  }, [selectedChapter, project, chapters, router]);
 
   const handleChapterSelect = (chapter: string) => {
     router.push(`/project/${encodeURIComponent(chapter)}`);
@@ -119,17 +116,17 @@ export default function ProjectDashboardClient({
                 scriptPromise={scriptPromise}
               />
 
-              <div className="space-y-4">
-                <div className="flex justify-between items-center mb-4">
+              <div className="space-y-8">
+                <div className="flex justify-between">
                   <div className="flex gap-4 items-center">
                     <label htmlFor="my-drawer" className="btn drawer-button">
                       <Menu size={16} />
                     </label>
-                    <h3 className="text-lg font-bold">{project.name}</h3>
+                    <h3 className="mt-0 mb-0">{project.name}</h3>
                   </div>
 
                   {selectedChapter && (
-                    <h4 className="text-lg font-semibold">{selectedChapter}</h4>
+                    <h4 className="mt-0 mb-0">{selectedChapter}</h4>
                   )}
                 </div>
 
@@ -167,8 +164,9 @@ export default function ProjectDashboardClient({
             aria-label="close sidebar"
             className="drawer-overlay"
           ></label>
-          <ul className="flex flex-col gap-8 menu bg-base-200 text-base-content min-h-full w-90 p-4">
+          <ul className="flex flex-col gap-8 menu bg-base-200 min-h-full w-90 p-4 mt-0">
             <li>
+              <h4>Chapters</h4>
               <div className="flex flex-col p-0 hover:bg-transparent active:!bg-transparent active:!text-base-content">
                 <ChapterSelector
                   chapters={chapters}

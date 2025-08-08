@@ -201,7 +201,7 @@ export default function ScriptEditor({
                       onChange={(e) =>
                         handleSegmentCharacterChange(index, e.target.value)
                       }
-                      className="select select-xs select-bordered min-w-[120px]"
+                      className="select select-sm select-bordered min-w-[120px]"
                     >
                       {availableCharacters.map((char) => (
                         <option key={char} value={char}>
@@ -210,9 +210,7 @@ export default function ScriptEditor({
                       ))}
                     </select>
                   </div>
-                  <div className="text-xs text-base-content/70 px-3">
-                    {voiceName}
-                  </div>
+                  <span className="text-sm">{voiceName}</span>
                 </div>
                 <div className="flex-1">
                   <textarea

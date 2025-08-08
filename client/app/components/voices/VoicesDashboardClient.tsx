@@ -1,14 +1,19 @@
 "use client";
 
 import React from "react";
-import { Suspense, useState } from "react";
+import { useState, use } from "react";
+import { useRouter } from "next/navigation";
 
 import { Plus } from "lucide-react";
 
+import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
+import { useUserChannels } from "@/app/lib/pusher-channels";
+
 import { Voice } from "../../actions/voices";
+import { handleRevalidateTag } from "@/app/actions/revalidate";
 
 import VoiceAddModal from "./VoiceAddModal";
-import VoiceList from "./VoiceList";
+import VoiceCard from "./VoiceCard";
 
 interface VoicesDashboardClientProps {
   voicesPromise: Promise<Voice[]>;
@@ -17,23 +22,32 @@ interface VoicesDashboardClientProps {
 export default function VoicesDashboardClient({
   voicesPromise,
 }: VoicesDashboardClientProps) {
+  const router = useRouter();
+  const voices = use(voicesPromise);
+  const userChannels = useUserChannels();
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  usePusherSubscriptions({
+    channels: userChannels ? [userChannels.VOICES_CHANNEL] : null,
+    onUpdate: () => {
+      handleRevalidateTag("voices");
+      router.refresh();
+    },
+  });
 
   return (
     <div className="flex flex-col gap-2 w-full">
-      <Suspense
-        fallback={
-          <div className="flex items-center gap-2">
-            Loading voices{" "}
-            <span className="loading loading-dots loading-xs"></span>
-          </div>
-        }
-      >
-        <VoiceList voicesPromise={voicesPromise} />
-      </Suspense>
+      <h4>Voices</h4>
+      {voices.length > 0 && (
+        <div className="flex flex-col max-h-80 overflow-y-scroll">
+          {voices.map((voice) => (
+            <VoiceCard key={voice.name} voice={voice} />
+          ))}
+        </div>
+      )}
       <button
         onClick={() => setIsModalOpen(true)}
-        className="btn btn-block mt-4 text-xs text-gray-500"
+        className="btn btn-block mt-4 text-gray-500"
       >
         <Plus className="h-4 w-4" />
         Add Voice

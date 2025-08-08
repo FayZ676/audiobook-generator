@@ -6,20 +6,22 @@ export default function Home() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <div className="hero bg-base-200 min-h-[70vh]">
-        <div className="hero-content flex-col lg:flex-row-reverse">
+      <div className="hero bg-base-200 min-h-[50vh]">
+        <div className="hero-content flex-col md:flex-row-reverse md:gap-16">
           <Image
-            src="dashboard.png"
+            src="/dashboard.png"
+            height={1500}
+            width={1500}
             className="min-w-[300px] rounded-lg shadow-2xl"
             alt="Dashboard Screenshot"
           />
-          <div className="flex flex-col gap-8">
-            <h1 className="text-5xl font-bold">
-              Your Stories Brought to Life<br></br>Exactly as Imagined
+          <div className="flex flex-col">
+            <h1 className="leading-snug">
+              Your Stories<br></br>Brought to Life<br></br>Exactly as Imagined
             </h1>
-            <p className="text-xl font-medium">
+            <p>
               Produce multi-voice audiobooks with complete control. Customize
-              characters, clone voices instantly, edit scripts on the fly ... Or
+              characters, clone voices instantly, edit scripts on the fly, or
               let the studio handle it all for you.
             </p>
           </div>
@@ -32,15 +34,13 @@ export default function Home() {
       <div></div>
 
       {/* Features */}
-      <div className="py-16 px-4 bg-base-100">
+      <div className="bg-base-100">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            One Goal in Mind
-          </h2>
+          <h2 className="text-center">One Goal in Mind</h2>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="card bg-base-200 shadow-lg">
-              <div className="card-body text-center">
-                <h3 className="card-title justify-center text-xl mb-4">
+              <div className="card-body">
+                <h3 className="card-title justify-center">
                   Multi Speaker Narration
                 </h3>
                 <p>
@@ -51,8 +51,8 @@ export default function Home() {
               </div>
             </div>
             <div className="card bg-base-200 shadow-lg">
-              <div className="card-body text-center">
-                <h3 className="card-title justify-center text-xl mb-4">
+              <div className="card-body">
+                <h3 className="card-title justify-center">
                   Instant Voice Cloning
                 </h3>
                 <p>
@@ -64,7 +64,7 @@ export default function Home() {
             </div>
             <div className="card bg-base-200 shadow-lg">
               <div className="card-body text-center">
-                <h3 className="card-title justify-center text-xl mb-4">
+                <h3 className="card-title justify-center mb-4">
                   Edit Everything
                 </h3>
                 <p>
@@ -79,9 +79,9 @@ export default function Home() {
       </div>
 
       {/* Waitlist */}
-      <div className="py-16 px-4">
+      <div>
         <div className="text-center">
-          <h2 className="text-3xl font-bold mb-4">Join the Waitlist</h2>
+          <h2>Join the Waitlist</h2>
           <div className="flex justify-center">
             <Waitlist />
           </div>
