@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Literal
 
 from pydantic import BaseModel
@@ -6,23 +5,6 @@ from pydantic import BaseModel
 
 Age = Literal["young", "middle-aged", "old"]
 Gender = Literal["male", "female"]
-
-
-@dataclass(eq=True, frozen=True)
-class CharacterDetails:
-    names: frozenset[str]
-    age: Age
-    gender: Gender
-
-    def first_alias(self) -> str:
-        return list(self.names)[0]
-
-    def to_dict(self) -> dict:
-        return {
-            "names": list(self.names),
-            "age": self.age,
-            "gender": self.gender,
-        }
 
 
 class AliasResponse(BaseModel):
