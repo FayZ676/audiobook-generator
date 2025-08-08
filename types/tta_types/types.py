@@ -18,10 +18,6 @@ class Character(BaseModel):
     def __hash__(self):
         return hash((tuple(self.names), self.age, self.gender))
 
-    def names_as_frozenset(self) -> frozenset[str]:
-        """Get names as frozenset for set operations."""
-        return frozenset(self.names)
-
     def first_alias(self) -> str:
         """Get the first name as primary identifier."""
         return self.names[0] if self.names else ""
