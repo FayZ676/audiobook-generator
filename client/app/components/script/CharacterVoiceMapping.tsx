@@ -41,18 +41,16 @@ export default function CharacterVoiceMapping({
   return (
     <div className="bg-base-200 p-4 rounded">
       <div className="max-h-[14rem] overflow-y-scroll mb-4">
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
           {characterMappings.map((mapping) => (
-            <div key={mapping.characterName} className="grid grid-cols-2">
-              <span className="font-medium min-w-[100px]">
-                {mapping.characterName}:
-              </span>
+            <div key={mapping.characterName} className="flex justify-between">
+              <span className="">{mapping.characterName}</span>
               <select
                 value={mapping.currentVoice}
                 onChange={(e) =>
                   onCharacterVoiceChange(mapping.characterName, e.target.value)
                 }
-                className="select select-sm select-bordered flex-1"
+                className="select select-sm select-bordered"
               >
                 <option value="">Select voice</option>
                 {voices.map((voice) => (
