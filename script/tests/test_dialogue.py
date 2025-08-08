@@ -5,7 +5,7 @@ import pytest
 from tta_script.dialogue.extract import (
     get_script,
     create_text_batches,
-    label_dialogue,
+    assign_speakers_to_dialogue,
     label,
     get_text_segments,
 )
@@ -56,7 +56,7 @@ def get_dialogue_expectation(filename: str):
 
 
 @pytest.mark.integration
-def test_label_dialogue():
+def test_assign_speakers_to_dialogue():
     texts = [
         TextSegment("Hello, how are you?", True),
         TextSegment("asked Bob.", False),
@@ -67,14 +67,14 @@ def test_label_dialogue():
         build_speaker_voice({"Bob"}, gender="male", voice_name="bob_voice"),
         build_speaker_voice({"Mary"}, gender="female", voice_name="mary_voice"),
     }
-    assert label_dialogue(texts, speakers, batch_size=2) == [
+    assert assign_speakers_to_dialogue(texts, speakers, batch_size=2) == [
         DialogueLabel(index=0, speaker="Bob"),
         DialogueLabel(index=2, speaker="Mary"),
     ]
 
 
 @pytest.mark.integration
-def test_label_dialogue__large():
+def test_assign_speakers_to_dialogue__large():
     speakers = {
         build_speaker_voice({"Narrator"}, age="middle-aged", gender="male"),
         build_speaker_voice({"Professor McGonagall"}, age="old", gender="female"),
@@ -93,7 +93,7 @@ def test_label_dialogue__large():
         TextSegment(e["text"], not e["speaker"] == "Narrator")
         for e in get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
     ]
-    result = label_dialogue(dialogues, speakers)
+    result = assign_speakers_to_dialogue(dialogues, speakers)
     expectated_dialogues = [
         DialogueLabel(i, e["speaker"])
         for i, e in enumerate(
@@ -164,7 +164,7 @@ def test_get_script():
 
     script = get_script(
         text=get_text("harrypotter-1.txt"),
-        speakers_voices=speakers,
+        speakers=speakers,
     )
 
     expected_details = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
