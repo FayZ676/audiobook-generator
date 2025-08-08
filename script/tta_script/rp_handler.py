@@ -60,17 +60,16 @@ def handler(event: dict):
         data = Response(filename="", request_word_count=0)
     else:
         try:
-            speaker_voices = assign_voices(
-                characters=speaker_details, voices=voices.copy()
-            )
-            script = get_script(text, speaker_voices)
+            speakers = assign_voices(characters=speaker_details, voices=voices.copy())
+            script = get_script(text, speakers)
             script_filename = _upload_script_result(
                 request.user_id, script, request_data.chapter_name
             )
-            word_count = len(text.split())
             status = "complete"
             message = ""
-            data = Response(filename=script_filename, request_word_count=word_count)
+            data = Response(
+                filename=script_filename, request_word_count=len(text.split())
+            )
         except (ValueError, KeyError, TypeError, RuntimeError) as e:
             logger.exception("Exception occurred during script processing: %s", str(e))
             status = "failed"

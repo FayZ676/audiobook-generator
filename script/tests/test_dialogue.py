@@ -7,7 +7,7 @@ from tta_script.dialogue.extract import (
     create_text_batches,
     label_dialogue,
     label,
-    split_by_dialogue,
+    get_text_segments,
 )
 from tta_script.dialogue.types import TextSegment, DialogueLabel
 from tta_script.character.types import Age, Gender
@@ -174,6 +174,6 @@ def test_get_script():
 
 
 def test_split_by_dialogue():
-    result = split_by_dialogue(get_text("harrypotter-1.txt"))
+    result = get_text_segments(get_text("harrypotter-1.txt"))
     expectation = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
     assert [r.text for r in result] == [e["text"] for e in expectation]

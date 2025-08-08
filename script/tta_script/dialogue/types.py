@@ -29,10 +29,10 @@ class Dialogue:
 @dataclass(frozen=True, eq=True)
 class TextSegment:
     text: str
-    dialogue: bool
+    is_dialogue: bool
 
     def __str__(self) -> str:
-        return f"({'D' if self.dialogue else 'N'}) {self.text}"
+        return f"({'D' if self.is_dialogue else 'N'}) {self.text}"
 
 
 @dataclass(frozen=True, eq=True)

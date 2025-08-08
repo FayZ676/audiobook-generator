@@ -48,20 +48,19 @@ def _extract_new_characters_from_text(
 ) -> set[Character]:
     """Extract new speakers from text that don't overlap with existing ones."""
     new_characters = set()
-
     for chunk in get_chunks(text, 100000):
-        chunk_speakers = _process_text_chunk(
+        chunk_characters = _extract_characters_from_chunk(
             chunk, existing_characters | new_characters
         )
-        new_characters.update(chunk_speakers)
+        new_characters.update(chunk_characters)
 
     return new_characters
 
 
-def _process_text_chunk(
+def _extract_characters_from_chunk(
     chunk: str, existing_characters: set[Character]
 ) -> set[Character]:
-    """Process a single text chunk to find new characters."""
+    """Extract new characters from a single text chunk."""
     character_aliases = get_aliases(chunk, get_character_names(chunk))
     new_aliases = _filter_overlapping_aliases(character_aliases, existing_characters)
 
