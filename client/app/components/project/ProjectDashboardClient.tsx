@@ -167,7 +167,7 @@ export default function ProjectDashboardClient({
             aria-label="close sidebar"
             className="drawer-overlay"
           ></label>
-          <ul className="flex flex-col gap-8 menu bg-base-200 text-base-content min-h-full w-90 p-4">
+          <ul className="flex flex-col gap-8 menu bg-base-200 min-h-full w-90 p-4">
             <li>
               <div className="flex flex-col p-0 hover:bg-transparent active:!bg-transparent active:!text-base-content">
                 <ChapterSelector

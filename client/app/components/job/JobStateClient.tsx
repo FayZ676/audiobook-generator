@@ -38,7 +38,7 @@ export default function JobStateClient({
   });
 
   return (
-    <div className="">
+    <div>
       {jobState?.script_status && jobState?.script_status === "processing" && (
         <>
           <Tip variant="info">

@@ -64,7 +64,7 @@ export default function Home() {
             </div>
             <div className="card bg-base-200 shadow-lg">
               <div className="card-body text-center">
-                <h3 className="card-title justify-center text-xl mb-4">
+                <h3 className="card-title justify-center mb-4">
                   Edit Everything
                 </h3>
                 <p>
@@ -79,9 +79,9 @@ export default function Home() {
       </div>
 
       {/* Waitlist */}
-      <div className="">
+      <div>
         <div className="text-center">
-          <h2 className="">Join the Waitlist</h2>
+          <h2>Join the Waitlist</h2>
           <div className="flex justify-center">
             <Waitlist />
           </div>

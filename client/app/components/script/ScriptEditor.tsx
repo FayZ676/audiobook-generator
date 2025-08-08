@@ -204,7 +204,7 @@ export default function ScriptEditor({
                       ))}
                     </select>
                   </div>
-                  <div className="text-base-content/70 px-3">{voiceName}</div>
+                  <div>{voiceName}</div>
                 </div>
                 <div className="flex-1">
                   <textarea
