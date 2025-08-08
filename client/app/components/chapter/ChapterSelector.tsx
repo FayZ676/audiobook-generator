@@ -21,15 +21,14 @@ export default function ChapterSelector({
 
   return (
     <div className="space-y-2 w-full">
-      <h4>Chapters</h4>
       <div className="space-y-1">
         {chapters.map((chapter) => (
           <button
             key={chapter}
-            className="btn btn-ghost btn-block"
+            className="btn btn-block"
             onClick={() => onChapterSelect(chapter)}
           >
-            <div className="font-medium truncate">{chapter}</div>
+            <h6 className="truncate">{chapter}</h6>
           </button>
         ))}
       </div>

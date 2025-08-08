@@ -64,13 +64,13 @@ export default function AudioPlayer({ voiceName }: AudioPlayerProps) {
           onClick={loadAudioUrl}
           className="btn btn-success btn-outline btn-sm"
         >
-          <CirclePlay size={14} />
+          <CirclePlay size={16} />
         </button>
       )}
 
       {loading && (
         <button className="btn btn-disabled btn-outline btn-sm">
-          <LoaderCircle size={14} className="animate-spin" />
+          <LoaderCircle size={16} className="animate-spin" />
         </button>
       )}
 
@@ -84,7 +84,7 @@ export default function AudioPlayer({ voiceName }: AudioPlayerProps) {
               isPlaying ? "btn-warning" : "btn-success"
             }`}
           >
-            {isPlaying ? <Pause size={14} /> : <CirclePlay size={14} />}
+            {isPlaying ? <Pause size={16} /> : <CirclePlay size={16} />}
           </button>
           <audio
             id={`audio-${voiceName}`}

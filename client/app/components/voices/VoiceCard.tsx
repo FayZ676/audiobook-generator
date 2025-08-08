@@ -40,7 +40,7 @@ export default function VoiceCard({ voice }: VoiceCardProps) {
     <div className="flex justify-between items-center p-2">
       <div className="flex flex-col gap-1">
         <span className="truncate max-w-50">{voice.name}</span>
-        <div className="text-gray-500 flex gap-2">
+        <div className="text-xs italic text-gray-500 flex gap-2">
           <span>{voice.gender}</span>
           <span>{voice.age}</span>
         </div>
@@ -57,9 +57,9 @@ export default function VoiceCard({ voice }: VoiceCardProps) {
             title="Delete voice"
           >
             {isDeleting ? (
-              <LoaderCircle size={14} className="animate-spin" />
+              <LoaderCircle size={16} className="animate-spin" />
             ) : (
-              <Trash2 size={14} />
+              <Trash2 size={16} />
             )}
           </button>
         )}

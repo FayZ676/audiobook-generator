@@ -166,6 +166,7 @@ export default function ProjectDashboardClient({
           ></label>
           <ul className="flex flex-col gap-8 menu bg-base-200 min-h-full w-90 p-4 mt-0">
             <li>
+              <h4>Chapters</h4>
               <div className="flex flex-col p-0 hover:bg-transparent active:!bg-transparent active:!text-base-content">
                 <ChapterSelector
                   chapters={chapters}
