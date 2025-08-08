@@ -27,37 +27,20 @@ class CharacterAliases:
         return next(iter(self.names))
 
 
-def get_traits(chunk: str, names: list[str]) -> tuple[dict[str, str], dict[str, str]]:
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        ages_future = executor.submit(get_ages, chunk, names)
-        genders_future = executor.submit(get_genders, chunk, names)
-        ages = ages_future.result()
-        genders = genders_future.result()
-    return ages, genders
-
-
-def get_speaker_details(
-    text: str, previous_speakers: list[Character]
+def get_character_details(
+    text: str, previous_characters: set[Character]
 ) -> set[Character]:
     """
-    Extract speaker details from the provided text using NER to identify names and LLMs to determine their traits.
+    Extract character details from the provided text using NER to identify names and LLMs to determine their traits.
 
     Args:
-        text: The text to extract speakers from
-        previous_speakers: List of previously found speakers (from types.Character) to convert and include
+        text: The text to extract characters from
+        previous_characters: Set of previously found characters to include
     """
-    existing_speakers = _convert_previous_speakers(previous_speakers)
-    new_speakers = _extract_new_speakers_from_text(text, existing_speakers)
-    all_speakers = existing_speakers | new_speakers
-    all_speakers.add(_create_narrator())
-    return all_speakers
-
-
-def _convert_previous_speakers(
-    previous_speakers: list[Character],
-) -> set[Character]:
-    """Convert API format speakers to internal format."""
-    return set(previous_speakers)  # No conversion needed anymore!
+    new_characters = _extract_new_speakers_from_text(text, previous_characters)
+    all_characters = previous_characters | new_characters
+    all_characters.add(_create_narrator())
+    return all_characters
 
 
 def _extract_new_speakers_from_text(
@@ -101,11 +84,20 @@ def _filter_overlapping_aliases(
     return non_overlapping
 
 
+def _get_traits(chunk: str, names: list[str]) -> tuple[dict[str, str], dict[str, str]]:
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        ages_future = executor.submit(get_ages, chunk, names)
+        genders_future = executor.submit(get_genders, chunk, names)
+        ages = ages_future.result()
+        genders = genders_future.result()
+    return ages, genders
+
+
 def _create_characters_with_traits(
     chunk: str, aliases_list: list[CharacterAliases]
 ) -> set[Character]:
     """Create Character with LLM-determined traits."""
-    ages, genders = get_traits(
+    ages, genders = _get_traits(
         chunk, [aliases.primary_name() for aliases in aliases_list]
     )
 

@@ -6,7 +6,7 @@ from typing import BinaryIO
 
 from tta_script.dialogue.types import Script
 from tta_script.dialogue.extract import get_script
-from tta_script.character.extract import get_speaker_details
+from tta_script.character.extract import get_character_details
 from tta_script.text_utils import normalize_quotes
 from tta_script.voices import assign_voices
 
@@ -51,7 +51,7 @@ def handler(event: dict):
     request_data = ScriptRequest.model_validate(request.data)
 
     text = normalize_quotes(request_data.text_content)
-    speaker_details = get_speaker_details(text, request_data.previous_speakers)
+    speaker_details = get_character_details(text, request_data.previous_speakers)
     voices = request_data.voices
 
     if len(speaker_details) > len(voices):

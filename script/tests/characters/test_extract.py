@@ -7,7 +7,7 @@ from tta_script.character.extract import (
     get_ages,
     get_genders,
     get_aliases,
-    get_speaker_details,
+    get_character_details,
 )
 from tta_script.metrics import precision_recall
 from tta_types.types import SpeakerDetails
@@ -127,7 +127,7 @@ def test_get_speaker_details_with_previous_speakers():
     # Simple text with one known and one new character
     text = 'Harry Potter said "Hello!" Then Hermione replied "Hi there!"'
 
-    result = get_speaker_details(text, previous_speakers)
+    result = get_character_details(text, previous_speakers)
 
     # Should include both previous speakers
     harry_found = any("Harry Potter" in speaker.names for speaker in result)
@@ -146,6 +146,6 @@ def test_get_speaker_details_without_previous_speakers():
     text = 'Test said "Hello!"'
 
     # Should work with empty list
-    result = get_speaker_details(text, [])
+    result = get_character_details(text, [])
 
     assert len(result) >= 1  # At least narrator
