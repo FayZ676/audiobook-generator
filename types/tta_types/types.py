@@ -1,6 +1,6 @@
 from typing import Literal, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 Age = Literal["young", "middle-aged", "old"]
@@ -12,8 +12,6 @@ class Character(BaseModel):
     names: list[str]
     age: Age
     gender: Gender
-
-    model_config = {"frozen": True}
 
     def __hash__(self):
         return hash((tuple(self.names), self.age, self.gender))
@@ -30,7 +28,7 @@ class Voice(BaseModel):
     audio_path: str
     audio_transcript: str
 
-    model_config = {"frozen": True}
+    model_config = ConfigDict(frozen=True)
 
 
 class SpeechRequestSegment(BaseModel):
