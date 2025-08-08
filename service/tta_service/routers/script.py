@@ -127,11 +127,13 @@ def _get_voices(user_id: str):
 def _get_previous_speakers(user_id: str) -> set[Speaker]:
     """Extract speakers from all existing scripts for the user"""
     project_files = s3_client.list_files(PROJECTS_BUCKET, f"{user_id}/")
+    script_files = [file for file in project_files if file.endswith("/script.json")]
     previous_speakers: set[Speaker] = set()
-    for file in project_files:
-        if file.endswith("/script.json"):
-            script_content = s3_client.get_file(PROJECTS_BUCKET, file).decode("utf-8")
-            script_data = ScriptData.model_validate_json(script_content)
-            previous_speakers.update(script_data.speakers)
+    for script_file in script_files:
+        script_content = s3_client.get_file(PROJECTS_BUCKET, script_file).decode(
+            "utf-8"
+        )
+        script_data = ScriptData.model_validate_json(script_content)
+        previous_speakers.update(script_data.speakers)
 
     return previous_speakers
