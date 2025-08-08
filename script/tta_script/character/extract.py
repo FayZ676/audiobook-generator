@@ -16,7 +16,7 @@ from tta_script.character.types import (
     AliasResponse,
     GendersResponse,
 )
-from tta_types.types import SpeakerDetails
+from tta_types.types import Character
 
 
 @dataclass(frozen=True)
@@ -37,14 +37,14 @@ def get_traits(chunk: str, names: list[str]) -> tuple[dict[str, str], dict[str, 
 
 
 def get_speaker_details(
-    text: str, previous_speakers: list[SpeakerDetails]
-) -> set[SpeakerDetails]:
+    text: str, previous_speakers: list[Character]
+) -> set[Character]:
     """
     Extract speaker details from the provided text using NER to identify names and LLMs to determine their traits.
 
     Args:
         text: The text to extract speakers from
-        previous_speakers: List of previously found speakers (from types.SpeakerDetails) to convert and include
+        previous_speakers: List of previously found speakers (from types.Character) to convert and include
     """
     existing_speakers = _convert_previous_speakers(previous_speakers)
     new_speakers = _extract_new_speakers_from_text(text, existing_speakers)
@@ -54,15 +54,15 @@ def get_speaker_details(
 
 
 def _convert_previous_speakers(
-    previous_speakers: list[SpeakerDetails],
-) -> set[SpeakerDetails]:
+    previous_speakers: list[Character],
+) -> set[Character]:
     """Convert API format speakers to internal format."""
     return set(previous_speakers)  # No conversion needed anymore!
 
 
 def _extract_new_speakers_from_text(
-    text: str, existing_speakers: set[SpeakerDetails]
-) -> set[SpeakerDetails]:
+    text: str, existing_speakers: set[Character]
+) -> set[Character]:
     """Extract new speakers from text that don't overlap with existing ones."""
     new_speakers = set()
 
@@ -74,8 +74,8 @@ def _extract_new_speakers_from_text(
 
 
 def _process_text_chunk(
-    chunk: str, existing_speakers: set[SpeakerDetails]
-) -> set[SpeakerDetails]:
+    chunk: str, existing_speakers: set[Character]
+) -> set[Character]:
     """Process a single text chunk to find new speakers."""
     character_aliases = get_aliases(chunk, get_speaker_names(chunk))
     new_aliases = _filter_overlapping_aliases(character_aliases, existing_speakers)
@@ -87,7 +87,7 @@ def _process_text_chunk(
 
 
 def _filter_overlapping_aliases(
-    character_aliases: set[CharacterAliases], existing_speakers: set[SpeakerDetails]
+    character_aliases: set[CharacterAliases], existing_speakers: set[Character]
 ) -> list[CharacterAliases]:
     """Filter out aliases that overlap with existing speakers."""
     non_overlapping = []
@@ -103,14 +103,14 @@ def _filter_overlapping_aliases(
 
 def _create_characters_with_traits(
     chunk: str, aliases_list: list[CharacterAliases]
-) -> set[SpeakerDetails]:
-    """Create SpeakerDetails with LLM-determined traits."""
+) -> set[Character]:
+    """Create Character with LLM-determined traits."""
     ages, genders = get_traits(
         chunk, [aliases.primary_name() for aliases in aliases_list]
     )
 
     return {
-        SpeakerDetails(
+        Character(
             names=list(aliases.names),
             age=age,
             gender=gender,
@@ -124,9 +124,9 @@ def _create_characters_with_traits(
     }
 
 
-def _create_narrator() -> SpeakerDetails:
+def _create_narrator() -> Character:
     """Create the standard narrator character."""
-    return SpeakerDetails(
+    return Character(
         names=["Narrator"],
         age="middle-aged",
         gender="male",

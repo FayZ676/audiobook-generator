@@ -7,20 +7,16 @@ Age = Literal["young", "middle-aged", "old"]
 Gender = Literal["male", "female"]
 
 
-class SpeakerDetails(BaseModel):
-    """Speaker details for cross-service communication (API/service layer)"""
+class Character(BaseModel):
 
     names: list[str]
     age: Age
     gender: Gender
-    voice_name: str = ""
-    audio_path: str = ""
-    audio_transcript: str = ""
 
     model_config = {"frozen": True}
 
     def __hash__(self):
-        return hash((tuple(self.names), self.age, self.gender, self.voice_name))
+        return hash((tuple(self.names), self.age, self.gender))
 
     def names_as_frozenset(self) -> frozenset[str]:
         """Get names as frozenset for set operations."""
@@ -33,8 +29,8 @@ class SpeakerDetails(BaseModel):
 
 class Voice(BaseModel):
     name: str
-    age: str
-    gender: str
+    age: Age
+    gender: Gender
     audio_path: str
     audio_transcript: str
 
@@ -57,7 +53,7 @@ class ScriptRequest(BaseModel):
     text_content: str
     voices: list[Voice]
     chapter_name: str
-    previous_speakers: list[SpeakerDetails]
+    previous_speakers: list[Character]
 
 
 class Response(BaseModel):
