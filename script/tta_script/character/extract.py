@@ -37,31 +37,33 @@ def get_character_details(
         text: The text to extract characters from
         previous_characters: Set of previously found characters to include
     """
-    new_characters = _extract_new_speakers_from_text(text, previous_characters)
+    new_characters = _extract_new_characters_from_text(text, previous_characters)
     all_characters = previous_characters | new_characters
     all_characters.add(_create_narrator())
     return all_characters
 
 
-def _extract_new_speakers_from_text(
-    text: str, existing_speakers: set[Character]
+def _extract_new_characters_from_text(
+    text: str, existing_characters: set[Character]
 ) -> set[Character]:
     """Extract new speakers from text that don't overlap with existing ones."""
-    new_speakers = set()
+    new_characters = set()
 
     for chunk in get_chunks(text, 100000):
-        chunk_speakers = _process_text_chunk(chunk, existing_speakers | new_speakers)
-        new_speakers.update(chunk_speakers)
+        chunk_speakers = _process_text_chunk(
+            chunk, existing_characters | new_characters
+        )
+        new_characters.update(chunk_speakers)
 
-    return new_speakers
+    return new_characters
 
 
 def _process_text_chunk(
-    chunk: str, existing_speakers: set[Character]
+    chunk: str, existing_characters: set[Character]
 ) -> set[Character]:
-    """Process a single text chunk to find new speakers."""
-    character_aliases = get_aliases(chunk, get_speaker_names(chunk))
-    new_aliases = _filter_overlapping_aliases(character_aliases, existing_speakers)
+    """Process a single text chunk to find new characters."""
+    character_aliases = get_aliases(chunk, get_character_names(chunk))
+    new_aliases = _filter_overlapping_aliases(character_aliases, existing_characters)
 
     if not new_aliases:
         return set()
@@ -70,14 +72,14 @@ def _process_text_chunk(
 
 
 def _filter_overlapping_aliases(
-    character_aliases: set[CharacterAliases], existing_speakers: set[Character]
+    character_aliases: set[CharacterAliases], existing_characters: set[Character]
 ) -> list[CharacterAliases]:
-    """Filter out aliases that overlap with existing speakers."""
+    """Filter out aliases that overlap with existing characters."""
     non_overlapping = []
     for aliases in character_aliases:
         has_overlap = any(
-            any(name in existing_speaker.names for name in aliases.names)
-            for existing_speaker in existing_speakers
+            any(name in existing_character.names for name in aliases.names)
+            for existing_character in existing_characters
         )
         if not has_overlap:
             non_overlapping.append(aliases)
@@ -125,7 +127,7 @@ def _create_narrator() -> Character:
     )
 
 
-def get_speaker_names(text: str) -> set[str]:
+def get_character_names(text: str) -> set[str]:
     paragraphs = []
     for p in text.split("\n\n"):
         if p.count('"') % 2 == 0 and p.count('"') > 0:

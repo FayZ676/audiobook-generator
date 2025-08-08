@@ -53,7 +53,7 @@ class ScriptRequest(BaseModel):
     text_content: str
     voices: list[Voice]
     chapter_name: str
-    previous_speakers: list[Character]
+    previous_characters: list[Character]
 
 
 class Response(BaseModel):
