@@ -8,7 +8,6 @@ Gender = Literal["male", "female"]
 
 
 class Character(BaseModel):
-
     names: list[str]
     age: Age
     gender: Gender
@@ -36,6 +35,9 @@ class Speaker(BaseModel):
     voice: Voice
 
     model_config = ConfigDict(frozen=True)
+
+    def __hash__(self):
+        return hash((self.character, self.voice))
 
     def first_alias(self) -> str:
         return self.character.first_alias()

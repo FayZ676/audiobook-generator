@@ -9,7 +9,7 @@ from tta_script.dialogue.types import (
     ScriptSegment,
     Script,
 )
-from tta_script.voices import Speaker
+from tta_script.speakers import Speaker
 from tta_script.models.text import generate_text
 
 
@@ -19,9 +19,7 @@ def get_script(text: str, speakers: set[Speaker]) -> Script:
         ScriptSegment(text=d.text, speaker_alias=d.speaker.first_alias())
         for d in dialogues
     ]
-    return Script(
-        segments=script_segments, speakers=list({d.speaker for d in dialogues})
-    )
+    return Script(segments=script_segments, speakers=list(d.speaker for d in dialogues))
 
 
 def get_dialogues(text_segments: list[TextSegment], speakers: set[Speaker]):

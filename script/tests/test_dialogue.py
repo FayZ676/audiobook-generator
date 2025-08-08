@@ -11,7 +11,7 @@ from tta_script.dialogue.extract import (
 )
 from tta_script.dialogue.types import TextSegment, DialogueLabel
 from tta_script.character.types import Age, Gender
-from tta_script.voices import Speaker
+from tta_script.speakers import Speaker
 from tta_types.types import Voice, Character
 
 
@@ -24,8 +24,8 @@ def build_speaker_voice(
     audio_transcript: str = "foo",
 ):
     return Speaker(
-        Character(names=list(names), age=age, gender=gender),
-        Voice(
+        character=Character(names=list(names), age=age, gender=gender),
+        voice=Voice(
             name=voice_name,
             age=age,
             gender=gender,

@@ -1,7 +1,7 @@
 from tta_types.types import Voice, Character, Speaker
 
 
-def assign_voices(
+def get_speakers(
     characters: set[Character],
     voices: list[Voice],
     previous_speakers: set[Speaker],
@@ -12,7 +12,7 @@ def assign_voices(
         )
 
     available_voices = voices.copy()
-    voiced_characters = set()
+    speakers: set[Speaker] = set()
 
     for character in characters:
         existing_speaker = next(
@@ -25,7 +25,7 @@ def assign_voices(
         )
 
         if existing_speaker:
-            voiced_characters.add(existing_speaker)
+            speakers.add(existing_speaker)
             if existing_speaker.voice in available_voices:
                 available_voices.remove(existing_speaker.voice)
         else:
@@ -38,12 +38,10 @@ def assign_voices(
             if matching_voices:
                 selected_voice = matching_voices[0]
                 available_voices.remove(selected_voice)
-                voiced_characters.add(
-                    Speaker(character=character, voice=selected_voice)
-                )
+                speakers.add(Speaker(character=character, voice=selected_voice))
             else:
                 raise ValueError(
                     f"No available voices for {character.first_alias()} with age {character.age} and gender {character.gender}."
                 )
 
-    return voiced_characters
+    return speakers
