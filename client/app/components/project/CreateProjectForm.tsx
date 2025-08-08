@@ -28,7 +28,7 @@ export default function CreateProjectForm() {
 
   return (
     <div className="flex flex-col gap-4 bg-base-200 p-4 rounded">
-      <h3 className="font-bold">Create New Project</h3>
+      <h3>Create New Project</h3>
 
       {error && <Tip variant="warning">{error}</Tip>}
 
