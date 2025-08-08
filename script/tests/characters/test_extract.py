@@ -115,18 +115,9 @@ def test_get_speaker_details_with_previous_speakers():
             gender="female",
         ),
     }
-
     result = get_characters(
         'Harry Potter said "Hello!" Then Hermione replied "Hi there!"',
         previous_characters,
     )
-
-    harry_found = any("Harry Potter" in speaker.names for speaker in result)
-    mcgonagall_found = any(
-        "Professor McGonagall" in speaker.names for speaker in result
-    )
-
-    assert harry_found, "Harry Potter should be included from previous speakers"
-    assert (
-        mcgonagall_found
-    ), "Professor McGonagall should be included from previous speakers"
+    assert any("Harry Potter" in speaker.names for speaker in result)
+    assert any("Professor McGonagall" in speaker.names for speaker in result)
