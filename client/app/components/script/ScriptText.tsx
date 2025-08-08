@@ -30,11 +30,11 @@ export default function ScriptText({
           {script.segments.map((scriptSegment, index) => {
             // Find speaker details for this segment
             const speaker = script.speakers.find((s) =>
-              s.names.includes(scriptSegment.speaker_alias)
+              s.character.names.includes(scriptSegment.speaker_alias)
             );
             const speakerName =
-              speaker?.names[0] || scriptSegment.speaker_alias;
-            const voiceName = speaker?.voice_name || "";
+              speaker?.character.names[0] || scriptSegment.speaker_alias;
+            const voiceName = speaker?.voice.name || "";
 
             return (
               <div key={index} className="mb-4">

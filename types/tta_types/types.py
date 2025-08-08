@@ -1,16 +1,46 @@
 from typing import Literal, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+
+
+Age = Literal["young", "middle-aged", "old"]
+Gender = Literal["male", "female"]
+
+
+class Character(BaseModel):
+    names: list[str]
+    age: Age
+    gender: Gender
+
+    def __hash__(self):
+        return hash((tuple(self.names), self.age, self.gender))
+
+    def first_alias(self) -> str:
+        """Get the first name as primary identifier."""
+        return self.names[0] if self.names else ""
 
 
 class Voice(BaseModel):
     name: str
-    age: str
-    gender: str
+    age: Age
+    gender: Gender
     audio_path: str
     audio_transcript: str
 
-    model_config = {"frozen": True}
+    model_config = ConfigDict(frozen=True)
+
+
+class Speaker(BaseModel):
+    character: Character
+    voice: Voice
+
+    model_config = ConfigDict(frozen=True)
+
+    def __hash__(self):
+        return hash((self.character, self.voice))
+
+    def first_alias(self) -> str:
+        return self.character.first_alias()
 
 
 class SpeechRequestSegment(BaseModel):
@@ -29,6 +59,7 @@ class ScriptRequest(BaseModel):
     text_content: str
     voices: list[Voice]
     chapter_name: str
+    previous_speakers: list[Speaker]
 
 
 class Response(BaseModel):

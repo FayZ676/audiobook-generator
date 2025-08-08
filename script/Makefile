@@ -9,7 +9,7 @@ run:
 	@./run.sh
 
 lint:
-	pylint --rcfile=../.pylintrc tta_script tests
+	.venv/bin/python -m pylint --rcfile=../.pylintrc tta_script tests
 
 test:
 	pytest --cov=tta --cov-report=term-missing --cov-fail-under=80 tests

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel
 
-from tta_script.voices import Speaker
+from tta_script.speakers import Speaker
 
 
 class LLMDialogue(BaseModel):
@@ -29,14 +29,13 @@ class Dialogue:
 @dataclass(frozen=True, eq=True)
 class TextSegment:
     text: str
-    dialogue: bool
+    is_dialogue: bool
 
     def __str__(self) -> str:
-        return f"({'D' if self.dialogue else 'N'}) {self.text}"
+        return f"({'D' if self.is_dialogue else 'N'}) {self.text}"
 
 
-@dataclass(frozen=True, eq=True)
-class ScriptSegment:
+class ScriptSegment(BaseModel):
     text: str
     speaker_alias: str  # References speaker by first_alias()
 
@@ -44,19 +43,6 @@ class ScriptSegment:
         return f"{self.speaker_alias}: {self.text}"
 
 
-@dataclass(frozen=True, eq=True)
-class Script:
+class Script(BaseModel):
     segments: list[ScriptSegment]
-    speakers: list[Speaker]  # All unique speakers with voice details
-
-    def to_dict(self) -> dict:
-        return {
-            "segments": [
-                {
-                    "text": segment.text,
-                    "speaker_alias": segment.speaker_alias,
-                }
-                for segment in self.segments
-            ],
-            "speakers": [speaker.to_dict() for speaker in self.speakers],
-        }
+    speakers: list[Speaker]

@@ -1,5 +1,6 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 
 from tta_script.models.text import generate_text
 from tta_script.ner import NER
@@ -14,11 +15,81 @@ from tta_script.character.types import (
     AgesResponse,
     AliasResponse,
     GendersResponse,
-    SpeakerDetails,
 )
+from tta_types.types import Character
 
 
-def get_traits(chunk: str, names: list[str]) -> tuple[dict[str, str], dict[str, str]]:
+@dataclass(frozen=True)
+class CharacterAliases:
+    names: frozenset[str]
+
+    def primary_name(self) -> str:
+        return next(iter(self.names))
+
+
+def get_characters(text: str, previous_characters: set[Character]) -> set[Character]:
+    """
+    Extract character details from the provided text using NER to identify names and LLMs to determine their traits.
+
+    Args:
+        text: The text to extract characters from
+        previous_characters: Set of previously found characters to include
+    """
+    new_characters = _extract_new_characters_from_text(text, previous_characters)
+    all_characters = previous_characters | new_characters
+    all_characters.add(
+        Character(
+            names=["Narrator"],
+            age="middle-aged",
+            gender="male",
+        )
+    )
+    return all_characters
+
+
+def _extract_new_characters_from_text(
+    text: str, existing_characters: set[Character]
+) -> set[Character]:
+    """Extract new speakers from text that don't overlap with existing ones."""
+    new_characters = set()
+    for chunk in get_chunks(text, 100000):
+        chunk_characters = _extract_characters_from_chunk(
+            chunk, existing_characters | new_characters
+        )
+        new_characters.update(chunk_characters)
+
+    return new_characters
+
+
+def _extract_characters_from_chunk(
+    chunk: str, existing_characters: set[Character]
+) -> set[Character]:
+    """Extract new characters from a single text chunk."""
+    character_aliases = get_aliases(chunk, get_character_names(chunk))
+    new_aliases = _filter_overlapping_aliases(character_aliases, existing_characters)
+
+    if not new_aliases:
+        return set()
+
+    return _create_characters_with_traits(chunk, new_aliases)
+
+
+def _filter_overlapping_aliases(
+    character_aliases: set[CharacterAliases], existing_characters: set[Character]
+) -> list[CharacterAliases]:
+    """Filter out aliases that overlap with existing characters."""
+    non_overlapping = []
+    for aliases in character_aliases:
+        has_overlap = any(
+            any(name in existing_character.names for name in aliases.names)
+            for existing_character in existing_characters
+        )
+        if not has_overlap:
+            non_overlapping.append(aliases)
+    return non_overlapping
+
+
+def _get_traits(chunk: str, names: list[str]) -> tuple[dict[str, str], dict[str, str]]:
     with ThreadPoolExecutor(max_workers=2) as executor:
         ages_future = executor.submit(get_ages, chunk, names)
         genders_future = executor.submit(get_genders, chunk, names)
@@ -27,30 +98,30 @@ def get_traits(chunk: str, names: list[str]) -> tuple[dict[str, str], dict[str, 
     return ages, genders
 
 
-def get_speaker_details(text: str):
-    """
-    Extract speaker details from the provided text using NER to identify names and LLMs to determine their traits.
-    """
-    details: set[SpeakerDetails] = set()
-    for chunk in get_chunks(text, 100000):
-        names = list(get_aliases(chunk, get_speaker_names(chunk)))
-        ages, genders = get_traits(chunk, [name[0] for name in names])
-        details.update(
-            {
-                # TODO: We need to make sure that age and gender are typed correctly.
-                SpeakerDetails(frozenset(name), age, gender)
-                for name, age, gender in zip(
-                    names, list(ages.values()), list(genders.values())
-                )
-                if name and age and gender
-            }
+def _create_characters_with_traits(
+    chunk: str, aliases_list: list[CharacterAliases]
+) -> set[Character]:
+    """Create Character with LLM-determined traits."""
+    ages, genders = _get_traits(
+        chunk, [aliases.primary_name() for aliases in aliases_list]
+    )
+
+    return {
+        Character(
+            names=list(aliases.names),
+            age=age,
+            gender=gender,
         )
-    # NOTE: We are hardcoding the narrator SpeakerDetails here. We do something similar in `get_script`. Is this necessary?
-    details.add(SpeakerDetails(frozenset(["Narrator"]), "middle-aged", "male"))
-    return details
+        for aliases, age, gender in zip(
+            aliases_list,
+            list(ages.values()),
+            list(genders.values()),
+        )
+        if aliases and age and gender
+    }
 
 
-def get_speaker_names(text: str) -> set[str]:
+def get_character_names(text: str) -> set[str]:
     paragraphs = []
     for p in text.split("\n\n"):
         if p.count('"') % 2 == 0 and p.count('"') > 0:
@@ -76,8 +147,11 @@ def get_genders(text: str, names: list[str]) -> dict[str, str]:
     return dict(zip(names, [str(gender) for gender in json.loads(result)["genders"]]))
 
 
-def get_aliases(text: str, names: set[str]) -> set[tuple[str]]:
+def get_aliases(text: str, names: set[str]) -> set[CharacterAliases]:
     result = generate_text(
         "", alias.substitute({"text": text, "names": names}), AliasResponse
     )
-    return {tuple(alias) for alias in json.loads(result)["aliases"]}
+    return {
+        CharacterAliases(frozenset(alias_group))
+        for alias_group in json.loads(result)["aliases"]
+    }
