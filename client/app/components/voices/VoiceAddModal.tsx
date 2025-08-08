@@ -98,9 +98,9 @@ export default function VoiceAddModal({ isOpen, onClose }: VoiceAddModalProps) {
     <div className={`modal ${isOpen ? "modal-open" : ""}`}>
       <div className="modal-box max-w-2xl">
         <div className="flex flex-col gap-2 rounded">
-          <div className="prose prose-base max-w-none">
-            <label htmlFor="name-input">Name</label>
-          </div>
+          <label htmlFor="name-input" className="font-medium">
+            Name
+          </label>
           <input
             id="name-input"
             name="name"
@@ -114,9 +114,9 @@ export default function VoiceAddModal({ isOpen, onClose }: VoiceAddModalProps) {
 
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-2">
-              <div className="prose prose-base max-w-none">
-                <label htmlFor="age-select">Age</label>
-              </div>
+              <label htmlFor="age-select" className="font-medium">
+                Age
+              </label>
               <select
                 id="age-select"
                 name="age"
@@ -135,9 +135,9 @@ export default function VoiceAddModal({ isOpen, onClose }: VoiceAddModalProps) {
             </div>
 
             <div className="flex flex-col gap-2">
-              <div className="prose prose-base max-w-none">
-                <label htmlFor="gender-select">Gender</label>
-              </div>
+              <label htmlFor="gender-select" className="font-medium">
+                Gender
+              </label>
               <select
                 id="gender-select"
                 name="gender"
@@ -156,9 +156,9 @@ export default function VoiceAddModal({ isOpen, onClose }: VoiceAddModalProps) {
             </div>
           </div>
 
-          <div className="prose prose-base max-w-none">
-            <label htmlFor="audio-input-mode">Audio Sample</label>
-          </div>
+          <label htmlFor="audio-input-mode" className="font-medium">
+            Audio Sample
+          </label>
           <Tip variant="info">Keep your audio file under 12 seconds.</Tip>
 
           <input

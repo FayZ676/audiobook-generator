@@ -47,7 +47,9 @@ export default function RootLayout({
               <UserButton />
             </SignedIn>
           </header>
-          {children}
+          <main className="prose prose-lg max-w-none">
+            {children}
+          </main>
         </body>
       </html>
     </ClerkProvider>
