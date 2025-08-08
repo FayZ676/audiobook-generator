@@ -52,34 +52,25 @@ def handler(event: dict):
 
     text = normalize_quotes(request_data.text_content)
     previous_speakers = set(request_data.previous_speakers)
-    characters = get_characters(text, {s.character for s in previous_speakers})
-    voices = request_data.voices
 
-    if len(characters) > len(voices):
+    try:
+        speakers = assign_voices(
+            characters=get_characters(text, {s.character for s in previous_speakers}),
+            voices=request_data.voices,
+            previous_speakers=previous_speakers,
+        )
+        script = get_script(text, speakers)
+        script_filename = _upload_script_result(
+            request.user_id, script, request_data.chapter_name
+        )
+        status = "complete"
+        message = ""
+        data = Response(filename=script_filename, request_word_count=len(text.split()))
+    except (ValueError, KeyError, TypeError, RuntimeError) as e:
+        logger.exception("Exception occurred during script processing: %s", str(e))
         status = "failed"
-        message = "Not enough voices available for the number of speakers in the text."
+        message = str(e)
         data = Response(filename="", request_word_count=0)
-    else:
-        try:
-            speakers = assign_voices(
-                characters=characters,
-                voices=voices.copy(),
-                previous_speakers=previous_speakers,
-            )
-            script = get_script(text, speakers)
-            script_filename = _upload_script_result(
-                request.user_id, script, request_data.chapter_name
-            )
-            status = "complete"
-            message = ""
-            data = Response(
-                filename=script_filename, request_word_count=len(text.split())
-            )
-        except (ValueError, KeyError, TypeError, RuntimeError) as e:
-            logger.exception("Exception occurred during script processing: %s", str(e))
-            status = "failed"
-            message = str(e)
-            data = Response(filename="", request_word_count=0)
 
     requests.post(
         request.callback,
