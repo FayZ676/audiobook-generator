@@ -91,7 +91,7 @@ def send_script_request(script_request: BuildScriptRequest):
             text_content=script_request.text_content,
             voices=voices,
             chapter_name=script_request.chapter_name,
-            previous_speakers=previous_speakers,
+            previous_speakers=list(previous_speakers),
         ).model_dump(),
     )
     # NOTE: Add /runsync endpoint when testing locally.
@@ -124,14 +124,14 @@ def _get_voices(user_id: str):
     return voices
 
 
-def _get_previous_speakers(user_id: str) -> list[Speaker]:
+def _get_previous_speakers(user_id: str) -> set[Speaker]:
     """Extract speakers from all existing scripts for the user"""
     project_files = s3_client.list_files(PROJECTS_BUCKET, f"{user_id}/")[0]
-    previous_speakers: list[Speaker] = []
+    previous_speakers: set[Speaker] = set()
     for file in project_files:
         if file.endswith("/script.json"):
             script_content = s3_client.get_file(PROJECTS_BUCKET, file).decode("utf-8")
             script_data = ScriptData.model_validate_json(script_content)
-            previous_speakers.extend(script_data.speakers)
+            previous_speakers.update(script_data.speakers)
 
     return previous_speakers
