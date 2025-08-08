@@ -10,7 +10,7 @@ from tta_script.dialogue.extract import (
     split_by_dialogue,
 )
 from tta_script.dialogue.types import TextSegment, DialogueLabel
-from tta_script.character.types import SpeakerDetails, Age, Gender
+from tta_script.character.types import Age, Gender, CharacterDetails
 from tta_script.voices import Speaker
 from tta_types.types import Voice
 
@@ -24,7 +24,7 @@ def build_speaker_voice(
     audio_transcript: str = "foo",
 ):
     return Speaker(
-        SpeakerDetails(frozenset(names), age, gender),
+        CharacterDetails(frozenset(names), age, gender),
         Voice(
             name=voice_name,
             age=age,
@@ -90,7 +90,7 @@ def test_label_dialogue__large():
         build_speaker_voice({"Harry Potter"}, age="young", gender="male"),
     }
     dialogues = [
-        TextSegment(e["text"], False if e["speaker"] == "Narrator" else True)
+        TextSegment(e["text"], not e["speaker"] == "Narrator")
         for e in get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
     ]
     result = label_dialogue(dialogues, speakers)

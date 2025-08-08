@@ -9,6 +9,7 @@ run:
 	@./run.sh
 
 lint:
+	(source .venv/bin/activate || . .venv/bin/activate) && \
 	pylint --rcfile=../.pylintrc tta_script tests
 
 test:

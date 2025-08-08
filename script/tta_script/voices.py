@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 
-from tta_script.character.types import SpeakerDetails
+from tta_script.character.types import CharacterDetails
 
 from tta_types.types import Voice
 
 
 @dataclass(eq=True, frozen=True)
 class Speaker:
-    character: SpeakerDetails
+    character: CharacterDetails
     voice: Voice
 
     def first_alias(self) -> str:
@@ -22,7 +22,7 @@ class Speaker:
         }
 
 
-def assign_voices(speakers: set[SpeakerDetails], voices: list[Voice]) -> set[Speaker]:
+def assign_voices(speakers: set[CharacterDetails], voices: list[Voice]) -> set[Speaker]:
     available_voices = voices
     voiced_characters = set()
     for speaker in speakers:

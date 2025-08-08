@@ -61,7 +61,7 @@ def handler(event: dict):
     else:
         try:
             speaker_voices = assign_voices(
-                speakers=speaker_details, voices=voices.copy()
+                speakers=set(speaker_details), voices=voices.copy()
             )
             script = get_script(text, speaker_voices)
             script_filename = _upload_script_result(
@@ -71,7 +71,7 @@ def handler(event: dict):
             status = "complete"
             message = ""
             data = Response(filename=script_filename, request_word_count=word_count)
-        except Exception as e:
+        except (ValueError, KeyError, TypeError, RuntimeError) as e:
             logger.exception("Exception occurred during script processing: %s", str(e))
             status = "failed"
             message = str(e)

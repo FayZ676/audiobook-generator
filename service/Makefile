@@ -6,3 +6,7 @@ install:
 run:
 	@chmod +x ./run.sh
 	@./run.sh
+
+lint:
+	(source .venv/bin/activate || . .venv/bin/activate) && \
+	pylint --rcfile=../.pylintrc tta_service

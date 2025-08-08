@@ -19,5 +19,9 @@ run:
 	@chmod +x ./run.sh
 	@./run.sh
 
+lint:
+	(source .venv/bin/activate || . .venv/bin/activate) && \
+	pylint --rcfile=../.pylintrc tta_speech
+
 test:
 	@set -a && source .env.local && set +a && cd tta_speech && python rp_handler.py
