@@ -28,7 +28,6 @@ export default function ScriptText({
       ) : (
         <div className="h-[32rem] overflow-y-scroll bg-base-200 p-4 rounded">
           {script.segments.map((scriptSegment, index) => {
-            // Find speaker details for this segment
             const speaker = script.speakers.find((s) =>
               s.character.names.includes(scriptSegment.speaker_alias)
             );
@@ -37,17 +36,15 @@ export default function ScriptText({
             const voiceName = speaker?.voice.name || "";
 
             return (
-              <div key={index} className="mb-4">
-                <p>
-                  <span
-                    className="font-medium tooltip tooltip-right"
-                    data-tip={voiceName}
-                  >
-                    {speakerName}
-                  </span>
-                  : {scriptSegment.text}
-                </p>
-              </div>
+              <p key={index} className="mt-0 mb-2">
+                <span
+                  className="font-medium tooltip tooltip-right"
+                  data-tip={voiceName}
+                >
+                  {speakerName}
+                </span>
+                : {scriptSegment.text}
+              </p>
             );
           })}
         </div>
