@@ -61,7 +61,7 @@ def handler(event: dict):
     else:
         try:
             speaker_voices = assign_voices(
-                speakers=set(speaker_details), voices=voices.copy()
+                speakers=speaker_details, voices=voices.copy()
             )
             script = get_script(text, speaker_voices)
             script_filename = _upload_script_result(

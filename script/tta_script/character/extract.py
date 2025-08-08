@@ -1,5 +1,6 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 
 from tta_script.models.text import generate_text
 from tta_script.ner import NER
@@ -19,6 +20,14 @@ from tta_script.character.types import (
 from tta_types.types import SpeakerDetails
 
 
+@dataclass(frozen=True)
+class CharacterAliases:
+    names: frozenset[str]
+
+    def primary_name(self) -> str:
+        return next(iter(self.names))
+
+
 def get_traits(chunk: str, names: list[str]) -> tuple[dict[str, str], dict[str, str]]:
     with ThreadPoolExecutor(max_workers=2) as executor:
         ages_future = executor.submit(get_ages, chunk, names)
@@ -30,7 +39,7 @@ def get_traits(chunk: str, names: list[str]) -> tuple[dict[str, str], dict[str, 
 
 def get_speaker_details(
     text: str, previous_speakers: list[SpeakerDetails]
-) -> list[CharacterDetails]:
+) -> set[CharacterDetails]:
     """
     Extract speaker details from the provided text using NER to identify names and LLMs to determine their traits.
 
@@ -38,47 +47,86 @@ def get_speaker_details(
         text: The text to extract speakers from
         previous_speakers: List of previously found speakers (from types.SpeakerDetails) to convert and include
     """
-    if previous_speakers is None:
-        previous_speakers = []
+    existing_speakers = _convert_previous_speakers(previous_speakers)
+    new_speakers = _extract_new_speakers_from_text(text, existing_speakers)
+    all_speakers = existing_speakers | new_speakers
+    all_speakers.add(_create_narrator())
+    return all_speakers
 
-    # Convert previous speakers to script format and collect their names
-    previous_speaker_names = set()
-    details: set[CharacterDetails] = set()
 
-    # Add previous speakers to result set
-    for prev_speaker in previous_speakers:
-        if hasattr(prev_speaker, "names"):
-            previous_speaker_names.update(prev_speaker.names)
-            script_speaker = CharacterDetails(
-                frozenset(prev_speaker.names), prev_speaker.age, prev_speaker.gender
-            )
-            details.add(script_speaker)
+def _convert_previous_speakers(
+    previous_speakers: list[SpeakerDetails],
+) -> set[CharacterDetails]:
+    """Convert API format speakers to internal format."""
+    return {
+        CharacterDetails(frozenset(speaker.names), speaker.age, speaker.gender)
+        for speaker in previous_speakers
+    }
 
-    # Extract new speakers from text
+
+def _extract_new_speakers_from_text(
+    text: str, existing_speakers: set[CharacterDetails]
+) -> set[CharacterDetails]:
+    """Extract new speakers from text that don't overlap with existing ones."""
+    new_speakers = set()
+
     for chunk in get_chunks(text, 100000):
-        names = list(get_aliases(chunk, get_speaker_names(chunk)))
+        chunk_speakers = _process_text_chunk(chunk, existing_speakers | new_speakers)
+        new_speakers.update(chunk_speakers)
 
-        # Only process names that don't overlap with previous speakers
-        new_names = []
-        for name_tuple in names:
-            if not any(name in previous_speaker_names for name in name_tuple):
-                new_names.append(name_tuple)
+    return new_speakers
 
-        if new_names:
-            ages, genders = get_traits(chunk, [name[0] for name in new_names])
-            details.update(
-                {
-                    CharacterDetails(frozenset(name), age, gender)
-                    for name, age, gender in zip(
-                        new_names, list(ages.values()), list(genders.values())
-                    )
-                    if name and age and gender
-                }
-            )
 
-    # NOTE: We are hardcoding the narrator CharacterDetails here. We do something similar in `get_script`. Is this necessary?
-    details.add(CharacterDetails(frozenset(["Narrator"]), "middle-aged", "male"))
-    return list(details)
+def _process_text_chunk(
+    chunk: str, existing_speakers: set[CharacterDetails]
+) -> set[CharacterDetails]:
+    """Process a single text chunk to find new speakers."""
+    character_aliases = get_aliases(chunk, get_speaker_names(chunk))
+    new_aliases = _filter_overlapping_aliases(character_aliases, existing_speakers)
+
+    if not new_aliases:
+        return set()
+
+    return _create_characters_with_traits(chunk, new_aliases)
+
+
+def _filter_overlapping_aliases(
+    character_aliases: set[CharacterAliases], existing_speakers: set[CharacterDetails]
+) -> list[CharacterAliases]:
+    """Filter out aliases that overlap with existing speakers."""
+    non_overlapping = []
+    for aliases in character_aliases:
+        has_overlap = any(
+            any(name in existing_speaker.names for name in aliases.names)
+            for existing_speaker in existing_speakers
+        )
+        if not has_overlap:
+            non_overlapping.append(aliases)
+    return non_overlapping
+
+
+def _create_characters_with_traits(
+    chunk: str, aliases_list: list[CharacterAliases]
+) -> set[CharacterDetails]:
+    """Create CharacterDetails with LLM-determined traits."""
+    ages, genders = get_traits(
+        chunk, [aliases.primary_name() for aliases in aliases_list]
+    )
+
+    return {
+        CharacterDetails(aliases.names, age, gender)
+        for aliases, age, gender in zip(
+            aliases_list,
+            list(ages.values()),
+            list(genders.values()),
+        )
+        if aliases and age and gender
+    }
+
+
+def _create_narrator() -> CharacterDetails:
+    """Create the standard narrator character."""
+    return CharacterDetails(frozenset(["Narrator"]), "middle-aged", "male")
 
 
 def get_speaker_names(text: str) -> set[str]:
@@ -107,8 +155,11 @@ def get_genders(text: str, names: list[str]) -> dict[str, str]:
     return dict(zip(names, [str(gender) for gender in json.loads(result)["genders"]]))
 
 
-def get_aliases(text: str, names: set[str]) -> set[tuple[str]]:
+def get_aliases(text: str, names: set[str]) -> set[CharacterAliases]:
     result = generate_text(
         "", alias.substitute({"text": text, "names": names}), AliasResponse
     )
-    return {tuple(alias) for alias in json.loads(result)["aliases"]}
+    return {
+        CharacterAliases(frozenset(alias_group))
+        for alias_group in json.loads(result)["aliases"]
+    }
