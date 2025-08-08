@@ -126,7 +126,7 @@ def _get_voices(user_id: str):
 
 def _get_previous_speakers(user_id: str) -> set[Speaker]:
     """Extract speakers from all existing scripts for the user"""
-    project_files = s3_client.list_files(PROJECTS_BUCKET, f"{user_id}/")[0]
+    project_files = s3_client.list_files(PROJECTS_BUCKET, f"{user_id}/")
     previous_speakers: set[Speaker] = set()
     for file in project_files:
         if file.endswith("/script.json"):
