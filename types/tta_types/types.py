@@ -13,9 +13,22 @@ class SpeakerDetails(BaseModel):
     names: list[str]
     age: Age
     gender: Gender
-    voice_name: str
+    voice_name: str = ""
     audio_path: str = ""
     audio_transcript: str = ""
+
+    model_config = {"frozen": True}
+
+    def __hash__(self):
+        return hash((tuple(self.names), self.age, self.gender, self.voice_name))
+
+    def names_as_frozenset(self) -> frozenset[str]:
+        """Get names as frozenset for set operations."""
+        return frozenset(self.names)
+
+    def first_alias(self) -> str:
+        """Get the first name as primary identifier."""
+        return self.names[0] if self.names else ""
 
 
 class Voice(BaseModel):

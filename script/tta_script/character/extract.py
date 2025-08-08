@@ -15,7 +15,6 @@ from tta_script.character.types import (
     AgesResponse,
     AliasResponse,
     GendersResponse,
-    CharacterDetails,
 )
 from tta_types.types import SpeakerDetails
 
@@ -39,7 +38,7 @@ def get_traits(chunk: str, names: list[str]) -> tuple[dict[str, str], dict[str, 
 
 def get_speaker_details(
     text: str, previous_speakers: list[SpeakerDetails]
-) -> set[CharacterDetails]:
+) -> set[SpeakerDetails]:
     """
     Extract speaker details from the provided text using NER to identify names and LLMs to determine their traits.
 
@@ -56,17 +55,14 @@ def get_speaker_details(
 
 def _convert_previous_speakers(
     previous_speakers: list[SpeakerDetails],
-) -> set[CharacterDetails]:
+) -> set[SpeakerDetails]:
     """Convert API format speakers to internal format."""
-    return {
-        CharacterDetails(frozenset(speaker.names), speaker.age, speaker.gender)
-        for speaker in previous_speakers
-    }
+    return set(previous_speakers)  # No conversion needed anymore!
 
 
 def _extract_new_speakers_from_text(
-    text: str, existing_speakers: set[CharacterDetails]
-) -> set[CharacterDetails]:
+    text: str, existing_speakers: set[SpeakerDetails]
+) -> set[SpeakerDetails]:
     """Extract new speakers from text that don't overlap with existing ones."""
     new_speakers = set()
 
@@ -78,8 +74,8 @@ def _extract_new_speakers_from_text(
 
 
 def _process_text_chunk(
-    chunk: str, existing_speakers: set[CharacterDetails]
-) -> set[CharacterDetails]:
+    chunk: str, existing_speakers: set[SpeakerDetails]
+) -> set[SpeakerDetails]:
     """Process a single text chunk to find new speakers."""
     character_aliases = get_aliases(chunk, get_speaker_names(chunk))
     new_aliases = _filter_overlapping_aliases(character_aliases, existing_speakers)
@@ -91,7 +87,7 @@ def _process_text_chunk(
 
 
 def _filter_overlapping_aliases(
-    character_aliases: set[CharacterAliases], existing_speakers: set[CharacterDetails]
+    character_aliases: set[CharacterAliases], existing_speakers: set[SpeakerDetails]
 ) -> list[CharacterAliases]:
     """Filter out aliases that overlap with existing speakers."""
     non_overlapping = []
@@ -107,14 +103,18 @@ def _filter_overlapping_aliases(
 
 def _create_characters_with_traits(
     chunk: str, aliases_list: list[CharacterAliases]
-) -> set[CharacterDetails]:
-    """Create CharacterDetails with LLM-determined traits."""
+) -> set[SpeakerDetails]:
+    """Create SpeakerDetails with LLM-determined traits."""
     ages, genders = get_traits(
         chunk, [aliases.primary_name() for aliases in aliases_list]
     )
 
     return {
-        CharacterDetails(aliases.names, age, gender)
+        SpeakerDetails(
+            names=list(aliases.names),
+            age=age,
+            gender=gender,
+        )
         for aliases, age, gender in zip(
             aliases_list,
             list(ages.values()),
@@ -124,9 +124,13 @@ def _create_characters_with_traits(
     }
 
 
-def _create_narrator() -> CharacterDetails:
+def _create_narrator() -> SpeakerDetails:
     """Create the standard narrator character."""
-    return CharacterDetails(frozenset(["Narrator"]), "middle-aged", "male")
+    return SpeakerDetails(
+        names=["Narrator"],
+        age="middle-aged",
+        gender="male",
+    )
 
 
 def get_speaker_names(text: str) -> set[str]:
