@@ -74,7 +74,7 @@ export default function AudioPlayer({ voiceName }: AudioPlayerProps) {
         </button>
       )}
 
-      {error && <span className="text-sm text-red-500">{error}</span>}
+      {error && <span className="text-red-500">{error}</span>}
 
       {audioUrl && !loading && (
         <>

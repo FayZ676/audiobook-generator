@@ -44,7 +44,7 @@ export default function CharacterVoiceMapping({
         <div className="flex flex-col gap-4">
           {characterMappings.map((mapping) => (
             <div key={mapping.characterName} className="grid grid-cols-2">
-              <span className="font-medium min-w-[100px] text-sm">
+              <span className="font-medium min-w-[100px]">
                 {mapping.characterName}:
               </span>
               <select

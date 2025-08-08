@@ -189,7 +189,7 @@ export default function VoiceAddModal({ isOpen, onClose }: VoiceAddModalProps) {
           </div>
 
           {audioFile && (
-            <div className="flex gap-1 items-center text-sm text-success">
+            <div className="flex gap-1 items-center text-success">
               <Check size={16} /> Audio recording ready
             </div>
           )}

@@ -40,7 +40,7 @@ export default function VoiceCard({ voice }: VoiceCardProps) {
     <div className="flex justify-between items-center p-2">
       <div className="flex flex-col gap-1">
         <span className="truncate max-w-50">{voice.name}</span>
-        <div className="text-sm text-gray-500 flex gap-2">
+        <div className="text-gray-500 flex gap-2">
           <span>{voice.gender}</span>
           <span>{voice.age}</span>
         </div>

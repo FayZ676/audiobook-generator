@@ -57,7 +57,7 @@ export default function CreateChapterForm({
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="btn btn-block text-gray-500 text-xs"
+        className="btn btn-block text-gray-500"
         disabled={isCreating}
       >
         <Plus className="h-4 w-4" />
