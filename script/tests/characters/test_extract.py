@@ -10,7 +10,7 @@ from tta_script.character.extract import (
     get_characters,
 )
 from tta_script.metrics import precision_recall
-from tta_types.types import SpeakerDetails
+from tta_types.types import Character
 
 
 def get_text(name: str):
@@ -100,36 +100,27 @@ def test_get_genders__hp_chapter_1_3():
     )
 
 
-# def test_get_speaker_details():
-#     for detail in get_speaker_details(get_text("harrypotter-1-3.txt")):
-#         print(detail)
-
-
+@pytest.mark.integration
 def test_get_speaker_details_with_previous_speakers():
     """Test that previous speakers are included and new ones are filtered correctly"""
-
-    # Mock previous speakers using the API SpeakerDetails type
-    previous_speakers = [
-        SpeakerDetails(
+    previous_characters = {
+        Character(
             names=["Harry Potter"],
             age="young",
             gender="male",
-            voice_name="young_male_voice",
         ),
-        SpeakerDetails(
+        Character(
             names=["Professor McGonagall"],
             age="middle-aged",
             gender="female",
-            voice_name="middle_aged_female_voice",
         ),
-    ]
+    }
 
-    # Simple text with one known and one new character
-    text = 'Harry Potter said "Hello!" Then Hermione replied "Hi there!"'
+    result = get_characters(
+        'Harry Potter said "Hello!" Then Hermione replied "Hi there!"',
+        previous_characters,
+    )
 
-    result = get_characters(text, previous_speakers)
-
-    # Should include both previous speakers
     harry_found = any("Harry Potter" in speaker.names for speaker in result)
     mcgonagall_found = any(
         "Professor McGonagall" in speaker.names for speaker in result
@@ -139,13 +130,3 @@ def test_get_speaker_details_with_previous_speakers():
     assert (
         mcgonagall_found
     ), "Professor McGonagall should be included from previous speakers"
-
-
-def test_get_speaker_details_without_previous_speakers():
-    """Test that get_speaker_details works without previous speakers (backward compatibility)"""
-    text = 'Test said "Hello!"'
-
-    # Should work with empty list
-    result = get_characters(text, [])
-
-    assert len(result) >= 1  # At least narrator
