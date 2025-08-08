@@ -5,7 +5,9 @@ init:
 	cd ../client && make install
 
 lint_all:
-	pylint --rcfile=.pylintrc src
+	cd script && make lint && \
+	cd ../speech && make lint && \
+	cd ../service && make lint && \
 
 test_all:
 	cd tta && make test

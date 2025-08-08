@@ -1,5 +1,4 @@
-from tta_types.types import JobStatus, Voice, EventType
-from tta_types.script import Age, Gender
+from tta_types.types import Voice, JobStatus, EventType, Age, Gender
 
 from pydantic import BaseModel
 

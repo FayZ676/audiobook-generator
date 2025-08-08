@@ -6,9 +6,9 @@ from typing import BinaryIO
 
 from tta_script.dialogue.types import Script
 from tta_script.dialogue.extract import get_script
-from tta_script.character.extract import get_speaker_details
+from tta_script.character.extract import get_characters
 from tta_script.text_utils import normalize_quotes
-from tta_script.voices import assign_voices
+from tta_script.speakers import get_speakers
 
 from tta_types.types import (
     WebhookResponse,
@@ -32,7 +32,7 @@ s3_client = S3Client()
 
 
 def _to_json_fileobject(filename: str, script_data: Script) -> BinaryIO:
-    json_data = script_data.to_dict()
+    json_data = script_data.model_dump()
     json_bytes = json.dumps(json_data, indent=4).encode("utf-8")
     file_obj = io.BytesIO(json_bytes)
     file_obj.name = f"{filename}"
@@ -51,31 +51,26 @@ def handler(event: dict):
     request_data = ScriptRequest.model_validate(request.data)
 
     text = normalize_quotes(request_data.text_content)
-    speaker_details = get_speaker_details(text)
-    voices = request_data.voices
+    previous_speakers = set(request_data.previous_speakers)
 
-    if len(speaker_details) > len(voices):
+    try:
+        speakers = get_speakers(
+            characters=get_characters(text, {s.character for s in previous_speakers}),
+            voices=request_data.voices,
+            previous_speakers=previous_speakers,
+        )
+        script = get_script(text, speakers)
+        script_filename = _upload_script_result(
+            request.user_id, script, request_data.chapter_name
+        )
+        status = "complete"
+        message = ""
+        data = Response(filename=script_filename, request_word_count=len(text.split()))
+    except (ValueError, KeyError, TypeError, RuntimeError) as e:
+        logger.exception("Exception occurred during script processing: %s", str(e))
         status = "failed"
-        message = "Not enough voices available for the number of speakers in the text."
+        message = str(e)
         data = Response(filename="", request_word_count=0)
-    else:
-        try:
-            speaker_voices = assign_voices(
-                speakers=speaker_details, voices=voices.copy()
-            )
-            script = get_script(text, speaker_voices)
-            script_filename = _upload_script_result(
-                request.user_id, script, request_data.chapter_name
-            )
-            word_count = len(text.split())
-            status = "complete"
-            message = ""
-            data = Response(filename=script_filename, request_word_count=word_count)
-        except Exception as e:
-            logger.exception("Exception occurred during script processing: %s", str(e))
-            status = "failed"
-            message = str(e)
-            data = Response(filename="", request_word_count=0)
 
     requests.post(
         request.callback,

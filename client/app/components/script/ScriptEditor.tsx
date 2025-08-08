@@ -79,12 +79,18 @@ export default function ScriptEditor({
     existingAge: "young" | "middle-aged" | "old",
     existingGender: "male" | "female"
   ) => ({
-    names: [characterName],
-    age: voice?.age || existingAge,
-    gender: voice?.gender || existingGender,
-    voice_name: voice?.name || "",
-    audio_path: voice?.audio_path || "",
-    audio_transcript: voice?.audio_transcript || "",
+    character: {
+      names: [characterName],
+      age: voice?.age || existingAge,
+      gender: voice?.gender || existingGender,
+    },
+    voice: {
+      name: voice?.name || "",
+      age: voice?.age || existingAge,
+      gender: voice?.gender || existingGender,
+      audio_path: voice?.audio_path || "",
+      audio_transcript: voice?.audio_transcript || "",
+    },
   });
 
   const handleCharacterVoiceChange = (
@@ -96,12 +102,12 @@ export default function ScriptEditor({
       voices.find((voice) => voice.name === voiceName) || null;
 
     const updatedSpeakers = editingScript.speakers.map((speaker) =>
-      speaker.names.includes(characterName)
+      speaker.character.names.includes(characterName)
         ? createSpeakerFromVoice(
             characterName,
             selectedVoice,
-            speaker.age,
-            speaker.gender
+            speaker.character.age,
+            speaker.character.gender
           )
         : speaker
     );
@@ -115,7 +121,7 @@ export default function ScriptEditor({
     clearMessages();
 
     const existingSpeaker = editingScript.speakers.find((speaker) =>
-      speaker.names.includes(character.name)
+      speaker.character.names.includes(character.name)
     );
 
     if (!existingSpeaker) {
@@ -154,7 +160,7 @@ export default function ScriptEditor({
 
   const getAllCharacters = () =>
     editingScript.speakers
-      .flatMap((speaker) => speaker.names)
+      .flatMap((speaker) => speaker.character.names)
       .filter((name) => name?.trim())
       .sort();
 
@@ -179,11 +185,11 @@ export default function ScriptEditor({
       <div className="h-[28rem] overflow-y-scroll bg-base-200 p-4 rounded">
         {editingScript.segments.map((scriptSegment, index) => {
           const speaker = editingScript.speakers.find((s) =>
-            s.names.includes(scriptSegment.speaker_alias)
+            s.character.names.includes(scriptSegment.speaker_alias)
           );
           const characterName =
-            speaker?.names[0] || scriptSegment.speaker_alias;
-          const voiceName = speaker?.voice_name || "";
+            speaker?.character.names[0] || scriptSegment.speaker_alias;
+          const voiceName = speaker?.voice.name || "";
 
           return (
             <div key={index} className="mb-4">

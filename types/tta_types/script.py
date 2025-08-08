@@ -5,31 +5,9 @@ This module provides adapters to convert between the canonical script types
 (defined in script/tta_script/dialogue/types.py) and service-specific formats.
 """
 
-from typing import List, Literal
+from typing import List
 from pydantic import BaseModel
-from tta_types.types import SpeechRequestSegment
-
-
-Age = Literal["young", "middle-aged", "old"]
-Gender = Literal["male", "female"]
-
-
-class ScriptSpeaker(BaseModel):
-    """Represents speaker information with names and voice mapping."""
-
-    names: List[str]
-    voice_name: str
-
-
-class SpeakerDetails(BaseModel):
-    """Extended speaker information including demographic and audio details."""
-
-    names: List[str]
-    age: Age
-    gender: Gender
-    voice_name: str
-    audio_path: str = ""
-    audio_transcript: str = ""
+from tta_types.types import SpeechRequestSegment, Speaker
 
 
 class ScriptData(BaseModel):
@@ -41,14 +19,14 @@ class ScriptData(BaseModel):
     """
 
     segments: List[dict]
-    speakers: List[ScriptSpeaker]
+    speakers: List[Speaker]
 
     def to_speech_segments(self) -> List[SpeechRequestSegment]:
         """Convert script data to speech request segments with proper voice mapping."""
         speaker_alias_to_voice = {}
         for speaker in self.speakers:
-            for name in speaker.names:
-                speaker_alias_to_voice[name] = speaker.voice_name
+            for name in speaker.character.names:
+                speaker_alias_to_voice[name] = speaker.voice.name
 
         return [
             SpeechRequestSegment(

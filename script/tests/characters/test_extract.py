@@ -3,13 +3,14 @@ from pathlib import Path
 import pytest
 
 from tta_script.character.extract import (
-    get_speaker_names,
+    get_character_names,
     get_ages,
     get_genders,
     get_aliases,
-    # get_speaker_details,
+    get_characters,
 )
 from tta_script.metrics import precision_recall
+from tta_types.types import Character
 
 
 def get_text(name: str):
@@ -29,7 +30,7 @@ def test_get_speakers__hp_chapter_1_3():
         "Dudley",
         "Harry Potter",
     }
-    result = get_speaker_names(get_text("harrypotter-1-3.txt"))
+    result = get_character_names(get_text("harrypotter-1-3.txt"))
     precision, recall = precision_recall(result, expected)
     print(f"Main -> PRECISION: {precision}, RECALL: {recall}")
     assert result == expected
@@ -99,6 +100,24 @@ def test_get_genders__hp_chapter_1_3():
     )
 
 
-# def test_get_speaker_details():
-#     for detail in get_speaker_details(get_text("harrypotter-1-3.txt")):
-#         print(detail)
+@pytest.mark.integration
+def test_get_speaker_details_with_previous_speakers():
+    """Test that previous speakers are included and new ones are filtered correctly"""
+    previous_characters = {
+        Character(
+            names=["Harry Potter"],
+            age="young",
+            gender="male",
+        ),
+        Character(
+            names=["Professor McGonagall"],
+            age="middle-aged",
+            gender="female",
+        ),
+    }
+    result = get_characters(
+        'Harry Potter said "Hello!" Then Hermione replied "Hi there!"',
+        previous_characters,
+    )
+    assert any("Harry Potter" in speaker.names for speaker in result)
+    assert any("Professor McGonagall" in speaker.names for speaker in result)

@@ -9,54 +9,44 @@ from tta_script.dialogue.types import (
     ScriptSegment,
     Script,
 )
-from tta_script.voices import Speaker
+from tta_script.speakers import Speaker
 from tta_script.models.text import generate_text
 
 
-def get_script(
-    text: str, speakers_voices: set[Speaker]
-) -> Script:
-    segments = split_by_dialogue(text)
-    dialogue = build_dialogue(segments, speakers_voices)
-
+def get_script(text: str, speakers: set[Speaker]) -> Script:
+    dialogues = get_dialogues(get_text_segments(text), speakers)
     script_segments = [
         ScriptSegment(text=d.text, speaker_alias=d.speaker.first_alias())
-        for d in dialogue
+        for d in dialogues
     ]
-    unique_speakers = list({d.speaker for d in dialogue})
-
-    return Script(segments=script_segments, speakers=unique_speakers)
+    return Script(segments=script_segments, speakers=list(d.speaker for d in dialogues))
 
 
-def build_dialogue(
-    segments: list[TextSegment],
-    speakers: set[Speaker],
-):
-    narrator_speaker = next(
-        s for s in speakers if "Narrator" in s.character.names
-    )
+def get_dialogues(text_segments: list[TextSegment], speakers: set[Speaker]):
+    narrator = next(s for s in speakers if "Narrator" in s.character.names)
     label_dict = {
-        label.index: label.speaker for label in label_dialogue(segments, speakers)
+        label.index: label.speaker
+        for label in assign_speakers_to_dialogue(text_segments, speakers)
     }
-    dialogue: list[Dialogue] = []
 
-    for i, seg in enumerate(segments):
-        if seg.dialogue:
-            label_speaker = label_dict.get(i)
+    dialogues: list[Dialogue] = []
+    for i, segment in enumerate(text_segments):
+        if segment.is_dialogue:
             speaker = (
                 next(
-                    (s for s in speakers if s.first_alias() == label_speaker),
+                    (s for s in speakers if s.first_alias() == label_dict.get(i)),
                     None,
                 )
-                or narrator_speaker
+                or narrator
             )
         else:
-            speaker = narrator_speaker
-        dialogue.append(Dialogue(speaker, seg.text))
-    return dialogue
+            speaker = narrator
+        dialogues.append(Dialogue(speaker, segment.text))
+
+    return dialogues
 
 
-def label_dialogue(
+def assign_speakers_to_dialogue(
     texts: list[TextSegment], speakers: set[Speaker], batch_size: int = 100
 ):
     labels: list[DialogueLabel] = []
@@ -69,34 +59,32 @@ def label_dialogue(
 
 def create_text_batches(texts: list[TextSegment], batch_size: int):
     enumerated = dict(enumerate(texts))
-    batches = [
+    return [
         {
             i: enumerated[i]
             for i in range(start, min(start + batch_size, len(enumerated)))
         }
         for start in range(0, len(enumerated), batch_size)
     ]
-    return batches
 
 
-def label(texts: dict[int, TextSegment], speakers: set[Speaker], max_retries: int = 3):
+def label(texts: dict[int, TextSegment], speakers: set[Speaker]):
     prompt = label_prompt.substitute(
         text="\n".join([f"{i}. {d}" for i, d in texts.items()]),
         speakers="\n".join([f"- {s.first_alias()}" for s in speakers]),
         num_segments=len(texts),
     )
-    for _ in range(max_retries):
-        response = generate_text("", prompt, DialogueLabelResponse)
-        result = [DialogueLabel(**d) for d in json.loads(response)["dialogue"]]
-        if len(result) <= len(texts):
-            return result
-    raise RuntimeError(
-        f"Invalid number of labels returned after {max_retries} retries: "
-        f"Expected {len(texts)} (at most), but got more."
-    )
+    response = generate_text("", prompt, DialogueLabelResponse)
+    result = [DialogueLabel(**d) for d in json.loads(response)["dialogue"]]
+    if len(result) > len(texts):
+        raise RuntimeError(
+            f"Invalid number of labels returned: "
+            f"Expected {len(texts)} (at most), but got {len(result)}."
+        )
+    return result
 
 
-def split_by_dialogue(text: str) -> list[TextSegment]:
+def get_text_segments(text: str) -> list[TextSegment]:
     def clean_text(text: str) -> str:
         return text.strip().replace("\n", " ")
 
@@ -105,7 +93,7 @@ def split_by_dialogue(text: str) -> list[TextSegment]:
     for paragraph in paragraphs:
         if paragraph.count('"') % 2 != 0:
             # TODO: Handle with LLM.
-            result.append(TextSegment(paragraph, dialogue=False))
+            result.append(TextSegment(paragraph, is_dialogue=False))
         else:
             in_quotes = False
             current_text = ""
@@ -113,12 +101,12 @@ def split_by_dialogue(text: str) -> list[TextSegment]:
                 if char == '"':
                     if current_text:
                         result.append(
-                            TextSegment(current_text.strip(), dialogue=in_quotes)
+                            TextSegment(current_text.strip(), is_dialogue=in_quotes)
                         )
                         current_text = ""
                     in_quotes = not in_quotes
                 else:
                     current_text += char
             if current_text:
-                result.append(TextSegment(current_text.strip(), dialogue=in_quotes))
+                result.append(TextSegment(current_text.strip(), is_dialogue=in_quotes))
     return result
