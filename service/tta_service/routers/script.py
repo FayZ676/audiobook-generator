@@ -2,13 +2,7 @@ import io
 import json
 from datetime import datetime, timezone
 from fastapi import APIRouter, BackgroundTasks, status
-from tta_types.types import (
-    WebhookRequest,
-    ScriptRequest,
-    AudiobookJob,
-    Voice,
-    SpeakerDetails,
-)
+from tta_types.types import WebhookRequest, ScriptRequest, AudiobookJob, Voice, Speaker
 from tta_types.script import ScriptData
 from tta_service.types import BuildScriptRequest, UpdateScriptRequest
 from tta_service.config import (
@@ -130,25 +124,14 @@ def _get_voices(user_id: str):
     return voices
 
 
-# TODO: This is also wrong. We should be returning
-def _get_previous_speakers(user_id: str) -> list[SpeakerDetails]:
+def _get_previous_speakers(user_id: str) -> list[Speaker]:
     """Extract speakers from all existing scripts for the user"""
     project_files = s3_client.list_files(PROJECTS_BUCKET, f"{user_id}/")[0]
-    previous_speakers: list[SpeakerDetails] = []
+    previous_speakers: list[Speaker] = []
     for file in project_files:
         if file.endswith("/script.json"):
             script_content = s3_client.get_file(PROJECTS_BUCKET, file).decode("utf-8")
             script_data = ScriptData.model_validate_json(script_content)
-
-            for speaker in script_data.speakers:
-                # TODO: This is wrong. We can't assume these values. We need to update the ScriptSpeaker to have these values.
-                speaker_details = SpeakerDetails(
-                    names=speaker.names,
-                    age="middle-aged",
-                    gender="male",
-                    voice_name=speaker.voice_name,
-                )
-                if speaker_details not in previous_speakers:
-                    previous_speakers.append(speaker_details)
+            previous_speakers.extend(script_data.speakers)
 
     return previous_speakers

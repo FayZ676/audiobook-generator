@@ -7,14 +7,7 @@ This module provides adapters to convert between the canonical script types
 
 from typing import List
 from pydantic import BaseModel
-from tta_types.types import SpeechRequestSegment
-
-
-class ScriptSpeaker(BaseModel):
-    """Represents speaker information with names and voice mapping."""
-
-    names: List[str]
-    voice_name: str
+from tta_types.types import SpeechRequestSegment, Speaker
 
 
 class ScriptData(BaseModel):
@@ -26,14 +19,14 @@ class ScriptData(BaseModel):
     """
 
     segments: List[dict]
-    speakers: List[ScriptSpeaker]
+    speakers: List[Speaker]
 
     def to_speech_segments(self) -> List[SpeechRequestSegment]:
         """Convert script data to speech request segments with proper voice mapping."""
         speaker_alias_to_voice = {}
         for speaker in self.speakers:
-            for name in speaker.names:
-                speaker_alias_to_voice[name] = speaker.voice_name
+            for name in speaker.character.names:
+                speaker_alias_to_voice[name] = speaker.voice.name
 
         return [
             SpeechRequestSegment(
