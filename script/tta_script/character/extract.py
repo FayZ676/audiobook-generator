@@ -37,7 +37,13 @@ def get_characters(text: str, previous_characters: set[Character]) -> set[Charac
     """
     new_characters = _extract_new_characters_from_text(text, previous_characters)
     all_characters = previous_characters | new_characters
-    all_characters.add(_create_narrator())
+    all_characters.add(
+        Character(
+            names=["Narrator"],
+            age="middle-aged",
+            gender="male",
+        )
+    )
     return all_characters
 
 
@@ -113,15 +119,6 @@ def _create_characters_with_traits(
         )
         if aliases and age and gender
     }
-
-
-def _create_narrator() -> Character:
-    """Create the standard narrator character."""
-    return Character(
-        names=["Narrator"],
-        age="middle-aged",
-        gender="male",
-    )
 
 
 def get_character_names(text: str) -> set[str]:
