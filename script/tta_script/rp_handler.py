@@ -6,7 +6,7 @@ from typing import BinaryIO
 
 from tta_script.dialogue.types import Script
 from tta_script.dialogue.extract import get_script
-from tta_script.character.extract import get_character_details
+from tta_script.character.extract import get_characters
 from tta_script.text_utils import normalize_quotes
 from tta_script.voices import assign_voices
 
@@ -51,16 +51,21 @@ def handler(event: dict):
     request_data = ScriptRequest.model_validate(request.data)
 
     text = normalize_quotes(request_data.text_content)
-    speaker_details = get_character_details(text, set(request_data.previous_characters))
+    previous_speakers = set(request_data.previous_speakers)
+    characters = get_characters(text, {s.character for s in previous_speakers})
     voices = request_data.voices
 
-    if len(speaker_details) > len(voices):
+    if len(characters) > len(voices):
         status = "failed"
         message = "Not enough voices available for the number of speakers in the text."
         data = Response(filename="", request_word_count=0)
     else:
         try:
-            speakers = assign_voices(characters=speaker_details, voices=voices.copy())
+            speakers = assign_voices(
+                characters=characters,
+                voices=voices.copy(),
+                previous_speakers=previous_speakers,
+            )
             script = get_script(text, speakers)
             script_filename = _upload_script_result(
                 request.user_id, script, request_data.chapter_name

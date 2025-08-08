@@ -31,6 +31,16 @@ class Voice(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
+class Speaker(BaseModel):
+    character: Character
+    voice: Voice
+
+    model_config = ConfigDict(frozen=True)
+
+    def first_alias(self) -> str:
+        return self.character.first_alias()
+
+
 class SpeechRequestSegment(BaseModel):
     text: str
     voice_name: str
@@ -47,7 +57,7 @@ class ScriptRequest(BaseModel):
     text_content: str
     voices: list[Voice]
     chapter_name: str
-    previous_characters: list[Character]
+    previous_speakers: list[Speaker]
 
 
 class Response(BaseModel):

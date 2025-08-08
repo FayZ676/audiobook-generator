@@ -44,12 +44,10 @@ def get_voice(user_id: str, voice_name: str):
         except Exception as e:
             if "NoSuchKey" in str(e):
                 continue
-            else:
-                return HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Failed to get voice '{voice_name}'",
-                )
-    return None
+            return HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Failed to get voice '{voice_name}'",
+            )
 
 
 @router.post("/voices")
@@ -155,7 +153,3 @@ def delete_voice(user_id: str, voice_name: str):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete voice: {str(e)}",
         ) from e
-
-
-@router.patch("/voices/{voice_id}")
-def update_voice(name: str | None = None, age: str | None = None): ...

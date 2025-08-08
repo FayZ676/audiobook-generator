@@ -27,9 +27,7 @@ class CharacterAliases:
         return next(iter(self.names))
 
 
-def get_character_details(
-    text: str, previous_characters: set[Character]
-) -> set[Character]:
+def get_characters(text: str, previous_characters: set[Character]) -> set[Character]:
     """
     Extract character details from the provided text using NER to identify names and LLMs to determine their traits.
 
