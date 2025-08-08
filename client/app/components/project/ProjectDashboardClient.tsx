@@ -116,17 +116,17 @@ export default function ProjectDashboardClient({
                 scriptPromise={scriptPromise}
               />
 
-              <div className="space-y-4">
-                <div className="flex justify-between items-center mb-4">
+              <div className="space-y-8">
+                <div className="flex justify-between">
                   <div className="flex gap-4 items-center">
                     <label htmlFor="my-drawer" className="btn drawer-button">
                       <Menu size={16} />
                     </label>
-                    <h3 className="font-bold">{project.name}</h3>
+                    <h3 className="mt-0 mb-0">{project.name}</h3>
                   </div>
 
                   {selectedChapter && (
-                    <h4 className="font-semibold">{selectedChapter}</h4>
+                    <h4 className="mt-0 mb-0">{selectedChapter}</h4>
                   )}
                 </div>
 
@@ -164,7 +164,7 @@ export default function ProjectDashboardClient({
             aria-label="close sidebar"
             className="drawer-overlay"
           ></label>
-          <ul className="flex flex-col gap-8 menu bg-base-200 min-h-full w-90 p-4">
+          <ul className="flex flex-col gap-8 menu bg-base-200 min-h-full w-90 p-4 mt-0">
             <li>
               <div className="flex flex-col p-0 hover:bg-transparent active:!bg-transparent active:!text-base-content">
                 <ChapterSelector
