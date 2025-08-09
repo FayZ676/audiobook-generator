@@ -2,13 +2,12 @@
 
 import React, { useState } from "react";
 import { use } from "react";
-import { Trash2, MicVocal } from "lucide-react";
+import { MicVocal } from "lucide-react";
 
 import { createNarration } from "../../actions/narrate";
 import { Script } from "../../actions/script";
 import { AudiobookJob } from "../../actions/job";
 import { Voice } from "../../actions/voices";
-import { deleteChapter } from "../../actions/chapter";
 import Tip from "../ui/Tip";
 
 interface ChapterControlsProps {
@@ -19,7 +18,6 @@ interface ChapterControlsProps {
   isEditing: boolean;
   onEditToggle: (editing: boolean) => void;
   chapterName: string;
-  onChapterDeleted?: () => void;
 }
 
 export default function ChapterControls({
@@ -30,7 +28,6 @@ export default function ChapterControls({
   isEditing,
   onEditToggle,
   chapterName,
-  onChapterDeleted,
 }: ChapterControlsProps) {
   const [isCreatingNarration, setIsCreatingNarration] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,16 +49,6 @@ export default function ChapterControls({
       setError(errorMessage ? errorMessage : "Something went wrong.");
     } finally {
       setIsCreatingNarration(false);
-    }
-  };
-
-  const handleDeleteChapter = async () => {
-    try {
-      await deleteChapter(chapterName);
-      onChapterDeleted?.();
-    } catch (error) {
-      console.error("Error deleting chapter:", error);
-      setError("Failed to delete chapter");
     }
   };
 
@@ -108,15 +95,6 @@ export default function ChapterControls({
             </span>
           </button>
         )}
-
-        <button
-          className="btn btn-error btn-outline"
-          onClick={handleDeleteChapter}
-          title="Delete chapter"
-        >
-          <Trash2 size={16} className="md:hidden" />
-          <span className="hidden md:inline">Delete</span>
-        </button>
       </div>
     </div>
   );

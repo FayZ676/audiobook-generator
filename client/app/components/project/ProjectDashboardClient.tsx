@@ -179,6 +179,7 @@ export default function ProjectDashboardClient({
                 <ChapterSelector
                   chapters={chapters}
                   onChapterSelect={handleChapterSelect}
+                  onChapterDeleted={handleChapterCreatedOrDeleted}
                 />
                 <CreateChapterForm
                   onChapterCreated={handleChapterCreatedOrDeleted}
