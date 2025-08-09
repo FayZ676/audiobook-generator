@@ -1,11 +1,11 @@
 import os
 from io import BytesIO
 from pathlib import Path
-from pydub import AudioSegment
-from pydub.effects import normalize
 
 import requests
 import runpod
+from pydub import AudioSegment
+from pydub.effects import normalize
 
 from tta_speech.infer import infer
 from tta_speech.inference_types import InferenceParams, InputData
@@ -85,47 +85,57 @@ def _build_audio(audio_segments: list[tuple[bytes, int | None]]) -> bytes:
     return output.getvalue()
 
 
+def _synthesize_segment(segment: SpeechRequestSegment, voices: list[Voice]):
+    text_input = _prepare_input([segment], voices, voice_save_path="/tmp")
+    return infer(
+        InferenceParams(
+            gen_text=text_input.text,
+            voices=text_input.voices,
+            vocab_file=f"{Path(__file__).parent}/vocab.txt",
+            vocoder_name="vocos",
+            vocoder_local_path=f"{Path(__file__).parent}/vocos",
+            load_vocoder_from_local=True,
+            remove_silence=True,
+            ckpt_file=f"{Path(__file__).parent}/checkpoints/model_1250000.safetensors",
+        )
+    )
+
+
 def handler(event: dict):
     request = WebhookRequest.model_validate(event["input"])
     request_data = SpeechRequest.model_validate(request.data)
 
     total_word_count = sum(len(segment.text.split()) for segment in request_data.text)
     data = Response(filename="", request_word_count=total_word_count)
-    status = "failed"  # NOTE: Default status is failed until we succeed
+    status = "failed"
 
     try:
-        text_input = _prepare_input(
-            request_data.text, request_data.voices, voice_save_path="/tmp"
-        )
-        result = infer(
-            InferenceParams(
-                gen_text=text_input.text,
-                voices=text_input.voices,
-                vocab_file=f"{Path(__file__).parent}/vocab.txt",
-                vocoder_name="vocos",
-                vocoder_local_path=f"{Path(__file__).parent}/vocos",
-                load_vocoder_from_local=True,
-                remove_silence=True,
-                ckpt_file=f"{Path(__file__).parent}/checkpoints/model_1250000.safetensors",
+        segment_results: list[tuple[bytes, int | None]] = []
+        for idx, segment in enumerate(request_data.text):
+            result = _synthesize_segment(segment, request_data.voices)
+            s3.upload_fileobj(
+                f"{PROJECTS_BUCKET}",
+                f"{request.user_id}/{request_data.chapter_name}/segments/{idx:04d}.mp3",
+                BytesIO(_build_audio([result])),
             )
-        )
-        audio = _build_audio([result])
+            segment_results.append(result)
+
         project_narration_path = (
             f"{request.user_id}/{request_data.chapter_name}/narration.mp3"
         )
         s3.upload_fileobj(
             f"{PROJECTS_BUCKET}",
             project_narration_path,
-            BytesIO(audio),
+            BytesIO(_build_audio(segment_results)),
         )
         status = "complete"
         data = Response(
             filename=project_narration_path, request_word_count=total_word_count
         )
     except Exception as e:
+        # TODO: Instead of raising we should log and set the message, status for the response.
         raise e from e
     finally:
-        # Notify the service about the completion or failure
         requests.post(
             url=request.callback,
             json=WebhookResponse(
