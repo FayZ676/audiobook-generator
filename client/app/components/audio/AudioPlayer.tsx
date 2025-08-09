@@ -1,102 +1,67 @@
 "use client";
 
-import React, { useState } from "react";
-import { CirclePlay, LoaderCircle, Pause } from "lucide-react";
-
-import { getVoiceAudioUrl } from "../../actions/voices";
+import React, { useEffect, useRef, useState } from "react";
+import { CirclePlay, Pause } from "lucide-react";
 
 interface AudioPlayerProps {
-  voiceName: string;
+  src: string;
+  autoPlay?: boolean;
 }
 
-export default function AudioPlayer({ voiceName }: AudioPlayerProps) {
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export default function AudioPlayer({
+  src,
+  autoPlay = false,
+}: AudioPlayerProps) {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const loadAudioUrl = async () => {
-    if (audioUrl || loading) return;
-
-    setLoading(true);
+  useEffect(() => {
+    setIsPlaying(false);
     setError(null);
+  }, [src]);
 
-    try {
-      const url = await getVoiceAudioUrl(voiceName);
-      setAudioUrl(url);
-      if (!url) {
-        setError("Audio not available");
-      } else {
-        setTimeout(() => {
-          const audio = document.getElementById(
-            `audio-${voiceName}`
-          ) as HTMLAudioElement;
-          if (audio) {
-            audio.play();
-          }
-        }, 100);
-      }
-    } catch (err) {
-      setError("Failed to load audio");
-      console.error("Error loading voice audio:", err);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (autoPlay && audioRef.current) {
+      audioRef.current
+        .play()
+        .then(() => setIsPlaying(true))
+        .catch(() => setError("Unable to autoplay"));
     }
-  };
+  }, [autoPlay, src]);
 
-  const handlePlayPause = () => {
-    const audio = document.getElementById(
-      `audio-${voiceName}`
-    ) as HTMLAudioElement;
-    if (audio) {
-      if (isPlaying) {
-        audio.pause();
-      } else {
-        audio.play();
-      }
+  const togglePlay = () => {
+    const el = audioRef.current;
+    if (!el) return;
+    if (isPlaying) {
+      el.pause();
+    } else {
+      el.play().catch(() => setError("Failed to play audio"));
     }
   };
 
   return (
     <div className="flex items-center gap-2">
-      {!audioUrl && !loading && (
-        <button
-          onClick={loadAudioUrl}
-          className="btn btn-success btn-outline btn-sm"
-        >
-          <CirclePlay size={16} />
-        </button>
-      )}
-
-      {loading && (
-        <button className="btn btn-disabled btn-outline btn-sm">
-          <LoaderCircle size={16} className="animate-spin" />
-        </button>
-      )}
-
-      {error && <span className="text-red-500">{error}</span>}
-
-      {audioUrl && !loading && (
-        <>
-          <button
-            onClick={handlePlayPause}
-            className={`btn btn-sm btn-outline ${
-              isPlaying ? "btn-warning" : "btn-success"
-            }`}
-          >
-            {isPlaying ? <Pause size={16} /> : <CirclePlay size={16} />}
-          </button>
-          <audio
-            id={`audio-${voiceName}`}
-            onPlay={() => setIsPlaying(true)}
-            onPause={() => setIsPlaying(false)}
-            onEnded={() => setIsPlaying(false)}
-            className="hidden"
-          >
-            <source src={audioUrl} />
-          </audio>
-        </>
-      )}
+      <button
+        onClick={togglePlay}
+        className={`btn btn-sm btn-outline ${
+          isPlaying ? "btn-warning" : "btn-success"
+        }`}
+        title={isPlaying ? "Pause" : "Play"}
+      >
+        {isPlaying ? <Pause size={16} /> : <CirclePlay size={16} />}
+      </button>
+      {error && <span className="text-red-500 text-xs">{error}</span>}
+      <audio
+        ref={audioRef}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        onEnded={() => setIsPlaying(false)}
+        onError={() => setError("Audio error")}
+        className="hidden"
+      >
+        <source src={src} />
+      </audio>
     </div>
   );
 }

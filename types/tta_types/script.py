@@ -28,13 +28,16 @@ class ScriptData(BaseModel):
             for name in speaker.character.names:
                 speaker_alias_to_voice[name] = speaker.voice.name
 
-        return [
-            SpeechRequestSegment(
-                id=segment.get("id", ""),
-                text=segment.get("text", ""),
-                voice_name=speaker_alias_to_voice.get(
-                    segment.get("speaker_alias", ""), segment.get("speaker_alias", "")
-                ),
+        result: List[SpeechRequestSegment] = []
+        for segment in self.segments:
+            result.append(
+                SpeechRequestSegment(
+                    id=segment["id"],
+                    text=segment.get("text", ""),
+                    voice_name=speaker_alias_to_voice.get(
+                        segment.get("speaker_alias", ""),
+                        segment.get("speaker_alias", ""),
+                    ),
+                )
             )
-            for segment in self.segments
-        ]
+        return result

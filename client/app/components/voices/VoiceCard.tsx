@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { Trash2, LoaderCircle } from "lucide-react";
+import { Trash2, LoaderCircle, CirclePlay } from "lucide-react";
 
-import { Voice, deleteVoice } from "../../actions/voices";
+import { Voice, deleteVoice, getVoiceAudioUrl } from "../../actions/voices";
 import AudioPlayer from "../audio/AudioPlayer";
 
 interface VoiceCardProps {
@@ -9,8 +9,6 @@ interface VoiceCardProps {
 }
 
 export function isUserCreatedVoice(voice: Voice): boolean {
-  // User-created voices have audio paths like "user_id/audio/voice.mp3"
-  // System voices have audio paths like "audio/voice.mp3"
   return (
     voice.audio_path.includes("/audio/") &&
     !voice.audio_path.startsWith("audio/")
@@ -19,6 +17,8 @@ export function isUserCreatedVoice(voice: Voice): boolean {
 
 export default function VoiceCard({ voice }: VoiceCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [voiceUrl, setVoiceUrl] = useState<string | null>(null);
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
 
   const isUserCreated = isUserCreatedVoice(voice);
 
@@ -36,6 +36,19 @@ export default function VoiceCard({ voice }: VoiceCardProps) {
     }
   };
 
+  const loadVoiceAudio = async () => {
+    if (voiceUrl || isLoadingAudio) return;
+    setIsLoadingAudio(true);
+    try {
+      const url = await getVoiceAudioUrl(voice.name);
+      if (url) setVoiceUrl(url);
+    } catch (error) {
+      console.error("Failed to load voice audio:", error);
+    } finally {
+      setIsLoadingAudio(false);
+    }
+  };
+
   return (
     <div className="flex justify-between items-center p-2">
       <div className="flex flex-col gap-1">
@@ -46,7 +59,22 @@ export default function VoiceCard({ voice }: VoiceCardProps) {
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <AudioPlayer voiceName={voice.name} />
+        {voiceUrl ? (
+          <AudioPlayer src={voiceUrl} autoPlay />
+        ) : (
+          <button
+            onClick={loadVoiceAudio}
+            disabled={isLoadingAudio}
+            className="btn btn-success btn-outline btn-sm"
+            title="Play sample"
+          >
+            {isLoadingAudio ? (
+              <LoaderCircle size={16} className="animate-spin" />
+            ) : (
+              <CirclePlay size={16} />
+            )}
+          </button>
+        )}
         {isUserCreated && (
           <button
             onClick={handleDelete}

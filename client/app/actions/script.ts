@@ -28,6 +28,7 @@ const SpeakerSchema = z.object({
 });
 
 const ScriptSegmentSchema = z.object({
+  id: z.string().optional(),
   text: z.string(),
   speaker_alias: z.string(),
 });

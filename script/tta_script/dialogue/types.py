@@ -36,6 +36,7 @@ class TextSegment:
 
 
 class ScriptSegment(BaseModel):
+    id: str
     text: str
     speaker_alias: str  # References speaker by first_alias()
 

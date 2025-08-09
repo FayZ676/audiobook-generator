@@ -5,6 +5,8 @@ import { Voice } from "@/app/actions/voices";
 import { ManualCharacter } from "@/app/types";
 import Tip from "@/app/components/ui/Tip";
 import CharacterVoiceMapping from "./CharacterVoiceMapping";
+import AudioPlayer from "@/app/components/audio/AudioPlayer";
+import { getSegmentAudioUrl } from "@/app/actions/segments";
 
 interface ScriptEditorProps {
   script: Script;
@@ -18,20 +20,15 @@ export default function ScriptEditor({
   chapterName,
 }: ScriptEditorProps) {
   const [editingScript, setEditingScript] = useState<Script>(script);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setEditingScript(script);
   }, [script]);
 
-  const clearMessages = () => {
-    setError(null);
-  };
+  const clearMessages = () => {};
 
   const autoSave = async (scriptToSave: Script) => {
     if (scriptToSave.segments.length === 0) {
-      setError("Script cannot be empty");
       return;
     }
 
@@ -39,20 +36,15 @@ export default function ScriptEditor({
       (segment) => !segment.text.trim()
     );
     if (hasEmptyText) {
-      setError("All script segments must have text");
       return;
     }
 
-    setIsSaving(true);
     clearMessages();
 
     try {
       await updateScript({ script: scriptToSave, chapterName });
     } catch (error) {
       console.error("Error updating script:", error);
-      setError("Failed to save script");
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -168,12 +160,9 @@ export default function ScriptEditor({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="h-8 flex items-center">
-        {isSaving && (
-          <span className="flex items-center loading loading-spinner loading-sm"></span>
-        )}
-        {error && <Tip variant="warning">{error}</Tip>}
-      </div>
+      <Tip>
+        Edit the script text, choose voices for characters, and save changes.
+      </Tip>
 
       <CharacterVoiceMapping
         script={editingScript}
@@ -210,7 +199,15 @@ export default function ScriptEditor({
                       ))}
                     </select>
                   </div>
-                  <span className="text-sm">{voiceName}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm">{voiceName}</span>
+                    {scriptSegment.id ? (
+                      <SegmentAudioLoader
+                        chapterName={chapterName}
+                        segmentId={scriptSegment.id as string}
+                      />
+                    ) : null}
+                  </div>
                 </div>
                 <div className="flex-1">
                   <textarea
@@ -227,5 +224,39 @@ export default function ScriptEditor({
         })}
       </div>
     </div>
+  );
+}
+
+function SegmentAudioLoader({
+  chapterName,
+  segmentId,
+}: {
+  chapterName: string;
+  segmentId: string;
+}) {
+  const [src, setSrc] = React.useState<string | null>(null);
+  const [loading, setLoading] = React.useState(false);
+
+  const load = async () => {
+    if (src || loading) return;
+    setLoading(true);
+    try {
+      const url = await getSegmentAudioUrl(chapterName, segmentId);
+      setSrc(url);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return src ? (
+    <AudioPlayer src={src} autoPlay />
+  ) : (
+    <button
+      onClick={load}
+      disabled={loading}
+      className="btn btn-success btn-outline btn-sm"
+    >
+      {loading ? "Loading..." : "Play"}
+    </button>
   );
 }

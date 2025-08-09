@@ -16,8 +16,10 @@ from tta_script.models.text import generate_text
 def get_script(text: str, speakers: set[Speaker]) -> Script:
     dialogues = get_dialogues(get_text_segments(text), speakers)
     script_segments = [
-        ScriptSegment(text=d.text, speaker_alias=d.speaker.first_alias())
-        for d in dialogues
+        ScriptSegment(
+            id=f"seg-{i:04d}", text=d.text, speaker_alias=d.speaker.first_alias()
+        )
+        for i, d in enumerate(dialogues)
     ]
     return Script(segments=script_segments, speakers=list(d.speaker for d in dialogues))
 
