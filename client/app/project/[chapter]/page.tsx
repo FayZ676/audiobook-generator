@@ -1,6 +1,8 @@
 import React from "react";
 
 import ProjectDashboard from "@/app/components/project/ProjectDashboard";
+import { getChapters } from "@/app/actions/chapter";
+import { redirect } from "next/navigation";
 
 // Force dynamic rendering since this page uses authentication
 export const dynamic = "force-dynamic";
@@ -16,6 +18,16 @@ export default async function ProjectChapterPage({
 }: ProjectChapterPageProps) {
   const { chapter } = await params;
   const currentChapter = decodeURIComponent(chapter);
+  const chapters = await getChapters();
 
-  return <ProjectDashboard currentChapter={currentChapter} />;
+  if (!chapters.includes(currentChapter)) {
+    redirect("/project");
+  }
+
+  return (
+    <ProjectDashboard
+      currentChapter={currentChapter}
+      initialChapters={chapters}
+    />
+  );
 }

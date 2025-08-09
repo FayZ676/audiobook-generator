@@ -11,15 +11,19 @@ import ProjectDashboardClient from "./ProjectDashboardClient";
 
 interface ProjectDashboardProps {
   currentChapter?: string;
+  initialChapters?: string[];
 }
 
 export default async function ProjectDashboard({
   currentChapter,
+  initialChapters,
 }: ProjectDashboardProps) {
   const jobStatePromise = getJobState();
   const voicesPromise = getVoices();
   const projectPromise = getCurrentProject();
-  const chaptersPromise = getChapters();
+  const chaptersPromise = initialChapters
+    ? Promise.resolve(initialChapters)
+    : getChapters();
 
   const selectedChapter = currentChapter || null;
 
