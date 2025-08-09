@@ -65,7 +65,7 @@ async def build_narration(request: BuildNarrationRequest, bg_tasks: BackgroundTa
 def get_narration(user_id: str, chapter_name: str):
     project_narration_path = f"{user_id}/{chapter_name}/audio/narration.mp3"
     if not s3_client.list_files(PROJECTS_BUCKET, project_narration_path):
-        raise HTTPException(status_code=404, detail="narration not found")
+        return None
     narration_url = s3_client.presigned_url(PROJECTS_BUCKET, project_narration_path)
     return narration_url
 
