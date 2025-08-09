@@ -19,6 +19,7 @@ interface ChapterContentProps {
   voices: Voice[];
   isEditing: boolean;
   setIsEditing: (editing: boolean) => void;
+  audioSegmentIds: string[];
 }
 
 export default function ChapterContent({
@@ -32,6 +33,7 @@ export default function ChapterContent({
   voices,
   isEditing,
   setIsEditing,
+  audioSegmentIds,
 }: ChapterContentProps) {
   return (
     <>
@@ -52,6 +54,7 @@ export default function ChapterContent({
         voices={voices}
         isEditing={isEditing}
         chapterName={selectedChapter}
+        audioSegmentIds={audioSegmentIds}
       />
     </>
   );

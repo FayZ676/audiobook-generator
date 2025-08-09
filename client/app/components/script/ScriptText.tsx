@@ -9,6 +9,7 @@ interface ScriptTextProps {
   voices: Voice[];
   isEditing: boolean;
   chapterName: string;
+  audioSegmentIds: string[];
 }
 
 export default function ScriptText({
@@ -16,6 +17,7 @@ export default function ScriptText({
   voices,
   isEditing,
   chapterName,
+  audioSegmentIds,
 }: ScriptTextProps) {
   return (
     <div className="flex flex-col gap-4">
@@ -24,6 +26,7 @@ export default function ScriptText({
           script={script}
           voices={voices}
           chapterName={chapterName}
+          audioSegmentIds={audioSegmentIds}
         />
       ) : (
         <div className="h-[32rem] overflow-y-scroll bg-base-200 p-4 rounded">

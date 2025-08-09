@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 
 import { Script, updateScript } from "@/app/actions/script";
 import { Voice } from "@/app/actions/voices";
@@ -12,18 +12,25 @@ interface ScriptEditorProps {
   script: Script;
   voices: Voice[];
   chapterName: string;
+  audioSegmentIds: string[];
 }
 
 export default function ScriptEditor({
   script,
   voices,
   chapterName,
+  audioSegmentIds,
 }: ScriptEditorProps) {
   const [editingScript, setEditingScript] = useState<Script>(script);
 
   useEffect(() => {
     setEditingScript(script);
   }, [script]);
+
+  const playableSegmentIds = useMemo(
+    () => new Set(audioSegmentIds),
+    [audioSegmentIds]
+  );
 
   const clearMessages = () => {};
 
@@ -179,6 +186,10 @@ export default function ScriptEditor({
           const characterName =
             speaker?.character.names[0] || scriptSegment.speaker_alias;
           const voiceName = speaker?.voice.name || "";
+          const segmentId = scriptSegment.id as string | undefined;
+          const hasAudio = segmentId
+            ? playableSegmentIds.has(segmentId)
+            : false;
 
           return (
             <div key={index} className="mb-4">
@@ -201,10 +212,10 @@ export default function ScriptEditor({
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-sm">{voiceName}</span>
-                    {scriptSegment.id ? (
+                    {hasAudio ? (
                       <SegmentAudioLoader
                         chapterName={chapterName}
-                        segmentId={scriptSegment.id as string}
+                        segmentId={segmentId as string}
                       />
                     ) : null}
                   </div>
