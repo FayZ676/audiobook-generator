@@ -30,6 +30,7 @@ class ScriptData(BaseModel):
 
         return [
             SpeechRequestSegment(
+                id=segment.get("id", ""),
                 text=segment.get("text", ""),
                 voice_name=speaker_alias_to_voice.get(
                     segment.get("speaker_alias", ""), segment.get("speaker_alias", "")

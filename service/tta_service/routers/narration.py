@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from fastapi import APIRouter, BackgroundTasks, status
+from fastapi import APIRouter, BackgroundTasks, status, HTTPException
 from tta_types.types import (
     Voice,
     WebhookRequest,
@@ -20,6 +20,7 @@ from tta_service.config import (
 )
 from tta_service.utils import send_async_request, update_status, validate_usage
 from tta_service.routers.job import get_job_status
+import json
 
 
 router = APIRouter()
@@ -62,18 +63,62 @@ async def build_narration(request: BuildNarrationRequest, bg_tasks: BackgroundTa
 
 @router.get("/narration/{user_id}/{chapter_name}")
 def get_narration(user_id: str, chapter_name: str):
-    project_narration_path = f"{user_id}/{chapter_name}/narration.mp3"
+    project_narration_path = f"{user_id}/{chapter_name}/audio/narration.mp3"
     if not s3_client.list_files(PROJECTS_BUCKET, project_narration_path):
-        return None
+        raise HTTPException(status_code=404, detail="narration not found")
     narration_url = s3_client.presigned_url(PROJECTS_BUCKET, project_narration_path)
     return narration_url
 
 
+@router.get("/narration/{user_id}/{chapter_name}/audio")
+def get_narration_manifest(user_id: str, chapter_name: str):
+    manifest_key = f"{user_id}/{chapter_name}/audio/manifest.json"
+    if not s3_client.list_files(PROJECTS_BUCKET, manifest_key):
+        raise HTTPException(status_code=404, detail="manifest not found")
+    manifest = json.loads(
+        s3_client.get_file(PROJECTS_BUCKET, manifest_key).decode("utf-8")
+    )
+    narration = manifest.get("narration", {})
+    segments = manifest.get("segments", [])
+    result = {
+        "narration": {
+            "key": narration.get("key"),
+            "url": s3_client.presigned_url(PROJECTS_BUCKET, narration.get("key")),
+        },
+        "segments": [
+            {
+                "id": s.get("id"),
+                "index": s.get("index"),
+                "key": s.get("key"),
+                "url": s3_client.presigned_url(PROJECTS_BUCKET, s.get("key")),
+            }
+            for s in segments
+        ],
+    }
+    return result
+
+
+@router.get("/narration/{user_id}/{chapter_name}/segments/{segment_id}")
+def get_segment_audio(user_id: str, chapter_name: str, segment_id: str):
+    manifest_key = f"{user_id}/{chapter_name}/audio/manifest.json"
+    if not s3_client.list_files(PROJECTS_BUCKET, manifest_key):
+        raise HTTPException(status_code=404, detail="manifest not found")
+    manifest = json.loads(
+        s3_client.get_file(PROJECTS_BUCKET, manifest_key).decode("utf-8")
+    )
+    segments = manifest.get("segments", [])
+    match = next((s for s in segments if s.get("id") == segment_id), None)
+    if not match:
+        raise HTTPException(status_code=404, detail="segment not found")
+    key = match.get("key")
+    return {"key": key, "url": s3_client.presigned_url(PROJECTS_BUCKET, key)}
+
+
 @router.delete("/narration/{user_id}/{chapter_name}")
 def delete_narration(user_id: str, chapter_name: str):
-    project_narration_path = f"{user_id}/{chapter_name}/narration.mp3"
+    project_narration_path = f"{user_id}/{chapter_name}/audio/narration.mp3"
     if not s3_client.list_files(PROJECTS_BUCKET, project_narration_path):
-        return
+        raise HTTPException(status_code=404, detail="narration not found")
     return s3_client.delete_file(PROJECTS_BUCKET, project_narration_path)
 
 
@@ -94,7 +139,6 @@ async def send_narration_request(
             chapter_name=chapter_name,
         ).model_dump(),
     )
-    # NOTE: Add /runsync endpoint when testing locally.
     send_async_request(
         url=f"{SPEECH_API_URL}",
         payload={"input": request.model_dump()},

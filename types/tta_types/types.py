@@ -44,6 +44,7 @@ class Speaker(BaseModel):
 
 
 class SpeechRequestSegment(BaseModel):
+    id: str
     text: str
     voice_name: str
 

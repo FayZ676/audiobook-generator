@@ -1,6 +1,7 @@
 import os
 from io import BytesIO
 from pathlib import Path
+import json
 
 import requests
 import runpod
@@ -111,29 +112,36 @@ def handler(event: dict):
 
     try:
         segment_results: list[tuple[bytes, int | None]] = []
+        manifest_segments: list[dict] = []
         for idx, segment in enumerate(request_data.text):
             result = _synthesize_segment(segment, request_data.voices)
+            segment_key = (
+                f"{request.user_id}/{request_data.chapter_name}/audio/segments/{segment.id}.mp3"
+            )
             s3.upload_fileobj(
                 f"{PROJECTS_BUCKET}",
-                f"{request.user_id}/{request_data.chapter_name}/segments/{idx:04d}.mp3",
+                segment_key,
                 BytesIO(_build_audio([result])),
             )
+            manifest_segments.append({"id": segment.id, "index": idx, "key": segment_key})
             segment_results.append(result)
 
-        project_narration_path = (
-            f"{request.user_id}/{request_data.chapter_name}/narration.mp3"
-        )
+        narration_key = f"{request.user_id}/{request_data.chapter_name}/audio/narration.mp3"
         s3.upload_fileobj(
             f"{PROJECTS_BUCKET}",
-            project_narration_path,
+            narration_key,
             BytesIO(_build_audio(segment_results)),
         )
-        status = "complete"
-        data = Response(
-            filename=project_narration_path, request_word_count=total_word_count
+
+        manifest_key = f"{request.user_id}/{request_data.chapter_name}/audio/manifest.json"
+        manifest = {"narration": {"key": narration_key}, "segments": manifest_segments}
+        s3.upload_fileobj(
+            f"{PROJECTS_BUCKET}", manifest_key, BytesIO(json.dumps(manifest).encode("utf-8"))
         )
+
+        status = "complete"
+        data = Response(filename=narration_key, request_word_count=total_word_count)
     except Exception as e:
-        # TODO: Instead of raising we should log and set the message, status for the response.
         raise e from e
     finally:
         requests.post(
