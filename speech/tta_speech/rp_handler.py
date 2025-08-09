@@ -115,28 +115,34 @@ def handler(event: dict):
         manifest_segments: list[dict] = []
         for idx, segment in enumerate(request_data.text):
             result = _synthesize_segment(segment, request_data.voices)
-            segment_key = (
-                f"{request.user_id}/{request_data.chapter_name}/audio/segments/{segment.id}.mp3"
-            )
+            segment_key = f"{request.user_id}/{request_data.chapter_name}/audio/segments/{segment.id}.mp3"
             s3.upload_fileobj(
                 f"{PROJECTS_BUCKET}",
                 segment_key,
                 BytesIO(_build_audio([result])),
             )
-            manifest_segments.append({"id": segment.id, "index": idx, "key": segment_key})
+            manifest_segments.append(
+                {"id": segment.id, "index": idx, "key": segment_key}
+            )
             segment_results.append(result)
 
-        narration_key = f"{request.user_id}/{request_data.chapter_name}/audio/narration.mp3"
+        narration_key = (
+            f"{request.user_id}/{request_data.chapter_name}/audio/narration.mp3"
+        )
         s3.upload_fileobj(
             f"{PROJECTS_BUCKET}",
             narration_key,
             BytesIO(_build_audio(segment_results)),
         )
 
-        manifest_key = f"{request.user_id}/{request_data.chapter_name}/audio/manifest.json"
+        manifest_key = (
+            f"{request.user_id}/{request_data.chapter_name}/audio/manifest.json"
+        )
         manifest = {"narration": {"key": narration_key}, "segments": manifest_segments}
         s3.upload_fileobj(
-            f"{PROJECTS_BUCKET}", manifest_key, BytesIO(json.dumps(manifest).encode("utf-8"))
+            f"{PROJECTS_BUCKET}",
+            manifest_key,
+            BytesIO(json.dumps(manifest).encode("utf-8")),
         )
 
         status = "complete"
