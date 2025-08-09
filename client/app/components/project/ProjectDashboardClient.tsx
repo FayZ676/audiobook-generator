@@ -55,11 +55,14 @@ export default function ProjectDashboardClient({
   const narrationUrl = use(narrationPromise);
   const userChannels = useUserChannels();
 
-  const handleRevalidate = () => {
-    handleRevalidateTag("script");
-    handleRevalidateTag("narration");
-    handleRevalidateTag("chapters");
-    handleRevalidateTag("project");
+  const handleRevalidate = async () => {
+    await Promise.all([
+      handleRevalidateTag("script"),
+      handleRevalidateTag("narration"),
+      handleRevalidateTag("chapters"),
+      handleRevalidateTag("project"),
+      handleRevalidateTag("job"),
+    ]);
     router.refresh();
   };
 

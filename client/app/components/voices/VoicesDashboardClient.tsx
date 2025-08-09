@@ -29,8 +29,8 @@ export default function VoicesDashboardClient({
 
   usePusherSubscriptions({
     channels: userChannels ? [userChannels.VOICES_CHANNEL] : null,
-    onUpdate: () => {
-      handleRevalidateTag("voices");
+    onUpdate: async () => {
+      await handleRevalidateTag("voices");
       router.refresh();
     },
   });
