@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect, useMemo } from "react";
 
 import { Script, updateScript } from "@/app/actions/script";

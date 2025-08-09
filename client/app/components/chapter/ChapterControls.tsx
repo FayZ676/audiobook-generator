@@ -7,16 +7,12 @@ import { MicVocal } from "lucide-react";
 import { createNarration } from "../../actions/narrate";
 import { Script } from "../../actions/script";
 import { AudiobookJob } from "../../actions/job";
-import { Voice } from "../../actions/voices";
 import Tip from "../ui/Tip";
 
 interface ChapterControlsProps {
   narrationUrlPromise: Promise<string | null>;
   scriptPromise: Promise<Script | null>;
   jobStatePromise: Promise<AudiobookJob | null>;
-  voicesPromise: Promise<Voice[]>;
-  isEditing: boolean;
-  onEditToggle: (editing: boolean) => void;
   chapterName: string;
 }
 
@@ -24,9 +20,6 @@ export default function ChapterControls({
   narrationUrlPromise,
   scriptPromise,
   jobStatePromise,
-  voicesPromise,
-  isEditing,
-  onEditToggle,
   chapterName,
 }: ChapterControlsProps) {
   const [isCreatingNarration, setIsCreatingNarration] = useState(false);
@@ -35,7 +28,6 @@ export default function ChapterControls({
   const narrationUrl = use(narrationUrlPromise);
   const script = use(scriptPromise);
   const jobState = use(jobStatePromise);
-  const voices = use(voicesPromise);
 
   const handleCreateNarration = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -60,21 +52,7 @@ export default function ChapterControls({
     <div className="flex items-center justify-between gap-4">
       {error && <Tip variant="warning">{error}</Tip>}
 
-      {script && (
-        <label className="flex cursor-pointer gap-2">
-          <span className="label-text text-gray-400">view</span>
-          <input
-            type="checkbox"
-            checked={isEditing}
-            onChange={(e) => onEditToggle(e.target.checked)}
-            disabled={isProcessing || voices.length === 0}
-            className="toggle toggle-lg"
-          />
-          <span className="label-text text-gray-400">edit</span>
-        </label>
-      )}
-
-      <div className="flex gap-2">
+      <div className="flex gap-2 ml-auto">
         {script && (
           <button
             className="btn btn-info btn-outline"

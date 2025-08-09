@@ -5,7 +5,7 @@ import { AudiobookJob } from "../../actions/job";
 import { Script } from "../../actions/script";
 
 import ChapterControls from "./ChapterControls";
-import ScriptText from "../script/ScriptText";
+import ScriptEditor from "../script/ScriptEditor";
 import NarrationAudio from "../narration/NarrationAudio";
 
 interface ChapterContentProps {
@@ -15,10 +15,7 @@ interface ChapterContentProps {
   narrationPromise: Promise<string | null>;
   scriptPromise: Promise<Script | null>;
   jobStatePromise: Promise<AudiobookJob | null>;
-  voicesPromise: Promise<Voice[]>;
   voices: Voice[];
-  isEditing: boolean;
-  setIsEditing: (editing: boolean) => void;
   audioSegmentIds: string[];
 }
 
@@ -29,10 +26,7 @@ export default function ChapterContent({
   narrationPromise,
   scriptPromise,
   jobStatePromise,
-  voicesPromise,
   voices,
-  isEditing,
-  setIsEditing,
   audioSegmentIds,
 }: ChapterContentProps) {
   return (
@@ -43,16 +37,12 @@ export default function ChapterContent({
         narrationUrlPromise={narrationPromise}
         scriptPromise={scriptPromise}
         jobStatePromise={jobStatePromise}
-        voicesPromise={voicesPromise}
-        isEditing={isEditing}
-        onEditToggle={setIsEditing}
         chapterName={selectedChapter}
       />
 
-      <ScriptText
+      <ScriptEditor
         script={currentScript}
         voices={voices}
-        isEditing={isEditing}
         chapterName={selectedChapter}
         audioSegmentIds={audioSegmentIds}
       />

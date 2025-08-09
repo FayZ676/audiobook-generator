@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, use, useEffect } from "react";
+import React, { use, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
@@ -47,8 +47,7 @@ export default function ProjectDashboardClient({
   audioSegmentIdsPromise,
 }: ProjectDashboardClientProps) {
   const router = useRouter();
-  const [isEditing, setIsEditing] = useState(false);
-  const [isDeletingProject, setIsDeletingProject] = useState(false);
+  const [isDeletingProject, setIsDeletingProject] = React.useState(false);
 
   const voices = use(voicesPromise);
   const project = use(projectPromise);
@@ -91,7 +90,6 @@ export default function ProjectDashboardClient({
 
   const handleChapterSelect = (chapter: string) => {
     router.push(`/project/${encodeURIComponent(chapter)}`);
-    setIsEditing(false);
   };
 
   const handleChapterCreatedOrDeleted = () => {
@@ -155,10 +153,7 @@ export default function ProjectDashboardClient({
                     narrationPromise={narrationPromise}
                     scriptPromise={scriptPromise}
                     jobStatePromise={jobStatePromise}
-                    voicesPromise={voicesPromise}
                     voices={voices}
-                    isEditing={isEditing}
-                    setIsEditing={setIsEditing}
                     audioSegmentIds={audioSegmentIds}
                   />
                 )}

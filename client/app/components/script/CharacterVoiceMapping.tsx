@@ -53,11 +53,15 @@ export default function CharacterVoiceMapping({
                 className="select select-sm select-bordered"
               >
                 <option value="">Select voice</option>
-                {voices.map((voice) => (
-                  <option key={voice.name} value={voice.name}>
-                    {voice.name}
-                  </option>
-                ))}
+                {voices.length > 0 ? (
+                  voices.map((voice) => (
+                    <option key={voice.name} value={voice.name}>
+                      {voice.name}
+                    </option>
+                  ))
+                ) : (
+                  <option value="">No voices available</option>
+                )}
               </select>
             </div>
           ))}
