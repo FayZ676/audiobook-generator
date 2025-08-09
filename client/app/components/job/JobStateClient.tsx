@@ -31,8 +31,8 @@ export default function JobStateClient({
     channels: userChannels
       ? [userChannels.SPEECH_CHANNEL, userChannels.SCRIPT_CHANNEL]
       : null,
-    onUpdate: () => {
-      handleRevalidateTag("job");
+    onUpdate: async () => {
+      await handleRevalidateTag("job");
       router.refresh();
     },
   });
