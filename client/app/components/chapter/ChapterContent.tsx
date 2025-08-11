@@ -19,7 +19,7 @@ interface ChapterContentProps {
   audioSegmentIds: string[];
 }
 
-export default function ChapterContent({
+export default async function ChapterContent({
   selectedChapter,
   currentScript,
   narrationUrl,
@@ -29,6 +29,9 @@ export default function ChapterContent({
   voices,
   audioSegmentIds,
 }: ChapterContentProps) {
+  const jobState = await jobStatePromise;
+  const processingSegmentIds = jobState?.processing_segment_ids || undefined;
+
   return (
     <>
       {narrationUrl && <NarrationAudio narrationUrl={narrationUrl} />}
@@ -45,6 +48,7 @@ export default function ChapterContent({
         voices={voices}
         chapterName={selectedChapter}
         audioSegmentIds={audioSegmentIds}
+        processingSegmentIds={processingSegmentIds}
       />
     </>
   );

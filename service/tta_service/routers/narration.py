@@ -36,10 +36,8 @@ async def build_narration(request: BuildNarrationRequest, bg_tasks: BackgroundTa
     ).to_speech_segments()
 
     if request.segment_ids:
-        # Filter to requested segments preserving script order
         requested_set = set(request.segment_ids)
         speech_segments = [s for s in all_speech_segments if s.id in requested_set]
-        # Validate all requested ids exist
         if len(speech_segments) != len(request.segment_ids):
             raise HTTPException(
                 status_code=400, detail="one or more segment_ids are invalid"
@@ -65,6 +63,7 @@ async def build_narration(request: BuildNarrationRequest, bg_tasks: BackgroundTa
                 existing_job.script_started_at if existing_job else None
             ),
             narration_started_at=datetime.now(timezone.utc).isoformat(),
+            processing_segment_ids=[s.id for s in speech_segments],
         )
     )
     bg_tasks.add_task(

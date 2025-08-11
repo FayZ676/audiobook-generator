@@ -105,3 +105,4 @@ class AudiobookJob(BaseModel):
     message: Optional[str]
     script_started_at: Optional[str] = None
     narration_started_at: Optional[str] = None
+    processing_segment_ids: Optional[list[str]] = None

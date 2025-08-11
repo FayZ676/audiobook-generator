@@ -16,6 +16,7 @@ interface ScriptEditorProps {
   voices: Voice[];
   chapterName: string;
   audioSegmentIds: string[];
+  processingSegmentIds?: string[];
 }
 
 export default function ScriptEditor({
@@ -23,6 +24,7 @@ export default function ScriptEditor({
   voices,
   chapterName,
   audioSegmentIds,
+  processingSegmentIds,
 }: ScriptEditorProps) {
   const [editingScript, setEditingScript] = useState<Script>(script);
   const [regenerating, setRegenerating] = useState<Record<string, boolean>>({});
@@ -30,6 +32,11 @@ export default function ScriptEditor({
   useEffect(() => {
     setEditingScript(script);
   }, [script]);
+
+  const processingSet = useMemo(
+    () => new Set(processingSegmentIds || []),
+    [processingSegmentIds]
+  );
 
   const playableSegmentIds = useMemo(
     () => new Set(audioSegmentIds),
@@ -76,75 +83,6 @@ export default function ScriptEditor({
     debouncedAutoSave(updatedScript);
   };
 
-  const createSpeakerFromVoice = (
-    characterName: string,
-    voice: Voice | null,
-    existingAge: "young" | "middle-aged" | "old",
-    existingGender: "male" | "female"
-  ) => ({
-    character: {
-      names: [characterName],
-      age: voice?.age || existingAge,
-      gender: voice?.gender || existingGender,
-    },
-    voice: {
-      name: voice?.name || "",
-      age: voice?.age || existingAge,
-      gender: voice?.gender || existingGender,
-      audio_path: voice?.audio_path || "",
-      audio_transcript: voice?.audio_transcript || "",
-    },
-  });
-
-  const handleCharacterVoiceChange = (
-    characterName: string,
-    voiceName: string
-  ) => {
-    clearMessages();
-    const selectedVoice =
-      voices.find((voice) => voice.name === voiceName) || null;
-
-    const updatedSpeakers = editingScript.speakers.map((speaker) =>
-      speaker.character.names.includes(characterName)
-        ? createSpeakerFromVoice(
-            characterName,
-            selectedVoice,
-            speaker.character.age,
-            speaker.character.gender
-          )
-        : speaker
-    );
-
-    const updatedScript = { ...editingScript, speakers: updatedSpeakers };
-    setEditingScript(updatedScript);
-    debouncedAutoSave(updatedScript);
-  };
-
-  const handleAddCharacter = (character: ManualCharacter) => {
-    clearMessages();
-
-    const existingSpeaker = editingScript.speakers.find((speaker) =>
-      speaker.character.names.includes(character.name)
-    );
-
-    if (!existingSpeaker) {
-      const newSpeaker = createSpeakerFromVoice(
-        character.name,
-        null,
-        character.age,
-        character.gender
-      );
-
-      const updatedScript = {
-        ...editingScript,
-        speakers: [...editingScript.speakers, newSpeaker],
-      };
-
-      setEditingScript(updatedScript);
-      debouncedAutoSave(updatedScript);
-    }
-  };
-
   const handleSegmentCharacterChange = (
     segmentIndex: number,
     characterName: string
@@ -173,10 +111,11 @@ export default function ScriptEditor({
     try {
       setRegenerating((prev) => ({ ...prev, [segmentId]: true }));
       await regenerateSegment(chapterName, segmentId);
-      // No immediate fetch; Pusher events will refresh UI via ProjectDashboardClient
     } catch (e) {
       console.error("Failed to regenerate segment", e);
     } finally {
+      // keep local true until pusher refresh clears via processingSegmentIds update
+      // but safe to set false as isRegenerating is union with processingSet
       setRegenerating((prev) => ({ ...prev, [segmentId]: false }));
     }
   };
@@ -190,8 +129,64 @@ export default function ScriptEditor({
       <CharacterVoiceMapping
         script={editingScript}
         voices={voices}
-        onCharacterVoiceChange={handleCharacterVoiceChange}
-        onAddCharacter={handleAddCharacter}
+        onCharacterVoiceChange={(characterName, voiceName) => {
+          const voice = voices.find((v) => v.name === voiceName) || null;
+          const create = (
+            name: string,
+            v: typeof voice,
+            age: "young" | "middle-aged" | "old",
+            gender: "male" | "female"
+          ) => ({
+            character: { names: [name], age, gender },
+            voice: {
+              name: v?.name || "",
+              age: v?.age || age,
+              gender: v?.gender || gender,
+              audio_path: v?.audio_path || "",
+              audio_transcript: v?.audio_transcript || "",
+            },
+          });
+          const updatedSpeakers = editingScript.speakers.map((s) =>
+            s.character.names.includes(characterName)
+              ? create(
+                  characterName,
+                  voice,
+                  s.character.age,
+                  s.character.gender
+                )
+              : s
+          );
+          const updatedScript = { ...editingScript, speakers: updatedSpeakers };
+          setEditingScript(updatedScript);
+          debouncedAutoSave(updatedScript);
+        }}
+        onAddCharacter={(character) => {
+          const exists = editingScript.speakers.find((s) =>
+            s.character.names.includes(character.name)
+          );
+          if (!exists) {
+            const newSpeaker = {
+              character: {
+                names: [character.name],
+                age: character.age,
+                gender: character.gender,
+              },
+              voice: {
+                name: "",
+                age: character.age,
+                gender: character.gender,
+                audio_path: "",
+                audio_transcript: "",
+              },
+            };
+            const updatedScript = {
+              ...editingScript,
+              speakers: [...editingScript.speakers, newSpeaker],
+            };
+            setEditingScript(updatedScript);
+            debouncedAutoSave(updatedScript);
+          }
+        }}
       />
 
       <div className="h-[28rem] overflow-y-scroll bg-base-200 p-4 rounded">
@@ -206,9 +201,15 @@ export default function ScriptEditor({
           const hasAudio = segmentId
             ? playableSegmentIds.has(segmentId)
             : false;
+          const isRegenerating = segmentId
+            ? !!regenerating[segmentId] || processingSet.has(segmentId)
+            : false;
 
           return (
-            <div key={index} className="mb-4">
+            <div
+              key={index}
+              className={`mb-4 ${isRegenerating ? "opacity-80" : ""}`}
+            >
               <div className="flex flex-col gap-2">
                 <div className="grid grid-cols-2 gap-2">
                   <select
@@ -217,6 +218,7 @@ export default function ScriptEditor({
                       handleSegmentCharacterChange(index, e.target.value)
                     }
                     className="select select-sm select-bordered min-w-[120px]"
+                    disabled={isRegenerating}
                   >
                     {availableCharacters.map((char) => (
                       <option key={char} value={char}>
@@ -228,6 +230,11 @@ export default function ScriptEditor({
                     <span className="text-sm text-gray-500 italic">
                       {voiceName}
                     </span>
+                    {isRegenerating && (
+                      <span className="badge badge-warning badge-sm">
+                        Regenerating
+                      </span>
+                    )}
                     {segmentId && (
                       <AudioPlayer
                         loadSrc={async () =>
@@ -239,9 +246,9 @@ export default function ScriptEditor({
                             className="btn btn-sm btn-outline"
                             title="Regenerate segment"
                             onClick={() => handleRegenerate(segmentId)}
-                            disabled={!!regenerating[segmentId]}
+                            disabled={isRegenerating}
                           >
-                            {regenerating[segmentId] ? (
+                            {isRegenerating ? (
                               <LoaderCircle
                                 size={16}
                                 className="animate-spin"
@@ -262,6 +269,7 @@ export default function ScriptEditor({
                     className="textarea textarea-bordered w-full min-h-[80px]"
                     rows={3}
                     placeholder="Enter script text..."
+                    disabled={isRegenerating}
                   />
                 </div>
               </div>
