@@ -34,13 +34,7 @@ class BuildNarrationRequest(BaseModel):
     user_id: str
     voices: list[Voice]
     chapter_name: str
-
-
-class BuildSegmentRequest(BaseModel):
-    user_id: str
-    voices: list[Voice]
-    chapter_name: str
-    segment_id: str
+    segment_ids: list[str] | None = None
 
 
 class AddVoiceRequest(BaseModel):

@@ -16,7 +16,6 @@ class Character(BaseModel):
         return hash((tuple(self.names), self.age, self.gender))
 
     def first_alias(self) -> str:
-        """Get the first name as primary identifier."""
         return self.names[0] if self.names else ""
 
 
@@ -68,7 +67,6 @@ class Response(BaseModel):
     request_word_count: int
 
 
-# Updated to remove per-segment speech events
 EventType = Literal["script", "speech", "subscription_reset"]
 
 

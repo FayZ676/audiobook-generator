@@ -42,23 +42,22 @@ export async function getSegmentAudioUrl(
   return data.url;
 }
 
-// Trigger regeneration of a single speech segment
+// Trigger regeneration of one or more speech segments via unified narration endpoint
 export async function regenerateSegment(
   chapterName: string,
   segmentId: string
 ): Promise<void> {
   const userId = await getUserId();
   const voices = await getVoices();
-  await apiCallVoid(`${process.env.AUDIOBOOK_SERVICE_URL}/narration/segment`, {
+  await apiCallVoid(`${process.env.AUDIOBOOK_SERVICE_URL}/narration`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       user_id: userId,
       voices,
       chapter_name: chapterName,
-      segment_id: segmentId,
+      segment_ids: [segmentId],
     }),
   });
-  // Refresh job state immediately; manifest will be updated via webhook + pusher
   revalidateTag("job");
 }

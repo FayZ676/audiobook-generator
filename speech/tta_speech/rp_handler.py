@@ -86,6 +86,17 @@ def _build_audio(audio_segments: list[tuple[bytes, int | None]]) -> bytes:
     return output.getvalue()
 
 
+def _concat_mp3_from_keys(keys: list[str]) -> bytes:
+    combined = AudioSegment.empty()
+    for key in keys:
+        data = s3.get_file(PROJECTS_BUCKET, key)
+        seg = AudioSegment.from_file(BytesIO(data), format="mp3")
+        combined += seg
+    out = BytesIO()
+    combined.export(out, format="mp3")
+    return out.getvalue()
+
+
 def _synthesize_segment(segment: SpeechRequestSegment, voices: list[Voice]):
     text_input = _prepare_input([segment], voices, voice_save_path="/tmp")
     return infer(
@@ -111,59 +122,76 @@ def handler(event: dict):
     status = "failed"
 
     try:
-        # Single-segment fast path: overwrite only that segment's audio
-        if len(request_data.text) == 1:
-            segment = request_data.text[0]
-            result = _synthesize_segment(segment, request_data.voices)
+        # Synthesize requested segments (full or partial)
+        segment_results: dict[str, tuple[bytes, int | None]] = {}
+        for segment in request_data.text:
+            segment_results[segment.id] = _synthesize_segment(
+                segment, request_data.voices
+            )
             segment_key = f"{request.user_id}/{request_data.chapter_name}/audio/segments/{segment.id}.mp3"
             s3.upload_fileobj(
                 f"{PROJECTS_BUCKET}",
                 segment_key,
-                BytesIO(_build_audio([result])),
-            )
-            status = "complete"
-            data = Response(filename=segment_key, request_word_count=total_word_count)
-        else:
-            # Full-narration path
-            segment_results: list[tuple[bytes, int | None]] = []
-            manifest_segments: list[dict] = []
-            for idx, segment in enumerate(request_data.text):
-                result = _synthesize_segment(segment, request_data.voices)
-                segment_key = f"{request.user_id}/{request_data.chapter_name}/audio/segments/{segment.id}.mp3"
-                s3.upload_fileobj(
-                    f"{PROJECTS_BUCKET}",
-                    segment_key,
-                    BytesIO(_build_audio([result])),
-                )
-                manifest_segments.append(
-                    {"id": segment.id, "index": idx, "key": segment_key}
-                )
-                segment_results.append(result)
-
-            narration_key = (
-                f"{request.user_id}/{request_data.chapter_name}/audio/narration.mp3"
-            )
-            s3.upload_fileobj(
-                f"{PROJECTS_BUCKET}",
-                narration_key,
-                BytesIO(_build_audio(segment_results)),
+                BytesIO(_build_audio([segment_results[segment.id]])),
             )
 
-            manifest_key = (
-                f"{request.user_id}/{request_data.chapter_name}/audio/manifest.json"
-            )
-            manifest = {
-                "narration": {"key": narration_key},
-                "segments": manifest_segments,
-            }
-            s3.upload_fileobj(
-                f"{PROJECTS_BUCKET}",
-                manifest_key,
-                BytesIO(json.dumps(manifest).encode("utf-8")),
-            )
+        # Decide how to build final narration and manifest
+        narration_key = (
+            f"{request.user_id}/{request_data.chapter_name}/audio/narration.mp3"
+        )
+        manifest_key = (
+            f"{request.user_id}/{request_data.chapter_name}/audio/manifest.json"
+        )
 
+        manifest_exists = bool(s3.list_files(PROJECTS_BUCKET, manifest_key))
+        if manifest_exists:
+            manifest = json.loads(
+                s3.get_file(PROJECTS_BUCKET, manifest_key).decode("utf-8")
+            )
+            segment_keys_in_order = [s.get("key") for s in manifest.get("segments", [])]
+            stitched = _concat_mp3_from_keys(segment_keys_in_order)
+            s3.upload_fileobj(f"{PROJECTS_BUCKET}", narration_key, BytesIO(stitched))
             status = "complete"
             data = Response(filename=narration_key, request_word_count=total_word_count)
+        else:
+            # No manifest -> fallback: if full request, create manifest and stitched; else stitch only regenerated segments
+            if len(request_data.text) > 1:
+                ordered_ids = [s.id for s in request_data.text]
+                manifest_segments = [
+                    {
+                        "id": seg_id,
+                        "index": idx,
+                        "key": f"{request.user_id}/{request_data.chapter_name}/audio/segments/{seg_id}.mp3",
+                    }
+                    for idx, seg_id in enumerate(ordered_ids)
+                ]
+                stitched = _concat_mp3_from_keys([m["key"] for m in manifest_segments])
+                s3.upload_fileobj(
+                    f"{PROJECTS_BUCKET}", narration_key, BytesIO(stitched)
+                )
+                manifest = {
+                    "narration": {"key": narration_key},
+                    "segments": manifest_segments,
+                }
+                s3.upload_fileobj(
+                    f"{PROJECTS_BUCKET}",
+                    manifest_key,
+                    BytesIO(json.dumps(manifest).encode("utf-8")),
+                )
+                status = "complete"
+                data = Response(
+                    filename=narration_key, request_word_count=total_word_count
+                )
+            else:
+                # Single segment without manifest: stitch only that one
+                only = next(iter(segment_results.values()))
+                s3.upload_fileobj(
+                    f"{PROJECTS_BUCKET}", narration_key, BytesIO(_build_audio([only]))
+                )
+                status = "complete"
+                data = Response(
+                    filename=narration_key, request_word_count=total_word_count
+                )
     except Exception as e:
         raise e from e
     finally:

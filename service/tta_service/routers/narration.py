@@ -8,7 +8,7 @@ from tta_types.types import (
     AudiobookJob,
 )
 from tta_types.script import ScriptData
-from tta_service.types import BuildNarrationRequest, BuildSegmentRequest
+from tta_service.types import BuildNarrationRequest
 from tta_service.config import (
     s3_client,
     SERVICE_API_URL,
@@ -31,13 +31,29 @@ async def build_narration(request: BuildNarrationRequest, bg_tasks: BackgroundTa
     script_data = s3_client.get_file(
         PROJECTS_BUCKET, f"{request.user_id}/{request.chapter_name}/script.json"
     ).decode("utf-8")
-    speech_segments = ScriptData.model_validate_json(script_data).to_speech_segments()
+    all_speech_segments = ScriptData.model_validate_json(
+        script_data
+    ).to_speech_segments()
+
+    if request.segment_ids:
+        # Filter to requested segments preserving script order
+        requested_set = set(request.segment_ids)
+        speech_segments = [s for s in all_speech_segments if s.id in requested_set]
+        # Validate all requested ids exist
+        if len(speech_segments) != len(request.segment_ids):
+            raise HTTPException(
+                status_code=400, detail="one or more segment_ids are invalid"
+            )
+    else:
+        speech_segments = all_speech_segments
+
     validate_usage(
         user_id=request.user_id,
         word_count=sum(len(segment.text.split()) for segment in speech_segments),
         cost_per_word=SPEECH_COST_PER_WORD,
         usage_limit=USAGE_LIMIT,
     )
+
     existing_job = get_job_status(request.user_id)
     update_status(
         AudiobookJob(
@@ -59,79 +75,6 @@ async def build_narration(request: BuildNarrationRequest, bg_tasks: BackgroundTa
         speech_segments,
     )
     return f"{request.user_id}/{request.chapter_name}"
-
-
-@router.post("/narration/segment", status_code=status.HTTP_202_ACCEPTED)
-async def build_single_segment(request: BuildSegmentRequest, bg_tasks: BackgroundTasks):
-    """Regenerate a single segment's speech audio and update manifest.
-
-    This triggers a short speech job for only one segment, updating job status
-    and pushing status events on the speech channel. The speech worker should
-    overwrite the specific segment audio and update manifest appropriately.
-    """
-    script_data = s3_client.get_file(
-        PROJECTS_BUCKET, f"{request.user_id}/{request.chapter_name}/script.json"
-    ).decode("utf-8")
-    all_segments = ScriptData.model_validate_json(script_data).to_speech_segments()
-    match = next((s for s in all_segments if s.id == request.segment_id), None)
-    if not match:
-        raise HTTPException(status_code=404, detail="segment not found in script")
-
-    # Usage validation for the single segment only
-    validate_usage(
-        user_id=request.user_id,
-        word_count=len(match.text.split()),
-        cost_per_word=SPEECH_COST_PER_WORD,
-        usage_limit=USAGE_LIMIT,
-    )
-
-    existing_job = get_job_status(request.user_id)
-    update_status(
-        AudiobookJob(
-            job_id=request.user_id,
-            narration_status="processing",
-            script_status=existing_job.script_status if existing_job else None,
-            message=None,
-            script_started_at=(
-                existing_job.script_started_at if existing_job else None
-            ),
-            narration_started_at=(
-                existing_job.narration_started_at if existing_job else None
-            ),
-        ),
-    )
-
-    # Create a WebhookRequest for speech worker with only one segment
-    single_segment_request = WebhookRequest(
-        callback=f"{SERVICE_API_URL}/events",
-        event="speech_segment",
-        user_id=request.user_id,
-        data=SpeechRequest(
-            user_id=request.user_id,
-            text=[
-                SpeechRequestSegment(
-                    id=match.id, text=match.text, voice_name=match.voice_name
-                )
-            ],
-            voices=request.voices,
-            chapter_name=request.chapter_name,
-        ).model_dump(),
-    )
-
-    bg_tasks.add_task(
-        send_async_request,
-        f"{SPEECH_API_URL}/runsync",
-        {"input": single_segment_request.model_dump()},
-        {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {SPEECH_SERVICE_API_KEY}",
-        },
-    )
-
-    return {
-        "message": "Segment regeneration started",
-        "segment_id": request.segment_id,
-    }
 
 
 @router.get("/narration/{user_id}/{chapter_name}")
