@@ -36,6 +36,13 @@ class BuildNarrationRequest(BaseModel):
     chapter_name: str
 
 
+class BuildSegmentRequest(BaseModel):
+    user_id: str
+    voices: list[Voice]
+    chapter_name: str
+    segment_id: str
+
+
 class AddVoiceRequest(BaseModel):
     name: str
     age: Age

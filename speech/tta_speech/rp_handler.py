@@ -111,9 +111,9 @@ def handler(event: dict):
     status = "failed"
 
     try:
-        segment_results: list[tuple[bytes, int | None]] = []
-        manifest_segments: list[dict] = []
-        for idx, segment in enumerate(request_data.text):
+        # Single-segment fast path: overwrite only that segment's audio
+        if len(request_data.text) == 1:
+            segment = request_data.text[0]
             result = _synthesize_segment(segment, request_data.voices)
             segment_key = f"{request.user_id}/{request_data.chapter_name}/audio/segments/{segment.id}.mp3"
             s3.upload_fileobj(
@@ -121,32 +121,49 @@ def handler(event: dict):
                 segment_key,
                 BytesIO(_build_audio([result])),
             )
-            manifest_segments.append(
-                {"id": segment.id, "index": idx, "key": segment_key}
+            status = "complete"
+            data = Response(filename=segment_key, request_word_count=total_word_count)
+        else:
+            # Full-narration path
+            segment_results: list[tuple[bytes, int | None]] = []
+            manifest_segments: list[dict] = []
+            for idx, segment in enumerate(request_data.text):
+                result = _synthesize_segment(segment, request_data.voices)
+                segment_key = f"{request.user_id}/{request_data.chapter_name}/audio/segments/{segment.id}.mp3"
+                s3.upload_fileobj(
+                    f"{PROJECTS_BUCKET}",
+                    segment_key,
+                    BytesIO(_build_audio([result])),
+                )
+                manifest_segments.append(
+                    {"id": segment.id, "index": idx, "key": segment_key}
+                )
+                segment_results.append(result)
+
+            narration_key = (
+                f"{request.user_id}/{request_data.chapter_name}/audio/narration.mp3"
             )
-            segment_results.append(result)
+            s3.upload_fileobj(
+                f"{PROJECTS_BUCKET}",
+                narration_key,
+                BytesIO(_build_audio(segment_results)),
+            )
 
-        narration_key = (
-            f"{request.user_id}/{request_data.chapter_name}/audio/narration.mp3"
-        )
-        s3.upload_fileobj(
-            f"{PROJECTS_BUCKET}",
-            narration_key,
-            BytesIO(_build_audio(segment_results)),
-        )
+            manifest_key = (
+                f"{request.user_id}/{request_data.chapter_name}/audio/manifest.json"
+            )
+            manifest = {
+                "narration": {"key": narration_key},
+                "segments": manifest_segments,
+            }
+            s3.upload_fileobj(
+                f"{PROJECTS_BUCKET}",
+                manifest_key,
+                BytesIO(json.dumps(manifest).encode("utf-8")),
+            )
 
-        manifest_key = (
-            f"{request.user_id}/{request_data.chapter_name}/audio/manifest.json"
-        )
-        manifest = {"narration": {"key": narration_key}, "segments": manifest_segments}
-        s3.upload_fileobj(
-            f"{PROJECTS_BUCKET}",
-            manifest_key,
-            BytesIO(json.dumps(manifest).encode("utf-8")),
-        )
-
-        status = "complete"
-        data = Response(filename=narration_key, request_word_count=total_word_count)
+            status = "complete"
+            data = Response(filename=narration_key, request_word_count=total_word_count)
     except Exception as e:
         raise e from e
     finally:

@@ -1,7 +1,9 @@
 "use server";
 
+import { revalidateTag } from "next/cache";
 import { getUserId } from "./user";
-import { apiCallJson } from "../lib/api";
+import { apiCallJson, apiCallVoid } from "../lib/api";
+import { getVoices } from "./voices";
 
 export interface SegmentAudio {
   id: string;
@@ -38,4 +40,25 @@ export async function getSegmentAudioUrl(
     { cache: "no-store" }
   );
   return data.url;
+}
+
+// Trigger regeneration of a single speech segment
+export async function regenerateSegment(
+  chapterName: string,
+  segmentId: string
+): Promise<void> {
+  const userId = await getUserId();
+  const voices = await getVoices();
+  await apiCallVoid(`${process.env.AUDIOBOOK_SERVICE_URL}/narration/segment`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      user_id: userId,
+      voices,
+      chapter_name: chapterName,
+      segment_id: segmentId,
+    }),
+  });
+  // Refresh job state immediately; manifest will be updated via webhook + pusher
+  revalidateTag("job");
 }

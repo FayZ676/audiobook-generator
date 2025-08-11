@@ -44,6 +44,14 @@ async def events(response: WebhookResponse):
             narration_started_at = (
                 existing_job.narration_started_at if existing_job else None
             )
+        case "speech_segment":
+            # Treat per-segment updates as narration status updates for UI/pusher
+            script_status = None
+            script_started_at = None
+            narration_status = response.status
+            narration_started_at = (
+                existing_job.narration_started_at if existing_job else None
+            )
         case "subscription_reset":
             save_log_entry(response.user_id, "subscription_reset", 0)
             return
@@ -62,7 +70,7 @@ async def events(response: WebhookResponse):
             narration_started_at=narration_started_at,
         ),
         pusher=PusherEventDetails(
-            channel=f"{response.user_id}-{response.event}",
+            channel=f"{response.user_id}-{('speech' if response.event == 'speech_segment' else response.event)}",
             event=response.status,
             message=response.message,
         ),
@@ -70,5 +78,7 @@ async def events(response: WebhookResponse):
 
     if response.status == "complete":
         save_log_entry(
-            response.user_id, response.event, response.data.request_word_count
+            response.user_id,
+            ("speech" if response.event == "speech_segment" else response.event),
+            response.data.request_word_count,
         )

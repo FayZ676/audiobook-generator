@@ -68,6 +68,7 @@ class Response(BaseModel):
     request_word_count: int
 
 
+# Updated to remove per-segment speech events
 EventType = Literal["script", "speech", "subscription_reset"]
 
 

@@ -8,7 +8,8 @@ import { ManualCharacter } from "@/app/types";
 import Tip from "@/app/components/ui/Tip";
 import CharacterVoiceMapping from "./CharacterVoiceMapping";
 import AudioPlayer from "@/app/components/audio/AudioPlayer";
-import { getSegmentAudioUrl } from "@/app/actions/segments";
+import { getSegmentAudioUrl, regenerateSegment } from "@/app/actions/segments";
+import { RotateCw, LoaderCircle } from "lucide-react";
 
 interface ScriptEditorProps {
   script: Script;
@@ -24,6 +25,7 @@ export default function ScriptEditor({
   audioSegmentIds,
 }: ScriptEditorProps) {
   const [editingScript, setEditingScript] = useState<Script>(script);
+  const [regenerating, setRegenerating] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     setEditingScript(script);
@@ -167,6 +169,18 @@ export default function ScriptEditor({
 
   const availableCharacters = getAllCharacters();
 
+  const handleRegenerate = async (segmentId: string) => {
+    try {
+      setRegenerating((prev) => ({ ...prev, [segmentId]: true }));
+      await regenerateSegment(chapterName, segmentId);
+      // No immediate fetch; Pusher events will refresh UI via ProjectDashboardClient
+    } catch (e) {
+      console.error("Failed to regenerate segment", e);
+    } finally {
+      setRegenerating((prev) => ({ ...prev, [segmentId]: false }));
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <Tip>
@@ -214,14 +228,31 @@ export default function ScriptEditor({
                     <span className="text-sm text-gray-500 italic">
                       {voiceName}
                     </span>
-                    {hasAudio ? (
+                    {segmentId && (
                       <AudioPlayer
                         loadSrc={async () =>
                           getSegmentAudioUrl(chapterName, segmentId as string)
                         }
                         autoPlay
+                        action={
+                          <button
+                            className="btn btn-sm btn-outline"
+                            title="Regenerate segment"
+                            onClick={() => handleRegenerate(segmentId)}
+                            disabled={!!regenerating[segmentId]}
+                          >
+                            {regenerating[segmentId] ? (
+                              <LoaderCircle
+                                size={16}
+                                className="animate-spin"
+                              />
+                            ) : (
+                              <RotateCw size={16} />
+                            )}
+                          </button>
+                        }
                       />
-                    ) : null}
+                    )}
                   </div>
                 </div>
                 <div className="flex-1">

@@ -7,12 +7,15 @@ interface AudioPlayerProps {
   src?: string | null;
   autoPlay?: boolean;
   loadSrc?: () => Promise<string | null>;
+  // Optional action button to render next to play/pause (e.g., regenerate)
+  action?: React.ReactNode;
 }
 
 export default function AudioPlayer({
   src = null,
   autoPlay = false,
   loadSrc,
+  action,
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [internalSrc, setInternalSrc] = useState<string | null>(src);
@@ -74,13 +77,14 @@ export default function AudioPlayer({
             <CirclePlay size={16} />
           )}
         </button>
+        {action}
         {error && <span className="text-red-500 text-xs">{error}</span>}
       </div>
     );
   }
 
   if (!internalSrc) {
-    return null;
+    return <div className="flex items-center gap-2">{action}</div>;
   }
 
   return (
@@ -94,6 +98,7 @@ export default function AudioPlayer({
       >
         {isPlaying ? <Pause size={16} /> : <CirclePlay size={16} />}
       </button>
+      {action}
       {error && <span className="text-red-500 text-xs">{error}</span>}
       <audio
         ref={audioRef}
