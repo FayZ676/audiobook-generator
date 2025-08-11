@@ -40,7 +40,7 @@ export default function CharacterVoiceMapping({
 
   return (
     <div className="bg-base-200 p-4 rounded">
-      <div className="max-h-[14rem] overflow-y-scroll mb-4">
+      <div className="max-h-[14rem] overflow-y-scroll mb-4 space-y-2">
         {characterMappings.map((mapping) => (
           <div key={mapping.characterName} className="grid grid-cols-2 gap-2 ">
             <span className="truncate">{mapping.characterName}</span>
