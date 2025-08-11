@@ -9,6 +9,7 @@ import Tip from "@/app/components/ui/Tip";
 import CharacterVoiceMapping from "./CharacterVoiceMapping";
 import AudioPlayer from "@/app/components/audio/AudioPlayer";
 import { getSegmentAudioUrl } from "@/app/actions/segments";
+import { CirclePlay, LoaderCircle } from "lucide-react";
 
 interface ScriptEditorProps {
   script: Script;
@@ -196,24 +197,24 @@ export default function ScriptEditor({
           return (
             <div key={index} className="mb-4">
               <div className="flex flex-col gap-2">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <select
-                      value={characterName}
-                      onChange={(e) =>
-                        handleSegmentCharacterChange(index, e.target.value)
-                      }
-                      className="select select-sm select-bordered min-w-[120px]"
-                    >
-                      {availableCharacters.map((char) => (
-                        <option key={char} value={char}>
-                          {char}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm">{voiceName}</span>
+                <div className="grid grid-cols-2 gap-2">
+                  <select
+                    value={characterName}
+                    onChange={(e) =>
+                      handleSegmentCharacterChange(index, e.target.value)
+                    }
+                    className="select select-sm select-bordered min-w-[120px]"
+                  >
+                    {availableCharacters.map((char) => (
+                      <option key={char} value={char}>
+                        {char}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="ml-auto flex items-center gap-3">
+                    <span className="text-sm text-gray-500 italic">
+                      {voiceName}
+                    </span>
                     {hasAudio ? (
                       <SegmentAudioLoader
                         chapterName={chapterName}
@@ -268,8 +269,13 @@ function SegmentAudioLoader({
       onClick={load}
       disabled={loading}
       className="btn btn-success btn-outline btn-sm"
+      title="Play sample"
     >
-      {loading ? "Loading..." : "Play"}
+      {loading ? (
+        <LoaderCircle size={16} className="animate-spin" />
+      ) : (
+        <CirclePlay size={16} />
+      )}
     </button>
   );
 }

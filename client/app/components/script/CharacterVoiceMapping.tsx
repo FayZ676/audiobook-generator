@@ -41,31 +41,29 @@ export default function CharacterVoiceMapping({
   return (
     <div className="bg-base-200 p-4 rounded">
       <div className="max-h-[14rem] overflow-y-scroll mb-4">
-        <div className="flex flex-col gap-2">
-          {characterMappings.map((mapping) => (
-            <div key={mapping.characterName} className="flex justify-between">
-              <span className="">{mapping.characterName}</span>
-              <select
-                value={mapping.currentVoice}
-                onChange={(e) =>
-                  onCharacterVoiceChange(mapping.characterName, e.target.value)
-                }
-                className="select select-sm select-bordered"
-              >
-                <option value="">Select voice</option>
-                {voices.length > 0 ? (
-                  voices.map((voice) => (
-                    <option key={voice.name} value={voice.name}>
-                      {voice.name}
-                    </option>
-                  ))
-                ) : (
-                  <option value="">No voices available</option>
-                )}
-              </select>
-            </div>
-          ))}
-        </div>
+        {characterMappings.map((mapping) => (
+          <div key={mapping.characterName} className="grid grid-cols-2 gap-2 ">
+            <span className="truncate">{mapping.characterName}</span>
+            <select
+              value={mapping.currentVoice}
+              onChange={(e) =>
+                onCharacterVoiceChange(mapping.characterName, e.target.value)
+              }
+              className="select select-sm select-bordered ml-auto"
+            >
+              <option value="">Select voice</option>
+              {voices.length > 0 ? (
+                voices.map((voice) => (
+                  <option key={voice.name} value={voice.name}>
+                    {voice.name}
+                  </option>
+                ))
+              ) : (
+                <option value="">No voices available</option>
+              )}
+            </select>
+          </div>
+        ))}
       </div>
 
       <button onClick={() => setIsModalOpen(true)} className="btn w-full">

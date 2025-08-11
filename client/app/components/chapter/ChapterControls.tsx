@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { use } from "react";
-import { MicVocal } from "lucide-react";
 
 import { createNarration } from "../../actions/narrate";
 import { Script } from "../../actions/script";
@@ -62,15 +61,11 @@ export default function ChapterControls({
             }}
             disabled={isCreatingNarration || isProcessing}
           >
-            <MicVocal size={16} className="md:hidden" />
-            <span className="hidden md:inline">
-              {isCreatingNarration ||
-              jobState?.narration_status === "processing"
-                ? "Creating..."
-                : narrationUrl
-                ? "Regenerate"
-                : "Narrate"}
-            </span>
+            {isCreatingNarration || jobState?.narration_status === "processing"
+              ? "Creating..."
+              : narrationUrl
+              ? "Regenerate"
+              : "Narrate"}
           </button>
         )}
       </div>
