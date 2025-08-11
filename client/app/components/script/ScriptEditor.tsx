@@ -9,7 +9,6 @@ import Tip from "@/app/components/ui/Tip";
 import CharacterVoiceMapping from "./CharacterVoiceMapping";
 import AudioPlayer from "@/app/components/audio/AudioPlayer";
 import { getSegmentAudioUrl } from "@/app/actions/segments";
-import { CirclePlay, LoaderCircle } from "lucide-react";
 
 interface ScriptEditorProps {
   script: Script;
@@ -216,9 +215,11 @@ export default function ScriptEditor({
                       {voiceName}
                     </span>
                     {hasAudio ? (
-                      <SegmentAudioLoader
-                        chapterName={chapterName}
-                        segmentId={segmentId as string}
+                      <AudioPlayer
+                        loadSrc={async () =>
+                          getSegmentAudioUrl(chapterName, segmentId as string)
+                        }
+                        autoPlay
                       />
                     ) : null}
                   </div>
@@ -238,44 +239,5 @@ export default function ScriptEditor({
         })}
       </div>
     </div>
-  );
-}
-
-function SegmentAudioLoader({
-  chapterName,
-  segmentId,
-}: {
-  chapterName: string;
-  segmentId: string;
-}) {
-  const [src, setSrc] = React.useState<string | null>(null);
-  const [loading, setLoading] = React.useState(false);
-
-  const load = async () => {
-    if (src || loading) return;
-    setLoading(true);
-    try {
-      const url = await getSegmentAudioUrl(chapterName, segmentId);
-      setSrc(url);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return src ? (
-    <AudioPlayer src={src} autoPlay />
-  ) : (
-    <button
-      onClick={load}
-      disabled={loading}
-      className="btn btn-success btn-outline btn-sm"
-      title="Play sample"
-    >
-      {loading ? (
-        <LoaderCircle size={16} className="animate-spin" />
-      ) : (
-        <CirclePlay size={16} />
-      )}
-    </button>
   );
 }
