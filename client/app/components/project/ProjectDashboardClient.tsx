@@ -131,7 +131,9 @@ export default function ProjectDashboardClient({
                   </div>
 
                   {selectedChapter && (
-                    <h4 className="mt-0 mb-0">{selectedChapter}</h4>
+                    <div className="flex items-center ">
+                      <h4 className="mt-0 mb-0">{selectedChapter}</h4>
+                    </div>
                   )}
                 </div>
 
