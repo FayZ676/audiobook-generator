@@ -117,7 +117,7 @@ def handler(event: dict):
             result = _synthesize_segment(segment, request_data.voices)
             segment_key = f"{request.user_id}/{request_data.chapter_name}/audio/segments/{segment.id}.mp3"
             s3.upload_fileobj(
-                f"{PROJECTS_BUCKET}",
+                PROJECTS_BUCKET,
                 segment_key,
                 BytesIO(_build_audio([result])),
             )
