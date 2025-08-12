@@ -14,7 +14,6 @@ interface ScriptEditorProps {
   script: Script;
   voices: Voice[];
   chapterName: string;
-  audioSegmentIds: string[];
   processingSegmentIds?: string[];
 }
 
@@ -22,7 +21,6 @@ export default function ScriptEditor({
   script,
   voices,
   chapterName,
-  audioSegmentIds,
   processingSegmentIds,
 }: ScriptEditorProps) {
   const [editingScript, setEditingScript] = useState<Script>(script);

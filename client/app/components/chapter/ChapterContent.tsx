@@ -47,7 +47,6 @@ export default async function ChapterContent({
         script={currentScript}
         voices={voices}
         chapterName={selectedChapter}
-        audioSegmentIds={audioSegmentIds}
         processingSegmentIds={processingSegmentIds}
       />
     </>
