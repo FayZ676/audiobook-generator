@@ -157,7 +157,7 @@ def handler(event: dict):
                 "segments": manifest_segments,
             }
             s3.upload_fileobj(
-                f"{PROJECTS_BUCKET}",
+                PROJECTS_BUCKET,
                 manifest_key,
                 BytesIO(json.dumps(manifest).encode("utf-8")),
             )
