@@ -37,11 +37,6 @@ export default function ScriptEditor({
     [processingSegmentIds]
   );
 
-  const playableSegmentIds = useMemo(
-    () => new Set(audioSegmentIds),
-    [audioSegmentIds]
-  );
-
   const clearMessages = () => {};
 
   const autoSave = async (scriptToSave: Script) => {
