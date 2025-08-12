@@ -48,7 +48,6 @@ export default function ProjectDashboardClient({
   const router = useRouter();
   const [isDeletingProject, setIsDeletingProject] = React.useState(false);
 
-  const voices = use(voicesPromise);
   const chapters = use(chaptersPromise);
   const currentScript = use(scriptPromise);
   const narrationUrl = use(narrationPromise);

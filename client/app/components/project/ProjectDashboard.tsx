@@ -8,7 +8,7 @@ import { getScript } from "../../actions/script";
 import { getNarration } from "../../actions/narrate";
 import { getAudioManifest } from "../../actions/segments";
 
-import ProjectDashboardWrapper from "./ProjectDashboardWrapper";
+import ProjectDashboardWrapper from "@/app/components/project/ProjectDashboardWrapper";
 
 interface ProjectDashboardProps {
   currentChapter?: string;
