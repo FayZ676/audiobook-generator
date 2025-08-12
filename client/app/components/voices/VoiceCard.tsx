@@ -57,7 +57,7 @@ export default function VoiceCard({ voice }: VoiceCardProps) {
       </div>
       <div className="flex items-center gap-2">
         {voiceUrl ? (
-          <AudioPlayer src={voiceUrl} autoPlay />
+          <AudioPlayer src={voiceUrl} />
         ) : (
           <button
             onClick={loadVoiceAudio}

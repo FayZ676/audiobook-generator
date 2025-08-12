@@ -5,13 +5,9 @@ import { CirclePlay, Pause } from "lucide-react";
 
 interface AudioPlayerProps {
   src: string;
-  autoPlay?: boolean;
 }
 
-export default function AudioPlayer({
-  src,
-  autoPlay = false,
-}: AudioPlayerProps) {
+export default function AudioPlayer({ src }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,15 +20,6 @@ export default function AudioPlayer({
       el.load();
     }
   }, [src]);
-
-  useEffect(() => {
-    if (autoPlay && audioRef.current) {
-      audioRef.current
-        .play()
-        .then(() => setIsPlaying(true))
-        .catch(() => setError("Unable to autoplay"));
-    }
-  }, [autoPlay, src]);
 
   const togglePlay = () => {
     const el = audioRef.current;

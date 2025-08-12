@@ -244,7 +244,7 @@ export default function ScriptEditor({
                     {segmentId && hasAudio && (
                       <div className="flex items-center gap-2">
                         {segmentUrl ? (
-                          <AudioPlayer src={segmentUrl} autoPlay />
+                          <AudioPlayer src={segmentUrl} />
                         ) : (
                           <button
                             onClick={() => loadSegmentUrl(segmentId)}
