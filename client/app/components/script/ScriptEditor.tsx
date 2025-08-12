@@ -4,18 +4,19 @@ import React, { useState, useEffect, useMemo } from "react";
 
 import { Script, updateScript } from "@/app/actions/script";
 import { Voice } from "@/app/actions/voices";
-import { ManualCharacter } from "@/app/types";
 import Tip from "@/app/components/ui/Tip";
 import CharacterVoiceMapping from "./CharacterVoiceMapping";
 import AudioPlayer from "@/app/components/audio/AudioPlayer";
 import { getSegmentAudioUrl, regenerateSegment } from "@/app/actions/segments";
-import { RotateCw, LoaderCircle } from "lucide-react";
+import { RotateCw, LoaderCircle, CirclePlay } from "lucide-react";
+import { useAudioLoader } from "../../hooks/useAudioLoader";
 
 interface ScriptEditorProps {
   script: Script;
   voices: Voice[];
   chapterName: string;
   processingSegmentIds?: string[];
+  playableSegmentIds?: string[];
 }
 
 export default function ScriptEditor({
@@ -23,9 +24,11 @@ export default function ScriptEditor({
   voices,
   chapterName,
   processingSegmentIds,
+  playableSegmentIds = [],
 }: ScriptEditorProps) {
   const [editingScript, setEditingScript] = useState<Script>(script);
   const [regenerating, setRegenerating] = useState<Record<string, boolean>>({});
+  const { loadAudio, getUrl, isLoading } = useAudioLoader();
 
   useEffect(() => {
     setEditingScript(script);
@@ -35,6 +38,14 @@ export default function ScriptEditor({
     () => new Set(processingSegmentIds || []),
     [processingSegmentIds]
   );
+  const playableSet = useMemo(
+    () => new Set(playableSegmentIds || []),
+    [playableSegmentIds]
+  );
+
+  const loadSegmentUrl = async (segmentId: string) => {
+    await loadAudio(segmentId, () => getSegmentAudioUrl(chapterName, segmentId));
+  };
 
   const clearMessages = () => {};
 
@@ -191,12 +202,12 @@ export default function ScriptEditor({
             speaker?.character.names[0] || scriptSegment.speaker_alias;
           const voiceName = speaker?.voice.name || "";
           const segmentId = scriptSegment.id as string | undefined;
-          const hasAudio = segmentId
-            ? playableSegmentIds.has(segmentId)
-            : false;
+          const hasAudio = segmentId ? playableSet.has(segmentId) : false;
           const isRegenerating = segmentId
             ? !!regenerating[segmentId] || processingSet.has(segmentId)
             : false;
+          const segmentUrl = segmentId ? getUrl(segmentId) : undefined;
+          const isLoadingUrl = segmentId ? isLoading(segmentId) : false;
 
           return (
             <div
@@ -228,30 +239,53 @@ export default function ScriptEditor({
                         Regenerating
                       </span>
                     )}
-                    {segmentId && (
-                      <AudioPlayer
-                        loadSrc={async () =>
-                          getSegmentAudioUrl(chapterName, segmentId as string)
-                        }
-                        autoPlay
-                        action={
+                    {segmentId && hasAudio && (
+                      <div className="flex items-center gap-2">
+                        {segmentUrl ? (
+                          <AudioPlayer src={segmentUrl} autoPlay />
+                        ) : (
                           <button
-                            className="btn btn-sm btn-outline"
-                            title="Regenerate segment"
-                            onClick={() => handleRegenerate(segmentId)}
-                            disabled={isRegenerating}
+                            onClick={() => loadSegmentUrl(segmentId)}
+                            disabled={isLoadingUrl}
+                            className="btn btn-success btn-outline btn-sm"
+                            title="Load and play audio"
                           >
-                            {isRegenerating ? (
+                            {isLoadingUrl ? (
                               <LoaderCircle
                                 size={16}
                                 className="animate-spin"
                               />
                             ) : (
-                              <RotateCw size={16} />
+                              <CirclePlay size={16} />
                             )}
                           </button>
-                        }
-                      />
+                        )}
+                        <button
+                          className="btn btn-sm btn-outline"
+                          title="Regenerate segment"
+                          onClick={() => handleRegenerate(segmentId)}
+                          disabled={isRegenerating}
+                        >
+                          {isRegenerating ? (
+                            <LoaderCircle size={16} className="animate-spin" />
+                          ) : (
+                            <RotateCw size={16} />
+                          )}
+                        </button>
+                      </div>
+                    )}
+                    {segmentId && !hasAudio && (
+                      <button
+                        className="btn btn-sm btn-primary"
+                        onClick={() => handleRegenerate(segmentId)}
+                        disabled={isRegenerating}
+                      >
+                        {isRegenerating ? (
+                          <LoaderCircle size={16} className="animate-spin" />
+                        ) : (
+                          "Narrate"
+                        )}
+                      </button>
                     )}
                   </div>
                 </div>

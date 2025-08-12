@@ -3,6 +3,7 @@ import { Trash2, LoaderCircle, CirclePlay } from "lucide-react";
 
 import { Voice, deleteVoice, getVoiceAudioUrl } from "../../actions/voices";
 import AudioPlayer from "../audio/AudioPlayer";
+import { useAudioLoader } from "../../hooks/useAudioLoader";
 
 interface VoiceCardProps {
   voice: Voice;
@@ -17,10 +18,11 @@ export function isUserCreatedVoice(voice: Voice): boolean {
 
 export default function VoiceCard({ voice }: VoiceCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
-  const [voiceUrl, setVoiceUrl] = useState<string | null>(null);
-  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+  const { loadAudio, getUrl, isLoading } = useAudioLoader();
 
   const isUserCreated = isUserCreatedVoice(voice);
+  const voiceUrl = getUrl(voice.name);
+  const isLoadingAudio = isLoading(voice.name);
 
   const handleDelete = async () => {
     if (!isUserCreated) return;
@@ -37,16 +39,11 @@ export default function VoiceCard({ voice }: VoiceCardProps) {
   };
 
   const loadVoiceAudio = async () => {
-    if (voiceUrl || isLoadingAudio) return;
-    setIsLoadingAudio(true);
-    try {
+    await loadAudio(voice.name, async () => {
       const url = await getVoiceAudioUrl(voice.name);
-      if (url) setVoiceUrl(url);
-    } catch (error) {
-      console.error("Failed to load voice audio:", error);
-    } finally {
-      setIsLoadingAudio(false);
-    }
+      if (!url) throw new Error("No audio URL returned");
+      return url;
+    });
   };
 
   return (

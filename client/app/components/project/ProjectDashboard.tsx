@@ -6,6 +6,7 @@ import { getCurrentProject } from "../../actions/project";
 import { getChapters } from "../../actions/chapter";
 import { getScript } from "../../actions/script";
 import { getNarration } from "../../actions/narrate";
+import { getAudioManifest } from "../../actions/segments";
 
 import ProjectDashboardClient from "./ProjectDashboardClient";
 
@@ -18,21 +19,25 @@ export default async function ProjectDashboard({
   currentChapter,
   initialChapters,
 }: ProjectDashboardProps) {
+  const selectedChapter = currentChapter || null;
+
   const jobStatePromise = getJobState();
   const voicesPromise = getVoices();
   const projectPromise = getCurrentProject();
   const chaptersPromise = initialChapters
     ? Promise.resolve(initialChapters)
     : getChapters();
-
-  const selectedChapter = currentChapter || null;
-
   const scriptPromise = selectedChapter
     ? getScript(selectedChapter)
     : Promise.resolve(null);
   const narrationPromise = selectedChapter
     ? getNarration(selectedChapter)
     : Promise.resolve(null);
+  const audioSegmentIdsPromise = selectedChapter
+    ? getAudioManifest(selectedChapter)
+        .then((m) => m.segments.map((s) => s.id))
+        .catch(() => [])
+    : Promise.resolve<string[]>([]);
 
   return (
     <Suspense
@@ -51,6 +56,7 @@ export default async function ProjectDashboard({
         scriptPromise={scriptPromise}
         narrationPromise={narrationPromise}
         selectedChapter={selectedChapter}
+        audioSegmentIdsPromise={audioSegmentIdsPromise}
       />
     </Suspense>
   );

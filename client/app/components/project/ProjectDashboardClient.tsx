@@ -33,6 +33,7 @@ interface ProjectDashboardClientProps {
   scriptPromise: Promise<Script | null>;
   narrationPromise: Promise<string | null>;
   selectedChapter: string | null;
+  audioSegmentIdsPromise: Promise<string[]>;
 }
 
 export default function ProjectDashboardClient({
@@ -43,6 +44,7 @@ export default function ProjectDashboardClient({
   scriptPromise,
   narrationPromise,
   selectedChapter,
+  audioSegmentIdsPromise,
 }: ProjectDashboardClientProps) {
   const router = useRouter();
   const [isDeletingProject, setIsDeletingProject] = React.useState(false);
@@ -52,6 +54,7 @@ export default function ProjectDashboardClient({
   const chapters = use(chaptersPromise);
   const currentScript = use(scriptPromise);
   const narrationUrl = use(narrationPromise);
+  const audioSegmentIds = use(audioSegmentIdsPromise);
   const userChannels = useUserChannels();
 
   const handleRevalidate = async () => {
@@ -153,6 +156,7 @@ export default function ProjectDashboardClient({
                     scriptPromise={scriptPromise}
                     jobStatePromise={jobStatePromise}
                     voices={voices}
+                    audioSegmentIds={audioSegmentIds}
                   />
                 )}
               </div>

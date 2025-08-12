@@ -1,42 +1,38 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { CirclePlay, Pause, LoaderCircle } from "lucide-react";
+import { CirclePlay, Pause } from "lucide-react";
 
 interface AudioPlayerProps {
-  src?: string | null;
+  src: string;
   autoPlay?: boolean;
-  loadSrc?: () => Promise<string | null>;
-  // Optional action button to render next to play/pause (e.g., regenerate)
-  action?: React.ReactNode;
 }
 
 export default function AudioPlayer({
-  src = null,
+  src,
   autoPlay = false,
-  loadSrc,
-  action,
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [internalSrc, setInternalSrc] = useState<string | null>(src);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setInternalSrc(src ?? null);
     setIsPlaying(false);
     setError(null);
+    const el = audioRef.current;
+    if (el) {
+      el.load();
+    }
   }, [src]);
 
   useEffect(() => {
-    if (autoPlay && internalSrc && audioRef.current) {
+    if (autoPlay && audioRef.current) {
       audioRef.current
         .play()
         .then(() => setIsPlaying(true))
         .catch(() => setError("Unable to autoplay"));
     }
-  }, [autoPlay, internalSrc]);
+  }, [autoPlay, src]);
 
   const togglePlay = () => {
     const el = audioRef.current;
@@ -47,45 +43,6 @@ export default function AudioPlayer({
       el.play().catch(() => setError("Failed to play audio"));
     }
   };
-
-  const load = async () => {
-    if (internalSrc || isLoading || !loadSrc) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      const url = await loadSrc();
-      setInternalSrc(url ?? null);
-    } catch {
-      setError("Failed to load audio");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (!internalSrc && loadSrc) {
-    return (
-      <div className="flex items-center gap-2">
-        <button
-          onClick={load}
-          disabled={isLoading}
-          className="btn btn-success btn-outline btn-sm"
-          title="Play sample"
-        >
-          {isLoading ? (
-            <LoaderCircle size={16} className="animate-spin" />
-          ) : (
-            <CirclePlay size={16} />
-          )}
-        </button>
-        {action}
-        {error && <span className="text-red-500 text-xs">{error}</span>}
-      </div>
-    );
-  }
-
-  if (!internalSrc) {
-    return <div className="flex items-center gap-2">{action}</div>;
-  }
 
   return (
     <div className="flex items-center gap-2">
@@ -98,7 +55,6 @@ export default function AudioPlayer({
       >
         {isPlaying ? <Pause size={16} /> : <CirclePlay size={16} />}
       </button>
-      {action}
       {error && <span className="text-red-500 text-xs">{error}</span>}
       <audio
         ref={audioRef}
@@ -108,7 +64,7 @@ export default function AudioPlayer({
         onError={() => setError("Audio error")}
         className="hidden"
       >
-        <source src={internalSrc} />
+        <source src={src} />
       </audio>
     </div>
   );

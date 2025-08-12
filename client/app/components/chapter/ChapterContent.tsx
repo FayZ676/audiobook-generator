@@ -16,6 +16,7 @@ interface ChapterContentProps {
   scriptPromise: Promise<Script | null>;
   jobStatePromise: Promise<AudiobookJob | null>;
   voices: Voice[];
+  audioSegmentIds: string[];
 }
 
 export default async function ChapterContent({
@@ -26,6 +27,7 @@ export default async function ChapterContent({
   scriptPromise,
   jobStatePromise,
   voices,
+  audioSegmentIds,
 }: ChapterContentProps) {
   const jobState = await jobStatePromise;
   const processingSegmentIds = jobState?.processing_segment_ids || undefined;
@@ -46,6 +48,7 @@ export default async function ChapterContent({
         voices={voices}
         chapterName={selectedChapter}
         processingSegmentIds={processingSegmentIds}
+        playableSegmentIds={audioSegmentIds}
       />
     </>
   );
