@@ -16,7 +16,6 @@ import { deleteProject } from "../../actions/audiobook";
 
 import ChapterContent from "../chapter/ChapterContent";
 import GenerateScriptForm from "../script/GenerateScriptForm";
-import CreateProjectForm from "./CreateProjectForm";
 import ChapterSelector from "../chapter/ChapterSelector";
 import CreateChapterForm from "../chapter/CreateChapterForm";
 import JobStateSection from "../job/JobStateSection";
@@ -25,10 +24,10 @@ import VoicesDashboardClient from "../voices/VoicesDashboardClient";
 interface ProjectDashboardClientProps {
   voicesPromise: Promise<Voice[]>;
   jobStatePromise: Promise<AudiobookJob | null>;
-  projectPromise: Promise<{
+  project: {
     name: string;
     user_id: string; // NOTE (faizi): We can get this from clerk.
-  } | null>;
+  };
   chaptersPromise: Promise<string[]>;
   scriptPromise: Promise<Script | null>;
   narrationPromise: Promise<string | null>;
@@ -39,7 +38,7 @@ interface ProjectDashboardClientProps {
 export default function ProjectDashboardClient({
   voicesPromise,
   jobStatePromise,
-  projectPromise,
+  project,
   chaptersPromise,
   scriptPromise,
   narrationPromise,
@@ -49,7 +48,7 @@ export default function ProjectDashboardClient({
   const router = useRouter();
   const [isDeletingProject, setIsDeletingProject] = React.useState(false);
 
-  const project = use(projectPromise);
+  const voices = use(voicesPromise);
   const chapters = use(chaptersPromise);
   const currentScript = use(scriptPromise);
   const narrationUrl = use(narrationPromise);
@@ -100,10 +99,6 @@ export default function ProjectDashboardClient({
     await deleteProject();
     router.refresh();
   };
-
-  if (!project) {
-    return <CreateProjectForm />;
-  }
 
   const hasNoSelectedChapter = !selectedChapter;
   const hasNoScript = !currentScript;

@@ -8,7 +8,7 @@ import { getScript } from "../../actions/script";
 import { getNarration } from "../../actions/narrate";
 import { getAudioManifest } from "../../actions/segments";
 
-import ProjectDashboardClient from "./ProjectDashboardClient";
+import ProjectDashboardWrapper from "./ProjectDashboardWrapper";
 
 interface ProjectDashboardProps {
   currentChapter?: string;
@@ -48,7 +48,7 @@ export default async function ProjectDashboard({
         </div>
       }
     >
-      <ProjectDashboardClient
+      <ProjectDashboardWrapper
         voicesPromise={voicesPromise}
         jobStatePromise={jobStatePromise}
         projectPromise={projectPromise}
