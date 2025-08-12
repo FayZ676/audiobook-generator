@@ -44,7 +44,9 @@ export default function ScriptEditor({
   );
 
   const loadSegmentUrl = async (segmentId: string) => {
-    await loadAudio(segmentId, () => getSegmentAudioUrl(chapterName, segmentId));
+    await loadAudio(segmentId, () =>
+      getSegmentAudioUrl(chapterName, segmentId)
+    );
   };
 
   const clearMessages = () => {};

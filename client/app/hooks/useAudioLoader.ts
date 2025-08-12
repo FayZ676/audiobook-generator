@@ -17,7 +17,8 @@ export function useAudioLoader(options: UseAudioLoaderOptions = {}) {
         const url = await loader();
         setUrls((prev) => ({ ...prev, [key]: url }));
       } catch (error) {
-        const err = error instanceof Error ? error : new Error("Failed to load audio");
+        const err =
+          error instanceof Error ? error : new Error("Failed to load audio");
         options.onError?.(err);
         console.error("Failed to load audio:", err);
       } finally {
