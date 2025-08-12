@@ -17,7 +17,7 @@ interface ChapterContentProps {
   narrationPromise: Promise<string | null>;
   scriptPromise: Promise<Script | null>;
   jobStatePromise: Promise<AudiobookJob | null>;
-  voices: Voice[];
+  voicesPromise: Promise<Voice[]>;
   audioSegmentIds: string[];
 }
 
@@ -28,7 +28,7 @@ export default function ChapterContent({
   narrationPromise,
   scriptPromise,
   jobStatePromise,
-  voices,
+  voicesPromise,
   audioSegmentIds,
 }: ChapterContentProps) {
   const jobState = use(jobStatePromise);
@@ -47,7 +47,7 @@ export default function ChapterContent({
 
       <ScriptEditor
         script={currentScript}
-        voices={voices}
+        voicesPromise={voicesPromise}
         chapterName={selectedChapter}
         processingSegmentIds={processingSegmentIds}
         playableSegmentIds={audioSegmentIds}

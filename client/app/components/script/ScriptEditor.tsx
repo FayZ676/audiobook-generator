@@ -1,20 +1,21 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
 import { useAudioLoader } from "../../hooks/useAudioLoader";
 import { RotateCw, LoaderCircle, CirclePlay } from "lucide-react";
 
 import { Script, updateScript } from "@/app/actions/script";
 import { Voice } from "@/app/actions/voices";
 import { getSegmentAudioUrl, regenerateSegment } from "@/app/actions/segments";
+import { ManualCharacter } from "@/app/types";
 
 import Tip from "@/app/components/ui/Tip";
-import CharacterVoiceMapping from "@/app/components/script/CharacterVoiceMapping";
+import CharacterVoiceMappingClient from "@/app/components/script/CharacterVoiceMappingClient";
 import AudioPlayer from "@/app/components/audio/AudioPlayer";
 
 interface ScriptEditorProps {
   script: Script;
-  voices: Voice[];
+  voicesPromise: Promise<Voice[]>;
   chapterName: string;
   processingSegmentIds?: string[];
   playableSegmentIds?: string[];
@@ -22,7 +23,7 @@ interface ScriptEditorProps {
 
 export default function ScriptEditor({
   script,
-  voices,
+  voicesPromise,
   chapterName,
   processingSegmentIds,
   playableSegmentIds = [],
@@ -133,68 +134,43 @@ export default function ScriptEditor({
         Edit the script text, choose voices for characters, and save changes.
       </Tip>
 
-      <CharacterVoiceMapping
-        script={editingScript}
-        voices={voices}
-        onCharacterVoiceChange={(characterName, voiceName) => {
-          const voice = voices.find((v) => v.name === voiceName) || null;
-          const create = (
-            name: string,
-            v: typeof voice,
-            age: "young" | "middle-aged" | "old",
-            gender: "male" | "female"
-          ) => ({
-            character: { names: [name], age, gender },
-            voice: {
-              name: v?.name || "",
-              age: v?.age || age,
-              gender: v?.gender || gender,
-              audio_path: v?.audio_path || "",
-              audio_transcript: v?.audio_transcript || "",
-            },
-          });
-          const updatedSpeakers = editingScript.speakers.map((s) =>
-            s.character.names.includes(characterName)
-              ? create(
-                  characterName,
-                  voice,
-                  s.character.age,
-                  s.character.gender
-                )
-              : s
-          );
-          const updatedScript = { ...editingScript, speakers: updatedSpeakers };
-          setEditingScript(updatedScript);
-          debouncedAutoSave(updatedScript);
-        }}
-        onAddCharacter={(character) => {
-          const exists = editingScript.speakers.find((s) =>
-            s.character.names.includes(character.name)
-          );
-          if (!exists) {
-            const newSpeaker = {
-              character: {
-                names: [character.name],
-                age: character.age,
-                gender: character.gender,
-              },
-              voice: {
-                name: "",
-                age: character.age,
-                gender: character.gender,
-                audio_path: "",
-                audio_transcript: "",
-              },
-            };
-            const updatedScript = {
-              ...editingScript,
-              speakers: [...editingScript.speakers, newSpeaker],
-            };
+      <Suspense fallback={<div>Loading character voice mapping...</div>}>
+        <CharacterVoiceMappingClient
+          script={editingScript}
+          voicesPromise={voicesPromise}
+          onScriptUpdate={(updatedScript: Script) => {
             setEditingScript(updatedScript);
             debouncedAutoSave(updatedScript);
-          }
-        }}
-      />
+          }}
+          onAddCharacter={(character: ManualCharacter) => {
+            const exists = editingScript.speakers.find((s) =>
+              s.character.names.includes(character.name)
+            );
+            if (!exists) {
+              const newSpeaker = {
+                character: {
+                  names: [character.name],
+                  age: character.age,
+                  gender: character.gender,
+                },
+                voice: {
+                  name: "",
+                  age: character.age,
+                  gender: character.gender,
+                  audio_path: "",
+                  audio_transcript: "",
+                },
+              };
+              const updatedScript = {
+                ...editingScript,
+                speakers: [...editingScript.speakers, newSpeaker],
+              };
+              setEditingScript(updatedScript);
+              debouncedAutoSave(updatedScript);
+            }
+          }}
+        />
+      </Suspense>
 
       <div className="h-[28rem] overflow-y-scroll bg-base-200 p-4 rounded">
         {editingScript.segments.map((scriptSegment, index) => {
