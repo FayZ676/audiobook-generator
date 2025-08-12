@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { use } from "react";
 
 import { Voice } from "../../actions/voices";
 import { AudiobookJob } from "../../actions/job";
@@ -19,7 +21,7 @@ interface ChapterContentProps {
   audioSegmentIds: string[];
 }
 
-export default async function ChapterContent({
+export default function ChapterContent({
   selectedChapter,
   currentScript,
   narrationUrl,
@@ -29,7 +31,7 @@ export default async function ChapterContent({
   voices,
   audioSegmentIds,
 }: ChapterContentProps) {
-  const jobState = await jobStatePromise;
+  const jobState = use(jobStatePromise);
   const processingSegmentIds = jobState?.processing_segment_ids || undefined;
 
   return (
