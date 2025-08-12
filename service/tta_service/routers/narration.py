@@ -104,7 +104,7 @@ async def build_single_segment(request: BuildSegmentRequest, bg_tasks: Backgroun
     # Create a WebhookRequest for speech worker with only one segment
     single_segment_request = WebhookRequest(
         callback=f"{SERVICE_API_URL}/events",
-        event="speech_segment",
+        event="speech",
         user_id=request.user_id,
         data=SpeechRequest(
             user_id=request.user_id,
