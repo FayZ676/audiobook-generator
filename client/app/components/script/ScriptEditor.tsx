@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo } from "react";
 
 import { Script, updateScript } from "@/app/actions/script";
 import { Voice } from "@/app/actions/voices";
-import { ManualCharacter } from "@/app/types";
 import Tip from "@/app/components/ui/Tip";
 import CharacterVoiceMapping from "./CharacterVoiceMapping";
 import AudioPlayer from "@/app/components/audio/AudioPlayer";
@@ -198,9 +197,6 @@ export default function ScriptEditor({
             speaker?.character.names[0] || scriptSegment.speaker_alias;
           const voiceName = speaker?.voice.name || "";
           const segmentId = scriptSegment.id as string | undefined;
-          const hasAudio = segmentId
-            ? playableSegmentIds.has(segmentId)
-            : false;
           const isRegenerating = segmentId
             ? !!regenerating[segmentId] || processingSet.has(segmentId)
             : false;
