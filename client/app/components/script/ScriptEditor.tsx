@@ -1,15 +1,16 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useAudioLoader } from "../../hooks/useAudioLoader";
+import { RotateCw, LoaderCircle, CirclePlay } from "lucide-react";
 
 import { Script, updateScript } from "@/app/actions/script";
 import { Voice } from "@/app/actions/voices";
-import Tip from "@/app/components/ui/Tip";
-import CharacterVoiceMapping from "./CharacterVoiceMapping";
-import AudioPlayer from "@/app/components/audio/AudioPlayer";
 import { getSegmentAudioUrl, regenerateSegment } from "@/app/actions/segments";
-import { RotateCw, LoaderCircle, CirclePlay } from "lucide-react";
-import { useAudioLoader } from "../../hooks/useAudioLoader";
+
+import Tip from "@/app/components/ui/Tip";
+import CharacterVoiceMapping from "@/app/components/script/CharacterVoiceMapping";
+import AudioPlayer from "@/app/components/audio/AudioPlayer";
 
 interface ScriptEditorProps {
   script: Script;
@@ -263,7 +264,7 @@ export default function ScriptEditor({
                           </button>
                         )}
                         <button
-                          className="btn btn-sm btn-outline"
+                          className="btn btn-sm btn-outline btn-info"
                           title="Regenerate segment"
                           onClick={() => handleRegenerate(segmentId)}
                           disabled={isRegenerating}
