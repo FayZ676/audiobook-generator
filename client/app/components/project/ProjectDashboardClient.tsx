@@ -145,7 +145,6 @@ export default function ProjectDashboardClient({
                     selectedChapter={selectedChapter}
                     currentScript={currentScript}
                     narrationUrl={narrationUrl}
-                    narrationPromise={narrationPromise}
                     scriptPromise={scriptPromise}
                     jobStatePromise={jobStatePromise}
                     voicesPromise={voicesPromise}
