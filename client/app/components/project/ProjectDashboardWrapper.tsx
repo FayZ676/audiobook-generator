@@ -5,13 +5,14 @@ import React, { use } from "react";
 import { Voice } from "../../actions/voices";
 import { AudiobookJob } from "../../actions/job";
 import { Script } from "../../actions/script";
-import { AudioSegmentData } from "../../types";
+import { AudioSegmentData, VoiceAudioData } from "../../types";
 
 import ProjectDashboardClient from "./ProjectDashboardClient";
 import CreateProjectForm from "./CreateProjectForm";
 
 interface ProjectDashboardWrapperProps {
   voicesPromise: Promise<Voice[]>;
+  voiceAudioData: VoiceAudioData;
   jobStatePromise: Promise<AudiobookJob | null>;
   projectPromise: Promise<{
     name: string;
@@ -26,6 +27,7 @@ interface ProjectDashboardWrapperProps {
 
 export default function ProjectDashboardWrapper({
   voicesPromise,
+  voiceAudioData,
   jobStatePromise,
   projectPromise,
   chaptersPromise,
@@ -43,6 +45,7 @@ export default function ProjectDashboardWrapper({
   return (
     <ProjectDashboardClient
       voicesPromise={voicesPromise}
+      voiceAudioData={voiceAudioData}
       jobStatePromise={jobStatePromise}
       project={project}
       chaptersPromise={chaptersPromise}

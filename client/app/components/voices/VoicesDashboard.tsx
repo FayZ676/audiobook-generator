@@ -1,11 +1,22 @@
 import React from "react";
 
-import { getVoices } from "../../actions/voices";
+import { getVoices, getVoiceAudioUrls } from "../../actions/voices";
 
 import VoicesDashboardClient from "@/app/components/voices/VoicesDashboardClient";
 
-export default function VoicesDashboard() {
+export default async function VoicesDashboard() {
   const voicesPromise = getVoices();
+  const voices = await voicesPromise;
+  const voiceAudioUrls = await getVoiceAudioUrls(voices);
 
-  return <VoicesDashboardClient voicesPromise={voicesPromise} />;
+  const voiceAudioData = {
+    urls: voiceAudioUrls,
+  };
+
+  return (
+    <VoicesDashboardClient
+      voicesPromise={Promise.resolve(voices)}
+      voiceAudioData={voiceAudioData}
+    />
+  );
 }

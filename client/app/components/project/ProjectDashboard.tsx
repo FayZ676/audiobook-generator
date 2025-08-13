@@ -1,13 +1,13 @@
 import React, { Suspense } from "react";
 
 import { getJobState } from "../../actions/job";
-import { getVoices } from "../../actions/voices";
+import { getVoices, getVoiceAudioUrls } from "../../actions/voices";
 import { getCurrentProject } from "../../actions/project";
 import { getChapters } from "../../actions/chapter";
 import { getScript } from "../../actions/script";
 import { getNarration } from "../../actions/narrate";
 import { getAudioManifest } from "../../actions/segments";
-import { AudioSegmentData } from "../../types";
+import { AudioSegmentData, VoiceAudioData } from "../../types";
 
 import ProjectDashboardWrapper from "@/app/components/project/ProjectDashboardWrapper";
 
@@ -45,6 +45,11 @@ export default async function ProjectDashboard({
         ids: [] as string[],
         urls: {} as Record<string, string>,
       });
+  const voices = await voicesPromise;
+  const voiceAudioUrls = await getVoiceAudioUrls(voices);
+  const voiceAudioData: VoiceAudioData = {
+    urls: voiceAudioUrls,
+  };
 
   return (
     <Suspense
@@ -56,7 +61,8 @@ export default async function ProjectDashboard({
       }
     >
       <ProjectDashboardWrapper
-        voicesPromise={voicesPromise}
+        voicesPromise={Promise.resolve(voices)}
+        voiceAudioData={voiceAudioData}
         jobStatePromise={jobStatePromise}
         projectPromise={projectPromise}
         chaptersPromise={chaptersPromise}

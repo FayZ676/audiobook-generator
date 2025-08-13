@@ -68,12 +68,14 @@ export async function addVoice(formData: {
   }
 }
 
-export async function getVoiceAudioUrl(
-  voiceName: string
-): Promise<string | null> {
-  try {
-    const userId = await getUserId();
-    const normalizedVoiceName = voiceName.toLowerCase().replace(/\s+/g, "_");
+export async function getVoiceAudioUrls(
+  voices: Voice[]
+): Promise<Record<string, string>> {
+  const userId = await getUserId();
+  const audioUrls: Record<string, string> = {};
+
+  const urlPromises = voices.map(async (voice) => {
+    const normalizedVoiceName = voice.name.toLowerCase().replace(/\s+/g, "_");
 
     try {
       const audioUrl = await apiCallJson<string>(
@@ -82,19 +84,26 @@ export async function getVoiceAudioUrl(
           cache: "no-store",
         }
       );
-      console.log("Fetched voice audio URL:", audioUrl);
-      return audioUrl;
+      return { name: voice.name, url: audioUrl };
     } catch (error) {
       // Handle 404 case - voice audio not found
       if (error instanceof Error && error.message.includes("404")) {
-        return null;
+        return { name: voice.name, url: null };
       }
-      throw error;
+      console.error(`Error fetching voice audio URL for ${voice.name}:`, error);
+      return { name: voice.name, url: null };
     }
-  } catch (error) {
-    console.error("Error fetching voice audio URL:", error);
-    return null;
-  }
+  });
+
+  const results = await Promise.all(urlPromises);
+
+  results.forEach(({ name, url }) => {
+    if (url) {
+      audioUrls[name] = url;
+    }
+  });
+
+  return audioUrls;
 }
 
 export async function deleteVoice(voiceName: string): Promise<void> {

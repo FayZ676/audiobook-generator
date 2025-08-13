@@ -12,7 +12,7 @@ import { Menu } from "lucide-react";
 import { Voice } from "../../actions/voices";
 import { AudiobookJob } from "../../actions/job";
 import { Script } from "../../actions/script";
-import { AudioSegmentData } from "../../types";
+import { AudioSegmentData, VoiceAudioData } from "../../types";
 import { deleteProject } from "../../actions/audiobook";
 
 import ChapterContent from "../chapter/ChapterContent";
@@ -24,6 +24,7 @@ import VoicesDashboardClient from "../voices/VoicesDashboardClient";
 
 interface ProjectDashboardClientProps {
   voicesPromise: Promise<Voice[]>;
+  voiceAudioData: VoiceAudioData;
   jobStatePromise: Promise<AudiobookJob | null>;
   project: {
     name: string;
@@ -38,6 +39,7 @@ interface ProjectDashboardClientProps {
 
 export default function ProjectDashboardClient({
   voicesPromise,
+  voiceAudioData,
   jobStatePromise,
   project,
   chaptersPromise,
@@ -178,7 +180,10 @@ export default function ProjectDashboardClient({
             </li>
             <li>
               <div className="flex flex-col p-0 hover:bg-transparent active:!bg-transparent active:!text-base-content">
-                <VoicesDashboardClient voicesPromise={voicesPromise} />
+                <VoicesDashboardClient
+                  voicesPromise={voicesPromise}
+                  voiceAudioData={voiceAudioData}
+                />
               </div>
             </li>
             <li className="mt-auto">

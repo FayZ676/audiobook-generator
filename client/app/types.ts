@@ -15,3 +15,7 @@ export interface AudioSegmentData {
   ids: string[];
   urls: Record<string, string>;
 }
+
+export interface VoiceAudioData {
+  urls: Record<string, string>;
+}
