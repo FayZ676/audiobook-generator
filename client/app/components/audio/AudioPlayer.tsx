@@ -18,6 +18,16 @@ export default function AudioPlayer({ src }: AudioPlayerProps) {
     const el = audioRef.current;
     if (el) {
       el.load();
+
+      const handleCanPlay = () => {
+        el.play().catch(() => setError("Failed to play audio"));
+        el.removeEventListener("canplay", handleCanPlay);
+      };
+      el.addEventListener("canplay", handleCanPlay);
+
+      return () => {
+        el.removeEventListener("canplay", handleCanPlay);
+      };
     }
   }, [src]);
 
