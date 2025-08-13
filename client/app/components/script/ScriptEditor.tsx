@@ -30,10 +30,12 @@ export default function ScriptEditor({
 }: ScriptEditorProps) {
   const [editingScript, setEditingScript] = useState<Script>(script);
   const [regenerating, setRegenerating] = useState<Record<string, boolean>>({});
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const { loadAudio, getUrl, isLoading } = useAudioLoader();
 
   useEffect(() => {
     setEditingScript(script);
+    setHasUnsavedChanges(false);
   }, [script]);
 
   const processingSet = useMemo(
@@ -53,7 +55,7 @@ export default function ScriptEditor({
 
   const clearMessages = () => {};
 
-  const autoSave = async (scriptToSave: Script) => {
+  const saveScript = async (scriptToSave: Script) => {
     if (scriptToSave.segments.length === 0) {
       return;
     }
@@ -69,18 +71,11 @@ export default function ScriptEditor({
 
     try {
       await updateScript({ script: scriptToSave, chapterName });
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error updating script:", error);
     }
   };
-
-  const debouncedAutoSave = (() => {
-    let timeoutId: NodeJS.Timeout;
-    return (scriptToSave: Script) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => autoSave(scriptToSave), 1000);
-    };
-  })();
 
   const handleTextChange = (index: number, newText: string) => {
     clearMessages();
@@ -88,7 +83,7 @@ export default function ScriptEditor({
     updatedSegments[index] = { ...updatedSegments[index], text: newText };
     const updatedScript = { ...editingScript, segments: updatedSegments };
     setEditingScript(updatedScript);
-    debouncedAutoSave(updatedScript);
+    setHasUnsavedChanges(true);
   };
 
   const handleSegmentCharacterChange = (
@@ -104,7 +99,7 @@ export default function ScriptEditor({
 
     const updatedScript = { ...editingScript, segments: updatedSegments };
     setEditingScript(updatedScript);
-    debouncedAutoSave(updatedScript);
+    saveScript(updatedScript);
   };
 
   const getAllCharacters = () =>
@@ -140,7 +135,7 @@ export default function ScriptEditor({
           voicesPromise={voicesPromise}
           onScriptUpdate={(updatedScript: Script) => {
             setEditingScript(updatedScript);
-            debouncedAutoSave(updatedScript);
+            saveScript(updatedScript);
           }}
           onAddCharacter={(character: ManualCharacter) => {
             const exists = editingScript.speakers.find((s) =>
@@ -166,7 +161,7 @@ export default function ScriptEditor({
                 speakers: [...editingScript.speakers, newSpeaker],
               };
               setEditingScript(updatedScript);
-              debouncedAutoSave(updatedScript);
+              saveScript(updatedScript);
             }
           }}
         />
@@ -272,6 +267,11 @@ export default function ScriptEditor({
                   <textarea
                     value={scriptSegment.text}
                     onChange={(e) => handleTextChange(index, e.target.value)}
+                    onBlur={() => {
+                      if (hasUnsavedChanges) {
+                        saveScript(editingScript);
+                      }
+                    }}
                     className="textarea textarea-bordered w-full min-h-[80px]"
                     rows={3}
                     placeholder="Enter script text..."
