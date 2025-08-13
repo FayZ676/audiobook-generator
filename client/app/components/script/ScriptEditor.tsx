@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, Suspense } from "react";
-import { useAudioLoader } from "../../hooks/useAudioLoader";
-import { RotateCw, LoaderCircle, CirclePlay } from "lucide-react";
+import { RotateCw, LoaderCircle } from "lucide-react";
 
 import { Script, updateScript } from "@/app/actions/script";
 import { Voice } from "@/app/actions/voices";
-import { getSegmentAudioUrl, regenerateSegment } from "@/app/actions/segments";
-import { ManualCharacter } from "@/app/types";
+import { regenerateSegment } from "@/app/actions/segments";
+import { ManualCharacter, AudioSegmentData } from "@/app/types";
 
 import Tip from "@/app/components/ui/Tip";
 import CharacterVoiceMappingClient from "@/app/components/script/CharacterVoiceMappingClient";
@@ -18,7 +17,7 @@ interface ScriptEditorProps {
   voicesPromise: Promise<Voice[]>;
   chapterName: string;
   processingSegmentIds?: string[];
-  playableSegmentIds?: string[];
+  audioSegmentData: AudioSegmentData;
 }
 
 export default function ScriptEditor({
@@ -26,12 +25,11 @@ export default function ScriptEditor({
   voicesPromise,
   chapterName,
   processingSegmentIds,
-  playableSegmentIds = [],
+  audioSegmentData,
 }: ScriptEditorProps) {
   const [editingScript, setEditingScript] = useState<Script>(script);
   const [regenerating, setRegenerating] = useState<Record<string, boolean>>({});
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const { loadAudio, getUrl, isLoading } = useAudioLoader();
 
   useEffect(() => {
     setEditingScript(script);
@@ -43,15 +41,9 @@ export default function ScriptEditor({
     [processingSegmentIds]
   );
   const playableSet = useMemo(
-    () => new Set(playableSegmentIds || []),
-    [playableSegmentIds]
+    () => new Set(audioSegmentData.ids || []),
+    [audioSegmentData.ids]
   );
-
-  const loadSegmentUrl = async (segmentId: string) => {
-    await loadAudio(segmentId, () =>
-      getSegmentAudioUrl(chapterName, segmentId)
-    );
-  };
 
   const clearMessages = () => {};
 
@@ -180,8 +172,9 @@ export default function ScriptEditor({
           const isRegenerating = segmentId
             ? !!regenerating[segmentId] || processingSet.has(segmentId)
             : false;
-          const segmentUrl = segmentId ? getUrl(segmentId) : undefined;
-          const isLoadingUrl = segmentId ? isLoading(segmentId) : false;
+          const segmentUrl = segmentId
+            ? audioSegmentData.urls[segmentId]
+            : undefined;
 
           return (
             <div
@@ -215,25 +208,7 @@ export default function ScriptEditor({
                     )}
                     {segmentId && hasAudio && (
                       <div className="flex items-center gap-2">
-                        {segmentUrl ? (
-                          <AudioPlayer src={segmentUrl} />
-                        ) : (
-                          <button
-                            onClick={() => loadSegmentUrl(segmentId)}
-                            disabled={isLoadingUrl}
-                            className="btn btn-success btn-outline btn-sm"
-                            title="Load and play audio"
-                          >
-                            {isLoadingUrl ? (
-                              <LoaderCircle
-                                size={16}
-                                className="animate-spin"
-                              />
-                            ) : (
-                              <CirclePlay size={16} />
-                            )}
-                          </button>
-                        )}
+                        {segmentUrl && <AudioPlayer src={segmentUrl} />}
                         <button
                           className="btn btn-sm btn-outline btn-info"
                           title="Regenerate segment"

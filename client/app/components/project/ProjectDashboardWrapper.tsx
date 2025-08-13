@@ -5,6 +5,7 @@ import React, { use } from "react";
 import { Voice } from "../../actions/voices";
 import { AudiobookJob } from "../../actions/job";
 import { Script } from "../../actions/script";
+import { AudioSegmentData } from "../../types";
 
 import ProjectDashboardClient from "./ProjectDashboardClient";
 import CreateProjectForm from "./CreateProjectForm";
@@ -20,7 +21,7 @@ interface ProjectDashboardWrapperProps {
   scriptPromise: Promise<Script | null>;
   narrationPromise: Promise<string | null>;
   selectedChapter: string | null;
-  audioSegmentIdsPromise: Promise<string[]>;
+  audioSegmentDataPromise: Promise<AudioSegmentData>;
 }
 
 export default function ProjectDashboardWrapper({
@@ -31,7 +32,7 @@ export default function ProjectDashboardWrapper({
   scriptPromise,
   narrationPromise,
   selectedChapter,
-  audioSegmentIdsPromise,
+  audioSegmentDataPromise,
 }: ProjectDashboardWrapperProps) {
   const project = use(projectPromise);
 
@@ -48,7 +49,7 @@ export default function ProjectDashboardWrapper({
       scriptPromise={scriptPromise}
       narrationPromise={narrationPromise}
       selectedChapter={selectedChapter}
-      audioSegmentIdsPromise={audioSegmentIdsPromise}
+      audioSegmentDataPromise={audioSegmentDataPromise}
     />
   );
 }

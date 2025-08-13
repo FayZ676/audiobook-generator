@@ -5,6 +5,7 @@ import React, { use } from "react";
 import { Voice } from "../../actions/voices";
 import { AudiobookJob } from "../../actions/job";
 import { Script } from "../../actions/script";
+import { AudioSegmentData } from "../../types";
 
 import ChapterControls from "./ChapterControls";
 import ScriptEditor from "../script/ScriptEditor";
@@ -17,7 +18,7 @@ interface ChapterContentProps {
   scriptPromise: Promise<Script | null>;
   jobStatePromise: Promise<AudiobookJob | null>;
   voicesPromise: Promise<Voice[]>;
-  audioSegmentIds: string[];
+  audioSegmentData: AudioSegmentData;
 }
 
 export default function ChapterContent({
@@ -27,7 +28,7 @@ export default function ChapterContent({
   scriptPromise,
   jobStatePromise,
   voicesPromise,
-  audioSegmentIds,
+  audioSegmentData,
 }: ChapterContentProps) {
   const jobState = use(jobStatePromise);
   const processingSegmentIds = jobState?.processing_segment_ids || undefined;
@@ -49,7 +50,7 @@ export default function ChapterContent({
         voicesPromise={voicesPromise}
         chapterName={selectedChapter}
         processingSegmentIds={processingSegmentIds}
-        playableSegmentIds={audioSegmentIds}
+        audioSegmentData={audioSegmentData}
       />
     </>
   );

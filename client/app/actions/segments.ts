@@ -37,12 +37,14 @@ export async function getSegmentAudioUrl(
   const userId = await getUserId();
   const data = await apiCallJson<{ key: string; url: string }>(
     `${process.env.AUDIOBOOK_SERVICE_URL}/narration/${userId}/${chapterName}/segments/${segmentId}`,
-    { cache: "no-store" }
+    {
+      cache: "force-cache",
+      next: { revalidate: 3600, tags: [`segment-audio-${segmentId}`] },
+    }
   );
   return data.url;
 }
 
-// Trigger regeneration of one or more speech segments via unified narration endpoint
 export async function regenerateSegment(
   chapterName: string,
   segmentId: string

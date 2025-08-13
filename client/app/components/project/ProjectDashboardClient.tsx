@@ -12,6 +12,7 @@ import { Menu } from "lucide-react";
 import { Voice } from "../../actions/voices";
 import { AudiobookJob } from "../../actions/job";
 import { Script } from "../../actions/script";
+import { AudioSegmentData } from "../../types";
 import { deleteProject } from "../../actions/audiobook";
 
 import ChapterContent from "../chapter/ChapterContent";
@@ -32,7 +33,7 @@ interface ProjectDashboardClientProps {
   scriptPromise: Promise<Script | null>;
   narrationPromise: Promise<string | null>;
   selectedChapter: string | null;
-  audioSegmentIdsPromise: Promise<string[]>;
+  audioSegmentDataPromise: Promise<AudioSegmentData>;
 }
 
 export default function ProjectDashboardClient({
@@ -43,7 +44,7 @@ export default function ProjectDashboardClient({
   scriptPromise,
   narrationPromise,
   selectedChapter,
-  audioSegmentIdsPromise,
+  audioSegmentDataPromise,
 }: ProjectDashboardClientProps) {
   const router = useRouter();
   const [isDeletingProject, setIsDeletingProject] = React.useState(false);
@@ -51,7 +52,7 @@ export default function ProjectDashboardClient({
   const chapters = use(chaptersPromise);
   const currentScript = use(scriptPromise);
   const narrationUrl = use(narrationPromise);
-  const audioSegmentIds = use(audioSegmentIdsPromise);
+  const audioSegmentData = use(audioSegmentDataPromise);
   const userChannels = useUserChannels();
 
   const handleRevalidate = async () => {
@@ -148,7 +149,7 @@ export default function ProjectDashboardClient({
                     scriptPromise={scriptPromise}
                     jobStatePromise={jobStatePromise}
                     voicesPromise={voicesPromise}
-                    audioSegmentIds={audioSegmentIds}
+                    audioSegmentData={audioSegmentData}
                   />
                 )}
               </div>

@@ -7,6 +7,7 @@ import { getChapters } from "../../actions/chapter";
 import { getScript } from "../../actions/script";
 import { getNarration } from "../../actions/narrate";
 import { getAudioManifest } from "../../actions/segments";
+import { AudioSegmentData } from "../../types";
 
 import ProjectDashboardWrapper from "@/app/components/project/ProjectDashboardWrapper";
 
@@ -33,11 +34,17 @@ export default async function ProjectDashboard({
   const narrationPromise = selectedChapter
     ? getNarration(selectedChapter)
     : Promise.resolve(null);
-  const audioSegmentIdsPromise = selectedChapter
+  const audioSegmentDataPromise: Promise<AudioSegmentData> = selectedChapter
     ? getAudioManifest(selectedChapter)
-        .then((m) => m.segments.map((s) => s.id))
-        .catch(() => [])
-    : Promise.resolve<string[]>([]);
+        .then((m) => ({
+          ids: m.segments.map((s) => s.id),
+          urls: Object.fromEntries(m.segments.map((s) => [s.id, s.url])),
+        }))
+        .catch(() => ({ ids: [], urls: {} }))
+    : Promise.resolve({
+        ids: [] as string[],
+        urls: {} as Record<string, string>,
+      });
 
   return (
     <Suspense
@@ -56,7 +63,7 @@ export default async function ProjectDashboard({
         scriptPromise={scriptPromise}
         narrationPromise={narrationPromise}
         selectedChapter={selectedChapter}
-        audioSegmentIdsPromise={audioSegmentIdsPromise}
+        audioSegmentDataPromise={audioSegmentDataPromise}
       />
     </Suspense>
   );
