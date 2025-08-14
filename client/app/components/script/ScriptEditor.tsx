@@ -168,13 +168,15 @@ export default function ScriptEditor({
             speaker?.character.names[0] || scriptSegment.speaker_alias;
           const voiceName = speaker?.voice.name || "";
           const segmentId = scriptSegment.id as string | undefined;
-          const hasAudio = segmentId ? playableSet.has(segmentId) : false;
-          const isRegenerating = segmentId
-            ? !!regenerating[segmentId] || processingSet.has(segmentId)
-            : false;
           const segmentUrl = segmentId
             ? audioSegmentData.urls[segmentId]
             : undefined;
+          const hasAudio = segmentId
+            ? playableSet.has(segmentId) || !!segmentUrl
+            : false;
+          const isRegenerating = segmentId
+            ? !!regenerating[segmentId] || processingSet.has(segmentId)
+            : false;
 
           return (
             <div
