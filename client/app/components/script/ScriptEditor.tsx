@@ -199,9 +199,6 @@ export default function ScriptEditor({
                     ))}
                   </select>
                   <div className="ml-auto flex items-center gap-3">
-                    <span className="text-sm text-gray-500 italic">
-                      {voiceName}
-                    </span>
                     {isRegenerating && (
                       <span className="badge badge-warning badge-sm">
                         Regenerating
