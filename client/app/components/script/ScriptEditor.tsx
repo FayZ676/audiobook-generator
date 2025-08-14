@@ -122,7 +122,7 @@ export default function ScriptEditor({
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-8">
       <Suspense fallback={<div>Loading character voice mapping...</div>}>
         <CharacterVoiceMappingClient
           script={editingScript}
