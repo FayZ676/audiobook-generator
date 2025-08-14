@@ -9,7 +9,6 @@ import { AudioSegmentData } from "../../types";
 
 import ChapterControls from "./ChapterControls";
 import ScriptEditor from "../script/ScriptEditor";
-import NarrationAudio from "../narration/NarrationAudio";
 
 interface ChapterContentProps {
   selectedChapter: string;
@@ -35,9 +34,7 @@ export default function ChapterContent({
 
   return (
     <>
-      {narrationUrl ? (
-        <NarrationAudio narrationUrl={narrationUrl} />
-      ) : (
+      {!narrationUrl && (
         <ChapterControls
           scriptPromise={scriptPromise}
           jobStatePromise={jobStatePromise}
@@ -51,6 +48,7 @@ export default function ChapterContent({
         chapterName={selectedChapter}
         processingSegmentIds={processingSegmentIds}
         audioSegmentData={audioSegmentData}
+        narrationUrl={narrationUrl}
       />
     </>
   );

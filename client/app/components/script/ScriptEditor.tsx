@@ -10,6 +10,7 @@ import { ManualCharacter, AudioSegmentData } from "@/app/types";
 
 import CharacterVoiceMappingClient from "@/app/components/script/CharacterVoiceMappingClient";
 import AudioPlayer from "@/app/components/audio/AudioPlayer";
+import NarrationAudio from "@/app/components/narration/NarrationAudio";
 
 interface ScriptEditorProps {
   script: Script;
@@ -17,6 +18,7 @@ interface ScriptEditorProps {
   chapterName: string;
   processingSegmentIds?: string[];
   audioSegmentData: AudioSegmentData;
+  narrationUrl?: string | null;
 }
 
 export default function ScriptEditor({
@@ -25,6 +27,7 @@ export default function ScriptEditor({
   chapterName,
   processingSegmentIds,
   audioSegmentData,
+  narrationUrl,
 }: ScriptEditorProps) {
   const [editingScript, setEditingScript] = useState<Script>(script);
   const [regenerating, setRegenerating] = useState<Record<string, boolean>>({});
@@ -154,7 +157,8 @@ export default function ScriptEditor({
         />
       </Suspense>
 
-      <div className="h-[28rem] overflow-y-scroll bg-base-200 p-4 rounded">
+      <div className="flex flex-col gap-4 h-[28rem] overflow-y-scroll bg-base-200 p-4 rounded">
+        {narrationUrl && <NarrationAudio narrationUrl={narrationUrl} />}
         {editingScript.segments.map((scriptSegment, index) => {
           const speaker = editingScript.speakers.find((s) =>
             s.character.names.includes(scriptSegment.speaker_alias)
@@ -195,6 +199,9 @@ export default function ScriptEditor({
                     ))}
                   </select>
                   <div className="ml-auto flex items-center gap-3">
+                    <span className="text-sm text-gray-500 italic">
+                      {voiceName}
+                    </span>
                     {isRegenerating && (
                       <span className="badge badge-warning badge-sm">
                         Regenerating
