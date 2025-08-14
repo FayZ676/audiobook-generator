@@ -6,11 +6,13 @@ import { CirclePlay, Pause, LoaderCircle } from "lucide-react";
 interface AudioPlayerProps {
   src: string;
   disabled?: boolean;
+  onPlayStateChange?: (isPlaying: boolean) => void;
 }
 
 export default function AudioPlayer({
   src,
   disabled = false,
+  onPlayStateChange,
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -18,14 +20,21 @@ export default function AudioPlayer({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const el = audioRef.current;
+    if (!el) return;
+
     setIsPlaying(false);
     setIsLoading(false);
     setError(null);
-    const el = audioRef.current;
-    if (el) {
-      el.load();
-    }
+    el.load();
   }, [src]);
+
+  useEffect(() => {
+    const el = audioRef.current;
+    if (disabled && isPlaying && el) {
+      el.pause();
+    }
+  }, [disabled]);
 
   const togglePlay = async () => {
     if (disabled) return;
@@ -78,9 +87,18 @@ export default function AudioPlayer({
       {error && <span className="text-red-500 text-xs">{error}</span>}
       <audio
         ref={audioRef}
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
-        onEnded={() => setIsPlaying(false)}
+        onPlay={() => {
+          setIsPlaying(true);
+          onPlayStateChange?.(true);
+        }}
+        onPause={() => {
+          setIsPlaying(false);
+          onPlayStateChange?.(false);
+        }}
+        onEnded={() => {
+          setIsPlaying(false);
+          onPlayStateChange?.(false);
+        }}
         onError={() => setError("Audio error")}
         className="hidden"
       >
