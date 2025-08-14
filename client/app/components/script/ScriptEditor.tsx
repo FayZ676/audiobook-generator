@@ -188,7 +188,7 @@ export default function ScriptEditor({
                     onChange={(e) =>
                       handleSegmentCharacterChange(index, e.target.value)
                     }
-                    className="select select-sm select-bordered min-w-[120px]"
+                    className="select select-sm min-w-[120px] text-gray-500 italic"
                     disabled={isRegenerating}
                   >
                     {availableCharacters.map((char) => (
@@ -244,8 +244,8 @@ export default function ScriptEditor({
                         saveScript(editingScript);
                       }
                     }}
-                    className="textarea textarea-bordered w-full min-h-[80px]"
-                    rows={3}
+                    className="textarea w-full min-h-[2rem] max-h-[12rem] resize-y"
+                    rows={1}
                     placeholder="Enter script text..."
                     disabled={isRegenerating}
                   />
