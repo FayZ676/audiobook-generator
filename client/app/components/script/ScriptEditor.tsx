@@ -157,7 +157,7 @@ export default function ScriptEditor({
         />
       </Suspense>
 
-      <div className="flex flex-col gap-4 h-[28rem] overflow-y-scroll bg-base-200 p-4 rounded">
+      <div className="flex flex-col gap-4 max-h-[32rem] overflow-y-scroll bg-base-200 p-4 rounded">
         {narrationUrl && <NarrationAudio narrationUrl={narrationUrl} />}
         {editingScript.segments.map((scriptSegment, index) => {
           const speaker = editingScript.speakers.find((s) =>
