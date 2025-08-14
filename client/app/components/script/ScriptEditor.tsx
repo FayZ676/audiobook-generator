@@ -165,7 +165,6 @@ export default function ScriptEditor({
           );
           const characterName =
             speaker?.character.names[0] || scriptSegment.speaker_alias;
-          const voiceName = speaker?.voice.name || "";
           const segmentId = scriptSegment.id as string | undefined;
           const segmentUrl = segmentId
             ? audioSegmentData.urls[segmentId]
