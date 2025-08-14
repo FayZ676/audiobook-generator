@@ -5,9 +5,13 @@ import { CirclePlay, Pause, LoaderCircle } from "lucide-react";
 
 interface AudioPlayerProps {
   src: string;
+  disabled?: boolean;
 }
 
-export default function AudioPlayer({ src }: AudioPlayerProps) {
+export default function AudioPlayer({
+  src,
+  disabled = false,
+}: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -24,6 +28,8 @@ export default function AudioPlayer({ src }: AudioPlayerProps) {
   }, [src]);
 
   const togglePlay = async () => {
+    if (disabled) return;
+
     const el = audioRef.current;
     if (!el) return;
 
@@ -47,11 +53,19 @@ export default function AudioPlayer({ src }: AudioPlayerProps) {
     <div className="flex items-center gap-2">
       <button
         onClick={togglePlay}
-        disabled={isLoading}
+        disabled={isLoading || disabled}
         className={`btn btn-sm btn-outline ${
           isPlaying ? "btn-warning" : "btn-success"
-        } ${isLoading ? "loading" : ""}`}
-        title={isLoading ? "Loading..." : isPlaying ? "Pause" : "Play"}
+        } ${isLoading ? "loading" : ""} ${disabled ? "btn-disabled" : ""}`}
+        title={
+          disabled
+            ? "Audio playback disabled during regeneration"
+            : isLoading
+            ? "Loading..."
+            : isPlaying
+            ? "Pause"
+            : "Play"
+        }
       >
         {isLoading ? (
           <LoaderCircle size={16} className="animate-spin" />

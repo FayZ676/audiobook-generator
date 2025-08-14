@@ -47,6 +47,10 @@ export default function ScriptEditor({
     [audioSegmentData.ids]
   );
 
+  const isAnySegmentRegenerating = useMemo(() => {
+    return processingSet.size > 0 || Object.values(regenerating).some(Boolean);
+  }, [processingSet, regenerating]);
+
   const clearMessages = () => {};
 
   const saveScript = async (scriptToSave: Script) => {
@@ -158,7 +162,12 @@ export default function ScriptEditor({
       </Suspense>
 
       <div className="flex flex-col gap-4 max-h-[32rem] overflow-y-scroll bg-base-200 p-4 rounded">
-        {narrationUrl && <NarrationAudio narrationUrl={narrationUrl} />}
+        {narrationUrl && (
+          <NarrationAudio
+            narrationUrl={narrationUrl}
+            disabled={isAnySegmentRegenerating}
+          />
+        )}
         {editingScript.segments.map((scriptSegment, index) => {
           const speaker = editingScript.speakers.find((s) =>
             s.character.names.includes(scriptSegment.speaker_alias)
@@ -189,7 +198,7 @@ export default function ScriptEditor({
                       handleSegmentCharacterChange(index, e.target.value)
                     }
                     className="select select-sm min-w-[120px] text-gray-500 italic"
-                    disabled={isRegenerating}
+                    disabled={isAnySegmentRegenerating}
                   >
                     {availableCharacters.map((char) => (
                       <option key={char} value={char}>
@@ -205,12 +214,17 @@ export default function ScriptEditor({
                     )}
                     {segmentId && hasAudio && (
                       <div className="flex items-center gap-2">
-                        {segmentUrl && <AudioPlayer src={segmentUrl} />}
+                        {segmentUrl && (
+                          <AudioPlayer
+                            src={segmentUrl}
+                            disabled={isAnySegmentRegenerating}
+                          />
+                        )}
                         <button
                           className="btn btn-sm btn-outline btn-info"
                           title="Regenerate segment"
                           onClick={() => handleRegenerate(segmentId)}
-                          disabled={isRegenerating}
+                          disabled={isAnySegmentRegenerating}
                         >
                           {isRegenerating ? (
                             <LoaderCircle size={16} className="animate-spin" />
@@ -224,7 +238,7 @@ export default function ScriptEditor({
                       <button
                         className="btn btn-sm btn-primary"
                         onClick={() => handleRegenerate(segmentId)}
-                        disabled={isRegenerating}
+                        disabled={isAnySegmentRegenerating}
                       >
                         {isRegenerating ? (
                           <LoaderCircle size={16} className="animate-spin" />
@@ -247,7 +261,7 @@ export default function ScriptEditor({
                     className="textarea w-full min-h-[2rem] max-h-[12rem] resize-y"
                     rows={1}
                     placeholder="Enter script text..."
-                    disabled={isRegenerating}
+                    disabled={isAnySegmentRegenerating}
                   />
                 </div>
               </div>
