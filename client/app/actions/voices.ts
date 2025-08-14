@@ -72,38 +72,11 @@ export async function getVoiceAudioUrls(
   voices: Voice[]
 ): Promise<Record<string, string>> {
   const userId = await getUserId();
-  const audioUrls: Record<string, string> = {};
 
-  const urlPromises = voices.map(async (voice) => {
-    const normalizedVoiceName = voice.name.toLowerCase().replace(/\s+/g, "_");
-
-    try {
-      const audioUrl = await apiCallJson<string>(
-        `${process.env.AUDIOBOOK_SERVICE_URL}/voices/${userId}/${normalizedVoiceName}/audio`,
-        {
-          cache: "no-store",
-        }
-      );
-      return { name: voice.name, url: audioUrl };
-    } catch (error) {
-      // Handle 404 case - voice audio not found
-      if (error instanceof Error && error.message.includes("404")) {
-        return { name: voice.name, url: null };
-      }
-      console.error(`Error fetching voice audio URL for ${voice.name}:`, error);
-      return { name: voice.name, url: null };
-    }
-  });
-
+  const urlPromises = voices.map((voice) => fetchVoiceAudioUrl(voice, userId));
   const results = await Promise.all(urlPromises);
 
-  results.forEach(({ name, url }) => {
-    if (url) {
-      audioUrls[name] = url;
-    }
-  });
-
-  return audioUrls;
+  return buildAudioUrlsRecord(results);
 }
 
 export async function deleteVoice(voiceName: string): Promise<void> {
@@ -123,4 +96,42 @@ export async function deleteVoice(voiceName: string): Promise<void> {
     console.error("Error deleting voice:", error);
     throw error;
   }
+}
+
+async function fetchVoiceAudioUrl(
+  voice: Voice,
+  userId: string
+): Promise<{ name: string; url: string | null }> {
+  const normalizedVoiceName = voice.name.toLowerCase().replace(/\s+/g, "_");
+
+  try {
+    const audioUrl = await apiCallJson<string>(
+      `${process.env.AUDIOBOOK_SERVICE_URL}/voices/${userId}/${normalizedVoiceName}/audio`,
+      {
+        cache: "no-store",
+      }
+    );
+    return { name: voice.name, url: audioUrl };
+  } catch (error) {
+    // Handle 404 case - voice audio not found
+    if (error instanceof Error && error.message.includes("404")) {
+      return { name: voice.name, url: null };
+    }
+    console.error(`Error fetching voice audio URL for ${voice.name}:`, error);
+    return { name: voice.name, url: null };
+  }
+}
+
+function buildAudioUrlsRecord(
+  results: Array<{ name: string; url: string | null }>
+): Record<string, string> {
+  const audioUrls: Record<string, string> = {};
+
+  results.forEach(({ name, url }) => {
+    if (url) {
+      audioUrls[name] = url;
+    }
+  });
+
+  return audioUrls;
 }
