@@ -108,12 +108,14 @@ async function fetchVoiceAudioUrl(
     const audioUrl = await apiCallJson<string>(
       `${process.env.AUDIOBOOK_SERVICE_URL}/voices/${userId}/${normalizedVoiceName}/audio`,
       {
-        cache: "no-store",
+        cache: "force-cache",
+        next: {
+          tags: ["voices"],
+        },
       }
     );
     return { name: voice.name, url: audioUrl };
   } catch (error) {
-    // Handle 404 case - voice audio not found
     if (error instanceof Error && error.message.includes("404")) {
       return { name: voice.name, url: null };
     }
