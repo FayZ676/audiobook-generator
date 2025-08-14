@@ -8,7 +8,6 @@ import { Voice } from "@/app/actions/voices";
 import { regenerateSegment } from "@/app/actions/segments";
 import { ManualCharacter, AudioSegmentData } from "@/app/types";
 
-import Tip from "@/app/components/ui/Tip";
 import CharacterVoiceMappingClient from "@/app/components/script/CharacterVoiceMappingClient";
 import AudioPlayer from "@/app/components/audio/AudioPlayer";
 
@@ -117,10 +116,6 @@ export default function ScriptEditor({
 
   return (
     <div className="flex flex-col gap-4">
-      <Tip>
-        Edit the script text, choose voices for characters, and save changes.
-      </Tip>
-
       <Suspense fallback={<div>Loading character voice mapping...</div>}>
         <CharacterVoiceMappingClient
           script={editingScript}
@@ -200,9 +195,6 @@ export default function ScriptEditor({
                     ))}
                   </select>
                   <div className="ml-auto flex items-center gap-3">
-                    <span className="text-sm text-gray-500 italic">
-                      {voiceName}
-                    </span>
                     {isRegenerating && (
                       <span className="badge badge-warning badge-sm">
                         Regenerating
