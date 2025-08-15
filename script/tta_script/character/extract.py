@@ -27,20 +27,6 @@ class CharacterAliases:
         return next(iter(self.names))
 
 
-def get_narrator() -> Character:
-    """
-    Create and return the narrator character.
-
-    Returns:
-        The narrator character with default traits
-    """
-    return Character(
-        names=["Narrator"],
-        age="middle-aged",
-        gender="male",
-    )
-
-
 def get_new_characters(
     text: str, existing_characters: set[Character]
 ) -> set[Character]:
