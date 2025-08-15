@@ -10,13 +10,7 @@ from tta_script.character.extract import get_new_characters
 from tta_script.text_utils import normalize_quotes
 from tta_script.speakers import get_speakers
 
-from tta_types.types import (
-    WebhookResponse,
-    WebhookRequest,
-    Response,
-    ScriptRequest,
-    Voice,
-)
+from tta_types.types import WebhookResponse, WebhookRequest, Response, ScriptRequest
 from tta_aws.s3 import S3Client
 
 import requests
