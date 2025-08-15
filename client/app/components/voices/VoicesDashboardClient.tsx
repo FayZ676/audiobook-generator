@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useState, use, useCallback } from "react";
+import { useState, use } from "react";
 import { useRouter } from "next/navigation";
 
 import { Plus } from "lucide-react";
