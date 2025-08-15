@@ -6,13 +6,11 @@ import { CirclePlay, Pause, LoaderCircle } from "lucide-react";
 interface AudioPlayerProps {
   src: string;
   disabled?: boolean;
-  onPlayStateChange?: (isPlaying: boolean) => void;
 }
 
 export default function AudioPlayer({
   src,
   disabled = false,
-  onPlayStateChange,
 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -28,13 +26,6 @@ export default function AudioPlayer({
     setError(null);
     el.load();
   }, [src]);
-
-  useEffect(() => {
-    const el = audioRef.current;
-    if (disabled && isPlaying && el) {
-      el.pause();
-    }
-  }, [disabled]);
 
   const togglePlay = async () => {
     if (disabled) return;
@@ -89,15 +80,12 @@ export default function AudioPlayer({
         ref={audioRef}
         onPlay={() => {
           setIsPlaying(true);
-          onPlayStateChange?.(true);
         }}
         onPause={() => {
           setIsPlaying(false);
-          onPlayStateChange?.(false);
         }}
         onEnded={() => {
           setIsPlaying(false);
-          onPlayStateChange?.(false);
         }}
         onError={() => setError("Audio error")}
         className="hidden"
