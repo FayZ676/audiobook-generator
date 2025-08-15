@@ -27,27 +27,7 @@ class CharacterAliases:
         return next(iter(self.names))
 
 
-def get_characters(text: str, previous_characters: set[Character]) -> set[Character]:
-    """
-    Extract character details from the provided text using NER to identify names and LLMs to determine their traits.
-
-    Args:
-        text: The text to extract characters from
-        previous_characters: Set of previously found characters to include
-    """
-    new_characters = _extract_new_characters_from_text(text, previous_characters)
-    all_characters = previous_characters | new_characters
-    all_characters.add(
-        Character(
-            names=["Narrator"],
-            age="middle-aged",
-            gender="male",
-        )
-    )
-    return all_characters
-
-
-def _extract_new_characters_from_text(
+def get_new_characters(
     text: str, existing_characters: set[Character]
 ) -> set[Character]:
     """Extract new speakers from text that don't overlap with existing ones."""

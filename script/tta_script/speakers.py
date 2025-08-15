@@ -4,16 +4,12 @@ from tta_types.types import Voice, Character, Speaker
 def get_speakers(
     characters: set[Character],
     voices: list[Voice],
+    narrator_voice: Voice,
     previous_speakers: set[Speaker],
 ) -> set[Speaker]:
-    if len(characters) > len(voices):
-        raise ValueError(
-            f"Not enough voices available for {len(characters)} characters. Available voices: {len(voices)}."
-        )
 
-    available_voices = voices.copy()
     speakers: set[Speaker] = set()
-
+    available_voices = voices.copy()
     for character in characters:
         existing_speaker = next(
             (
@@ -40,8 +36,6 @@ def get_speakers(
                 available_voices.remove(selected_voice)
                 speakers.add(Speaker(character=character, voice=selected_voice))
             else:
-                raise ValueError(
-                    f"No available voices for {character.first_alias()} with age {character.age} and gender {character.gender}."
-                )
+                speakers.add(Speaker(character=character, voice=narrator_voice))
 
     return speakers
