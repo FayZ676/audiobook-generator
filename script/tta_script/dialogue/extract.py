@@ -21,7 +21,8 @@ def get_script(text: str, speakers: set[Speaker]) -> Script:
         )
         for i, d in enumerate(dialogues)
     ]
-    return Script(segments=script_segments, speakers=list(d.speaker for d in dialogues))
+    unique_speakers = list(set(d.speaker for d in dialogues))
+    return Script(segments=script_segments, speakers=unique_speakers)
 
 
 def get_dialogues(text_segments: list[TextSegment], speakers: set[Speaker]):
