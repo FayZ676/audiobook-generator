@@ -21,6 +21,12 @@ from f5_tts.infer.utils_infer import (
 from tta_speech.inference_types import InferenceParams
 
 
+def _create_silence(sample_rate: int, duration_seconds: float) -> np.ndarray:
+    """Creates a numpy array of silence for the specified duration."""
+    num_samples = int(sample_rate * duration_seconds)
+    return np.zeros(num_samples, dtype=np.float32)
+
+
 def _initialize_inference(
     params: InferenceParams,
 ) -> Tuple[Any, Any]:
@@ -162,6 +168,10 @@ def _synthesize_text_chunks(
                 raise ValueError("Invalid audio segment generated.")
             generated_audio_segments.append(audio_segment)
             final_sample_rate = final_sample_rate or sample_rate
+            
+            # Add 1 second of silence after each audio segment
+            silence = _create_silence(sample_rate, 1.0)
+            generated_audio_segments.append(silence)
 
         except Exception as e:
             raise RuntimeError(
