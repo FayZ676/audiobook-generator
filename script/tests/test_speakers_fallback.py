@@ -33,6 +33,7 @@ young_female = Voice(
 ### Test Characters
 old_lady = Character(names=["OldLady"], age="old", gender="female")
 alice = Character(names=["Alice"], age="young", gender="female")
+emma = Character(names=["Emma"], age="young", gender="female")
 bob = Character(names=["Bob"], age="middle-aged", gender="male")
 charlie = Character(names=["Charlie"], age="old", gender="male")
 
@@ -83,3 +84,15 @@ def test_get_speakers_prefers_matching_voice_over_narrator():
     result = get_speakers(characters, voices, set())
     expected = {build_speaker(alice, young_female)}
     assert result == expected
+
+
+def test_get_speakers_assigns_one_voice_per_character_with_narrator_fallback():
+    """Test that when multiple characters match one voice, one gets the voice and others get narrator"""
+    characters = {alice, emma}
+    voices = [narrator, young_female]
+
+    result = get_speakers(characters, voices, set())
+    narrator_speakers = [s for s in result if s.voice.name == "Narrator"]
+    young_female_speakers = [s for s in result if s.voice.name == "YoungFemale"]
+    assert len(narrator_speakers) == 1
+    assert len(young_female_speakers) == 1
