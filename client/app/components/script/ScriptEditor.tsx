@@ -207,11 +207,6 @@ export default function ScriptEditor({
                     ))}
                   </select>
                   <div className="ml-auto flex items-center gap-3">
-                    {isRegenerating && (
-                      <span className="badge badge-warning badge-sm">
-                        Regenerating
-                      </span>
-                    )}
                     {segmentId && hasAudio && (
                       <div className="flex items-center gap-2">
                         {segmentUrl && (

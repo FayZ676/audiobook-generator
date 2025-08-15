@@ -19,13 +19,6 @@ export default function NarrationAudio({
         <source src={narrationUrl} />
         Your browser does not support the audio element.
       </audio>
-      {disabled && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-75 rounded">
-          <span className="text-sm text-gray-600">
-            Audio disabled during regeneration
-          </span>
-        </div>
-      )}
     </div>
   );
 }

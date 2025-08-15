@@ -29,20 +29,6 @@ export default function VoicesDashboardClient({
   const voices = use(voicesPromise);
   const userChannels = useUserChannels();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentlyPlayingVoice, setCurrentlyPlayingVoice] = useState<
-    string | null
-  >(null);
-
-  const handleVoicePlayStateChange = useCallback(
-    (voiceName: string, isPlaying: boolean) => {
-      if (isPlaying) {
-        setCurrentlyPlayingVoice(voiceName);
-      } else if (currentlyPlayingVoice === voiceName) {
-        setCurrentlyPlayingVoice(null);
-      }
-    },
-    [currentlyPlayingVoice]
-  );
 
   usePusherSubscriptions({
     channels: userChannels ? [userChannels.VOICES_CHANNEL] : null,
@@ -62,13 +48,6 @@ export default function VoicesDashboardClient({
               key={voice.name}
               voice={voice}
               voiceAudioUrl={voiceAudioData.urls[voice.name]}
-              disabled={
-                currentlyPlayingVoice !== null &&
-                currentlyPlayingVoice !== voice.name
-              }
-              onPlayStateChange={(isPlaying) =>
-                handleVoicePlayStateChange(voice.name, isPlaying)
-              }
             />
           ))}
         </div>

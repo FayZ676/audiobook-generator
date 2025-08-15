@@ -7,8 +7,6 @@ import AudioPlayer from "../audio/AudioPlayer";
 interface VoiceCardProps {
   voice: Voice;
   voiceAudioUrl: string | undefined;
-  disabled: boolean;
-  onPlayStateChange?: (isPlaying: boolean) => void;
 }
 
 export function isUserCreatedVoice(voice: Voice): boolean {
@@ -18,12 +16,7 @@ export function isUserCreatedVoice(voice: Voice): boolean {
   );
 }
 
-export default function VoiceCard({
-  voice,
-  voiceAudioUrl,
-  disabled,
-  onPlayStateChange,
-}: VoiceCardProps) {
+export default function VoiceCard({ voice, voiceAudioUrl }: VoiceCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const isUserCreated = isUserCreatedVoice(voice);
@@ -52,13 +45,7 @@ export default function VoiceCard({
         </div>
       </div>
       <div className="flex items-center gap-2">
-        {voiceAudioUrl && (
-          <AudioPlayer
-            src={voiceAudioUrl}
-            disabled={disabled}
-            onPlayStateChange={onPlayStateChange}
-          />
-        )}
+        {voiceAudioUrl && <AudioPlayer src={voiceAudioUrl} />}
         {isUserCreated && (
           <button
             onClick={handleDelete}
