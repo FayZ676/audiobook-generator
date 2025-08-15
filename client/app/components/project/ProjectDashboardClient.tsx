@@ -60,14 +60,6 @@ export default function ProjectDashboardClient({
   const audioSegmentData = use(audioSegmentDataPromise);
   const userChannels = useUserChannels();
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  if (!project) {
-    return <CreateProjectForm />;
-  }
-
   const handleRevalidate = async () => {
     await Promise.all([
       handleRevalidateTag("script"),
@@ -79,6 +71,10 @@ export default function ProjectDashboardClient({
     ]);
     router.refresh();
   };
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   usePusherSubscriptions({
     channels: userChannels
@@ -102,6 +98,10 @@ export default function ProjectDashboardClient({
   const handleChapterSelect = (chapter: string) => {
     router.push(`/project/${encodeURIComponent(chapter)}`);
   };
+
+  if (!project) {
+    return <CreateProjectForm />;
+  }
 
   const handleChapterCreatedOrDeleted = () => {
     handleRevalidate();
