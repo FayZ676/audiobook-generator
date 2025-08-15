@@ -6,7 +6,7 @@ from typing import BinaryIO
 
 from tta_script.dialogue.types import Script
 from tta_script.dialogue.extract import get_script
-from tta_script.character.extract import get_new_characters,
+from tta_script.character.extract import get_new_characters
 from tta_script.text_utils import normalize_quotes
 from tta_script.speakers import get_speakers
 
