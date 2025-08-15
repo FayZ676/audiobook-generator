@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use, useEffect } from "react";
+import React, { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
@@ -49,15 +49,24 @@ export default function ProjectDashboardClient({
   selectedChapter,
   audioSegmentDataPromise,
 }: ProjectDashboardClientProps) {
-  const project = use(projectPromise);
   const router = useRouter();
-  const [isDeletingProject, setIsDeletingProject] = React.useState(false);
+  const [isClient, setIsClient] = useState(false);
+  const [isDeletingProject, setIsDeletingProject] = useState(false);
 
+  const project = use(projectPromise);
   const chapters = use(chaptersPromise);
   const currentScript = use(scriptPromise);
   const narrationUrl = use(narrationPromise);
   const audioSegmentData = use(audioSegmentDataPromise);
   const userChannels = useUserChannels();
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!project) {
+    return <CreateProjectForm />;
+  }
 
   const handleRevalidate = async () => {
     await Promise.all([
@@ -90,10 +99,6 @@ export default function ProjectDashboardClient({
     }
   }, [selectedChapter, project, chapters, router]);
 
-  if (!project) {
-    return <CreateProjectForm />;
-  }
-
   const handleChapterSelect = (chapter: string) => {
     router.push(`/project/${encodeURIComponent(chapter)}`);
   };
@@ -112,101 +117,110 @@ export default function ProjectDashboardClient({
   const hasNoScript = !currentScript;
 
   return (
-    <div className="flex h-screen">
-      <div className="drawer">
-        <input id="my-drawer" type="checkbox" className="drawer-toggle" />
-        <div className="drawer-content">
-          <div className="flex-1 flex flex-col">
-            <div className="flex-1 p-4 space-y-4 overflow-y-auto">
-              <JobStateSection
-                jobStatePromise={jobStatePromise}
-                scriptPromise={scriptPromise}
-              />
-
-              <div className="space-y-8">
-                <div className="flex justify-between">
-                  <div className="flex gap-4 items-center">
-                    <label htmlFor="my-drawer" className="btn drawer-button">
-                      <Menu size={16} />
-                    </label>
-                    <h3 className="mt-0 mb-0">{project.name}</h3>
-                  </div>
-
-                  {selectedChapter && (
-                    <div className="flex items-center ">
-                      <h4 className="mt-0 mb-0">{selectedChapter}</h4>
-                    </div>
-                  )}
-                </div>
-
-                {hasNoSelectedChapter && chapters.length === 0 && (
-                  <CreateChapterForm
-                    onChapterCreated={handleChapterCreatedOrDeleted}
-                  />
-                )}
-
-                {selectedChapter && hasNoScript && (
-                  <GenerateScriptForm chapterName={selectedChapter} />
-                )}
-
-                {selectedChapter && !hasNoScript && (
-                  <ChapterContent
-                    selectedChapter={selectedChapter}
-                    currentScript={currentScript}
-                    narrationUrl={narrationUrl}
-                    scriptPromise={scriptPromise}
+    <>
+      {isClient && (
+        <div className="flex h-screen">
+          <div className="drawer">
+            <input id="my-drawer" type="checkbox" className="drawer-toggle" />
+            <div className="drawer-content">
+              <div className="flex-1 flex flex-col">
+                <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+                  <JobStateSection
                     jobStatePromise={jobStatePromise}
-                    voicesPromise={voicesPromise}
-                    audioSegmentData={audioSegmentData}
+                    scriptPromise={scriptPromise}
                   />
-                )}
+
+                  <div className="space-y-8">
+                    <div className="flex justify-between">
+                      <div className="flex gap-4 items-center">
+                        <label
+                          htmlFor="my-drawer"
+                          className="btn drawer-button"
+                        >
+                          <Menu size={16} />
+                        </label>
+                        <h3 className="mt-0 mb-0">{project.name}</h3>
+                      </div>
+
+                      {selectedChapter && (
+                        <div className="flex items-center ">
+                          <h4 className="mt-0 mb-0">{selectedChapter}</h4>
+                        </div>
+                      )}
+                    </div>
+
+                    {hasNoSelectedChapter && chapters.length === 0 && (
+                      <CreateChapterForm
+                        onChapterCreated={handleChapterCreatedOrDeleted}
+                      />
+                    )}
+
+                    {selectedChapter && hasNoScript && (
+                      <GenerateScriptForm chapterName={selectedChapter} />
+                    )}
+
+                    {selectedChapter && !hasNoScript && (
+                      <ChapterContent
+                        selectedChapter={selectedChapter}
+                        currentScript={currentScript}
+                        narrationUrl={narrationUrl}
+                        scriptPromise={scriptPromise}
+                        jobStatePromise={jobStatePromise}
+                        voicesPromise={voicesPromise}
+                        audioSegmentData={audioSegmentData}
+                      />
+                    )}
+                  </div>
+                </div>
               </div>
+            </div>
+            <div className="drawer-side">
+              <label
+                htmlFor="my-drawer"
+                aria-label="close sidebar"
+                className="drawer-overlay"
+              ></label>
+              <ul className="flex flex-col gap-8 menu bg-base-200 min-h-full w-90 p-4 mt-0">
+                <li>
+                  <h4>Chapters</h4>
+                  <div className="flex flex-col p-0 hover:bg-transparent active:!bg-transparent active:!text-base-content">
+                    <ChapterSelector
+                      chapters={chapters}
+                      onChapterSelect={handleChapterSelect}
+                      onChapterDeleted={handleChapterCreatedOrDeleted}
+                    />
+                    <CreateChapterForm
+                      onChapterCreated={handleChapterCreatedOrDeleted}
+                    />
+                  </div>
+                </li>
+                <li>
+                  <div className="flex flex-col p-0 hover:bg-transparent active:!bg-transparent active:!text-base-content">
+                    <VoicesDashboardClient
+                      voicesPromise={voicesPromise}
+                      voiceAudioData={voiceAudioData}
+                    />
+                  </div>
+                </li>
+                <li className="mt-auto">
+                  <button
+                    onClick={handleDeleteProject}
+                    disabled={isDeletingProject}
+                    className="btn btn-outline btn-error btn-block"
+                    title={
+                      isDeletingProject
+                        ? "Deleting Project..."
+                        : "Delete Project"
+                    }
+                  >
+                    Delete Project
+                  </button>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
-        <div className="drawer-side">
-          <label
-            htmlFor="my-drawer"
-            aria-label="close sidebar"
-            className="drawer-overlay"
-          ></label>
-          <ul className="flex flex-col gap-8 menu bg-base-200 min-h-full w-90 p-4 mt-0">
-            <li>
-              <h4>Chapters</h4>
-              <div className="flex flex-col p-0 hover:bg-transparent active:!bg-transparent active:!text-base-content">
-                <ChapterSelector
-                  chapters={chapters}
-                  onChapterSelect={handleChapterSelect}
-                  onChapterDeleted={handleChapterCreatedOrDeleted}
-                />
-                <CreateChapterForm
-                  onChapterCreated={handleChapterCreatedOrDeleted}
-                />
-              </div>
-            </li>
-            <li>
-              <div className="flex flex-col p-0 hover:bg-transparent active:!bg-transparent active:!text-base-content">
-                <VoicesDashboardClient
-                  voicesPromise={voicesPromise}
-                  voiceAudioData={voiceAudioData}
-                />
-              </div>
-            </li>
-            <li className="mt-auto">
-              <button
-                onClick={handleDeleteProject}
-                disabled={isDeletingProject}
-                className="btn btn-outline btn-error btn-block"
-                title={
-                  isDeletingProject ? "Deleting Project..." : "Delete Project"
-                }
-              >
-                Delete Project
-              </button>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 }
