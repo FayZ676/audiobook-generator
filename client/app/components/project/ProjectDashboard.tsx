@@ -9,7 +9,7 @@ import { getNarration } from "../../actions/narrate";
 import { getAudioManifest } from "../../actions/segments";
 import { AudioSegmentData, VoiceAudioData } from "../../types";
 
-import ProjectDashboardWrapper from "@/app/components/project/ProjectDashboardWrapper";
+import ProjectDashboardClient from "@/app/components/project/ProjectDashboardClient";
 
 interface ProjectDashboardProps {
   currentChapter?: string;
@@ -60,7 +60,7 @@ export default async function ProjectDashboard({
         </div>
       }
     >
-      <ProjectDashboardWrapper
+      <ProjectDashboardClient
         voicesPromise={Promise.resolve(voices)}
         voiceAudioData={voiceAudioData}
         jobStatePromise={jobStatePromise}

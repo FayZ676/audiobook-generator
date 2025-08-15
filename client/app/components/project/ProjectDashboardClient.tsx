@@ -21,15 +21,16 @@ import ChapterSelector from "../chapter/ChapterSelector";
 import CreateChapterForm from "../chapter/CreateChapterForm";
 import JobStateSection from "../job/JobStateSection";
 import VoicesDashboardClient from "../voices/VoicesDashboardClient";
+import CreateProjectForm from "./CreateProjectForm";
 
 interface ProjectDashboardClientProps {
   voicesPromise: Promise<Voice[]>;
   voiceAudioData: VoiceAudioData;
   jobStatePromise: Promise<AudiobookJob | null>;
-  project: {
+  projectPromise: Promise<{
     name: string;
-    user_id: string; // NOTE (faizi): We can get this from clerk.
-  };
+    user_id: string;
+  } | null>;
   chaptersPromise: Promise<string[]>;
   scriptPromise: Promise<Script | null>;
   narrationPromise: Promise<string | null>;
@@ -41,13 +42,14 @@ export default function ProjectDashboardClient({
   voicesPromise,
   voiceAudioData,
   jobStatePromise,
-  project,
+  projectPromise,
   chaptersPromise,
   scriptPromise,
   narrationPromise,
   selectedChapter,
   audioSegmentDataPromise,
 }: ProjectDashboardClientProps) {
+  const project = use(projectPromise);
   const router = useRouter();
   const [isDeletingProject, setIsDeletingProject] = React.useState(false);
 
@@ -87,6 +89,10 @@ export default function ProjectDashboardClient({
       router.push("/project");
     }
   }, [selectedChapter, project, chapters, router]);
+
+  if (!project) {
+    return <CreateProjectForm />;
+  }
 
   const handleChapterSelect = (chapter: string) => {
     router.push(`/project/${encodeURIComponent(chapter)}`);
