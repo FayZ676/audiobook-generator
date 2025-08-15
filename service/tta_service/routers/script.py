@@ -96,7 +96,7 @@ def send_script_request(script_request: BuildScriptRequest):
     )
     # NOTE: Add /runsync endpoint when testing locally.
     send_async_request(
-        url=f"{SCRIPT_API_URL}/runsync",
+        url=f"{SCRIPT_API_URL}",
         payload={"input": request.model_dump()},
         headers={
             "Content-Type": "application/json",

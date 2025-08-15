@@ -154,8 +154,9 @@ async def send_narration_request(
             chapter_name=chapter_name,
         ).model_dump(),
     )
+    # NOTE: Add /runsync endpoint when testing locally.
     send_async_request(
-        url=f"{SPEECH_API_URL}/runsync",
+        url=f"{SPEECH_API_URL}",
         payload={"input": request.model_dump()},
         headers={
             "Content-Type": "application/json",
