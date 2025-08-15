@@ -1,7 +1,3 @@
-"""Tests for the fallback behavior in speakers.py"""
-
-import pytest
-
 from tta_types.types import Voice, Character, Speaker
 from tta_script.speakers import get_speakers
 
@@ -46,9 +42,9 @@ def build_speaker(character: Character, voice: Voice) -> Speaker:
 def test_get_speakers_uses_narrator_fallback_when_no_matching_voice():
     """Test that characters use Narrator voice when no matching voice is found"""
     characters = {old_lady}
-    voices = [narrator, young_male]
+    voices = [young_male]
 
-    result = get_speakers(characters, voices, set())
+    result = get_speakers(characters, voices, narrator, set())
     expected = {build_speaker(old_lady, narrator)}
     assert result == expected
 
@@ -56,9 +52,9 @@ def test_get_speakers_uses_narrator_fallback_when_no_matching_voice():
 def test_get_speakers_succeeds_with_more_characters_than_voices():
     """Test that having more characters than voices doesn't raise an exception"""
     characters = {alice, bob, charlie}
-    voices = [narrator, young_male]
+    voices = [young_male]
 
-    result = get_speakers(characters, voices, set())
+    result = get_speakers(characters, voices, narrator, set())
     expected = {
         build_speaker(alice, narrator),
         build_speaker(bob, narrator),
@@ -67,21 +63,12 @@ def test_get_speakers_succeeds_with_more_characters_than_voices():
     assert result == expected
 
 
-def test_get_speakers_raises_error_when_no_narrator_voice():
-    """Test that an error is still raised when no Narrator voice is available"""
-    characters = {old_lady}
-    voices = [young_male]
-
-    with pytest.raises(ValueError, match="no Narrator voice found"):
-        get_speakers(characters, voices, set())
-
-
 def test_get_speakers_prefers_matching_voice_over_narrator():
     """Test that characters still get matching voices when available"""
     characters = {alice}
-    voices = [narrator, young_female]
+    voices = [young_female]
 
-    result = get_speakers(characters, voices, set())
+    result = get_speakers(characters, voices, narrator, set())
     expected = {build_speaker(alice, young_female)}
     assert result == expected
 
@@ -89,9 +76,9 @@ def test_get_speakers_prefers_matching_voice_over_narrator():
 def test_get_speakers_assigns_one_voice_per_character_with_narrator_fallback():
     """Test that when multiple characters match one voice, one gets the voice and others get narrator"""
     characters = {alice, emma}
-    voices = [narrator, young_female]
+    voices = [young_female]
 
-    result = get_speakers(characters, voices, set())
+    result = get_speakers(characters, voices, narrator, set())
     narrator_speakers = [s for s in result if s.voice.name == "Narrator"]
     young_female_speakers = [s for s in result if s.voice.name == "YoungFemale"]
     assert len(narrator_speakers) == 1

@@ -6,7 +6,7 @@ from typing import BinaryIO
 
 from tta_script.dialogue.types import Script
 from tta_script.dialogue.extract import get_script
-from tta_script.character.extract import get_characters
+from tta_script.character.extract import get_new_characters,
 from tta_script.text_utils import normalize_quotes
 from tta_script.speakers import get_speakers
 
@@ -15,6 +15,7 @@ from tta_types.types import (
     WebhookRequest,
     Response,
     ScriptRequest,
+    Voice,
 )
 from tta_aws.s3 import S3Client
 
@@ -27,6 +28,7 @@ PROJECTS_BUCKET = os.environ.get("PROJECTS_BUCKET", "")
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 s3_client = S3Client()
 
@@ -54,9 +56,16 @@ def handler(event: dict):
     previous_speakers = set(request_data.previous_speakers)
 
     try:
+        voices = request_data.voices
+        if len(voices) == 0:
+            raise ValueError("No voices available")
+
+        previous_characters = {s.character for s in previous_speakers}
+        new_characters = get_new_characters(text, previous_characters)
         speakers = get_speakers(
-            characters=get_characters(text, {s.character for s in previous_speakers}),
-            voices=request_data.voices,
+            characters=previous_characters | new_characters,
+            voices=voices,
+            narrator_voice=voices[0],
             previous_speakers=previous_speakers,
         )
         script = get_script(text, speakers)
