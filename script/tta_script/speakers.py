@@ -6,13 +6,15 @@ def get_speakers(
     voices: list[Voice],
     previous_speakers: set[Speaker],
 ) -> set[Speaker]:
-    if len(characters) > len(voices):
-        raise ValueError(
-            f"Not enough voices available for {len(characters)} characters. Available voices: {len(voices)}."
-        )
 
     available_voices = voices.copy()
     speakers: set[Speaker] = set()
+    
+    # Find the Narrator voice for fallback
+    narrator_voice = next(
+        (voice for voice in voices if voice.name == "Narrator"),
+        None
+    )
 
     for character in characters:
         existing_speaker = next(
@@ -40,8 +42,12 @@ def get_speakers(
                 available_voices.remove(selected_voice)
                 speakers.add(Speaker(character=character, voice=selected_voice))
             else:
-                raise ValueError(
-                    f"No available voices for {character.first_alias()} with age {character.age} and gender {character.gender}."
-                )
+                # Fallback to Narrator voice if available
+                if narrator_voice:
+                    speakers.add(Speaker(character=character, voice=narrator_voice))
+                else:
+                    raise ValueError(
+                        f"No available voices for {character.first_alias()} with age {character.age} and gender {character.gender}, and no Narrator voice found."
+                    )
 
     return speakers
