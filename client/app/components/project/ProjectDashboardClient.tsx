@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use, useEffect } from "react";
+import React, { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
@@ -12,49 +12,52 @@ import { Menu } from "lucide-react";
 import { Voice } from "../../actions/voices";
 import { AudiobookJob } from "../../actions/job";
 import { Script } from "../../actions/script";
+import { AudioSegmentData, VoiceAudioData } from "../../types";
 import { deleteProject } from "../../actions/audiobook";
 
 import ChapterContent from "../chapter/ChapterContent";
 import GenerateScriptForm from "../script/GenerateScriptForm";
-import CreateProjectForm from "./CreateProjectForm";
 import ChapterSelector from "../chapter/ChapterSelector";
 import CreateChapterForm from "../chapter/CreateChapterForm";
 import JobStateSection from "../job/JobStateSection";
 import VoicesDashboardClient from "../voices/VoicesDashboardClient";
+import CreateProjectForm from "./CreateProjectForm";
 
 interface ProjectDashboardClientProps {
   voicesPromise: Promise<Voice[]>;
+  voiceAudioData: VoiceAudioData;
   jobStatePromise: Promise<AudiobookJob | null>;
   projectPromise: Promise<{
     name: string;
-    user_id: string; // NOTE (faizi): We can get this from clerk.
+    user_id: string;
   } | null>;
   chaptersPromise: Promise<string[]>;
   scriptPromise: Promise<Script | null>;
   narrationPromise: Promise<string | null>;
   selectedChapter: string | null;
-  audioSegmentIdsPromise: Promise<string[]>;
+  audioSegmentDataPromise: Promise<AudioSegmentData>;
 }
 
 export default function ProjectDashboardClient({
   voicesPromise,
+  voiceAudioData,
   jobStatePromise,
   projectPromise,
   chaptersPromise,
   scriptPromise,
   narrationPromise,
   selectedChapter,
-  audioSegmentIdsPromise,
+  audioSegmentDataPromise,
 }: ProjectDashboardClientProps) {
   const router = useRouter();
-  const [isDeletingProject, setIsDeletingProject] = React.useState(false);
+  const [isClient, setIsClient] = useState(false);
+  const [isDeletingProject, setIsDeletingProject] = useState(false);
 
-  const voices = use(voicesPromise);
   const project = use(projectPromise);
   const chapters = use(chaptersPromise);
   const currentScript = use(scriptPromise);
   const narrationUrl = use(narrationPromise);
-  const audioSegmentIds = use(audioSegmentIdsPromise);
+  const audioSegmentData = use(audioSegmentDataPromise);
   const userChannels = useUserChannels();
 
   const handleRevalidate = async () => {
@@ -68,6 +71,10 @@ export default function ProjectDashboardClient({
     ]);
     router.refresh();
   };
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   usePusherSubscriptions({
     channels: userChannels
@@ -92,6 +99,10 @@ export default function ProjectDashboardClient({
     router.push(`/project/${encodeURIComponent(chapter)}`);
   };
 
+  if (!project) {
+    return <CreateProjectForm />;
+  }
+
   const handleChapterCreatedOrDeleted = () => {
     handleRevalidate();
   };
@@ -101,10 +112,6 @@ export default function ProjectDashboardClient({
     await deleteProject();
     router.refresh();
   };
-
-  if (!project) {
-    return <CreateProjectForm />;
-  }
 
   const hasNoSelectedChapter = !selectedChapter;
   const hasNoScript = !currentScript;
@@ -127,9 +134,9 @@ export default function ProjectDashboardClient({
                     <label htmlFor="my-drawer" className="btn drawer-button">
                       <Menu size={16} />
                     </label>
-                    <h3 className="mt-0 mb-0">{project.name}</h3>
+                    {/* TODO: Why does only this suffer from hydration errors? */}
+                    {isClient && <h3 className="mt-0 mb-0">{project.name}</h3>}
                   </div>
-
                   {selectedChapter && (
                     <div className="flex items-center ">
                       <h4 className="mt-0 mb-0">{selectedChapter}</h4>
@@ -152,11 +159,10 @@ export default function ProjectDashboardClient({
                     selectedChapter={selectedChapter}
                     currentScript={currentScript}
                     narrationUrl={narrationUrl}
-                    narrationPromise={narrationPromise}
                     scriptPromise={scriptPromise}
                     jobStatePromise={jobStatePromise}
-                    voices={voices}
-                    audioSegmentIds={audioSegmentIds}
+                    voicesPromise={voicesPromise}
+                    audioSegmentData={audioSegmentData}
                   />
                 )}
               </div>
@@ -185,7 +191,10 @@ export default function ProjectDashboardClient({
             </li>
             <li>
               <div className="flex flex-col p-0 hover:bg-transparent active:!bg-transparent active:!text-base-content">
-                <VoicesDashboardClient voicesPromise={voicesPromise} />
+                <VoicesDashboardClient
+                  voicesPromise={voicesPromise}
+                  voiceAudioData={voiceAudioData}
+                />
               </div>
             </li>
             <li className="mt-auto">

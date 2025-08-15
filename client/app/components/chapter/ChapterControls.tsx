@@ -9,14 +9,12 @@ import { AudiobookJob } from "../../actions/job";
 import Tip from "../ui/Tip";
 
 interface ChapterControlsProps {
-  narrationUrlPromise: Promise<string | null>;
   scriptPromise: Promise<Script | null>;
   jobStatePromise: Promise<AudiobookJob | null>;
   chapterName: string;
 }
 
 export default function ChapterControls({
-  narrationUrlPromise,
   scriptPromise,
   jobStatePromise,
   chapterName,
@@ -24,7 +22,6 @@ export default function ChapterControls({
   const [isCreatingNarration, setIsCreatingNarration] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const narrationUrl = use(narrationUrlPromise);
   const script = use(scriptPromise);
   const jobState = use(jobStatePromise);
 
@@ -63,8 +60,6 @@ export default function ChapterControls({
           >
             {isCreatingNarration || jobState?.narration_status === "processing"
               ? "Creating..."
-              : narrationUrl
-              ? "Regenerate"
               : "Narrate"}
           </button>
         )}

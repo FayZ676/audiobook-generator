@@ -31,13 +31,27 @@ async def build_narration(request: BuildNarrationRequest, bg_tasks: BackgroundTa
     script_data = s3_client.get_file(
         PROJECTS_BUCKET, f"{request.user_id}/{request.chapter_name}/script.json"
     ).decode("utf-8")
-    speech_segments = ScriptData.model_validate_json(script_data).to_speech_segments()
+    all_speech_segments = ScriptData.model_validate_json(
+        script_data
+    ).to_speech_segments()
+
+    if request.segment_ids:
+        requested_set = set(request.segment_ids)
+        speech_segments = [s for s in all_speech_segments if s.id in requested_set]
+        if len(speech_segments) != len(request.segment_ids):
+            raise HTTPException(
+                status_code=400, detail="one or more segment_ids are invalid"
+            )
+    else:
+        speech_segments = all_speech_segments
+
     validate_usage(
         user_id=request.user_id,
         word_count=sum(len(segment.text.split()) for segment in speech_segments),
         cost_per_word=SPEECH_COST_PER_WORD,
         usage_limit=USAGE_LIMIT,
     )
+
     existing_job = get_job_status(request.user_id)
     update_status(
         AudiobookJob(
@@ -49,6 +63,7 @@ async def build_narration(request: BuildNarrationRequest, bg_tasks: BackgroundTa
                 existing_job.script_started_at if existing_job else None
             ),
             narration_started_at=datetime.now(timezone.utc).isoformat(),
+            processing_segment_ids=[s.id for s in speech_segments],
         )
     )
     bg_tasks.add_task(
@@ -140,7 +155,7 @@ async def send_narration_request(
         ).model_dump(),
     )
     send_async_request(
-        url=f"{SPEECH_API_URL}",
+        url=f"{SPEECH_API_URL}/runsync",
         payload={"input": request.model_dump()},
         headers={
             "Content-Type": "application/json",

@@ -1,42 +1,59 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
+import { RotateCw, LoaderCircle } from "lucide-react";
 
 import { Script, updateScript } from "@/app/actions/script";
 import { Voice } from "@/app/actions/voices";
-import { ManualCharacter } from "@/app/types";
-import Tip from "@/app/components/ui/Tip";
-import CharacterVoiceMapping from "./CharacterVoiceMapping";
+import { regenerateSegment } from "@/app/actions/segments";
+import { ManualCharacter, AudioSegmentData } from "@/app/types";
+
+import CharacterVoiceMappingClient from "@/app/components/script/CharacterVoiceMappingClient";
 import AudioPlayer from "@/app/components/audio/AudioPlayer";
-import { getSegmentAudioUrl } from "@/app/actions/segments";
+import NarrationAudio from "@/app/components/narration/NarrationAudio";
 
 interface ScriptEditorProps {
   script: Script;
-  voices: Voice[];
+  voicesPromise: Promise<Voice[]>;
   chapterName: string;
-  audioSegmentIds: string[];
+  processingSegmentIds?: string[];
+  audioSegmentData: AudioSegmentData;
+  narrationUrl?: string | null;
 }
 
 export default function ScriptEditor({
   script,
-  voices,
+  voicesPromise,
   chapterName,
-  audioSegmentIds,
+  processingSegmentIds,
+  audioSegmentData,
+  narrationUrl,
 }: ScriptEditorProps) {
   const [editingScript, setEditingScript] = useState<Script>(script);
+  const [regenerating, setRegenerating] = useState<Record<string, boolean>>({});
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   useEffect(() => {
     setEditingScript(script);
+    setHasUnsavedChanges(false);
   }, [script]);
 
-  const playableSegmentIds = useMemo(
-    () => new Set(audioSegmentIds),
-    [audioSegmentIds]
+  const processingSet = useMemo(
+    () => new Set(processingSegmentIds || []),
+    [processingSegmentIds]
   );
+  const playableSet = useMemo(
+    () => new Set(audioSegmentData.ids || []),
+    [audioSegmentData.ids]
+  );
+
+  const isAnySegmentRegenerating = useMemo(() => {
+    return processingSet.size > 0 || Object.values(regenerating).some(Boolean);
+  }, [processingSet, regenerating]);
 
   const clearMessages = () => {};
 
-  const autoSave = async (scriptToSave: Script) => {
+  const saveScript = async (scriptToSave: Script) => {
     if (scriptToSave.segments.length === 0) {
       return;
     }
@@ -52,18 +69,11 @@ export default function ScriptEditor({
 
     try {
       await updateScript({ script: scriptToSave, chapterName });
+      setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Error updating script:", error);
     }
   };
-
-  const debouncedAutoSave = (() => {
-    let timeoutId: NodeJS.Timeout;
-    return (scriptToSave: Script) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => autoSave(scriptToSave), 1000);
-    };
-  })();
 
   const handleTextChange = (index: number, newText: string) => {
     clearMessages();
@@ -71,76 +81,7 @@ export default function ScriptEditor({
     updatedSegments[index] = { ...updatedSegments[index], text: newText };
     const updatedScript = { ...editingScript, segments: updatedSegments };
     setEditingScript(updatedScript);
-    debouncedAutoSave(updatedScript);
-  };
-
-  const createSpeakerFromVoice = (
-    characterName: string,
-    voice: Voice | null,
-    existingAge: "young" | "middle-aged" | "old",
-    existingGender: "male" | "female"
-  ) => ({
-    character: {
-      names: [characterName],
-      age: voice?.age || existingAge,
-      gender: voice?.gender || existingGender,
-    },
-    voice: {
-      name: voice?.name || "",
-      age: voice?.age || existingAge,
-      gender: voice?.gender || existingGender,
-      audio_path: voice?.audio_path || "",
-      audio_transcript: voice?.audio_transcript || "",
-    },
-  });
-
-  const handleCharacterVoiceChange = (
-    characterName: string,
-    voiceName: string
-  ) => {
-    clearMessages();
-    const selectedVoice =
-      voices.find((voice) => voice.name === voiceName) || null;
-
-    const updatedSpeakers = editingScript.speakers.map((speaker) =>
-      speaker.character.names.includes(characterName)
-        ? createSpeakerFromVoice(
-            characterName,
-            selectedVoice,
-            speaker.character.age,
-            speaker.character.gender
-          )
-        : speaker
-    );
-
-    const updatedScript = { ...editingScript, speakers: updatedSpeakers };
-    setEditingScript(updatedScript);
-    debouncedAutoSave(updatedScript);
-  };
-
-  const handleAddCharacter = (character: ManualCharacter) => {
-    clearMessages();
-
-    const existingSpeaker = editingScript.speakers.find((speaker) =>
-      speaker.character.names.includes(character.name)
-    );
-
-    if (!existingSpeaker) {
-      const newSpeaker = createSpeakerFromVoice(
-        character.name,
-        null,
-        character.age,
-        character.gender
-      );
-
-      const updatedScript = {
-        ...editingScript,
-        speakers: [...editingScript.speakers, newSpeaker],
-      };
-
-      setEditingScript(updatedScript);
-      debouncedAutoSave(updatedScript);
-    }
+    setHasUnsavedChanges(true);
   };
 
   const handleSegmentCharacterChange = (
@@ -156,7 +97,7 @@ export default function ScriptEditor({
 
     const updatedScript = { ...editingScript, segments: updatedSegments };
     setEditingScript(updatedScript);
-    debouncedAutoSave(updatedScript);
+    saveScript(updatedScript);
   };
 
   const getAllCharacters = () =>
@@ -167,34 +108,88 @@ export default function ScriptEditor({
 
   const availableCharacters = getAllCharacters();
 
+  const handleRegenerate = async (segmentId: string) => {
+    try {
+      setRegenerating((prev) => ({ ...prev, [segmentId]: true }));
+      await regenerateSegment(chapterName, segmentId);
+    } catch (e) {
+      console.error("Failed to regenerate segment", e);
+    } finally {
+      // keep local true until pusher refresh clears via processingSegmentIds update
+      // but safe to set false as isRegenerating is union with processingSet
+      setRegenerating((prev) => ({ ...prev, [segmentId]: false }));
+    }
+  };
+
   return (
-    <div className="flex flex-col gap-4">
-      <Tip>
-        Edit the script text, choose voices for characters, and save changes.
-      </Tip>
+    <div className="flex flex-col gap-8">
+      <Suspense fallback={<div>Loading character voice mapping...</div>}>
+        <CharacterVoiceMappingClient
+          script={editingScript}
+          voicesPromise={voicesPromise}
+          onScriptUpdate={(updatedScript: Script) => {
+            setEditingScript(updatedScript);
+            saveScript(updatedScript);
+          }}
+          onAddCharacter={(character: ManualCharacter) => {
+            const exists = editingScript.speakers.find((s) =>
+              s.character.names.includes(character.name)
+            );
+            if (!exists) {
+              const newSpeaker = {
+                character: {
+                  names: [character.name],
+                  age: character.age,
+                  gender: character.gender,
+                },
+                voice: {
+                  name: "",
+                  age: character.age,
+                  gender: character.gender,
+                  audio_path: "",
+                  audio_transcript: "",
+                },
+              };
+              const updatedScript = {
+                ...editingScript,
+                speakers: [...editingScript.speakers, newSpeaker],
+              };
+              setEditingScript(updatedScript);
+              saveScript(updatedScript);
+            }
+          }}
+        />
+      </Suspense>
 
-      <CharacterVoiceMapping
-        script={editingScript}
-        voices={voices}
-        onCharacterVoiceChange={handleCharacterVoiceChange}
-        onAddCharacter={handleAddCharacter}
-      />
-
-      <div className="h-[28rem] overflow-y-scroll bg-base-200 p-4 rounded">
+      <div className="flex flex-col gap-4 max-h-[32rem] overflow-y-scroll bg-base-200 p-4 rounded">
+        {narrationUrl && (
+          <NarrationAudio
+            narrationUrl={narrationUrl}
+            disabled={isAnySegmentRegenerating}
+          />
+        )}
         {editingScript.segments.map((scriptSegment, index) => {
           const speaker = editingScript.speakers.find((s) =>
             s.character.names.includes(scriptSegment.speaker_alias)
           );
           const characterName =
             speaker?.character.names[0] || scriptSegment.speaker_alias;
-          const voiceName = speaker?.voice.name || "";
           const segmentId = scriptSegment.id as string | undefined;
+          const segmentUrl = segmentId
+            ? audioSegmentData.urls[segmentId]
+            : undefined;
           const hasAudio = segmentId
-            ? playableSegmentIds.has(segmentId)
+            ? playableSet.has(segmentId) || !!segmentUrl
+            : false;
+          const isRegenerating = segmentId
+            ? !!regenerating[segmentId] || processingSet.has(segmentId)
             : false;
 
           return (
-            <div key={index} className="mb-4">
+            <div
+              key={index}
+              className={`mb-4 ${isRegenerating ? "opacity-80" : ""}`}
+            >
               <div className="flex flex-col gap-2">
                 <div className="grid grid-cols-2 gap-2">
                   <select
@@ -202,7 +197,8 @@ export default function ScriptEditor({
                     onChange={(e) =>
                       handleSegmentCharacterChange(index, e.target.value)
                     }
-                    className="select select-sm select-bordered min-w-[120px]"
+                    className="select select-sm min-w-[120px] text-gray-500 italic"
+                    disabled={isAnySegmentRegenerating}
                   >
                     {availableCharacters.map((char) => (
                       <option key={char} value={char}>
@@ -211,26 +207,56 @@ export default function ScriptEditor({
                     ))}
                   </select>
                   <div className="ml-auto flex items-center gap-3">
-                    <span className="text-sm text-gray-500 italic">
-                      {voiceName}
-                    </span>
-                    {hasAudio ? (
-                      <AudioPlayer
-                        loadSrc={async () =>
-                          getSegmentAudioUrl(chapterName, segmentId as string)
-                        }
-                        autoPlay
-                      />
-                    ) : null}
+                    {segmentId && hasAudio && (
+                      <div className="flex items-center gap-2">
+                        {segmentUrl && (
+                          <AudioPlayer
+                            src={segmentUrl}
+                            disabled={isAnySegmentRegenerating}
+                          />
+                        )}
+                        <button
+                          className="btn btn-sm btn-outline btn-info"
+                          title="Regenerate segment"
+                          onClick={() => handleRegenerate(segmentId)}
+                          disabled={isAnySegmentRegenerating}
+                        >
+                          {isRegenerating ? (
+                            <LoaderCircle size={16} className="animate-spin" />
+                          ) : (
+                            <RotateCw size={16} />
+                          )}
+                        </button>
+                      </div>
+                    )}
+                    {segmentId && !hasAudio && (
+                      <button
+                        className="btn btn-sm btn-primary"
+                        onClick={() => handleRegenerate(segmentId)}
+                        disabled={isAnySegmentRegenerating}
+                      >
+                        {isRegenerating ? (
+                          <LoaderCircle size={16} className="animate-spin" />
+                        ) : (
+                          "Narrate"
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
                 <div className="flex-1">
                   <textarea
                     value={scriptSegment.text}
                     onChange={(e) => handleTextChange(index, e.target.value)}
-                    className="textarea textarea-bordered w-full min-h-[80px]"
-                    rows={3}
+                    onBlur={() => {
+                      if (hasUnsavedChanges) {
+                        saveScript(editingScript);
+                      }
+                    }}
+                    className="textarea w-full min-h-[2rem] max-h-[12rem] resize-y"
+                    rows={1}
                     placeholder="Enter script text..."
+                    disabled={isAnySegmentRegenerating}
                   />
                 </div>
               </div>

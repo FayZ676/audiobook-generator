@@ -10,3 +10,12 @@ export const ManualCharacterSchema = z.object({
 });
 
 export type ManualCharacter = z.infer<typeof ManualCharacterSchema>;
+
+export interface AudioSegmentData {
+  ids: string[];
+  urls: Record<string, string>;
+}
+
+export interface VoiceAudioData {
+  urls: Record<string, string>;
+}

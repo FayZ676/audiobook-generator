@@ -37,6 +37,9 @@ async def events(response: WebhookResponse):
             script_started_at = existing_job.script_started_at if existing_job else None
             narration_status = None
             narration_started_at = None
+            processing_segment_ids = (
+                existing_job.processing_segment_ids if existing_job else None
+            )
         case "speech":
             script_status = None
             script_started_at = None
@@ -44,6 +47,7 @@ async def events(response: WebhookResponse):
             narration_started_at = (
                 existing_job.narration_started_at if existing_job else None
             )
+            processing_segment_ids = None if response.status != "processing" else existing_job.processing_segment_ids  # type: ignore[attr-defined]
         case "subscription_reset":
             save_log_entry(response.user_id, "subscription_reset", 0)
             return
@@ -60,6 +64,7 @@ async def events(response: WebhookResponse):
             message=response.message,
             script_started_at=script_started_at,
             narration_started_at=narration_started_at,
+            processing_segment_ids=processing_segment_ids,
         ),
         pusher=PusherEventDetails(
             channel=f"{response.user_id}-{response.event}",
@@ -70,5 +75,7 @@ async def events(response: WebhookResponse):
 
     if response.status == "complete":
         save_log_entry(
-            response.user_id, response.event, response.data.request_word_count
+            response.user_id,
+            response.event,
+            response.data.request_word_count,
         )

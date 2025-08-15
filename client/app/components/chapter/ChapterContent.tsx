@@ -1,50 +1,54 @@
-import React from "react";
+"use client";
+
+import React, { use } from "react";
 
 import { Voice } from "../../actions/voices";
 import { AudiobookJob } from "../../actions/job";
 import { Script } from "../../actions/script";
+import { AudioSegmentData } from "../../types";
 
 import ChapterControls from "./ChapterControls";
 import ScriptEditor from "../script/ScriptEditor";
-import NarrationAudio from "../narration/NarrationAudio";
 
 interface ChapterContentProps {
   selectedChapter: string;
   currentScript: Script;
   narrationUrl: string | null;
-  narrationPromise: Promise<string | null>;
   scriptPromise: Promise<Script | null>;
   jobStatePromise: Promise<AudiobookJob | null>;
-  voices: Voice[];
-  audioSegmentIds: string[];
+  voicesPromise: Promise<Voice[]>;
+  audioSegmentData: AudioSegmentData;
 }
 
 export default function ChapterContent({
   selectedChapter,
   currentScript,
   narrationUrl,
-  narrationPromise,
   scriptPromise,
   jobStatePromise,
-  voices,
-  audioSegmentIds,
+  voicesPromise,
+  audioSegmentData,
 }: ChapterContentProps) {
+  const jobState = use(jobStatePromise);
+  const processingSegmentIds = jobState?.processing_segment_ids || undefined;
+
   return (
     <>
-      {narrationUrl && <NarrationAudio narrationUrl={narrationUrl} />}
-
-      <ChapterControls
-        narrationUrlPromise={narrationPromise}
-        scriptPromise={scriptPromise}
-        jobStatePromise={jobStatePromise}
-        chapterName={selectedChapter}
-      />
+      {!narrationUrl && (
+        <ChapterControls
+          scriptPromise={scriptPromise}
+          jobStatePromise={jobStatePromise}
+          chapterName={selectedChapter}
+        />
+      )}
 
       <ScriptEditor
         script={currentScript}
-        voices={voices}
+        voicesPromise={voicesPromise}
         chapterName={selectedChapter}
-        audioSegmentIds={audioSegmentIds}
+        processingSegmentIds={processingSegmentIds}
+        audioSegmentData={audioSegmentData}
+        narrationUrl={narrationUrl}
       />
     </>
   );
