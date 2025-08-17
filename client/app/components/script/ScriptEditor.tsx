@@ -11,6 +11,7 @@ import { ManualCharacter, AudioSegmentData } from "@/app/types";
 import CharacterVoiceMappingClient from "@/app/components/script/CharacterVoiceMappingClient";
 import AudioPlayer from "@/app/components/audio/AudioPlayer";
 import NarrationAudio from "@/app/components/narration/NarrationAudio";
+import TextArea from "@/app/components/ui/TextArea";
 
 interface ScriptEditorProps {
   script: Script;
@@ -245,16 +246,14 @@ export default function ScriptEditor({
                   </div>
                 </div>
                 <div className="flex-1">
-                  <textarea
+                  <TextArea
                     value={scriptSegment.text}
-                    onChange={(e) => handleTextChange(index, e.target.value)}
+                    onChange={(newText) => handleTextChange(index, newText)}
                     onBlur={() => {
                       if (hasUnsavedChanges) {
                         saveScript(editingScript);
                       }
                     }}
-                    className="textarea w-full min-h-[2rem] max-h-[12rem] resize-y"
-                    rows={1}
                     placeholder="Enter script text..."
                     disabled={isAnySegmentRegenerating}
                   />
