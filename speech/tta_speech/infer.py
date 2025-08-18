@@ -168,10 +168,7 @@ def _synthesize_text_chunks(
                 raise ValueError("Invalid audio segment generated.")
             generated_audio_segments.append(audio_segment)
             final_sample_rate = final_sample_rate or sample_rate
-            
-            # Add 1 second of silence after each audio segment
-            silence = _create_silence(sample_rate, 1.0)
-            generated_audio_segments.append(silence)
+            generated_audio_segments.append(_create_silence(sample_rate, 0.75))
 
         except Exception as e:
             raise RuntimeError(
@@ -214,16 +211,13 @@ def _postprocess_and_encode(
 # TODO: This should return a list of tuples (audio, sample_rate) instead of a single tuple since we are doing multi speaker audio.
 def infer(params: InferenceParams) -> tuple[bytes, int | None]:
     ema_model, vocoder = _initialize_inference(params)
-
-    prepared_voices = _prepare_voices(params.voices)
-
     generated_audio_segments, final_sample_rate = _synthesize_text_chunks(
         gen_text=params.gen_text,
         vocoder_name=params.vocoder_name,
         infer_params=params,
         device=params.device,
         ema_model=ema_model,
-        prepared_voices=prepared_voices,
+        prepared_voices=_prepare_voices(params.voices),
         vocoder=vocoder,
     )
 

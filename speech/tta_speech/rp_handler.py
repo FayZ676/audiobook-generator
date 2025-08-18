@@ -107,7 +107,7 @@ def _synthesize_segment(segment: SpeechRequestSegment, voices: list[Voice]):
             vocoder_name="vocos",
             vocoder_local_path=f"{Path(__file__).parent}/vocos",
             load_vocoder_from_local=True,
-            remove_silence=True,
+            remove_silence=False,
             ckpt_file=f"{Path(__file__).parent}/checkpoints/model_1250000.safetensors",
         )
     )
