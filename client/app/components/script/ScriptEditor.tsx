@@ -1,17 +1,20 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, Suspense } from "react";
+import React, { useState, useEffect, useMemo, Suspense, use } from "react";
 import { RotateCw, LoaderCircle } from "lucide-react";
 
 import { Script, updateScript } from "@/app/actions/script";
 import { Voice } from "@/app/actions/voices";
 import { regenerateSegment } from "@/app/actions/segments";
 import { ManualCharacter, AudioSegmentData } from "@/app/types";
+import { createNarration } from "@/app/actions/narrate";
+import { AudiobookJob } from "@/app/actions/job";
 
 import CharacterVoiceMappingClient from "@/app/components/script/CharacterVoiceMappingClient";
 import AudioPlayer from "@/app/components/audio/AudioPlayer";
 import NarrationAudio from "@/app/components/narration/NarrationAudio";
 import TextArea from "@/app/components/ui/TextArea";
+import Tip from "@/app/components/ui/Tip";
 
 interface ScriptEditorProps {
   script: Script;
@@ -20,6 +23,8 @@ interface ScriptEditorProps {
   processingSegmentIds?: string[];
   audioSegmentData: AudioSegmentData;
   narrationUrl?: string | null;
+  scriptPromise: Promise<Script | null>;
+  jobStatePromise: Promise<AudiobookJob | null>;
 }
 
 export default function ScriptEditor({
@@ -29,10 +34,17 @@ export default function ScriptEditor({
   processingSegmentIds,
   audioSegmentData,
   narrationUrl,
+  scriptPromise,
+  jobStatePromise,
 }: ScriptEditorProps) {
   const [editingScript, setEditingScript] = useState<Script>(script);
   const [regenerating, setRegenerating] = useState<Record<string, boolean>>({});
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isCreatingNarration, setIsCreatingNarration] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const scriptData = use(scriptPromise);
+  const jobState = use(jobStatePromise);
 
   useEffect(() => {
     setEditingScript(script);
@@ -53,6 +65,25 @@ export default function ScriptEditor({
   }, [processingSet, regenerating]);
 
   const clearMessages = () => {};
+
+  const handleCreateNarration = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsCreatingNarration(true);
+    setError(null);
+    try {
+      await createNarration(chapterName);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      setError(errorMessage ? errorMessage : "Something went wrong.");
+    } finally {
+      setIsCreatingNarration(false);
+    }
+  };
+
+  const isProcessing =
+    jobState?.script_status === "processing" ||
+    jobState?.narration_status === "processing";
 
   const saveScript = async (scriptToSave: Script) => {
     if (scriptToSave.segments.length === 0) {
@@ -163,11 +194,31 @@ export default function ScriptEditor({
       </Suspense>
 
       <div className="flex flex-col gap-4 max-h-[32rem] overflow-y-scroll bg-base-200 p-4 rounded">
-        {narrationUrl && (
+        {narrationUrl ? (
           <NarrationAudio
             narrationUrl={narrationUrl}
             disabled={isAnySegmentRegenerating}
           />
+        ) : (
+          <div className="flex items-center justify-between gap-4">
+            {error && <Tip variant="warning">{error}</Tip>}
+            <div className="flex gap-2 ml-auto">
+              {scriptData && (
+                <button
+                  className="btn btn-info btn-outline"
+                  onClick={(e) => {
+                    setError(null);
+                    handleCreateNarration(e);
+                  }}
+                  disabled={isCreatingNarration || isProcessing}
+                >
+                  {isCreatingNarration || jobState?.narration_status === "processing"
+                    ? "Creating..."
+                    : "Narrate"}
+                </button>
+              )}
+            </div>
+          </div>
         )}
         {editingScript.segments.map((scriptSegment, index) => {
           const speaker = editingScript.speakers.find((s) =>
