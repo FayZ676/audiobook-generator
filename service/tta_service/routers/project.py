@@ -37,7 +37,6 @@ def delete_project(user_id: str):
     for file_path in project_files:
         s3_client.delete_file(PROJECTS_BUCKET, file_path)
 
-    # Also delete job status for the user
     job_status_file = f"{user_id}.json"
     if s3_client.list_files(JOB_STATUS_BUCKET, job_status_file):
         s3_client.delete_file(JOB_STATUS_BUCKET, job_status_file)
