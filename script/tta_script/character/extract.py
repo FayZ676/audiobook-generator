@@ -38,6 +38,10 @@ def get_new_characters(
         )
         new_characters.update(chunk_characters)
 
+    if not existing_characters:
+        new_characters.add(
+            Character(names=["Narrator"], age="middle-aged", gender="male")
+        )
     return new_characters
 
 
