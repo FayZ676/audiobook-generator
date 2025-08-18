@@ -1,7 +1,7 @@
 from io import BytesIO
 from fastapi import APIRouter, status
 from tta_service.types import Project
-from tta_service.config import s3_client, PROJECTS_BUCKET
+from tta_service.config import s3_client, PROJECTS_BUCKET, JOB_STATUS_BUCKET
 
 router = APIRouter()
 
@@ -36,4 +36,9 @@ def delete_project(user_id: str):
     project_files = s3_client.list_files(PROJECTS_BUCKET, f"{user_id}/")
     for file_path in project_files:
         s3_client.delete_file(PROJECTS_BUCKET, file_path)
+
+    job_status_file = f"{user_id}.json"
+    if s3_client.list_files(JOB_STATUS_BUCKET, job_status_file):
+        s3_client.delete_file(JOB_STATUS_BUCKET, job_status_file)
+
     return {"message": "Project deleted successfully"}
