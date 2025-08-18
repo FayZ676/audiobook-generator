@@ -230,19 +230,6 @@ export default function ScriptEditor({
                         </button>
                       </div>
                     )}
-                    {segmentId && !hasAudio && (
-                      <button
-                        className="btn btn-sm btn-primary"
-                        onClick={() => handleRegenerate(segmentId)}
-                        disabled={isAnySegmentRegenerating}
-                      >
-                        {isRegenerating ? (
-                          <LoaderCircle size={16} className="animate-spin" />
-                        ) : (
-                          "Narrate"
-                        )}
-                      </button>
-                    )}
                   </div>
                 </div>
                 <div className="flex-1">
