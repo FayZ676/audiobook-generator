@@ -1,4 +1,5 @@
 import React from "react";
+import AudioPlayerLarge from "../audio/AudioPlayerLarge";
 
 interface NarrationAudioProps {
   narrationUrl: string;
@@ -11,14 +12,7 @@ export default function NarrationAudio({
 }: NarrationAudioProps) {
   return (
     <div className="relative">
-      <audio
-        key={narrationUrl}
-        controls={!disabled}
-        className={`w-full ${disabled ? "opacity-50 pointer-events-none" : ""}`}
-      >
-        <source src={narrationUrl} />
-        Your browser does not support the audio element.
-      </audio>
+      <AudioPlayerLarge src={narrationUrl} disabled={disabled} />
     </div>
   );
 }
