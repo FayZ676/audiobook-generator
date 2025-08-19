@@ -48,7 +48,7 @@ export default function AudioPlayerLarge({
 
   const handleDownload = () => {
     if (!src) return;
-    
+
     const link = document.createElement("a");
     link.href = src;
     link.download = `narration-${Date.now()}.mp3`;
@@ -60,24 +60,16 @@ export default function AudioPlayerLarge({
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="bg-base-100 border border-base-300 rounded-lg p-4 shadow-sm max-w-2xl mx-auto">
+    <div className="bg-base-100 border border-base-300 rounded-md w-full px-4">
       <div className="flex items-center gap-3">
         {/* Play/Pause Button */}
         <button
           onClick={togglePlay}
           disabled={isLoading || disabled}
-          className={`btn btn-circle btn-lg ${
-            isPlaying ? "btn-warning" : "btn-primary"
-          } ${disabled ? "btn-disabled" : ""}`}
-          title={
-            disabled
-              ? "Audio playback disabled during regeneration"
-              : isLoading
-              ? "Loading..."
-              : isPlaying
-              ? "Pause"
-              : "Play"
-          }
+          className={`btn btn-circle btn-lg ${isPlaying ? "btn-warning" : ""} ${
+            disabled ? "btn-disabled" : ""
+          }`}
+          title="Play Button"
         >
           {isLoading ? (
             <LoaderCircle size={20} className="animate-spin" />
@@ -89,7 +81,7 @@ export default function AudioPlayerLarge({
         </button>
 
         {/* Current Time */}
-        <span className="text-sm font-mono text-base-content min-w-[2.5rem]">
+        <span className="text-sm font-mono text-gray-500">
           {formatTime(currentTime)}
         </span>
 
@@ -106,7 +98,7 @@ export default function AudioPlayerLarge({
             onTouchStart={handleSliderMouseDown}
             onTouchEnd={handleSliderMouseUp}
             disabled={disabled || duration === 0}
-            className="range range-primary w-full"
+            className="range range-sm w-full"
             style={{
               background: `linear-gradient(to right, hsl(var(--p)) 0%, hsl(var(--p)) ${progress}%, hsl(var(--b3)) ${progress}%, hsl(var(--b3)) 100%)`,
             }}
@@ -114,7 +106,7 @@ export default function AudioPlayerLarge({
         </div>
 
         {/* Duration */}
-        <span className="text-sm font-mono text-base-content min-w-[2.5rem]">
+        <span className="text-sm font-mono text-gray-500">
           {formatTime(duration)}
         </span>
 
@@ -127,7 +119,7 @@ export default function AudioPlayerLarge({
           }`}
           title="Download audio file"
         >
-          <Download size={16} />
+          <Download size={20} />
         </button>
       </div>
 
@@ -137,11 +129,7 @@ export default function AudioPlayerLarge({
         </div>
       )}
 
-      <audio
-        ref={audioRef}
-        {...audioEventHandlers}
-        className="hidden"
-      >
+      <audio ref={audioRef} {...audioEventHandlers} className="hidden">
         <source src={src} />
       </audio>
     </div>
