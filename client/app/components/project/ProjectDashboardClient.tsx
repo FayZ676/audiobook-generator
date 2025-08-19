@@ -15,13 +15,14 @@ import { Script } from "../../actions/script";
 import { AudioSegmentData, VoiceAudioData } from "../../types";
 import { deleteProject } from "../../actions/audiobook";
 
-import ChapterContent from "../chapter/ChapterContent";
 import GenerateScriptForm from "../script/GenerateScriptForm";
+
 import ChapterSelector from "../chapter/ChapterSelector";
 import CreateChapterForm from "../chapter/CreateChapterForm";
 import JobStateSection from "../job/JobStateSection";
 import VoicesDashboardClient from "../voices/VoicesDashboardClient";
 import CreateProjectForm from "./CreateProjectForm";
+import ScriptEditor from "../script/ScriptEditor";
 
 interface ProjectDashboardClientProps {
   voicesPromise: Promise<Voice[]>;
@@ -58,6 +59,8 @@ export default function ProjectDashboardClient({
   const currentScript = use(scriptPromise);
   const narrationUrl = use(narrationPromise);
   const audioSegmentData = use(audioSegmentDataPromise);
+  const jobState = use(jobStatePromise);
+  const processingSegmentIds = jobState?.processing_segment_ids || undefined;
   const userChannels = useUserChannels();
 
   const handleRevalidate = async () => {
@@ -155,14 +158,15 @@ export default function ProjectDashboardClient({
                 )}
 
                 {selectedChapter && !hasNoScript && (
-                  <ChapterContent
-                    selectedChapter={selectedChapter}
-                    currentScript={currentScript}
+                  <ScriptEditor
+                    script={currentScript}
+                    voicesPromise={voicesPromise}
+                    chapterName={selectedChapter}
+                    processingSegmentIds={processingSegmentIds}
+                    audioSegmentData={audioSegmentData}
                     narrationUrl={narrationUrl}
                     scriptPromise={scriptPromise}
                     jobStatePromise={jobStatePromise}
-                    voicesPromise={voicesPromise}
-                    audioSegmentData={audioSegmentData}
                   />
                 )}
               </div>
