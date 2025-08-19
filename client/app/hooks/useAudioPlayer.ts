@@ -101,7 +101,7 @@ export function useAudioPlayer(src: string, options: UseAudioPlayerOptions = {})
     onPlay: () => setIsPlaying(true),
     onPause: () => setIsPlaying(false),
     onEnded: () => setIsPlaying(false),
-    onError: () => setError("Audio error"),
+    onError: () => setError("Failed to play audio"),
   };
 
   return {
