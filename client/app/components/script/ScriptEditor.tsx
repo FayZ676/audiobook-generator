@@ -14,7 +14,6 @@ import CharacterVoiceMappingClient from "@/app/components/script/CharacterVoiceM
 import AudioPlayer from "@/app/components/audio/AudioPlayer";
 import NarrationAudio from "@/app/components/narration/NarrationAudio";
 import TextArea from "@/app/components/ui/TextArea";
-import Tip from "@/app/components/ui/Tip";
 
 interface ScriptEditorProps {
   script: Script;
