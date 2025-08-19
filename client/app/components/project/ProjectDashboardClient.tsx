@@ -125,7 +125,7 @@ export default function ProjectDashboardClient({
         <input id="my-drawer" type="checkbox" className="drawer-toggle" />
         <div className="drawer-content">
           <div className="flex-1 flex flex-col">
-            <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+            <div className="flex-1 space-y-4 overflow-y-auto">
               <JobStateSection
                 jobStatePromise={jobStatePromise}
                 scriptPromise={scriptPromise}
