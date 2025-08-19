@@ -98,7 +98,7 @@ export default function AudioPlayerLarge({
             onTouchStart={handleSliderMouseDown}
             onTouchEnd={handleSliderMouseUp}
             disabled={disabled || duration === 0}
-            className="range range-sm w-full"
+            className="range range-xs w-full"
             style={{
               background: `linear-gradient(to right, hsl(var(--p)) 0%, hsl(var(--p)) ${progress}%, hsl(var(--b3)) ${progress}%, hsl(var(--b3)) 100%)`,
             }}
