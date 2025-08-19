@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React from "react";
 import { Play, Pause, Download, LoaderCircle } from "lucide-react";
+import { useAudioPlayer } from "@/app/hooks/useAudioPlayer";
 
 interface AudioPlayerLargeProps {
   src: string;
@@ -12,50 +13,18 @@ export default function AudioPlayerLarge({
   src,
   disabled = false,
 }: AudioPlayerLargeProps) {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-
-  useEffect(() => {
-    const el = audioRef.current;
-    if (!el) return;
-
-    setIsPlaying(false);
-    setIsLoading(false);
-    setError(null);
-    setCurrentTime(0);
-    setDuration(0);
-    el.load();
-  }, [src]);
-
-  useEffect(() => {
-    const el = audioRef.current;
-    if (!el) return;
-
-    const updateTime = () => {
-      if (!isDragging) {
-        setCurrentTime(el.currentTime);
-      }
-    };
-
-    const updateDuration = () => {
-      setDuration(el.duration || 0);
-    };
-
-    el.addEventListener("timeupdate", updateTime);
-    el.addEventListener("loadedmetadata", updateDuration);
-    el.addEventListener("durationchange", updateDuration);
-
-    return () => {
-      el.removeEventListener("timeupdate", updateTime);
-      el.removeEventListener("loadedmetadata", updateDuration);
-      el.removeEventListener("durationchange", updateDuration);
-    };
-  }, [isDragging]);
+  const {
+    audioRef,
+    isPlaying,
+    isLoading,
+    error,
+    currentTime,
+    duration,
+    setIsDragging,
+    togglePlay,
+    seekTo,
+    audioEventHandlers,
+  } = useAudioPlayer(src, { disabled, trackTime: true });
 
   const formatTime = (seconds: number): string => {
     if (!isFinite(seconds) || isNaN(seconds)) return "0:00";
@@ -64,35 +33,9 @@ export default function AudioPlayerLarge({
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const handlePlayPause = async () => {
-    if (disabled) return;
-
-    const el = audioRef.current;
-    if (!el) return;
-
-    if (isPlaying) {
-      el.pause();
-    } else {
-      try {
-        setIsLoading(true);
-        setError(null);
-        await el.play();
-      } catch (err) {
-        setError("Failed to play audio");
-        console.error("Audio play error:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  };
-
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const el = audioRef.current;
-    if (!el) return;
-
     const newTime = parseFloat(e.target.value);
-    setCurrentTime(newTime);
-    el.currentTime = newTime;
+    seekTo(newTime);
   };
 
   const handleSliderMouseDown = () => {
@@ -121,7 +64,7 @@ export default function AudioPlayerLarge({
       <div className="flex items-center gap-3">
         {/* Play/Pause Button */}
         <button
-          onClick={handlePlayPause}
+          onClick={togglePlay}
           disabled={isLoading || disabled}
           className={`btn btn-circle btn-lg ${
             isPlaying ? "btn-warning" : "btn-primary"
@@ -196,10 +139,7 @@ export default function AudioPlayerLarge({
 
       <audio
         ref={audioRef}
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
-        onEnded={() => setIsPlaying(false)}
-        onError={() => setError("Audio error")}
+        {...audioEventHandlers}
         className="hidden"
       >
         <source src={src} />
