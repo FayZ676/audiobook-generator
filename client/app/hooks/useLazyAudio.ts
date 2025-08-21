@@ -19,7 +19,7 @@ export function useLazyAudio(
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Time tracking state (only when trackTime is enabled)
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -148,7 +148,8 @@ export function useLazyAudio(
   };
 
   // Calculate progress for progress bars
-  const progress = trackTime && duration > 0 ? (currentTime / duration) * 100 : 0;
+  const progress =
+    trackTime && duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return {
     audioRef,
@@ -156,15 +157,13 @@ export function useLazyAudio(
     isPlaying,
     isLoading,
     error,
-    // Time-related (only when trackTime is enabled)
+    // Time-related (always available but only meaningful when trackTime is enabled)
     currentTime: trackTime ? currentTime : 0,
     duration: trackTime ? duration : 0,
-    isDragging: trackTime ? isDragging : false,
     progress: trackTime ? progress : 0,
-    // Functions
+    // Functions (always available but some only work when trackTime is enabled)
     handlePlay,
     handleDownload,
-    seekTo,
     formatTime,
     handleSliderChange,
     handleSliderMouseDown,

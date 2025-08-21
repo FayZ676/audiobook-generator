@@ -19,7 +19,6 @@ export default function AudioPlayer({
     isLoading,
     error,
     handlePlay,
-    formatTime, // Even though we don't track time, we can still use the utility
     audioEventHandlers,
   } = useLazyAudio(url);
   return (
