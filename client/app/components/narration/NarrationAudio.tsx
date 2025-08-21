@@ -2,17 +2,17 @@ import React from "react";
 import AudioPlayerLarge from "../audio/AudioPlayerLarge";
 
 interface NarrationAudioProps {
-  narrationUrl: string;
+  url: () => Promise<string>;
   disabled?: boolean;
 }
 
 export default function NarrationAudio({
-  narrationUrl,
+  url,
   disabled = false,
 }: NarrationAudioProps) {
   return (
     <div className="relative">
-      <AudioPlayerLarge src={narrationUrl} disabled={disabled} />
+      <AudioPlayerLarge url={url} disabled={disabled} />
     </div>
   );
 }

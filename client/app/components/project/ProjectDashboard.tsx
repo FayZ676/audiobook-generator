@@ -1,13 +1,11 @@
 import React from "react";
 
 import { getJobState } from "../../actions/job";
-import { getVoices, getVoiceAudioUrls } from "../../actions/voices";
+import { getVoices } from "../../actions/voices";
 import { getCurrentProject } from "../../actions/project";
 import { getChapters } from "../../actions/chapter";
 import { getScript } from "../../actions/script";
 import { getNarration } from "../../actions/narrate";
-import { getAudioManifest } from "../../actions/segments";
-import { AudioSegmentData, VoiceAudioData } from "../../types";
 
 import ProjectDashboardClient from "@/app/components/project/ProjectDashboardClient";
 
@@ -34,34 +32,16 @@ export default async function ProjectDashboard({
   const narrationPromise = selectedChapter
     ? getNarration(selectedChapter)
     : Promise.resolve(null);
-  const audioSegmentDataPromise: Promise<AudioSegmentData> = selectedChapter
-    ? getAudioManifest(selectedChapter)
-        .then((m) => ({
-          ids: m.segments.map((s) => s.id),
-          urls: Object.fromEntries(m.segments.map((s) => [s.id, s.url])),
-        }))
-        .catch(() => ({ ids: [], urls: {} }))
-    : Promise.resolve({
-        ids: [] as string[],
-        urls: {} as Record<string, string>,
-      });
-  const voices = await voicesPromise;
-  const voiceAudioUrls = await getVoiceAudioUrls(voices);
-  const voiceAudioData: VoiceAudioData = {
-    urls: voiceAudioUrls,
-  };
 
   return (
     <ProjectDashboardClient
-      voicesPromise={Promise.resolve(voices)}
-      voiceAudioData={voiceAudioData}
+      voicesPromise={voicesPromise}
       jobStatePromise={jobStatePromise}
       projectPromise={projectPromise}
       chaptersPromise={chaptersPromise}
       scriptPromise={scriptPromise}
       narrationPromise={narrationPromise}
       selectedChapter={selectedChapter}
-      audioSegmentDataPromise={audioSegmentDataPromise}
     />
   );
 }

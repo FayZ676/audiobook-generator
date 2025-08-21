@@ -10,7 +10,6 @@ import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
 import { useUserChannels } from "@/app/lib/pusher-channels";
 
 import { Voice } from "../../actions/voices";
-import { VoiceAudioData } from "@/app/types";
 import { handleRevalidateTag } from "@/app/actions/revalidate";
 
 import VoiceAddModal from "./VoiceAddModal";
@@ -18,12 +17,10 @@ import VoiceCard from "./VoiceCard";
 
 interface VoicesDashboardClientProps {
   voicesPromise: Promise<Voice[]>;
-  voiceAudioData: VoiceAudioData;
 }
 
 export default function VoicesDashboardClient({
   voicesPromise,
-  voiceAudioData,
 }: VoicesDashboardClientProps) {
   const router = useRouter();
   const voices = use(voicesPromise);
@@ -44,11 +41,7 @@ export default function VoicesDashboardClient({
       {voices.length > 0 && (
         <div className="flex flex-col max-h-80 overflow-y-scroll">
           {voices.map((voice) => (
-            <VoiceCard
-              key={voice.name}
-              voice={voice}
-              voiceAudioUrl={voiceAudioData.urls[voice.name]}
-            />
+            <VoiceCard key={voice.name} voice={voice} />
           ))}
         </div>
       )}

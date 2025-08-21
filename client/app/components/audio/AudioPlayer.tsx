@@ -2,15 +2,15 @@
 
 import React from "react";
 import { CirclePlay, Pause, LoaderCircle } from "lucide-react";
-import { useAudioPlayer } from "@/app/hooks/useAudioPlayer";
+import { useLazyAudio } from "@/app/hooks/useLazyAudio";
 
 interface AudioPlayerProps {
-  src: string;
+  url: () => Promise<string>;
   disabled?: boolean;
 }
 
 export default function AudioPlayer({
-  src,
+  url,
   disabled = false,
 }: AudioPlayerProps) {
   const {
@@ -18,14 +18,14 @@ export default function AudioPlayer({
     isPlaying,
     isLoading,
     error,
-    togglePlay,
+    handlePlay,
+    formatTime, // Even though we don't track time, we can still use the utility
     audioEventHandlers,
-  } = useAudioPlayer(src, { disabled });
-
+  } = useLazyAudio(url);
   return (
     <div className="flex items-center gap-2">
       <button
-        onClick={togglePlay}
+        onClick={handlePlay}
         disabled={isLoading || disabled}
         className={`btn btn-sm btn-outline ${
           isPlaying ? "btn-warning" : "btn-success"
@@ -49,9 +49,12 @@ export default function AudioPlayer({
         )}
       </button>
       {error && <span className="text-red-500 text-xs">{error}</span>}
-      <audio ref={audioRef} {...audioEventHandlers} className="hidden">
-        <source src={src} />
-      </audio>
+      <audio
+        ref={audioRef}
+        preload="none"
+        {...audioEventHandlers}
+        className="hidden"
+      />
     </div>
   );
 }

@@ -12,7 +12,6 @@ import { Menu } from "lucide-react";
 import { Voice } from "../../actions/voices";
 import { AudiobookJob } from "../../actions/job";
 import { Script } from "../../actions/script";
-import { AudioSegmentData, VoiceAudioData } from "../../types";
 import { deleteProject } from "../../actions/audiobook";
 
 import GenerateScriptForm from "../script/GenerateScriptForm";
@@ -26,7 +25,6 @@ import ScriptEditor from "../script/ScriptEditor";
 
 interface ProjectDashboardClientProps {
   voicesPromise: Promise<Voice[]>;
-  voiceAudioData: VoiceAudioData;
   jobStatePromise: Promise<AudiobookJob | null>;
   projectPromise: Promise<{
     name: string;
@@ -36,19 +34,16 @@ interface ProjectDashboardClientProps {
   scriptPromise: Promise<Script | null>;
   narrationPromise: Promise<string | null>;
   selectedChapter: string | null;
-  audioSegmentDataPromise: Promise<AudioSegmentData>;
 }
 
 export default function ProjectDashboardClient({
   voicesPromise,
-  voiceAudioData,
   jobStatePromise,
   projectPromise,
   chaptersPromise,
   scriptPromise,
   narrationPromise,
   selectedChapter,
-  audioSegmentDataPromise,
 }: ProjectDashboardClientProps) {
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
@@ -58,7 +53,6 @@ export default function ProjectDashboardClient({
   const chapters = use(chaptersPromise);
   const currentScript = use(scriptPromise);
   const narrationUrl = use(narrationPromise);
-  const audioSegmentData = use(audioSegmentDataPromise);
   const jobState = use(jobStatePromise);
   const processingSegmentIds = jobState?.processing_segment_ids || undefined;
   const userChannels = useUserChannels();
@@ -163,7 +157,6 @@ export default function ProjectDashboardClient({
                     voicesPromise={voicesPromise}
                     chapterName={selectedChapter}
                     processingSegmentIds={processingSegmentIds}
-                    audioSegmentData={audioSegmentData}
                     narrationUrl={narrationUrl}
                     scriptPromise={scriptPromise}
                     jobStatePromise={jobStatePromise}
@@ -195,10 +188,7 @@ export default function ProjectDashboardClient({
             </li>
             <li>
               <div className="flex flex-col p-0 hover:bg-transparent active:!bg-transparent active:!text-base-content">
-                <VoicesDashboardClient
-                  voicesPromise={voicesPromise}
-                  voiceAudioData={voiceAudioData}
-                />
+                <VoicesDashboardClient voicesPromise={voicesPromise} />
               </div>
             </li>
             <li className="mt-auto">

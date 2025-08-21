@@ -2,74 +2,54 @@
 
 import React from "react";
 import { Play, Pause, Download, LoaderCircle } from "lucide-react";
-import { useAudioPlayer } from "@/app/hooks/useAudioPlayer";
+import { useLazyAudio } from "@/app/hooks/useLazyAudio";
 
 interface AudioPlayerLargeProps {
-  src: string;
+  url: () => Promise<string>;
   disabled?: boolean;
 }
 
 export default function AudioPlayerLarge({
-  src,
+  url,
   disabled = false,
 }: AudioPlayerLargeProps) {
   const {
     audioRef,
+    loaded,
     isPlaying,
     isLoading,
     error,
     currentTime,
     duration,
-    setIsDragging,
-    togglePlay,
-    seekTo,
+    progress,
+    handlePlay,
+    handleDownload,
+    formatTime,
+    handleSliderChange,
+    handleSliderMouseDown,
+    handleSliderMouseUp,
     audioEventHandlers,
-  } = useAudioPlayer(src, { disabled, trackTime: true });
-
-  const formatTime = (seconds: number): string => {
-    if (!isFinite(seconds) || isNaN(seconds)) return "0:00";
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTime = parseFloat(e.target.value);
-    seekTo(newTime);
-  };
-
-  const handleSliderMouseDown = () => {
-    setIsDragging(true);
-  };
-
-  const handleSliderMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const handleDownload = () => {
-    if (!src) return;
-
-    const link = document.createElement("a");
-    link.href = src;
-    link.download = `narration-${Date.now()}.mp3`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  } = useLazyAudio(url, { trackTime: true });
 
   return (
     <div className="bg-base-100 border border-base-300 rounded-md w-full px-4">
       <div className="flex items-center gap-3">
         {/* Play/Pause Button */}
         <button
-          onClick={togglePlay}
+          onClick={handlePlay}
           disabled={isLoading || disabled}
           className={`btn btn-circle btn-lg ${isPlaying ? "btn-warning" : ""} ${
             disabled ? "btn-disabled" : ""
           }`}
-          title="Play Button"
+          title={
+            disabled
+              ? "Audio playback disabled"
+              : isLoading
+              ? "Loading..."
+              : isPlaying
+              ? "Pause"
+              : "Play"
+          }
         >
           {isLoading ? (
             <LoaderCircle size={20} className="animate-spin" />
@@ -113,9 +93,9 @@ export default function AudioPlayerLarge({
         {/* Download Button */}
         <button
           onClick={handleDownload}
-          disabled={disabled || !src}
+          disabled={disabled || !loaded}
           className={`btn btn-circle btn-ghost btn-sm ${
-            disabled ? "btn-disabled" : ""
+            disabled || !loaded ? "btn-disabled" : ""
           }`}
           title="Download audio file"
         >
@@ -129,9 +109,12 @@ export default function AudioPlayerLarge({
         </div>
       )}
 
-      <audio ref={audioRef} {...audioEventHandlers} className="hidden">
-        <source src={src} />
-      </audio>
+      <audio
+        ref={audioRef}
+        preload="none"
+        {...audioEventHandlers}
+        className="hidden"
+      />
     </div>
   );
 }

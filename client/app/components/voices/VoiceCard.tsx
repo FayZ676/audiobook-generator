@@ -1,12 +1,11 @@
 import React, { useState } from "react";
 import { Trash2, LoaderCircle } from "lucide-react";
 
-import { Voice, deleteVoice } from "../../actions/voices";
+import { Voice, deleteVoice, getVoiceAudioUrl } from "../../actions/voices";
 import AudioPlayer from "../audio/AudioPlayer";
 
 interface VoiceCardProps {
   voice: Voice;
-  voiceAudioUrl: string | undefined;
 }
 
 export function isUserCreatedVoice(voice: Voice): boolean {
@@ -16,7 +15,7 @@ export function isUserCreatedVoice(voice: Voice): boolean {
   );
 }
 
-export default function VoiceCard({ voice, voiceAudioUrl }: VoiceCardProps) {
+export default function VoiceCard({ voice }: VoiceCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const isUserCreated = isUserCreatedVoice(voice);
@@ -45,7 +44,7 @@ export default function VoiceCard({ voice, voiceAudioUrl }: VoiceCardProps) {
         </div>
       </div>
       <div className="flex items-center gap-2">
-        {voiceAudioUrl && <AudioPlayer src={voiceAudioUrl} />}
+        <AudioPlayer url={() => getVoiceAudioUrl(voice.name)} />
         {isUserCreated && (
           <button
             onClick={handleDelete}

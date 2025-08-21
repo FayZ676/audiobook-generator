@@ -5,9 +5,9 @@ import { RotateCw, LoaderCircle } from "lucide-react";
 
 import { Script, updateScript } from "@/app/actions/script";
 import { Voice } from "@/app/actions/voices";
-import { regenerateSegment } from "@/app/actions/segments";
-import { ManualCharacter, AudioSegmentData } from "@/app/types";
-import { createNarration } from "@/app/actions/narrate";
+import { regenerateSegment, getSegmentAudioUrl } from "@/app/actions/segments";
+import { ManualCharacter } from "@/app/types";
+import { createNarration, getNarration } from "@/app/actions/narrate";
 import { AudiobookJob } from "@/app/actions/job";
 
 import CharacterVoiceMappingClient from "@/app/components/script/CharacterVoiceMappingClient";
@@ -20,7 +20,6 @@ interface ScriptEditorProps {
   voicesPromise: Promise<Voice[]>;
   chapterName: string;
   processingSegmentIds?: string[];
-  audioSegmentData: AudioSegmentData;
   narrationUrl?: string | null;
   scriptPromise: Promise<Script | null>;
   jobStatePromise: Promise<AudiobookJob | null>;
@@ -31,7 +30,6 @@ export default function ScriptEditor({
   voicesPromise,
   chapterName,
   processingSegmentIds,
-  audioSegmentData,
   narrationUrl,
   scriptPromise,
   jobStatePromise,
@@ -52,10 +50,6 @@ export default function ScriptEditor({
   const processingSet = useMemo(
     () => new Set(processingSegmentIds || []),
     [processingSegmentIds]
-  );
-  const playableSet = useMemo(
-    () => new Set(audioSegmentData.ids || []),
-    [audioSegmentData.ids]
   );
 
   const isAnySegmentRegenerating = useMemo(() => {
@@ -182,25 +176,28 @@ export default function ScriptEditor({
       />
 
       <div className="flex flex-col gap-4 max-h-[32rem] overflow-y-scroll bg-base-200 p-4 rounded">
-        {narrationUrl ? (
-          <NarrationAudio
-            narrationUrl={narrationUrl}
-            disabled={isAnySegmentRegenerating}
-          />
-        ) : (
-          scriptData && (
-            <button
-              className="btn btn-info btn-outline btn-block"
-              onClick={handleCreateNarration}
-              disabled={isCreatingNarration || isProcessing}
-            >
-              {isCreatingNarration ||
-              jobState?.narration_status === "processing"
-                ? "Initiating ..."
-                : "Narrate"}
-            </button>
-          )
-        )}
+        {scriptData ? (
+          <>
+            <NarrationAudio
+              url={() =>
+                getNarration(chapterName).then((result) => result || "")
+              }
+              disabled={isAnySegmentRegenerating}
+            />
+            {!narrationUrl && (
+              <button
+                className="btn btn-info btn-outline btn-block"
+                onClick={handleCreateNarration}
+                disabled={isCreatingNarration || isProcessing}
+              >
+                {isCreatingNarration ||
+                jobState?.narration_status === "processing"
+                  ? "Initiating ..."
+                  : "Narrate"}
+              </button>
+            )}
+          </>
+        ) : null}
         {editingScript.segments.map((scriptSegment, index) => {
           const speaker = editingScript.speakers.find((s) =>
             s.character.names.includes(scriptSegment.speaker_alias)
@@ -208,12 +205,6 @@ export default function ScriptEditor({
           const characterName =
             speaker?.character.names[0] || scriptSegment.speaker_alias;
           const segmentId = scriptSegment.id as string | undefined;
-          const segmentUrl = segmentId
-            ? audioSegmentData.urls[segmentId]
-            : undefined;
-          const hasAudio = segmentId
-            ? playableSet.has(segmentId) || !!segmentUrl
-            : false;
           const isRegenerating = segmentId
             ? !!regenerating[segmentId] || processingSet.has(segmentId)
             : false;
@@ -240,14 +231,12 @@ export default function ScriptEditor({
                     ))}
                   </select>
                   <div className="ml-auto flex items-center gap-3">
-                    {segmentId && hasAudio && (
+                    {segmentId && (
                       <div className="flex items-center gap-2">
-                        {segmentUrl && (
-                          <AudioPlayer
-                            src={segmentUrl}
-                            disabled={isAnySegmentRegenerating}
-                          />
-                        )}
+                        <AudioPlayer
+                          url={() => getSegmentAudioUrl(chapterName, segmentId)}
+                          disabled={isAnySegmentRegenerating}
+                        />
                         <button
                           className="btn btn-sm btn-outline btn-info"
                           title="Regenerate segment"

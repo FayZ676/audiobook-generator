@@ -68,72 +68,33 @@ export async function addVoice(formData: {
   }
 }
 
-export async function getVoiceAudioUrls(
-  voices: Voice[]
-): Promise<Record<string, string>> {
+export async function getVoiceAudioUrl(voiceName: string): Promise<string> {
   const userId = await getUserId();
+  const normalizedVoiceName = voiceName.toLowerCase().replace(/\s+/g, "_");
 
-  const urlPromises = voices.map((voice) => fetchVoiceAudioUrl(voice, userId));
-  const results = await Promise.all(urlPromises);
-
-  return buildAudioUrlsRecord(results);
+  const audioUrl = await apiCallJson<string>(
+    `${process.env.AUDIOBOOK_SERVICE_URL}/voices/${userId}/${normalizedVoiceName}/audio`,
+    {
+      cache: "force-cache",
+      next: {
+        tags: ["voices"],
+      },
+    }
+  );
+  return audioUrl;
 }
 
 export async function deleteVoice(voiceName: string): Promise<void> {
-  try {
-    const userId = await getUserId();
-    const normalizedVoiceName = voiceName.toLowerCase().replace(/\s+/g, "_");
+  const userId = await getUserId();
 
-    await apiCall(
-      `${process.env.AUDIOBOOK_SERVICE_URL}/voices/${userId}/${normalizedVoiceName}`,
-      {
-        method: "DELETE",
-      }
-    );
-
-    revalidateTag("voices");
-  } catch (error) {
-    console.error("Error deleting voice:", error);
-    throw error;
-  }
-}
-
-async function fetchVoiceAudioUrl(
-  voice: Voice,
-  userId: string
-): Promise<{ name: string; url: string | null }> {
-  const normalizedVoiceName = voice.name.toLowerCase().replace(/\s+/g, "_");
-
-  try {
-    const audioUrl = await apiCallJson<string>(
-      `${process.env.AUDIOBOOK_SERVICE_URL}/voices/${userId}/${normalizedVoiceName}/audio`,
-      {
-        cache: "force-cache",
-        next: {
-          tags: ["voices"],
-        },
-      }
-    );
-    return { name: voice.name, url: audioUrl };
-  } catch (error) {
-    if (error instanceof Error && error.message.includes("404")) {
-      return { name: voice.name, url: null };
+  await apiCall(
+    `${process.env.AUDIOBOOK_SERVICE_URL}/voices/${userId}/${voiceName}`,
+    {
+      method: "DELETE",
+      cache: "no-cache",
+      next: {
+        tags: ["voices"],
+      },
     }
-    console.error(`Error fetching voice audio URL for ${voice.name}:`, error);
-    return { name: voice.name, url: null };
-  }
-}
-
-function buildAudioUrlsRecord(
-  results: Array<{ name: string; url: string | null }>
-): Record<string, string> {
-  const audioUrls: Record<string, string> = {};
-
-  results.forEach(({ name, url }) => {
-    if (url) {
-      audioUrls[name] = url;
-    }
-  });
-
-  return audioUrls;
+  );
 }
