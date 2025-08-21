@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React from "react";
 
 import { getJobState } from "../../actions/job";
 import { getVoices, getVoiceAudioUrls } from "../../actions/voices";
@@ -52,25 +52,16 @@ export default async function ProjectDashboard({
   };
 
   return (
-    <Suspense
-      fallback={
-        <div>
-          Loading project{" "}
-          <span className="loading loading-dots loading-xs"></span>
-        </div>
-      }
-    >
-      <ProjectDashboardClient
-        voicesPromise={Promise.resolve(voices)}
-        voiceAudioData={voiceAudioData}
-        jobStatePromise={jobStatePromise}
-        projectPromise={projectPromise}
-        chaptersPromise={chaptersPromise}
-        scriptPromise={scriptPromise}
-        narrationPromise={narrationPromise}
-        selectedChapter={selectedChapter}
-        audioSegmentDataPromise={audioSegmentDataPromise}
-      />
-    </Suspense>
+    <ProjectDashboardClient
+      voicesPromise={Promise.resolve(voices)}
+      voiceAudioData={voiceAudioData}
+      jobStatePromise={jobStatePromise}
+      projectPromise={projectPromise}
+      chaptersPromise={chaptersPromise}
+      scriptPromise={scriptPromise}
+      narrationPromise={narrationPromise}
+      selectedChapter={selectedChapter}
+      audioSegmentDataPromise={audioSegmentDataPromise}
+    />
   );
 }

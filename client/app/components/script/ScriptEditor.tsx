@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, Suspense, use } from "react";
+import React, { useState, useEffect, useMemo, use } from "react";
 import { RotateCw, LoaderCircle } from "lucide-react";
 
 import { Script, updateScript } from "@/app/actions/script";
@@ -145,43 +145,41 @@ export default function ScriptEditor({
 
   return (
     <div className="flex flex-col gap-8">
-      <Suspense fallback={<div>Loading character voice mapping...</div>}>
-        <CharacterVoiceMappingClient
-          script={editingScript}
-          voicesPromise={voicesPromise}
-          onScriptUpdate={(updatedScript: Script) => {
+      <CharacterVoiceMappingClient
+        script={editingScript}
+        voicesPromise={voicesPromise}
+        onScriptUpdate={(updatedScript: Script) => {
+          setEditingScript(updatedScript);
+          saveScript(updatedScript);
+        }}
+        onAddCharacter={(character: ManualCharacter) => {
+          const exists = editingScript.speakers.find((s) =>
+            s.character.names.includes(character.name)
+          );
+          if (!exists) {
+            const newSpeaker = {
+              character: {
+                names: [character.name],
+                age: character.age,
+                gender: character.gender,
+              },
+              voice: {
+                name: "",
+                age: character.age,
+                gender: character.gender,
+                audio_path: "",
+                audio_transcript: "",
+              },
+            };
+            const updatedScript = {
+              ...editingScript,
+              speakers: [...editingScript.speakers, newSpeaker],
+            };
             setEditingScript(updatedScript);
             saveScript(updatedScript);
-          }}
-          onAddCharacter={(character: ManualCharacter) => {
-            const exists = editingScript.speakers.find((s) =>
-              s.character.names.includes(character.name)
-            );
-            if (!exists) {
-              const newSpeaker = {
-                character: {
-                  names: [character.name],
-                  age: character.age,
-                  gender: character.gender,
-                },
-                voice: {
-                  name: "",
-                  age: character.age,
-                  gender: character.gender,
-                  audio_path: "",
-                  audio_transcript: "",
-                },
-              };
-              const updatedScript = {
-                ...editingScript,
-                speakers: [...editingScript.speakers, newSpeaker],
-              };
-              setEditingScript(updatedScript);
-              saveScript(updatedScript);
-            }
-          }}
-        />
-      </Suspense>
+          }
+        }}
+      />
 
       <div className="flex flex-col gap-4 max-h-[32rem] overflow-y-scroll bg-base-200 p-4 rounded">
         {narrationUrl ? (

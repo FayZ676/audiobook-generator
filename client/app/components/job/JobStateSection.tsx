@@ -1,5 +1,4 @@
 import React from "react";
-import { Suspense } from "react";
 
 import { AudiobookJob } from "../../actions/job";
 import { Script } from "../../actions/script";
@@ -16,11 +15,9 @@ export default function JobStateSection({
   scriptPromise,
 }: JobStateSectionProps) {
   return (
-    <Suspense fallback={<div>Loading job state ...</div>}>
-      <JobStateClient 
-        jobStatePromise={jobStatePromise} 
-        scriptPromise={scriptPromise}
-      />
-    </Suspense>
+    <JobStateClient
+      jobStatePromise={jobStatePromise}
+      scriptPromise={scriptPromise}
+    />
   );
 }
