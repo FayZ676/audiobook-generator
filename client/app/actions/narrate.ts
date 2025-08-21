@@ -53,7 +53,7 @@ export async function getNarration(
       {
         cache: "force-cache",
         next: {
-          revalidate: 3600,
+          revalidate: 2700,
           tags: ["narration"],
         },
       }

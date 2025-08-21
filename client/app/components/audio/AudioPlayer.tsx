@@ -49,11 +49,7 @@ export default function AudioPlayer({
         )}
       </button>
       {error && <span className="text-red-500 text-xs">{error}</span>}
-      <audio
-        ref={audioRef}
-        {...audioEventHandlers}
-        className="hidden"
-      >
+      <audio ref={audioRef} {...audioEventHandlers} className="hidden">
         <source src={src} />
       </audio>
     </div>

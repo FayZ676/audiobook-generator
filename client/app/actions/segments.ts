@@ -25,7 +25,7 @@ export async function getAudioManifest(
     `${process.env.AUDIOBOOK_SERVICE_URL}/narration/${userId}/${chapterName}/audio`,
     {
       cache: "force-cache",
-      next: { revalidate: 3600, tags: ["audio-manifest"] },
+      next: { revalidate: 2700, tags: ["audio-manifest"] },
     }
   );
 }
@@ -39,7 +39,7 @@ export async function getSegmentAudioUrl(
     `${process.env.AUDIOBOOK_SERVICE_URL}/narration/${userId}/${chapterName}/segments/${segmentId}`,
     {
       cache: "force-cache",
-      next: { revalidate: 3600, tags: [`segment-audio-${segmentId}`] },
+      next: { revalidate: 2700, tags: [`segment-audio-${segmentId}`] },
     }
   );
   return data.url;
