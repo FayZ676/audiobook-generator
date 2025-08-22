@@ -178,13 +178,12 @@ export default function ScriptEditor({
       <div className="flex flex-col gap-4 max-h-[32rem] overflow-y-scroll bg-base-200 p-4 rounded">
         {scriptData ? (
           <>
-            <NarrationAudio
-              url={() =>
-                getNarration(chapterName).then((result) => result || "")
-              }
-              disabled={isAnySegmentRegenerating}
-            />
-            {!narrationUrl && (
+            {narrationUrl ? (
+              <NarrationAudio
+                url={() => Promise.resolve(narrationUrl)}
+                disabled={isAnySegmentRegenerating}
+              />
+            ) : (
               <button
                 className="btn btn-info btn-outline btn-block"
                 onClick={handleCreateNarration}
