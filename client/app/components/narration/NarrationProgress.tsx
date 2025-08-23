@@ -1,25 +1,20 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Script } from "../../actions/script";
-import {
-  calculateWordCount,
-  estimateNarrationDurationSeconds,
-} from "../../utils/narrationEstimation";
+import { estimateNarrationDurationSeconds } from "../../utils/narrationEstimation";
 
 interface NarrationProgressProps {
-  script: Script;
+  wordCount: number;
   narrationStartedAt?: string | null;
 }
 
 export default function NarrationProgress({
-  script,
+  wordCount,
   narrationStartedAt,
 }: NarrationProgressProps) {
   const [progress, setProgress] = useState(0);
   const [isFinishing, setIsFinishing] = useState(false);
 
-  const wordCount = useMemo(() => calculateWordCount(script), [script]);
   const estimatedDurationSeconds = useMemo(
     () => estimateNarrationDurationSeconds(wordCount),
     [wordCount]

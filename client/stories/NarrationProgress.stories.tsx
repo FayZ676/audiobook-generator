@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 import NarrationProgress from "../app/components/narration/NarrationProgress";
 import { Script } from "../app/actions/script";
+import { calculateWordCount } from "../app/utils/narrationEstimation";
 
 const sampleScript: Script = {
   segments: [
@@ -59,14 +60,14 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    script: sampleScript,
+    wordCount: calculateWordCount(sampleScript),
   },
   render: (args) => <NarrationProgress {...args} />,
 };
 
 export const WithServerTimestamp: Story = {
   args: {
-    script: sampleScript,
+    wordCount: calculateWordCount(sampleScript),
     narrationStartedAt: new Date(Date.now() - 30000).toISOString(), // 30 seconds ago
   },
   render: (args) => <NarrationProgress {...args} />,

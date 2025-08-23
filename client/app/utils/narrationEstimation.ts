@@ -1,11 +1,14 @@
 import { Script } from "../actions/script";
 
+export function countWords(text: string): number {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
 export function calculateWordCount(script: Script): number {
-  return script.segments.reduce((total, segment) => {
-    return (
-      total + segment.text.split(/\s+/).filter((word) => word.length > 0).length
-    );
-  }, 0);
+  return script.segments.reduce(
+    (total, segment) => total + countWords(segment.text),
+    0
+  );
 }
 
 export function estimateNarrationDurationSeconds(wordCount: number): number {
