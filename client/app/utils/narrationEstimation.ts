@@ -17,5 +17,8 @@ export function estimateNarrationDurationSeconds(wordCount: number): number {
     process.env.NEXT_PUBLIC_NARRATION_DURATION_BASE || "30",
     10
   );
+  console.log(`Word Count: ${wordCount}`);
+  console.log(`Words Per Minute: ${wordsPerMinute}`);
+  console.log(`Duration Base: ${durationBase}`);
   return Math.max(durationBase, Math.round((wordCount / wordsPerMinute) * 60));
 }
