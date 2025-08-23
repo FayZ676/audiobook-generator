@@ -2,29 +2,26 @@
 
 import React from "react";
 import { use } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
 import { handleRevalidateTag } from "@/app/actions/revalidate";
 import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
 import { useUserChannels } from "@/app/lib/pusher-channels";
 
-import { AudiobookJob } from "../../actions/job";
-import { Script } from "../../actions/script";
+import { getJobState } from "../../actions/job";
+import { getScript } from "../../actions/script";
 import Tip from "../ui/Tip";
 import NarrationProgress from "../narration/NarrationProgress";
 
-interface JobStateSectionProps {
-  jobStatePromise: Promise<AudiobookJob | null>;
-  scriptPromise: Promise<Script | null>;
-}
-
-export default function JobStateClient({
-  jobStatePromise,
-  scriptPromise,
-}: JobStateSectionProps) {
+export default function JobStateClient() {
   const router = useRouter();
-  const jobState = use(jobStatePromise);
-  const script = use(scriptPromise);
+  const params = useParams();
+  const selectedChapter = params.chapter
+    ? decodeURIComponent(params.chapter as string)
+    : null;
+
+  const jobState = use(getJobState());
+  const script = selectedChapter ? use(getScript(selectedChapter)) : null;
   const userChannels = useUserChannels();
 
   usePusherSubscriptions({

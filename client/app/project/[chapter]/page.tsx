@@ -1,6 +1,6 @@
 import React from "react";
 
-import ProjectDashboard from "@/app/components/project/ProjectDashboard";
+import ProjectDashboardClient from "@/app/components/project/ProjectDashboardClient";
 import { getChapters } from "@/app/actions/chapter";
 import { redirect } from "next/navigation";
 
@@ -24,10 +24,5 @@ export default async function ProjectChapterPage({
     redirect("/project");
   }
 
-  return (
-    <ProjectDashboard
-      currentChapter={currentChapter}
-      initialChapters={chapters}
-    />
-  );
+  return <ProjectDashboardClient />;
 }

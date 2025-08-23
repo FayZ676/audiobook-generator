@@ -1,7 +1,7 @@
 "use client";
 
-import React, { use, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { use, useEffect, useState, Suspense } from "react";
+import { useRouter, useParams } from "next/navigation";
 
 import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
 import { useUserChannels } from "@/app/lib/pusher-channels";
@@ -9,52 +9,43 @@ import { handleRevalidateTag } from "@/app/actions/revalidate";
 
 import { Menu } from "lucide-react";
 
-import { Voice } from "../../actions/voices";
-import { AudiobookJob } from "../../actions/job";
-import { Script } from "../../actions/script";
+import { getCurrentProject } from "../../actions/project";
+import { getChapters } from "../../actions/chapter";
+import { getScript } from "../../actions/script";
 import { deleteProject } from "../../actions/audiobook";
 
 import GenerateScriptForm from "../script/GenerateScriptForm";
 
 import ChapterSelector from "../chapter/ChapterSelector";
 import CreateChapterForm from "../chapter/CreateChapterForm";
-import JobStateSection from "../job/JobStateSection";
+import JobStateClient from "../job/JobStateClient";
 import VoicesDashboardClient from "../voices/VoicesDashboardClient";
 import CreateProjectForm from "./CreateProjectForm";
 import ScriptEditor from "../script/ScriptEditor";
 
-interface ProjectDashboardClientProps {
-  voicesPromise: Promise<Voice[]>;
-  jobStatePromise: Promise<AudiobookJob | null>;
-  projectPromise: Promise<{
-    name: string;
-    user_id: string;
-  } | null>;
-  chaptersPromise: Promise<string[]>;
-  scriptPromise: Promise<Script | null>;
-  narrationPromise: Promise<string | null>;
-  selectedChapter: string | null;
+export default function ProjectDashboardClient() {
+  return (
+    <Suspense fallback={<div>Loading Project...</div>}>
+      <ProjectDashboardContent />
+    </Suspense>
+  );
 }
 
-export default function ProjectDashboardClient({
-  voicesPromise,
-  jobStatePromise,
-  projectPromise,
-  chaptersPromise,
-  scriptPromise,
-  narrationPromise,
-  selectedChapter,
-}: ProjectDashboardClientProps) {
+function ProjectDashboardContent() {
   const router = useRouter();
+  const params = useParams();
   const [isClient, setIsClient] = useState(false);
   const [isDeletingProject, setIsDeletingProject] = useState(false);
 
-  const project = use(projectPromise);
-  const chapters = use(chaptersPromise);
-  const currentScript = use(scriptPromise);
-  const narrationUrl = use(narrationPromise);
-  const jobState = use(jobStatePromise);
-  const processingSegmentIds = jobState?.processing_segment_ids || undefined;
+  const selectedChapter = params.chapter
+    ? decodeURIComponent(params.chapter as string)
+    : null;
+
+  const project = use(getCurrentProject());
+  const chapters = use(getChapters());
+  const currentScript = selectedChapter
+    ? use(getScript(selectedChapter))
+    : null;
   const userChannels = useUserChannels();
 
   const handleRevalidate = async () => {
@@ -120,10 +111,9 @@ export default function ProjectDashboardClient({
         <div className="drawer-content">
           <div className="flex-1 flex flex-col">
             <div className="flex-1 space-y-4 overflow-y-auto">
-              <JobStateSection
-                jobStatePromise={jobStatePromise}
-                scriptPromise={scriptPromise}
-              />
+              <Suspense fallback={<div>Loading job state...</div>}>
+                <JobStateClient />
+              </Suspense>
 
               <div className="space-y-8">
                 <div className="flex justify-between">
@@ -152,15 +142,9 @@ export default function ProjectDashboardClient({
                 )}
 
                 {selectedChapter && !hasNoScript && (
-                  <ScriptEditor
-                    script={currentScript}
-                    voicesPromise={voicesPromise}
-                    chapterName={selectedChapter}
-                    processingSegmentIds={processingSegmentIds}
-                    narrationUrl={narrationUrl}
-                    scriptPromise={scriptPromise}
-                    jobStatePromise={jobStatePromise}
-                  />
+                  <Suspense fallback={<div>Loading Script Editor...</div>}>
+                    <ScriptEditor />
+                  </Suspense>
                 )}
               </div>
             </div>
@@ -188,7 +172,9 @@ export default function ProjectDashboardClient({
             </li>
             <li>
               <div className="flex flex-col p-0 hover:bg-transparent active:!bg-transparent active:!text-base-content">
-                <VoicesDashboardClient voicesPromise={voicesPromise} />
+                <Suspense fallback={<div>Loading voices...</div>}>
+                  <VoicesDashboardClient />
+                </Suspense>
               </div>
             </li>
             <li className="mt-auto">

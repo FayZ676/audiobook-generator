@@ -1,51 +1,42 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, use } from "react";
+import { useParams } from "next/navigation";
 import { RotateCw, LoaderCircle } from "lucide-react";
 
-import { Script, updateScript } from "@/app/actions/script";
-import { Voice } from "@/app/actions/voices";
+import { Script, updateScript, getScript } from "@/app/actions/script";
 import { regenerateSegment, getSegmentAudioUrl } from "@/app/actions/segments";
 import { ManualCharacter } from "@/app/types";
 import { createNarration, getNarration } from "@/app/actions/narrate";
-import { AudiobookJob } from "@/app/actions/job";
+import { getJobState } from "@/app/actions/job";
 
 import CharacterVoiceMappingClient from "@/app/components/script/CharacterVoiceMappingClient";
 import AudioPlayer from "@/app/components/audio/AudioPlayer";
 import NarrationAudio from "@/app/components/narration/NarrationAudio";
 import TextArea from "@/app/components/ui/TextArea";
 
-interface ScriptEditorProps {
-  script: Script;
-  voicesPromise: Promise<Voice[]>;
-  chapterName: string;
-  processingSegmentIds?: string[];
-  narrationUrl?: string | null;
-  scriptPromise: Promise<Script | null>;
-  jobStatePromise: Promise<AudiobookJob | null>;
-}
+export default function ScriptEditor() {
+  const params = useParams();
+  const chapterName = params.chapter
+    ? decodeURIComponent(params.chapter as string)
+    : "";
 
-export default function ScriptEditor({
-  script,
-  voicesPromise,
-  chapterName,
-  processingSegmentIds,
-  narrationUrl,
-  scriptPromise,
-  jobStatePromise,
-}: ScriptEditorProps) {
-  const [editingScript, setEditingScript] = useState<Script>(script);
   const [regenerating, setRegenerating] = useState<Record<string, boolean>>({});
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isCreatingNarration, setIsCreatingNarration] = useState(false);
 
-  const scriptData = use(scriptPromise);
-  const jobState = use(jobStatePromise);
+  const script = use(getScript(chapterName));
+  const jobState = use(getJobState());
+  const narrationUrl = use(getNarration(chapterName));
 
-  useEffect(() => {
-    setEditingScript(script);
-    setHasUnsavedChanges(false);
-  }, [script]);
+  const [editingScript, setEditingScript] = useState<Script>(
+    script || {
+      segments: [],
+      speakers: [],
+    }
+  );
+
+  const processingSegmentIds = jobState?.processing_segment_ids || undefined;
 
   const processingSet = useMemo(
     () => new Set(processingSegmentIds || []),
@@ -55,6 +46,17 @@ export default function ScriptEditor({
   const isAnySegmentRegenerating = useMemo(() => {
     return processingSet.size > 0 || Object.values(regenerating).some(Boolean);
   }, [processingSet, regenerating]);
+
+  useEffect(() => {
+    if (script) {
+      setEditingScript(script);
+      setHasUnsavedChanges(false);
+    }
+  }, [script]);
+
+  if (!script) {
+    return <div>No script found for this chapter.</div>;
+  }
 
   const clearMessages = () => {};
 
@@ -141,7 +143,6 @@ export default function ScriptEditor({
     <div className="flex flex-col gap-8">
       <CharacterVoiceMappingClient
         script={editingScript}
-        voicesPromise={voicesPromise}
         onScriptUpdate={(updatedScript: Script) => {
           setEditingScript(updatedScript);
           saveScript(updatedScript);
@@ -176,7 +177,7 @@ export default function ScriptEditor({
       />
 
       <div className="flex flex-col gap-4 max-h-[32rem] overflow-y-scroll bg-base-200 p-4 rounded">
-        {scriptData ? (
+        {script ? (
           <>
             {narrationUrl ? (
               <NarrationAudio
