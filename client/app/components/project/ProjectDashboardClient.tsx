@@ -9,8 +9,6 @@ import { handleRevalidateTag } from "@/app/actions/revalidate";
 
 import { Menu } from "lucide-react";
 
-import { getCurrentProject } from "../../actions/project";
-import { getChapters } from "../../actions/chapter";
 import { getScript } from "../../actions/script";
 import { deleteProject } from "../../actions/audiobook";
 
@@ -23,15 +21,18 @@ import VoicesDashboardClient from "../voices/VoicesDashboardClient";
 import CreateProjectForm from "./CreateProjectForm";
 import ScriptEditor from "../script/ScriptEditor";
 
-export default function ProjectDashboardClient() {
-  return (
-    <Suspense fallback={<div>Loading Project...</div>}>
-      <ProjectDashboardContent />
-    </Suspense>
-  );
+interface ProjectDashboardClientProps {
+  project: {
+    name: string;
+    user_id: string;
+  } | null;
+  chapters: string[];
 }
 
-function ProjectDashboardContent() {
+export default function ProjectDashboardClient({
+  project: propProject,
+  chapters: propChapters,
+}: ProjectDashboardClientProps) {
   const router = useRouter();
   const params = useParams();
   const [isDeletingProject, setIsDeletingProject] = useState(false);
@@ -40,8 +41,8 @@ function ProjectDashboardContent() {
     ? decodeURIComponent(params.chapter as string)
     : null;
 
-  const project = use(getCurrentProject());
-  const chapters = use(getChapters());
+  const project = propProject;
+  const chapters = propChapters || [];
   const currentScript = selectedChapter
     ? use(getScript(selectedChapter))
     : null;

@@ -15,5 +15,5 @@ export default async function ProjectHome() {
     redirect(`/project/${encodeURIComponent(chapters[0])}`);
   }
 
-  return <ProjectDashboardClient />;
+  return <ProjectDashboardClient project={project} chapters={chapters} />;
 }
