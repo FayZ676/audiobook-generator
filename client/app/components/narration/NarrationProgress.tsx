@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Script } from "../../actions/script";
 import {
   calculateWordCount,
-  estimateNarrationDuration,
+  estimateNarrationDurationSeconds,
 } from "../../utils/narrationEstimation";
 
 interface NarrationProgressProps {
@@ -21,7 +21,7 @@ export default function NarrationProgress({
 
   const wordCount = useMemo(() => calculateWordCount(script), [script]);
   const estimatedDurationSeconds = useMemo(
-    () => estimateNarrationDuration(wordCount),
+    () => estimateNarrationDurationSeconds(wordCount),
     [wordCount]
   );
 
