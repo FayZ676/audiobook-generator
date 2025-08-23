@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use, useEffect, useState, Suspense } from "react";
+import React, { use, useState, Suspense } from "react";
 import { useRouter, useParams } from "next/navigation";
 
 import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
@@ -34,7 +34,6 @@ export default function ProjectDashboardClient() {
 function ProjectDashboardContent() {
   const router = useRouter();
   const params = useParams();
-  const [isClient, setIsClient] = useState(false);
   const [isDeletingProject, setIsDeletingProject] = useState(false);
 
   const selectedChapter = params.chapter
@@ -60,28 +59,12 @@ function ProjectDashboardContent() {
     router.refresh();
   };
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
   usePusherSubscriptions({
     channels: userChannels
       ? [userChannels.SCRIPT_CHANNEL, userChannels.SPEECH_CHANNEL]
       : [],
     onUpdate: handleRevalidate,
   });
-
-  useEffect(() => {
-    if (!selectedChapter && project && chapters.length > 0) {
-      router.push(`/project/${encodeURIComponent(chapters[0])}`);
-    } else if (
-      selectedChapter &&
-      chapters.length > 0 &&
-      !chapters.includes(selectedChapter)
-    ) {
-      router.push("/project");
-    }
-  }, [selectedChapter, project, chapters, router]);
 
   const handleChapterSelect = (chapter: string) => {
     router.push(`/project/${encodeURIComponent(chapter)}`);
@@ -121,8 +104,7 @@ function ProjectDashboardContent() {
                     <label htmlFor="my-drawer" className="btn drawer-button">
                       <Menu size={16} />
                     </label>
-                    {/* TODO: Why does only this suffer from hydration errors? */}
-                    {isClient && <h3 className="mt-0 mb-0">{project.name}</h3>}
+                    <h3 className="mt-0 mb-0">{project.name}</h3>
                   </div>
                   {selectedChapter && (
                     <div className="flex items-center ">
