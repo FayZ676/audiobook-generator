@@ -8,16 +8,21 @@ import { Plus } from "lucide-react";
 
 import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
 import { useUserChannels } from "@/app/lib/pusher-channels";
-
-import { getVoices } from "../../actions/voices";
+import type { Voice } from "../../actions/voices";
 import { handleRevalidateTag } from "@/app/actions/revalidate";
 
 import VoiceAddModal from "./VoiceAddModal";
 import VoiceCard from "./VoiceCard";
 
-export default function VoicesDashboardClient() {
+interface VoicesDashboardClientProps {
+  voicesPromise: Promise<Voice[]>;
+}
+
+export default function VoicesDashboardClient({
+  voicesPromise,
+}: VoicesDashboardClientProps) {
   const router = useRouter();
-  const voices = use(getVoices());
+  const voices = use(voicesPromise);
   const userChannels = useUserChannels();
   const [isModalOpen, setIsModalOpen] = useState(false);
 

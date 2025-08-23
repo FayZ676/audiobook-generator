@@ -7,21 +7,28 @@ import { useRouter, useParams } from "next/navigation";
 import { handleRevalidateTag } from "@/app/actions/revalidate";
 import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
 import { useUserChannels } from "@/app/lib/pusher-channels";
-
-import { getJobState } from "../../actions/job";
-import { getScript } from "../../actions/script";
+import type { AudiobookJob } from "@/app/actions/job";
+import type { Script } from "@/app/actions/script";
 import Tip from "../ui/Tip";
 import NarrationProgress from "../narration/NarrationProgress";
 
-export default function JobStateClient() {
+interface JobStateClientProps {
+  jobStatePromise: Promise<AudiobookJob | null>;
+  scriptPromise: Promise<Script | null> | null;
+}
+
+export default function JobStateClient({
+  jobStatePromise,
+  scriptPromise,
+}: JobStateClientProps) {
   const router = useRouter();
   const params = useParams();
   const selectedChapter = params.chapter
     ? decodeURIComponent(params.chapter as string)
     : null;
 
-  const jobState = use(getJobState());
-  const script = selectedChapter ? use(getScript(selectedChapter)) : null;
+  const jobState = use(jobStatePromise);
+  const script = selectedChapter && scriptPromise ? use(scriptPromise) : null;
   const userChannels = useUserChannels();
 
   usePusherSubscriptions({

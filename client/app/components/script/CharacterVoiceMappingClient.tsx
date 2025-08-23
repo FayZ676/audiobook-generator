@@ -2,7 +2,7 @@
 
 import React, { use, useState, useCallback } from "react";
 import { Script } from "@/app/actions/script";
-import { getVoices } from "@/app/actions/voices";
+import type { Voice } from "@/app/actions/voices";
 import { ManualCharacter } from "@/app/types";
 import AddCharacterModal from "./AddCharacterModal";
 
@@ -10,6 +10,7 @@ interface CharacterVoiceMappingClientProps {
   script: Script;
   onScriptUpdate: (updatedScript: Script) => void;
   onAddCharacter: (character: ManualCharacter) => void;
+  voicesPromise: Promise<Voice[]>;
 }
 
 interface CharacterMapping {
@@ -28,9 +29,10 @@ export default function CharacterVoiceMappingClient({
   script,
   onScriptUpdate,
   onAddCharacter,
+  voicesPromise,
 }: CharacterVoiceMappingClientProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const voices = use(getVoices());
+  const voices = use(voicesPromise);
 
   const handleCharacterVoiceChange = useCallback(
     (characterName: string, voiceName: string) => {

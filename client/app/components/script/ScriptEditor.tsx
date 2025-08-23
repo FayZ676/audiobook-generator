@@ -4,18 +4,32 @@ import React, { useState, useEffect, useMemo, use } from "react";
 import { useParams } from "next/navigation";
 import { RotateCw, LoaderCircle } from "lucide-react";
 
-import { Script, updateScript, getScript } from "@/app/actions/script";
+import { Script, updateScript } from "@/app/actions/script";
 import { regenerateSegment, getSegmentAudioUrl } from "@/app/actions/segments";
 import { ManualCharacter } from "@/app/types";
-import { createNarration, getNarration } from "@/app/actions/narrate";
-import { getJobState } from "@/app/actions/job";
+import { createNarration } from "@/app/actions/narrate";
+import type { NarrationUrl } from "@/app/actions/narrate";
+import type { AudiobookJob } from "@/app/actions/job";
+import type { Voice } from "@/app/actions/voices";
 
 import CharacterVoiceMappingClient from "@/app/components/script/CharacterVoiceMappingClient";
 import AudioPlayer from "@/app/components/audio/AudioPlayer";
 import NarrationAudio from "@/app/components/narration/NarrationAudio";
 import TextArea from "@/app/components/ui/TextArea";
 
-export default function ScriptEditor() {
+interface ScriptEditorProps {
+  scriptPromise: Promise<Script | null>;
+  jobStatePromise: Promise<AudiobookJob | null>;
+  narrationPromise: Promise<NarrationUrl | null>;
+  voicesPromise?: Promise<Voice[]>;
+}
+
+export default function ScriptEditor({
+  scriptPromise,
+  jobStatePromise,
+  narrationPromise,
+  voicesPromise,
+}: ScriptEditorProps) {
   const params = useParams();
   const chapterName = params.chapter
     ? decodeURIComponent(params.chapter as string)
@@ -25,9 +39,9 @@ export default function ScriptEditor() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isCreatingNarration, setIsCreatingNarration] = useState(false);
 
-  const script = use(getScript(chapterName));
-  const jobState = use(getJobState());
-  const narrationUrl = use(getNarration(chapterName));
+  const script = use(scriptPromise);
+  const jobState = use(jobStatePromise);
+  const narrationUrl = use(narrationPromise);
 
   const [editingScript, setEditingScript] = useState<Script>(
     script || {
@@ -174,6 +188,7 @@ export default function ScriptEditor() {
             saveScript(updatedScript);
           }
         }}
+        voicesPromise={voicesPromise as Promise<Voice[]>}
       />
 
       <div className="flex flex-col gap-4 max-h-[32rem] overflow-y-scroll bg-base-200 p-4 rounded">

@@ -4,6 +4,10 @@ import ProjectDashboardClient from "@/app/components/project/ProjectDashboardCli
 import { getCurrentProject } from "@/app/actions/project";
 import { getChapters } from "@/app/actions/chapter";
 import { redirect } from "next/navigation";
+import { getJobState } from "@/app/actions/job";
+import { getVoices } from "@/app/actions/voices";
+import { getScript } from "@/app/actions/script";
+import { getNarration } from "@/app/actions/narrate";
 
 // Force dynamic rendering since this page uses authentication
 export const dynamic = "force-dynamic";
@@ -27,5 +31,19 @@ export default async function ProjectChapterPage({
     redirect("/project");
   }
 
-  return <ProjectDashboardClient project={project} chapters={chapters} />;
+  const jobStatePromise = getJobState();
+  const voicesPromise = getVoices();
+  const scriptPromise = getScript(currentChapter);
+  const narrationPromise = getNarration(currentChapter);
+
+  return (
+    <ProjectDashboardClient
+      project={project}
+      chapters={chapters}
+      jobStatePromise={jobStatePromise}
+      voicesPromise={voicesPromise}
+      scriptPromise={scriptPromise}
+      narrationPromise={narrationPromise}
+    />
+  );
 }

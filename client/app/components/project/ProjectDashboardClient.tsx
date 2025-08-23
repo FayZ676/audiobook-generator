@@ -9,8 +9,11 @@ import { handleRevalidateTag } from "@/app/actions/revalidate";
 
 import { Menu } from "lucide-react";
 
-import { getScript } from "../../actions/script";
+import type { Script } from "../../actions/script";
 import { deleteProject } from "../../actions/audiobook";
+import type { AudiobookJob } from "../../actions/job";
+import type { Voice } from "../../actions/voices";
+import type { NarrationUrl } from "@/app/actions/narrate";
 
 import GenerateScriptForm from "../script/GenerateScriptForm";
 
@@ -27,11 +30,19 @@ interface ProjectDashboardClientProps {
     user_id: string;
   } | null;
   chapters: string[];
+  jobStatePromise: Promise<AudiobookJob | null>;
+  voicesPromise: Promise<Voice[]>;
+  scriptPromise?: Promise<Script | null> | null;
+  narrationPromise?: Promise<NarrationUrl | null> | null;
 }
 
 export default function ProjectDashboardClient({
   project: propProject,
   chapters: propChapters,
+  jobStatePromise,
+  voicesPromise,
+  scriptPromise,
+  narrationPromise,
 }: ProjectDashboardClientProps) {
   const router = useRouter();
   const params = useParams();
@@ -43,9 +54,8 @@ export default function ProjectDashboardClient({
 
   const project = propProject;
   const chapters = propChapters || [];
-  const currentScript = selectedChapter
-    ? use(getScript(selectedChapter))
-    : null;
+  const currentScript =
+    selectedChapter && scriptPromise ? use(scriptPromise) : null;
   const userChannels = useUserChannels();
 
   const handleRevalidate = async () => {
@@ -96,7 +106,10 @@ export default function ProjectDashboardClient({
           <div className="flex-1 flex flex-col">
             <div className="flex-1 space-y-4 overflow-y-auto">
               <Suspense fallback={<div>Loading job state...</div>}>
-                <JobStateClient />
+                <JobStateClient
+                  jobStatePromise={jobStatePromise}
+                  scriptPromise={selectedChapter ? scriptPromise ?? null : null}
+                />
               </Suspense>
 
               <div className="space-y-8">
@@ -125,8 +138,17 @@ export default function ProjectDashboardClient({
                 )}
 
                 {selectedChapter && !hasNoScript && (
-                  <Suspense fallback={<div>Loading Script Editor...</div>}>
-                    <ScriptEditor />
+                  <Suspense fallback={<div>Loading script editor...</div>}>
+                    <ScriptEditor
+                      scriptPromise={scriptPromise as Promise<Script | null>}
+                      jobStatePromise={jobStatePromise}
+                      narrationPromise={
+                        selectedChapter
+                          ? (narrationPromise as Promise<NarrationUrl | null>)
+                          : Promise.resolve(null)
+                      }
+                      voicesPromise={voicesPromise}
+                    />
                   </Suspense>
                 )}
               </div>
@@ -156,7 +178,7 @@ export default function ProjectDashboardClient({
             <li>
               <div className="flex flex-col p-0 hover:bg-transparent active:!bg-transparent active:!text-base-content">
                 <Suspense fallback={<div>Loading voices...</div>}>
-                  <VoicesDashboardClient />
+                  <VoicesDashboardClient voicesPromise={voicesPromise} />
                 </Suspense>
               </div>
             </li>
