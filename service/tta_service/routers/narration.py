@@ -30,17 +30,37 @@ import json
 router = APIRouter()
 
 
+def _check_endpoint_health(response: requests.Response) -> bool:
+    """Check if an endpoint is healthy by parsing its JSON response."""
+    try:
+        if response.status_code != 200:
+            return False
+        response_data = response.json()
+        return response_data.get("workers", {}).get("ready", 0) > 0
+    except (requests.exceptions.JSONDecodeError, KeyError, ValueError):
+        return False
+
+
 @router.get("/narration/endpoint")
 def get_endpoint() -> NarrationEndpointDetails:
     headers = {"Authorization": f"Bearer {SPEECH_SERVICE_API_KEY}"}
-    gpu_response = requests.get(
-        url=f"{SPEECH_API_URL_GPU}/health", headers=headers, timeout=5
-    )
-    cpu_response = requests.get(
-        url=f"{SPEECH_API_URL_CPU}/health", headers=headers, timeout=5
-    )
-    is_gpu_ready = gpu_response.json()["workers"]["ready"] > 0
-    is_cpu_ready = cpu_response.json()["workers"]["ready"] > 0
+    
+    try:
+        gpu_response = requests.get(
+            url=f"{SPEECH_API_URL_GPU}/health", headers=headers, timeout=5
+        )
+    except (requests.exceptions.RequestException, Exception):
+        gpu_response = None
+    
+    try:
+        cpu_response = requests.get(
+            url=f"{SPEECH_API_URL_CPU}/health", headers=headers, timeout=5
+        )
+    except (requests.exceptions.RequestException, Exception):
+        cpu_response = None
+        
+    is_gpu_ready = gpu_response is not None and _check_endpoint_health(gpu_response)
+    is_cpu_ready = cpu_response is not None and _check_endpoint_health(cpu_response)
     endpoint = (
         SPEECH_API_URL_GPU
         if is_gpu_ready
