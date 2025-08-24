@@ -35,6 +35,12 @@ class BuildNarrationRequest(BaseModel):
     voices: list[Voice]
     chapter_name: str
     segment_ids: list[str] | None = None
+    endpoint: str
+
+
+class NarrationEndpointDetails(BaseModel):
+    endpoint: str
+    words_per_minute: int
 
 
 class AddVoiceRequest(BaseModel):

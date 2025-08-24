@@ -10,44 +10,18 @@ import { useUserChannels } from "@/app/lib/pusher-channels";
 import type { AudiobookJob } from "@/app/actions/job";
 import type { Script } from "@/app/actions/script";
 import Tip from "../ui/Tip";
-import NarrationProgress from "../narration/NarrationProgress";
-import { calculateWordCount } from "@/app/utils/narrationEstimation";
 
 interface JobStateClientProps {
   jobStatePromise: Promise<AudiobookJob | null>;
   scriptPromise: Promise<Script | null> | null;
 }
 
-function calculateNarrationWordCount(
-  script: Script,
-  processingSegmentIds?: string[] | null
-): number {
-  let toCount;
-
-  if (!processingSegmentIds || processingSegmentIds.length === 0) {
-    toCount = script;
-  } else {
-    const processingSegments = script.segments.filter(
-      (seg) => seg.id && processingSegmentIds.includes(seg.id)
-    );
-    toCount = { ...script, segments: processingSegments };
-  }
-
-  return calculateWordCount(toCount);
-}
-
 export default function JobStateClient({
   jobStatePromise,
-  scriptPromise,
 }: JobStateClientProps) {
   const router = useRouter();
   const params = useParams();
-  const selectedChapter = params.chapter
-    ? decodeURIComponent(params.chapter as string)
-    : null;
-
   const jobState = use(jobStatePromise);
-  const script = selectedChapter && scriptPromise ? use(scriptPromise) : null;
   const userChannels = useUserChannels();
 
   usePusherSubscriptions({
@@ -73,20 +47,10 @@ export default function JobStateClient({
       {jobState?.narration_status &&
         jobState?.narration_status === "processing" && (
           <>
-            {script ? (
-              <NarrationProgress
-                narrationStartedAt={jobState.narration_started_at}
-                wordCount={calculateNarrationWordCount(
-                  script,
-                  jobState?.processing_segment_ids
-                )}
-              />
-            ) : (
-              <>
-                Generating narration{" "}
-                <span className="loading loading-dots loading-xs"></span>
-              </>
-            )}
+            <Tip variant="info">
+              Generating Narration{" "}
+              <span className="loading loading-dots loading-xs"></span>
+            </Tip>
           </>
         )}
       {jobState?.script_status && jobState?.script_status === "failed" && (

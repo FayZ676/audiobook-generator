@@ -4,6 +4,7 @@ import { revalidateTag } from "next/cache";
 
 import { getUserId } from "./user";
 import { apiCallVoid, apiCallJson } from "../lib/api";
+import { NarrationEndpointDetails } from "../types";
 
 import { getVoices, Voice } from "./voices";
 
@@ -16,8 +17,14 @@ interface NarrationRequest {
 export type NarrationUrl = string;
 
 export async function createNarration(chapterName: string) {
-  const userId = await getUserId();
+  const endpointDetails = await getNarrationEndpoint();
+  if (!endpointDetails.endpoint) {
+    throw new Error(
+      "Sorry, not enough resources available to create narration. Please try again later."
+    );
+  }
 
+  const userId = await getUserId();
   const voices = await getVoices();
 
   const request: NarrationRequest = {
@@ -77,6 +84,21 @@ export async function deleteNarration(chapterName: string) {
     );
   } catch (error) {
     console.error("Error deleting narration:", error);
+    throw error;
+  }
+}
+
+async function getNarrationEndpoint(): Promise<NarrationEndpointDetails> {
+  try {
+    const endpointDetails = await apiCallJson<NarrationEndpointDetails>(
+      `${process.env.AUDIOBOOK_SERVICE_URL}/narration/endpoint`,
+      {
+        method: "GET",
+      }
+    );
+    return endpointDetails;
+  } catch (error) {
+    console.error("Error fetching narration endpoint:", error);
     throw error;
   }
 }

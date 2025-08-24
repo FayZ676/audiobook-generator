@@ -11,7 +11,7 @@ from tta_types.types import (
     AudiobookJob,
 )
 from tta_types.script import ScriptData
-from tta_service.types import BuildNarrationRequest
+from tta_service.types import BuildNarrationRequest, NarrationEndpointDetails
 from tta_service.config import (
     s3_client,
     SERVICE_API_URL,
@@ -30,14 +30,32 @@ import json
 router = APIRouter()
 
 
+@router.get("/narration/endpoint")
+def get_endpoint() -> NarrationEndpointDetails:
+    headers = {"Authorization": f"Bearer {SPEECH_SERVICE_API_KEY}"}
+    gpu_response = requests.get(
+        url=f"{SPEECH_API_URL_GPU}/health", headers=headers, timeout=5
+    )
+    cpu_response = requests.get(
+        url=f"{SPEECH_API_URL_CPU}/health", headers=headers, timeout=5
+    )
+    is_gpu_ready = gpu_response.json()["workers"]["ready"] > 0
+    is_cpu_ready = cpu_response.json()["workers"]["ready"] > 0
+    endpoint = (
+        SPEECH_API_URL_GPU
+        if is_gpu_ready
+        else SPEECH_API_URL_CPU if is_cpu_ready else None
+    )
+    wpm = 15 if is_gpu_ready else 5 if is_cpu_ready else None
+    if not endpoint or not wpm:
+        raise HTTPException(status_code=400, detail="No endpoints are available")
+    return NarrationEndpointDetails(endpoint=endpoint, words_per_minute=wpm)
+
+
 @router.post("/narration", status_code=status.HTTP_202_ACCEPTED)
 async def build_narration(request: BuildNarrationRequest, bg_tasks: BackgroundTasks):
-    endpoint = await get_endpoint()
-    if not endpoint:
-        raise HTTPException(
-            status_code=404,
-            detail="Not enough resources available to handle your request. Try again later.",
-        )
+    if request.endpoint not in {SPEECH_API_URL_CPU, SPEECH_API_URL_GPU}:
+        raise HTTPException(status_code=400, detail="Invalid endpoint")
 
     script_data = s3_client.get_file(
         PROJECTS_BUCKET, f"{request.user_id}/{request.chapter_name}/script.json"
@@ -83,7 +101,7 @@ async def build_narration(request: BuildNarrationRequest, bg_tasks: BackgroundTa
         request.chapter_name,
         request.voices,
         speech_segments,
-        endpoint,
+        request.endpoint,
     )
     return f"{request.user_id}/{request.chapter_name}"
 
@@ -147,23 +165,6 @@ def delete_narration(user_id: str, chapter_name: str):
     if not s3_client.list_files(PROJECTS_BUCKET, project_narration_path):
         raise HTTPException(status_code=404, detail="narration not found")
     return s3_client.delete_file(PROJECTS_BUCKET, project_narration_path)
-
-
-async def get_endpoint() -> str | None:
-    headers = {"Authorization": f"Bearer {SPEECH_SERVICE_API_KEY}"}
-    gpu_response = requests.get(
-        url=f"{SPEECH_API_URL_GPU}/health", headers=headers, timeout=5
-    )
-    cpu_response = requests.get(
-        url=f"{SPEECH_API_URL_CPU}/health", headers=headers, timeout=5
-    )
-    is_gpu_ready = gpu_response.json()["workers"]["ready"] > 0
-    is_cpu_ready = cpu_response.json()["workers"]["ready"] > 0
-    return (
-        SPEECH_API_URL_GPU
-        if is_gpu_ready
-        else SPEECH_API_URL_CPU if is_cpu_ready else None
-    )
 
 
 async def send_narration_request(
