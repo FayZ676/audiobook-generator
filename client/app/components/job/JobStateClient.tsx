@@ -20,7 +20,6 @@ export default function JobStateClient({
   jobStatePromise,
 }: JobStateClientProps) {
   const router = useRouter();
-  const params = useParams();
   const jobState = use(jobStatePromise);
   const userChannels = useUserChannels();
 
