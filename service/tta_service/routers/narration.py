@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 class HealthResponse(BaseModel):
+    jobs: dict[str, int]
     workers: dict[str, int]
 
 
@@ -49,7 +50,7 @@ def _check_endpoint_health(response: requests.Response) -> bool:
         logger.info(f"Health endpoint response: {response_text}")
         
         health_data = HealthResponse.model_validate_json(response_text)
-        return health_data.workers.get("ready", 0) > 0
+        return health_data.workers.get("running", 0) > 0
     except ValidationError as e:
         logger.error(f"Health endpoint response validation failed: {e}")
         return False
@@ -61,23 +62,14 @@ def _check_endpoint_health(response: requests.Response) -> bool:
 @router.get("/narration/endpoint")
 def get_endpoint() -> NarrationEndpointDetails:
     headers = {"Authorization": f"Bearer {SPEECH_SERVICE_API_KEY}"}
-    
-    try:
-        gpu_response = requests.get(
-            url=f"{SPEECH_API_URL_GPU}/health", headers=headers, timeout=5
-        )
-    except (requests.exceptions.RequestException, Exception):
-        gpu_response = None
-    
-    try:
-        cpu_response = requests.get(
-            url=f"{SPEECH_API_URL_CPU}/health", headers=headers, timeout=5
-        )
-    except (requests.exceptions.RequestException, Exception):
-        cpu_response = None
-        
-    is_gpu_ready = gpu_response is not None and _check_endpoint_health(gpu_response)
-    is_cpu_ready = cpu_response is not None and _check_endpoint_health(cpu_response)
+    gpu_response = requests.get(
+        url=f"{SPEECH_API_URL_GPU}/health", headers=headers, timeout=5
+    )
+    cpu_response = requests.get(
+        url=f"{SPEECH_API_URL_CPU}/health", headers=headers, timeout=5
+    )
+    is_gpu_ready = _check_endpoint_health(gpu_response)
+    is_cpu_ready = _check_endpoint_health(cpu_response)
     endpoint = (
         SPEECH_API_URL_GPU
         if is_gpu_ready
