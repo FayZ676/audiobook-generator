@@ -50,7 +50,7 @@ def _check_endpoint_health(response: requests.Response) -> bool:
         logger.info(f"Health endpoint response: {response_text}")
         
         health_data = HealthResponse.model_validate_json(response_text)
-        return health_data.workers.get("running", 0) > 0
+        return health_data.workers["running"] > 0
     except ValidationError as e:
         logger.error(f"Health endpoint response validation failed: {e}")
         return False
