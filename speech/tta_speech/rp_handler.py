@@ -109,7 +109,6 @@ def _synthesize_segment(segment: SpeechRequestSegment, voices: list[Voice]):
             load_vocoder_from_local=True,
             remove_silence=False,
             ckpt_file=f"{Path(__file__).parent}/checkpoints/model_1250000.safetensors",
-            device="cpu",
         )
     )
 
@@ -123,7 +122,6 @@ def handler(event: dict):
     status = "failed"
 
     try:
-        # Synthesize requested segments (full or partial)
         segment_results: dict[str, tuple[bytes, int | None]] = {}
         for segment in request_data.text:
             segment_results[segment.id] = _synthesize_segment(
@@ -136,7 +134,6 @@ def handler(event: dict):
                 BytesIO(_build_audio([segment_results[segment.id]])),
             )
 
-        # Decide how to build final narration and manifest
         narration_key = (
             f"{request.user_id}/{request_data.chapter_name}/audio/narration.mp3"
         )
@@ -155,7 +152,6 @@ def handler(event: dict):
             status = "complete"
             data = Response(filename=narration_key, request_word_count=total_word_count)
         else:
-            # No manifest -> fallback: if full request, create manifest and stitched; else stitch only regenerated segments
             if len(request_data.text) > 1:
                 ordered_ids = [s.id for s in request_data.text]
                 manifest_segments = [
@@ -184,7 +180,6 @@ def handler(event: dict):
                     filename=narration_key, request_word_count=total_word_count
                 )
             else:
-                # Single segment without manifest: stitch only that one
                 only = next(iter(segment_results.values()))
                 s3.upload_fileobj(
                     f"{PROJECTS_BUCKET}", narration_key, BytesIO(_build_audio([only]))

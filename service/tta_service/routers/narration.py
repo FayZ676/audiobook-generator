@@ -1,5 +1,8 @@
 from datetime import datetime, timezone
+
+import requests
 from fastapi import APIRouter, BackgroundTasks, status, HTTPException
+
 from tta_types.types import (
     Voice,
     WebhookRequest,
@@ -12,7 +15,8 @@ from tta_service.types import BuildNarrationRequest
 from tta_service.config import (
     s3_client,
     SERVICE_API_URL,
-    SPEECH_API_URL,
+    SPEECH_API_URL_CPU,
+    SPEECH_API_URL_GPU,
     SPEECH_SERVICE_API_KEY,
     SPEECH_COST_PER_WORD,
     USAGE_LIMIT,
@@ -28,6 +32,13 @@ router = APIRouter()
 
 @router.post("/narration", status_code=status.HTTP_202_ACCEPTED)
 async def build_narration(request: BuildNarrationRequest, bg_tasks: BackgroundTasks):
+    endpoint = await get_endpoint()
+    if not endpoint:
+        raise HTTPException(
+            status_code=404,
+            detail="Not enough resources available to handle your request. Try again later.",
+        )
+
     script_data = s3_client.get_file(
         PROJECTS_BUCKET, f"{request.user_id}/{request.chapter_name}/script.json"
     ).decode("utf-8")
@@ -72,6 +83,7 @@ async def build_narration(request: BuildNarrationRequest, bg_tasks: BackgroundTa
         request.chapter_name,
         request.voices,
         speech_segments,
+        endpoint,
     )
     return f"{request.user_id}/{request.chapter_name}"
 
@@ -137,11 +149,29 @@ def delete_narration(user_id: str, chapter_name: str):
     return s3_client.delete_file(PROJECTS_BUCKET, project_narration_path)
 
 
+async def get_endpoint() -> str | None:
+    headers = {"Authorization": f"Bearer {SPEECH_SERVICE_API_KEY}"}
+    gpu_response = requests.get(
+        url=f"{SPEECH_API_URL_GPU}/health", headers=headers, timeout=5
+    )
+    cpu_response = requests.get(
+        url=f"{SPEECH_API_URL_CPU}/health", headers=headers, timeout=5
+    )
+    is_gpu_ready = gpu_response.json()["workers"]["ready"] > 0
+    is_cpu_ready = cpu_response.json()["workers"]["ready"] > 0
+    return (
+        SPEECH_API_URL_GPU
+        if is_gpu_ready
+        else SPEECH_API_URL_CPU if is_cpu_ready else None
+    )
+
+
 async def send_narration_request(
     user_id: str,
     chapter_name: str,
     voices: list[Voice],
     speech_segments: list[SpeechRequestSegment],
+    url: str,
 ):
     request = WebhookRequest(
         callback=f"{SERVICE_API_URL}/events",
@@ -156,7 +186,7 @@ async def send_narration_request(
     )
     # NOTE: Add /runsync endpoint when testing locally.
     send_async_request(
-        url=f"{SPEECH_API_URL}",
+        url=f"{url}",
         payload={"input": request.model_dump()},
         headers={
             "Content-Type": "application/json",

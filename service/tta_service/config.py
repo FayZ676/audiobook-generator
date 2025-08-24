@@ -11,7 +11,8 @@ PROJECTS_BUCKET = os.environ.get("PROJECTS_BUCKET", "")
 SERVICE_API_URL = os.environ.get("SERVICE_API_URL", "")
 
 SPEECH_SERVICE_API_KEY = os.environ.get("SPEECH_SERVICE_API_KEY", "")
-SPEECH_API_URL = os.environ.get("SPEECH_API_URL", "")
+SPEECH_API_URL_CPU = os.environ.get("SPEECH_API_URL_CPU", "")
+SPEECH_API_URL_GPU = os.environ.get("SPEECH_API_URL_GPU", "")
 
 SCRIPT_SERVICE_API_KEY = os.environ.get("SCRIPT_SERVICE_API_KEY", "")
 SCRIPT_API_URL = os.environ.get("SCRIPT_API_URL", "")
