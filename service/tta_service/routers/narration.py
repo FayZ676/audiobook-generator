@@ -1,7 +1,9 @@
 from datetime import datetime, timezone
+import logging
 
 import requests
 from fastapi import APIRouter, BackgroundTasks, status, HTTPException
+from pydantic import BaseModel, ValidationError
 
 from tta_types.types import (
     Voice,
@@ -29,15 +31,30 @@ import json
 
 router = APIRouter()
 
+logger = logging.getLogger(__name__)
+
+
+class HealthResponse(BaseModel):
+    workers: dict[str, int]
+
 
 def _check_endpoint_health(response: requests.Response) -> bool:
-    """Check if an endpoint is healthy by parsing its JSON response."""
+    """Check if an endpoint is healthy using Pydantic validation."""
     try:
         if response.status_code != 200:
+            logger.warning(f"Health endpoint returned status {response.status_code}")
             return False
-        response_data = response.json()
-        return response_data.get("workers", {}).get("ready", 0) > 0
-    except (requests.exceptions.JSONDecodeError, KeyError, ValueError):
+        
+        response_text = response.text
+        logger.info(f"Health endpoint response: {response_text}")
+        
+        health_data = HealthResponse.model_validate_json(response_text)
+        return health_data.workers.get("ready", 0) > 0
+    except ValidationError as e:
+        logger.error(f"Health endpoint response validation failed: {e}")
+        return False
+    except Exception as e:
+        logger.error(f"Health endpoint check failed: {e}")
         return False
 
 
