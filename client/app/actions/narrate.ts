@@ -12,6 +12,7 @@ interface NarrationRequest {
   user_id: string;
   voices: Voice[];
   chapter_name: string;
+  endpoint: string;
 }
 
 export type NarrationUrl = string;
@@ -31,6 +32,7 @@ export async function createNarration(chapterName: string) {
     user_id: userId,
     voices: voices,
     chapter_name: chapterName,
+    endpoint: endpointDetails.endpoint,
   };
 
   try {
