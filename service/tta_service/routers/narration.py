@@ -187,7 +187,7 @@ async def send_narration_request(
     )
     # NOTE: Add /runsync endpoint when testing locally.
     send_async_request(
-        url=f"{url}",
+        url=f"{url}/run",
         payload={"input": request.model_dump()},
         headers={
             "Content-Type": "application/json",
