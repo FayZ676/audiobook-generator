@@ -8,8 +8,7 @@ import runpod
 from pydub import AudioSegment
 from pydub.effects import normalize
 
-from tta_speech.infer import infer
-from tta_speech.inference_types import InferenceParams, InputData
+from tta_speech.infer import DiaTTS
 
 from tta_types.types import (
     Voice,
@@ -68,9 +67,7 @@ def _prepare_input(
             if voice.name in voice_names
         }
 
-    text = " ".join([f"[{r.voice_name}] {r.text}" for r in request])
-    voices_dict = voices_from_names([r.voice_name for r in request])
-    return InputData(text, voices_dict)
+    ...
 
 
 def _build_audio(audio_segments: list[tuple[bytes, int | None]]) -> bytes:
