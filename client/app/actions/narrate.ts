@@ -90,7 +90,7 @@ export async function deleteNarration(chapterName: string) {
   }
 }
 
-async function getNarrationEndpoint(): Promise<NarrationEndpointDetails> {
+export async function getNarrationEndpoint(): Promise<NarrationEndpointDetails> {
   try {
     const endpointDetails = await apiCallJson<NarrationEndpointDetails>(
       `${process.env.AUDIOBOOK_SERVICE_URL}/narration/endpoint`,

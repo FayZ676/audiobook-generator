@@ -4,6 +4,7 @@ import { revalidateTag } from "next/cache";
 import { getUserId } from "./user";
 import { apiCallJson, apiCallVoid } from "../lib/api";
 import { getVoices } from "./voices";
+import { getNarrationEndpoint } from "./narrate";
 
 export interface SegmentAudio {
   id: string;
@@ -49,6 +50,13 @@ export async function regenerateSegment(
   chapterName: string,
   segmentId: string
 ): Promise<void> {
+  const endpointDetails = await getNarrationEndpoint();
+  if (!endpointDetails.endpoint) {
+    throw new Error(
+      "Sorry, not enough resources available to regenerate segment. Please try again later."
+    );
+  }
+
   const userId = await getUserId();
   const voices = await getVoices();
   await apiCallVoid(`${process.env.AUDIOBOOK_SERVICE_URL}/narration`, {
@@ -59,6 +67,7 @@ export async function regenerateSegment(
       voices,
       chapter_name: chapterName,
       segment_ids: [segmentId],
+      endpoint: endpointDetails.endpoint,
     }),
   });
   revalidateTag("job");
