@@ -24,25 +24,16 @@ export default function TextArea({
   maxHeight = "12rem",
 }: TextAreaProps) {
   return (
-    <div
-      contentEditable={!disabled}
-      role="textbox"
-      aria-placeholder={placeholder}
-      className={`textarea w-full overflow-y-auto outline-none ${className}`}
+    <textarea
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      onBlur={onBlur}
+      placeholder={placeholder}
+      disabled={disabled}
+      className={`textarea w-full resize-none ${className}`}
       style={{
         minHeight,
         maxHeight,
-        opacity: disabled ? 0.6 : 1,
-        cursor: disabled ? "not-allowed" : "text",
-      }}
-      suppressContentEditableWarning={true}
-      onInput={(e) => {
-        const target = e.target as HTMLDivElement;
-        onChange(target.textContent || "");
-      }}
-      onBlur={onBlur}
-      dangerouslySetInnerHTML={{
-        __html: value || `<span class="text-gray-400">${placeholder}</span>`,
       }}
     />
   );
