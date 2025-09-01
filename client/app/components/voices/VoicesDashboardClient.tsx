@@ -32,6 +32,10 @@ export default function VoicesDashboardClient({
       await handleRevalidateTag("voices");
       router.refresh();
     },
+    onReconnection: async () => {
+      await handleRevalidateTag("voices");
+      router.refresh();
+    },
   });
 
   return (

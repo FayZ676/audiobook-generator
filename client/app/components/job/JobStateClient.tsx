@@ -23,14 +23,24 @@ export default function JobStateClient({
   const jobState = use(jobStatePromise);
   const userChannels = useUserChannels();
 
+  const isProcessing = 
+    jobState?.script_status === "processing" || 
+    jobState?.narration_status === "processing";
+
+  const handleUpdateState = async () => {
+    await handleRevalidateTag("job");
+    router.refresh();
+  };
+
   usePusherSubscriptions({
     channels: userChannels
       ? [userChannels.SPEECH_CHANNEL, userChannels.SCRIPT_CHANNEL]
       : null,
-    onUpdate: async () => {
-      await handleRevalidateTag("job");
-      router.refresh();
-    },
+    onUpdate: handleUpdateState,
+    onReconnection: handleUpdateState,
+    enablePolling: true,
+    pollingInterval: 5000,
+    shouldPoll: () => isProcessing,
   });
 
   return (

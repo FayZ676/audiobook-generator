@@ -57,6 +57,12 @@ export default function ProjectDashboardClient({
   const currentScript =
     selectedChapter && scriptPromise ? use(scriptPromise) : null;
   const userChannels = useUserChannels();
+  
+  // Use jobState to determine if we should poll
+  const jobState = use(jobStatePromise);
+  const isProcessing = 
+    jobState?.script_status === "processing" || 
+    jobState?.narration_status === "processing";
 
   const handleRevalidate = async () => {
     await Promise.all([
@@ -75,6 +81,10 @@ export default function ProjectDashboardClient({
       ? [userChannels.SCRIPT_CHANNEL, userChannels.SPEECH_CHANNEL]
       : [],
     onUpdate: handleRevalidate,
+    onReconnection: handleRevalidate,
+    enablePolling: true,
+    pollingInterval: 5000,
+    shouldPoll: () => isProcessing,
   });
 
   const handleChapterSelect = (chapter: string) => {
