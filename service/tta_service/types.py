@@ -43,6 +43,10 @@ class NarrationEndpointDetails(BaseModel):
     words_per_minute: int
 
 
+class ScriptEndpointDetails(BaseModel):
+    endpoint: str
+
+
 class AddVoiceRequest(BaseModel):
     name: str
     age: Age

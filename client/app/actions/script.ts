@@ -6,7 +6,7 @@ import { apiCallVoid, apiCallJson } from "../lib/api";
 
 import { z } from "zod";
 
-import { AgeEnum, GenderEnum } from "../types";
+import { AgeEnum, GenderEnum, ScriptEndpointDetails } from "../types";
 
 const CharacterSchema = z.object({
   names: z.array(z.string()),
@@ -56,10 +56,32 @@ interface UpdateScriptProps {
 
 export type Script = z.infer<typeof ScriptSchema>;
 
+export async function getScriptEndpoint(): Promise<ScriptEndpointDetails> {
+  try {
+    const endpointDetails = await apiCallJson<ScriptEndpointDetails>(
+      `${process.env.AUDIOBOOK_SERVICE_URL}/script/endpoint`,
+      {
+        method: "GET",
+      }
+    );
+    return endpointDetails;
+  } catch (error) {
+    console.error("Error fetching script endpoint:", error);
+    throw error;
+  }
+}
+
 export async function createScript({
   textContent,
   chapterName: chapterName,
 }: CreateScriptProps) {
+  const endpointDetails = await getScriptEndpoint();
+  if (!endpointDetails.endpoint) {
+    throw new Error(
+      "Sorry, not enough resources available to create script. Please try again later."
+    );
+  }
+
   const userId = await getUserId();
 
   const request: BuildScriptRequest = {

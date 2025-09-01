@@ -15,3 +15,7 @@ export interface NarrationEndpointDetails {
   endpoint: string;
   words_per_minute: number;
 }
+
+export interface ScriptEndpointDetails {
+  endpoint: string;
+}
