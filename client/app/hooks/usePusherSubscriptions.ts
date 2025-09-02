@@ -10,7 +10,6 @@ interface UsePusherSubscriptionsOptions {
   channels: (ChannelConfig | null)[] | null;
   onUpdate?: (channel: string, event: string, data?: unknown) => void;
   onReconnection?: () => void;
-  enablePolling?: boolean;
   pollingInterval?: number;
   shouldPoll?: () => boolean;
 }
@@ -19,7 +18,6 @@ export const usePusherSubscriptions = ({
   channels,
   onUpdate,
   onReconnection,
-  enablePolling = false,
   pollingInterval = 5000,
   shouldPoll,
 }: UsePusherSubscriptionsOptions) => {
@@ -27,15 +25,14 @@ export const usePusherSubscriptions = ({
   const hasInitializedRef = useRef(false);
 
   const startPolling = useCallback(() => {
-    if (!enablePolling || !shouldPoll || pollingIntervalRef.current) return;
-    
+    if (!shouldPoll || pollingIntervalRef.current) return;
+
     pollingIntervalRef.current = setInterval(() => {
       if (shouldPoll?.()) {
         onReconnection?.();
       }
     }, pollingInterval);
-  }, [enablePolling, shouldPoll, onReconnection, pollingInterval]);
-
+  }, [shouldPoll, onReconnection, pollingInterval]);
   const stopPolling = useCallback(() => {
     if (pollingIntervalRef.current) {
       clearInterval(pollingIntervalRef.current);
@@ -44,14 +41,10 @@ export const usePusherSubscriptions = ({
   }, []);
 
   useEffect(() => {
-    if (!channels || channels.length === 0) {
-      stopPolling();
-      return;
-    }
-
-    const validChannels = channels.filter(
-      (channel): channel is ChannelConfig => channel !== null
-    );
+    const validChannels =
+      channels?.filter(
+        (channel): channel is ChannelConfig => channel !== null
+      ) || [];
 
     if (validChannels.length === 0) {
       stopPolling();
@@ -68,54 +61,41 @@ export const usePusherSubscriptions = ({
       const channelInstance = pusherClient.subscribe(channel);
 
       events.forEach((event: string) => {
-        const handler = (data?: unknown) => {
+        channelInstance.bind(event, (data?: unknown) => {
           onUpdate?.(channel, event, data);
-        };
-        channelInstance.bind(event, handler);
+        });
       });
 
       return { channel, channelInstance, events };
     });
 
-    // Handle Pusher connection state changes
-    const handleConnected = () => {
-      // When reconnected, sync state to catch any missed events
-      onReconnection?.();
-    };
-
-    const handleDisconnected = () => {
-      // Start polling when disconnected to ensure we don't miss updates
-      if (enablePolling) {
-        startPolling();
+    if (onReconnection) {
+      pusherClient.connection.bind("connected", onReconnection);
+    }
+    pusherClient.connection.bind("disconnected", startPolling);
+    pusherClient.connection.bind(
+      "state_change",
+      (states: { current: string; previous: string }) => {
+        if (
+          states.previous === "disconnected" &&
+          states.current === "connected"
+        ) {
+          stopPolling();
+          onReconnection?.();
+        }
       }
-    };
-
-    const handleReconnected = () => {
-      // Stop polling when reconnected and sync state
-      stopPolling();
-      onReconnection?.();
-    };
-
-    // Bind to connection state events
-    pusherClient.connection.bind('connected', handleConnected);
-    pusherClient.connection.bind('disconnected', handleDisconnected);
-    pusherClient.connection.bind('state_change', (states: { current: string; previous: string }) => {
-      if (states.previous === 'disconnected' && states.current === 'connected') {
-        handleReconnected();
-      }
-    });
+    );
 
     // Start polling if we should be polling
-    if (enablePolling && shouldPoll?.()) {
-      startPolling();
-    }
+    startPolling();
 
     return () => {
-      // Unbind connection state events
-      pusherClient.connection.unbind('connected', handleConnected);
-      pusherClient.connection.unbind('disconnected', handleDisconnected);
-      pusherClient.connection.unbind('state_change');
-      
+      if (onReconnection) {
+        pusherClient.connection.unbind("connected", onReconnection);
+      }
+      pusherClient.connection.unbind("disconnected", startPolling);
+      pusherClient.connection.unbind("state_change");
+
       stopPolling();
 
       subscriptions.forEach(({ channel, channelInstance, events }) => {
@@ -125,5 +105,12 @@ export const usePusherSubscriptions = ({
         pusherClient.unsubscribe(channel);
       });
     };
-  }, [channels, onUpdate, onReconnection, startPolling, stopPolling, enablePolling, shouldPoll]);
+  }, [
+    channels,
+    onUpdate,
+    onReconnection,
+    startPolling,
+    stopPolling,
+    shouldPoll,
+  ]);
 };
