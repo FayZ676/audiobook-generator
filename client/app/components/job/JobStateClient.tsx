@@ -23,8 +23,8 @@ export default function JobStateClient({
   const jobState = use(jobStatePromise);
   const userChannels = useUserChannels();
 
-  const isProcessing = 
-    jobState?.script_status === "processing" || 
+  const isProcessing =
+    jobState?.script_status === "processing" ||
     jobState?.narration_status === "processing";
 
   const handleUpdateState = async () => {
@@ -38,7 +38,6 @@ export default function JobStateClient({
       : null,
     onUpdate: handleUpdateState,
     onReconnection: handleUpdateState,
-    enablePolling: true,
     pollingInterval: 5000,
     shouldPoll: () => isProcessing,
   });
