@@ -57,11 +57,11 @@ export default function ProjectDashboardClient({
   const currentScript =
     selectedChapter && scriptPromise ? use(scriptPromise) : null;
   const userChannels = useUserChannels();
-  
+
   // Use jobState to determine if we should poll
   const jobState = use(jobStatePromise);
-  const isProcessing = 
-    jobState?.script_status === "processing" || 
+  const isProcessing =
+    jobState?.script_status === "processing" ||
     jobState?.narration_status === "processing";
 
   const handleRevalidate = async () => {
@@ -82,7 +82,6 @@ export default function ProjectDashboardClient({
       : [],
     onUpdate: handleRevalidate,
     onReconnection: handleRevalidate,
-    enablePolling: true,
     pollingInterval: 5000,
     shouldPoll: () => isProcessing,
   });
