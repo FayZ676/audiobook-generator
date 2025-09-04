@@ -7,6 +7,7 @@ interface ChannelConfig {
 }
 
 interface UsePusherSubscriptionsOptions {
+  // TODO: channels shouldn't be allowed to be null[] | null.
   channels: (ChannelConfig | null)[] | null;
   onUpdate?: (channel: string, event: string, data?: unknown) => void;
 }
