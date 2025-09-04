@@ -16,6 +16,8 @@ export const usePusherSubscriptions = ({
   onUpdate,
 }: UsePusherSubscriptionsOptions) => {
   useEffect(() => {
+    // TODO: If pusher.client is in connected state, we should revalidate the data of whatever component uses this hook.
+
     if (!channels || channels.length === 0) {
       return;
     }
