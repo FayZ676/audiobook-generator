@@ -1,11 +1,10 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { UserResource } from "@clerk/types";
-import { ReactElement, cloneElement } from "react";
+import { ReactNode } from "react";
 
 interface ClerkWrapperProps {
-  children: ReactElement<{ user: UserResource }>;
+  children: (userId: string) => ReactNode;
 }
 
 export default function ClerkWrapper({ children }: ClerkWrapperProps) {
@@ -20,5 +19,5 @@ export default function ClerkWrapper({ children }: ClerkWrapperProps) {
     return <div>Sign In</div>;
   }
 
-  return cloneElement(children, { user });
+  return <>{children(user.id)}</>;
 }
