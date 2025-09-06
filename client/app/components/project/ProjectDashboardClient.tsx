@@ -173,10 +173,7 @@ export default function ProjectDashboardClient({
             <li>
               <div className="flex flex-col p-0 hover:bg-transparent active:!bg-transparent active:!text-base-content">
                 <Suspense fallback={<div>Loading voices...</div>}>
-                  <VoicesDashboardClient
-                    userId={userId}
-                    voicesPromise={voicesPromise}
-                  />
+                  <VoicesDashboardClient voicesPromise={voicesPromise} />
                 </Suspense>
               </div>
             </li>

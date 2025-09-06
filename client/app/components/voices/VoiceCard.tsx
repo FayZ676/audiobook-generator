@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Trash2, LoaderCircle } from "lucide-react";
 
 import { Voice, deleteVoice, getVoiceAudioUrl } from "../../actions/voices";
@@ -16,6 +17,7 @@ export function isUserCreatedVoice(voice: Voice): boolean {
 }
 
 export default function VoiceCard({ voice }: VoiceCardProps) {
+  const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
 
   const isUserCreated = isUserCreatedVoice(voice);
@@ -26,6 +28,7 @@ export default function VoiceCard({ voice }: VoiceCardProps) {
     setIsDeleting(true);
     try {
       await deleteVoice(voice.name);
+      router.refresh();
     } catch (error) {
       console.error("Failed to delete voice:", error);
       alert("Failed to delete voice. Please try again.");
