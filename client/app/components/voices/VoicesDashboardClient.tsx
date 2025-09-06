@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 
 import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
-import { useUserChannels } from "@/app/lib/pusher-channels";
+import { getUserSpecificChannels } from "@/app/lib/pusher-channels";
 import type { Voice } from "../../actions/voices";
 import { handleRevalidateTag } from "@/app/actions/revalidate";
 
@@ -15,19 +15,22 @@ import VoiceAddModal from "./VoiceAddModal";
 import VoiceCard from "./VoiceCard";
 
 interface VoicesDashboardClientProps {
+  userId: string;
   voicesPromise: Promise<Voice[]>;
 }
 
 export default function VoicesDashboardClient({
+  userId,
   voicesPromise,
 }: VoicesDashboardClientProps) {
   const router = useRouter();
   const voices = use(voicesPromise);
-  const userChannels = useUserChannels();
+  const userChannels = getUserSpecificChannels(userId);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // TODO: Why does this component need pusher?
   usePusherSubscriptions({
-    channels: userChannels ? [userChannels.VOICES_CHANNEL] : null,
+    channels: [userChannels.VOICES_CHANNEL],
     onUpdate: async () => {
       await handleRevalidateTag("voices");
       router.refresh();
