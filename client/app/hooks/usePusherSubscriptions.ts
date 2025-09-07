@@ -30,7 +30,7 @@ export const usePusherSubscriptions = ({
       const channelInstance = pusherClient.subscribe(channel);
 
       events.forEach((event: string) => {
-        const handler = (data?: unknown) => {
+        const handler = () => {
           onUpdate();
         };
         channelInstance.bind(event, handler);
