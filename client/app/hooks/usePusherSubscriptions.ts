@@ -8,7 +8,7 @@ interface ChannelConfig {
 
 interface UsePusherSubscriptionsOptions {
   channels: ChannelConfig[];
-  onUpdate?: (channel: string, event: string, data?: unknown) => void;
+  onUpdate: () => void;
 }
 
 export const usePusherSubscriptions = ({
@@ -16,14 +16,22 @@ export const usePusherSubscriptions = ({
   onUpdate,
 }: UsePusherSubscriptionsOptions) => {
   useEffect(() => {
-    // TODO: If pusher.client is in connected state, we should revalidate the data of whatever component uses this hook.
+    const handleStateChange = (states: {
+      previous: string;
+      current: string;
+    }) => {
+      if (states.previous === "connecting" && states.current === "connected") {
+        onUpdate();
+      }
+    };
 
+    pusherClient.connection.bind("state_change", handleStateChange);
     const subscriptions = channels.map(({ channel, events }) => {
       const channelInstance = pusherClient.subscribe(channel);
 
       events.forEach((event: string) => {
         const handler = (data?: unknown) => {
-          onUpdate?.(channel, event, data);
+          onUpdate();
         };
         channelInstance.bind(event, handler);
       });
@@ -32,6 +40,7 @@ export const usePusherSubscriptions = ({
     });
 
     return () => {
+      pusherClient.connection.unbind("state_change", handleStateChange);
       subscriptions.forEach(({ channel, channelInstance, events }) => {
         events.forEach((event: string) => {
           channelInstance.unbind(event);
