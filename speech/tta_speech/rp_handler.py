@@ -42,8 +42,8 @@ def normalize_audio_volume(audio_path: str, headroom: float = 0.1) -> str:
 
 # NOTE: I hate that we need to download the audio.
 def _prepare_input(
-    request: list[SpeechRequestSegment], voices: list[Voice], voice_save_path: str
-) -> InputData:
+    request: SpeechRequestSegment, voice: Voice, voice_save_path: str
+) -> str:
     def download_audio(audio_path: str):
         audio = s3.get_file(VOICES_BUCKET, audio_path)
         temp_audio_path = f"{voice_save_path}/{audio_path.split('/')[-1]}"
@@ -67,7 +67,8 @@ def _prepare_input(
             if voice.name in voice_names
         }
 
-    ...
+    # TODO: Complete
+    return ""
 
 
 def _build_audio(audio_segments: list[tuple[bytes, int | None]]) -> bytes:
@@ -94,20 +95,25 @@ def _concat_mp3_from_keys(keys: list[str]) -> bytes:
     return out.getvalue()
 
 
-def _synthesize_segment(segment: SpeechRequestSegment, voices: list[Voice]):
-    text_input = _prepare_input([segment], voices, voice_save_path="/tmp")
-    return infer(
-        InferenceParams(
-            gen_text=text_input.text,
-            voices=text_input.voices,
-            vocab_file=f"{Path(__file__).parent}/vocab.txt",
-            vocoder_name="vocos",
-            vocoder_local_path=f"{Path(__file__).parent}/vocos",
-            load_vocoder_from_local=True,
-            remove_silence=False,
-            ckpt_file=f"{Path(__file__).parent}/checkpoints/model_1250000.safetensors",
-        )
+def _synthesize_segment(
+    segment: SpeechRequestSegment, voice: Voice
+) -> tuple[bytes, int | None]:
+    # TODO: Preprocess the text to be in the format dia needs for inference.
+    text = segment.text
+    # TODO: Fetch and download the voice audio using the voice.audio_path. Don't download if already downloaded.
+    audio_path = voice.audio_path
+    DiaTTS().generate(
+        text=text,
+        reference_audio_path=audio_path,
+        reference_audio_transcript=voice.audio_transcript,
+        output_path="",  # TODO: Where should we save?
     )
+    # TODO: We need to return the audio in this format. Or do we?
+    return (b"", 0)
+
+
+def get_voice_for_name(voices: list[Voice], voice_name: str):
+    return next(voice for voice in voices if voice.name == voice_name)
 
 
 def handler(event: dict):
@@ -122,12 +128,14 @@ def handler(event: dict):
         segment_results: dict[str, tuple[bytes, int | None]] = {}
         for segment in request_data.text:
             segment_results[segment.id] = _synthesize_segment(
-                segment, request_data.voices
+                segment=segment,
+                voice=get_voice_for_name(
+                    voices=request_data.voices, voice_name=segment.voice_name
+                ),
             )
-            segment_key = f"{request.user_id}/{request_data.chapter_name}/audio/segments/{segment.id}.mp3"
             s3.upload_fileobj(
                 PROJECTS_BUCKET,
-                segment_key,
+                f"{request.user_id}/{request_data.chapter_name}/audio/segments/{segment.id}.mp3",
                 BytesIO(_build_audio([segment_results[segment.id]])),
             )
 
