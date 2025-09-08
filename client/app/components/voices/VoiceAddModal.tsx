@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 
 import { AgeEnum, GenderEnum } from "../../types";
 
@@ -17,6 +18,7 @@ interface VoiceAddModalProps {
 }
 
 export default function VoiceAddModal({ isOpen, onClose }: VoiceAddModalProps) {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [age, setAge] = useState<Age | "">("");
   const [gender, setGender] = useState<Gender | "">("");
@@ -80,6 +82,7 @@ export default function VoiceAddModal({ isOpen, onClose }: VoiceAddModalProps) {
         setAudioInputMode("upload");
 
         onClose();
+        router.refresh();
       } catch (error) {
         console.error("Failed to add voice:", error);
       } finally {

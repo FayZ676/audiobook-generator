@@ -97,4 +97,6 @@ export async function deleteVoice(voiceName: string): Promise<void> {
       },
     }
   );
+
+  revalidateTag("voices");
 }

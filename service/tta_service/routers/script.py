@@ -1,10 +1,15 @@
 import io
 import json
 from datetime import datetime, timezone
-from fastapi import APIRouter, BackgroundTasks, status
+import requests
+from fastapi import APIRouter, BackgroundTasks, status, HTTPException
 from tta_types.types import WebhookRequest, ScriptRequest, AudiobookJob, Voice, Speaker
 from tta_types.script import ScriptData
-from tta_service.types import BuildScriptRequest, UpdateScriptRequest
+from tta_service.types import (
+    BuildScriptRequest,
+    UpdateScriptRequest,
+    ScriptEndpointDetails,
+)
 from tta_service.config import (
     s3_client,
     VOICES_BUCKET,
@@ -20,6 +25,18 @@ from tta_service.routers.job import get_job_status
 
 
 router = APIRouter()
+
+
+@router.get("/script/endpoint")
+def get_endpoint() -> ScriptEndpointDetails:
+    headers = {"Authorization": f"Bearer {SCRIPT_SERVICE_API_KEY}"}
+    response = requests.get(url=f"{SCRIPT_API_URL}/health", headers=headers, timeout=5)
+    if response.status_code == 200:
+        health_data = response.json()
+        is_ready = health_data.get("workers", {}).get("ready", 0) > 0
+        if is_ready:
+            return ScriptEndpointDetails(endpoint=SCRIPT_API_URL)
+    raise HTTPException(status_code=503, detail="Script endpoint is not available")
 
 
 @router.post("/script", status_code=status.HTTP_202_ACCEPTED)

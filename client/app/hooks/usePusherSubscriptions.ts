@@ -7,8 +7,8 @@ interface ChannelConfig {
 }
 
 interface UsePusherSubscriptionsOptions {
-  channels: (ChannelConfig | null)[] | null;
-  onUpdate?: (channel: string, event: string, data?: unknown) => void;
+  channels: ChannelConfig[];
+  onUpdate: () => void;
 }
 
 export const usePusherSubscriptions = ({
@@ -16,24 +16,22 @@ export const usePusherSubscriptions = ({
   onUpdate,
 }: UsePusherSubscriptionsOptions) => {
   useEffect(() => {
-    if (!channels || channels.length === 0) {
-      return;
-    }
+    const handleStateChange = (states: {
+      previous: string;
+      current: string;
+    }) => {
+      if (states.previous === "connecting" && states.current === "connected") {
+        onUpdate();
+      }
+    };
 
-    const validChannels = channels.filter(
-      (channel): channel is ChannelConfig => channel !== null
-    );
-
-    if (validChannels.length === 0) {
-      return;
-    }
-
-    const subscriptions = validChannels.map(({ channel, events }) => {
+    pusherClient.connection.bind("state_change", handleStateChange);
+    const subscriptions = channels.map(({ channel, events }) => {
       const channelInstance = pusherClient.subscribe(channel);
 
       events.forEach((event: string) => {
-        const handler = (data?: unknown) => {
-          onUpdate?.(channel, event, data);
+        const handler = () => {
+          onUpdate();
         };
         channelInstance.bind(event, handler);
       });
@@ -42,6 +40,7 @@ export const usePusherSubscriptions = ({
     });
 
     return () => {
+      pusherClient.connection.unbind("state_change", handleStateChange);
       subscriptions.forEach(({ channel, channelInstance, events }) => {
         events.forEach((event: string) => {
           channelInstance.unbind(event);

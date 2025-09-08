@@ -50,25 +50,21 @@ export async function deleteProject() {
   revalidateTag("project");
 }
 
-export async function getCurrentProject(): Promise<{
-  name: string;
-  user_id: string;
-} | null> {
+export async function getCurrentProjectName(): Promise<string> {
   const userId = await getUserId();
 
   try {
-    const project = await apiCallJson<{
-      name: string;
-      user_id: string;
-    } | null>(`${process.env.AUDIOBOOK_SERVICE_URL}/project/${userId}`, {
-      cache: "force-cache",
-      next: {
-        tags: ["project"],
-      },
-    });
+    const project = await apiCallJson<string>(
+      `${process.env.AUDIOBOOK_SERVICE_URL}/project/${userId}`,
+      {
+        cache: "force-cache",
+        next: {
+          tags: ["project"],
+        },
+      }
+    );
     return project;
   } catch (error) {
-    console.error("Error fetching current project:", error);
-    return null;
+    throw new Error(`Failed to get current project name: ${error}`);
   }
 }

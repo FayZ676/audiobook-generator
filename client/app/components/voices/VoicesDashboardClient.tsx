@@ -2,14 +2,10 @@
 
 import React from "react";
 import { useState, use } from "react";
-import { useRouter } from "next/navigation";
 
 import { Plus } from "lucide-react";
 
-import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
-import { useUserChannels } from "@/app/lib/pusher-channels";
 import type { Voice } from "../../actions/voices";
-import { handleRevalidateTag } from "@/app/actions/revalidate";
 
 import VoiceAddModal from "./VoiceAddModal";
 import VoiceCard from "./VoiceCard";
@@ -21,18 +17,8 @@ interface VoicesDashboardClientProps {
 export default function VoicesDashboardClient({
   voicesPromise,
 }: VoicesDashboardClientProps) {
-  const router = useRouter();
   const voices = use(voicesPromise);
-  const userChannels = useUserChannels();
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  usePusherSubscriptions({
-    channels: userChannels ? [userChannels.VOICES_CHANNEL] : null,
-    onUpdate: async () => {
-      await handleRevalidateTag("voices");
-      router.refresh();
-    },
-  });
 
   return (
     <div className="flex flex-col gap-2 w-full">

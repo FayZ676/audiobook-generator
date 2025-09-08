@@ -4,7 +4,7 @@ import React, { use, useState, Suspense } from "react";
 import { useRouter, useParams } from "next/navigation";
 
 import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
-import { useUserChannels } from "@/app/lib/pusher-channels";
+import { getUserSpecificChannels } from "@/app/lib/pusher-channels";
 import { handleRevalidateTag } from "@/app/actions/revalidate";
 
 import { Menu } from "lucide-react";
@@ -25,10 +25,8 @@ import CreateProjectForm from "./CreateProjectForm";
 import ScriptEditor from "../script/ScriptEditor";
 
 interface ProjectDashboardClientProps {
-  project: {
-    name: string;
-    user_id: string;
-  } | null;
+  userId: string;
+  projectName: string;
   chapters: string[];
   jobStatePromise: Promise<AudiobookJob | null>;
   voicesPromise: Promise<Voice[]>;
@@ -37,7 +35,8 @@ interface ProjectDashboardClientProps {
 }
 
 export default function ProjectDashboardClient({
-  project: propProject,
+  userId,
+  projectName,
   chapters: propChapters,
   jobStatePromise,
   voicesPromise,
@@ -51,12 +50,10 @@ export default function ProjectDashboardClient({
   const selectedChapter = params.chapter
     ? decodeURIComponent(params.chapter as string)
     : null;
-
-  const project = propProject;
   const chapters = propChapters || [];
   const currentScript =
     selectedChapter && scriptPromise ? use(scriptPromise) : null;
-  const userChannels = useUserChannels();
+  const userChannels = getUserSpecificChannels(userId);
 
   const handleRevalidate = async () => {
     await Promise.all([
@@ -71,9 +68,7 @@ export default function ProjectDashboardClient({
   };
 
   usePusherSubscriptions({
-    channels: userChannels
-      ? [userChannels.SCRIPT_CHANNEL, userChannels.SPEECH_CHANNEL]
-      : [],
+    channels: [userChannels.SCRIPT_CHANNEL, userChannels.SPEECH_CHANNEL],
     onUpdate: handleRevalidate,
   });
 
@@ -81,7 +76,7 @@ export default function ProjectDashboardClient({
     router.push(`/project/${encodeURIComponent(chapter)}`);
   };
 
-  if (!project) {
+  if (!projectName) {
     return <CreateProjectForm />;
   }
 
@@ -107,8 +102,8 @@ export default function ProjectDashboardClient({
             <div className="flex-1 space-y-4 overflow-y-auto">
               <Suspense fallback={<div>Loading job state...</div>}>
                 <JobStateClient
+                  userId={userId}
                   jobStatePromise={jobStatePromise}
-                  scriptPromise={selectedChapter ? scriptPromise ?? null : null}
                 />
               </Suspense>
 
@@ -118,7 +113,7 @@ export default function ProjectDashboardClient({
                     <label htmlFor="my-drawer" className="btn drawer-button">
                       <Menu size={16} />
                     </label>
-                    <h3 className="mt-0 mb-0">{project.name}</h3>
+                    <h3 className="mt-0 mb-0">{projectName}</h3>
                   </div>
                   {selectedChapter && (
                     <div className="flex items-center ">

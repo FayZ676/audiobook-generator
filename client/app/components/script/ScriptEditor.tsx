@@ -246,7 +246,7 @@ export default function ScriptEditor({
                     ))}
                   </select>
                   <div className="ml-auto flex items-center gap-3">
-                    {segmentId && (
+                    {segmentId && narrationUrl && (
                       <div className="flex items-center gap-2">
                         <AudioPlayer
                           url={() => getSegmentAudioUrl(chapterName, segmentId)}

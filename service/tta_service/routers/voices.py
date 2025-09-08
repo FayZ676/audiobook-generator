@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, status, Form, UploadFile
 
 from tta_types.types import Voice
 from tta_service.types import Age, Gender
-from tta_service.config import s3_client, VOICES_BUCKET, pusher_client
+from tta_service.config import s3_client, VOICES_BUCKET
 from tta_service.utils import transcribe_audio
 from tta_service.audio_utils import convert_audio_to_mp3, is_mp3_format
 
@@ -96,8 +96,6 @@ def add_voice(
             filename=name_normalized,
         ),
     )
-    pusher_client.trigger(f"{user_id}-voices", "complete", {"message": "Voice added"})
-    return
 
 
 @router.get("/voices/{user_id}/{voice_name}/audio")
@@ -144,9 +142,6 @@ def delete_voice(user_id: str, voice_name: str):
     try:
         s3_client.delete_file(VOICES_BUCKET, metadata_path)
         s3_client.delete_file(VOICES_BUCKET, audio_path)
-        pusher_client.trigger(
-            f"{user_id}-voices", "complete", {"message": "Voice deleted"}
-        )
         return {"message": "Voice deleted successfully"}
     except Exception as e:
         raise HTTPException(

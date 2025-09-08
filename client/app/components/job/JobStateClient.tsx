@@ -6,27 +6,25 @@ import { useRouter } from "next/navigation";
 
 import { handleRevalidateTag } from "@/app/actions/revalidate";
 import { usePusherSubscriptions } from "@/app/hooks/usePusherSubscriptions";
-import { useUserChannels } from "@/app/lib/pusher-channels";
+import { getUserSpecificChannels } from "@/app/lib/pusher-channels";
 import type { AudiobookJob } from "@/app/actions/job";
-import type { Script } from "@/app/actions/script";
 import Tip from "../ui/Tip";
 
 interface JobStateClientProps {
+  userId: string;
   jobStatePromise: Promise<AudiobookJob | null>;
-  scriptPromise: Promise<Script | null> | null;
 }
 
 export default function JobStateClient({
+  userId,
   jobStatePromise,
 }: JobStateClientProps) {
   const router = useRouter();
   const jobState = use(jobStatePromise);
-  const userChannels = useUserChannels();
+  const userChannels = getUserSpecificChannels(userId);
 
   usePusherSubscriptions({
-    channels: userChannels
-      ? [userChannels.SPEECH_CHANNEL, userChannels.SCRIPT_CHANNEL]
-      : null,
+    channels: [userChannels.SPEECH_CHANNEL, userChannels.SCRIPT_CHANNEL],
     onUpdate: async () => {
       await handleRevalidateTag("job");
       router.refresh();

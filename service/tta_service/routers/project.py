@@ -6,6 +6,7 @@ from tta_service.config import s3_client, PROJECTS_BUCKET, JOB_STATUS_BUCKET
 router = APIRouter()
 
 
+# TODO: Update project to just be a folder since all we need is the name
 @router.post("/project", status_code=status.HTTP_201_CREATED)
 async def create_project(request: Project):
     """Create a new project for the user"""
@@ -19,6 +20,7 @@ async def create_project(request: Project):
     }
 
 
+# TODO: As per the above comment, we should just need to get the project directory, not file.
 @router.get("/project/{user_id}")
 def get_current_project(user_id: str):
     """Get the current project for a user"""
@@ -27,7 +29,7 @@ def get_current_project(user_id: str):
         return None
     project_content = s3_client.get_file(PROJECTS_BUCKET, project_path).decode("utf-8")
     project = Project.model_validate_json(project_content)
-    return project
+    return project.name
 
 
 @router.delete("/project/{user_id}")
