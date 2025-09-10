@@ -28,4 +28,4 @@ class DiaTTS:
             top_p=0.90,
             cfg_filter_top_k=50,
         )
-        return self.model.save_audio(output_path, output_result)
+        return self.model.save_audio(output_path, output_result)  # type: ignore

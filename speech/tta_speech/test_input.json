@@ -1,16 +1,22 @@
 {
   "input": {
     "callback": "http://localhost:8003/webhook",
-    "channel": "test_channel",
+    "event": "speech",
     "user_id": "test_user_123",
     "data": {
-      "title": "harrypotter-sample-tiny",
+      "user_id": "test_user_123",
+      "chapter_name": "sample-chapter",
       "text": [
         {
+          "id": "segment_1",
           "text": "You'd be stiff if you'd been sitting on a brick wall all day,",
           "voice_name": "Cathleen McCarron"
         },
-        { "text": "said Professor McGonagall.", "voice_name": "Arthur Lane" }
+        {
+          "id": "segment_2",
+          "text": "said Professor McGonagall.",
+          "voice_name": "Arthur Lane"
+        }
       ],
       "voices": [
         {
@@ -26,34 +32,6 @@
           "gender": "female",
           "audio_path": "s3://tta-voices-audios/cathleen_mccarron.mp3",
           "audio_transcript": "Bessy Brunson took a deep breath and prepared to climb a flight of stairs for what seemed like the hundredth time since sunrise. It was not yet noon."
-        },
-        {
-          "name": "Elizabeth Gaskell",
-          "age": "middle-aged",
-          "gender": "female",
-          "audio_path": "s3://tta-voices-audios/elizabeth_gaskell.mp3",
-          "audio_transcript": "When she wakened of herself, as sure as clockwork, and left the household very little peace afterwards."
-        },
-        {
-          "name": "Jim Dale",
-          "age": "middle-aged",
-          "gender": "male",
-          "audio_path": "s3://tta-voices-audios/jim_dale.mp3",
-          "audio_transcript": "Mr. Vernon Dursley had been woken in the early hours of the morning by a loud hooting noise from his nephew Harry's room."
-        },
-        {
-          "name": "Richard Armitage",
-          "age": "middle-aged",
-          "gender": "male",
-          "audio_path": "s3://tta-voices-audios/richard_armitage.mp3",
-          "audio_transcript": "The first of our three golden rules; One, send a message to let us know where you are, closely followed by two, stick to your curfew."
-        },
-        {
-          "name": "Stephen Fry",
-          "age": "old",
-          "gender": "male",
-          "audio_path": "s3://tta-voices-audios/stephen_fry.mp3",
-          "audio_transcript": "At the moment, cosmos is chaos and only chaos because chaos is the only thing that is the case."
         }
       ]
     }
