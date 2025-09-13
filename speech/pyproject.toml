@@ -15,7 +15,6 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "runpod==1.7.9",
     "tta_aws==0.0.1",
     "tta_f5==0.0.1",
     "tta_types==0.0.1",

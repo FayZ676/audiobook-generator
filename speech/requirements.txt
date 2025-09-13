@@ -1,0 +1,4 @@
+# External dependencies only
+# Local dependencies (tta_aws, tta_f5, tta_types) are declared in pyproject.toml
+# and installed separately in Docker/Makefile
+runpod==1.7.9
