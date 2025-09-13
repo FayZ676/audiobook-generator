@@ -14,12 +14,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
-dependencies = [
-    "f5-tts==1.1.0",
-    "pydub==0.25.1",
-    "torch==2.6.0",
-    "torchaudio==2.6.0",
-]
+dependencies = []
 
 [project.urls]
 Homepage = "https://github.com/FayZ676/audiobook-generator"
