@@ -17,7 +17,7 @@ from tta_types.types import (
     Response,
 )
 from tta_aws.s3 import S3Client
-from .audio_utils import normalize_audio_volume, _build_audio, _concat_mp3_from_keys
+from tta_speech.audio_utils import normalize_audio_volume, _build_audio, _concat_mp3_from_keys
 
 
 PROJECTS_BUCKET = os.environ.get("PROJECTS_BUCKET", "")
