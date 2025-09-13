@@ -4,7 +4,6 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y ffmpeg wget && rm -rf /var/lib/apt/lists/*
 
-# TODO: We are also copying the .venv folders which is inflating the size of the container by a lot.
 COPY f5/requirements.txt /app/f5/requirements.txt
 COPY types/requirements.txt /app/types/requirements.txt  
 COPY aws/requirements.txt /app/aws/requirements.txt
