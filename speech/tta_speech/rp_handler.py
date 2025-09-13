@@ -8,8 +8,8 @@ import runpod
 from pydub import AudioSegment
 from pydub.effects import normalize
 
-from tta_speech.infer import infer
-from tta_speech.inference_types import InferenceParams, InputData
+from tta_f5.infer import infer
+from tta_f5.inference_types import InferenceParams, InputData
 
 from tta_types.types import (
     Voice,
@@ -103,12 +103,8 @@ def _synthesize_segment(segment: SpeechRequestSegment, voices: list[Voice]):
         InferenceParams(
             gen_text=text_input.text,
             voices=text_input.voices,
-            vocab_file=f"{Path(__file__).parent}/vocab.txt",
-            vocoder_name="vocos",
-            vocoder_local_path=f"{Path(__file__).parent}/vocos",
             load_vocoder_from_local=True,
             remove_silence=False,
-            ckpt_file=f"{Path(__file__).parent}/checkpoints/model_1250000.safetensors",
         )
     )
 

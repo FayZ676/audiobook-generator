@@ -50,6 +50,9 @@ def get_endpoint() -> NarrationEndpointDetails:
     if not endpoint:
         raise HTTPException(status_code=503, detail="No endpoints are available")
     return NarrationEndpointDetails(endpoint=endpoint, words_per_minute=wpm)  # type: ignore
+    # return NarrationEndpointDetails(
+    #     endpoint=SPEECH_API_URL_GPU, words_per_minute=5
+    # )  # NOTE: For testing
 
 
 @router.post("/narration", status_code=status.HTTP_202_ACCEPTED)

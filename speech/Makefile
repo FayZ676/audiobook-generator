@@ -1,13 +1,11 @@
-download_vocos_model:
-	wget -P tta_speech/vocos https://huggingface.co/charactr/vocos-mel-24khz/resolve/main/pytorch_model.bin
-
-download_checkpoint:
-	wget -P tta_speech/checkpoints https://huggingface.co/SWivid/F5-TTS/resolve/main/F5TTS_v1_Base/model_1250000.safetensors
-
-install: download_vocos_model download_checkpoint
+install:
+	cd ../f5 && make download_vocos_model download_checkpoint
 	python -m venv .venv
-	(source .venv/bin/activate || . .venv/bin/activate) && \
-	pip install -e ../aws -e ../types -e .
+	source .venv/bin/activate && \
+	pip install -e ../aws \
+	-e ../types \
+	-e ../f5 \
+	-e .
 
 docker_build:
 	cd .. && docker build --platform linux/amd64 -f speech/Dockerfile -t tta_speech .

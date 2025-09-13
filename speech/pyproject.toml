@@ -15,12 +15,9 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "f5-tts==1.1.0",
-    "pydub==0.25.1",
     "runpod==1.7.9",
-    "torch==2.6.0",
-    "torchaudio==2.6.0",
     "tta_aws==0.0.1",
+    "tta_f5==0.0.1",
     "tta_types==0.0.1",
 ]
 
