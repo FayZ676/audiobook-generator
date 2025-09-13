@@ -19,14 +19,14 @@ RUN mkdir -p /usr/local/lib/python3.12/site-packages/tta_f5/checkpoints /usr/loc
     wget -O /usr/local/lib/python3.12/site-packages/tta_f5/vocos/pytorch_model.bin "https://huggingface.co/charactr/vocos-mel-24khz/resolve/main/pytorch_model.bin" && \
     wget -O /usr/local/lib/python3.12/site-packages/tta_f5/vocos/config.yaml "https://huggingface.co/charactr/vocos-mel-24khz/resolve/main/config.yaml"
 
-COPY f5/ /app/f5
-RUN pip install /app/f5
-
 COPY types/ /app/types
 RUN pip install /app/types
 
 COPY aws/ /app/aws
 RUN pip install /app/aws
+
+COPY f5/ /app/f5
+RUN pip install /app/f5
 
 COPY speech/ /app/speech
 RUN pip install /app/speech
