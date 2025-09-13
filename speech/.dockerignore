@@ -1,0 +1,8 @@
+.env
+.env.local
+__pycache__/
+.pytest_cache/
+pytorch_model.bin
+.venv
+*.pt
+*.safetensors
