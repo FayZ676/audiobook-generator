@@ -17,7 +17,7 @@ from tta_types.types import (
     Response,
 )
 from tta_aws.s3 import S3Client
-from tta_speech.audio_utils import normalize_audio_volume, _build_audio, _concat_mp3_from_keys
+from tta_speech.audio_utils import build_audio, concat_mp3_from_keys
 
 
 PROJECTS_BUCKET = os.environ.get("PROJECTS_BUCKET", "")
@@ -25,7 +25,6 @@ VOICES_BUCKET = os.environ.get("VOICES_BUCKET", "")
 
 
 s3 = S3Client()
-
 
 
 # NOTE: I hate that we need to download the audio.
@@ -60,8 +59,6 @@ def _prepare_input(
     return InputData(text, voices_dict)
 
 
-
-
 def _synthesize_segment(segment: SpeechRequestSegment, voices: list[Voice]):
     text_input = _prepare_input([segment], voices, voice_save_path="/tmp")
     return infer(
@@ -74,6 +71,7 @@ def _synthesize_segment(segment: SpeechRequestSegment, voices: list[Voice]):
     )
 
 
+# TODO: This is doing way too much. Needs simplification.
 def handler(event: dict):
     request = WebhookRequest.model_validate(event["input"])
     request_data = SpeechRequest.model_validate(request.data)
@@ -92,7 +90,7 @@ def handler(event: dict):
             s3.upload_fileobj(
                 PROJECTS_BUCKET,
                 segment_key,
-                BytesIO(_build_audio([segment_results[segment.id]])),
+                BytesIO(build_audio([segment_results[segment.id]])),
             )
 
         narration_key = (
@@ -108,7 +106,7 @@ def handler(event: dict):
                 s3.get_file(PROJECTS_BUCKET, manifest_key).decode("utf-8")
             )
             segment_keys_in_order = [s.get("key") for s in manifest.get("segments", [])]
-            stitched = _concat_mp3_from_keys(segment_keys_in_order)
+            stitched = concat_mp3_from_keys(segment_keys_in_order)
             s3.upload_fileobj(f"{PROJECTS_BUCKET}", narration_key, BytesIO(stitched))
             status = "complete"
             data = Response(filename=narration_key, request_word_count=total_word_count)
@@ -123,7 +121,7 @@ def handler(event: dict):
                     }
                     for idx, seg_id in enumerate(ordered_ids)
                 ]
-                stitched = _concat_mp3_from_keys([m["key"] for m in manifest_segments])
+                stitched = concat_mp3_from_keys([m["key"] for m in manifest_segments])
                 s3.upload_fileobj(
                     f"{PROJECTS_BUCKET}", narration_key, BytesIO(stitched)
                 )
@@ -143,7 +141,7 @@ def handler(event: dict):
             else:
                 only = next(iter(segment_results.values()))
                 s3.upload_fileobj(
-                    f"{PROJECTS_BUCKET}", narration_key, BytesIO(_build_audio([only]))
+                    f"{PROJECTS_BUCKET}", narration_key, BytesIO(build_audio([only]))
                 )
                 status = "complete"
                 data = Response(
