@@ -9,7 +9,7 @@ install:
 	-e .
 
 docker_build:
-	cd .. && docker build --platform linux/amd64 -f speech/Dockerfile -t tta_speech .
+	cd .. && docker build --no-cache --platform linux/amd64 -f speech/Dockerfile -t tta_speech .
 
 docker_run:
 	docker run --rm -it -p 8002:8002 --platform linux/amd64 --env-file .env.local tta_speech
