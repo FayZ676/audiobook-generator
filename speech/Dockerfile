@@ -31,4 +31,6 @@ RUN pip install /app/f5
 COPY speech/ /app/speech
 RUN pip install /app/speech
 
+RUN pip cache purge
+
 CMD ["python", "-u", "speech/tta_speech/rp_handler.py"]
