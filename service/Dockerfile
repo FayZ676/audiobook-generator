@@ -4,6 +4,11 @@ RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
+COPY types/requirements.txt /app/types/requirements.txt
+COPY aws/requirements.txt /app/aws/requirements.txt
+RUN pip install -r /app/types/requirements.txt
+RUN pip install -r /app/aws/requirements.txt
+
 COPY types/ /app/types
 COPY aws/ /app/aws
 COPY service/ /app/service
