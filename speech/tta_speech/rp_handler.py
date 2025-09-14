@@ -27,15 +27,16 @@ VOICES_BUCKET = os.environ.get("VOICES_BUCKET", "")
 s3 = S3Client()
 
 
-# NOTE: I hate that we need to download the audio.
 def _prepare_input(
     request: list[SpeechRequestSegment], voices: list[Voice], voice_save_path: str
 ) -> InputData:
-    def download_audio(audio_path: str):
-        audio = s3.get_file(VOICES_BUCKET, audio_path)
-        temp_audio_path = f"{voice_save_path}/{audio_path.split('/')[-1]}"
-        with open(temp_audio_path, "wb") as f:
-            f.write(audio)
+    def download_audio(audio_path: str, voice_name: str):
+        """Download audio file for voice if it itsn't already downloaded."""
+        temp_audio_path = f"{voice_save_path}/{voice_name}.wav"
+        if not os.path.exists(temp_audio_path):
+            audio = s3.get_file(VOICES_BUCKET, audio_path)
+            with open(temp_audio_path, "wb") as f:
+                f.write(audio)
         return temp_audio_path
 
     def voice_to_dict(path, transcript):
@@ -47,7 +48,7 @@ def _prepare_input(
     def voices_from_names(voice_names: list[str]):
         return {
             voice.name: voice_to_dict(
-                path=download_audio(voice.audio_path),
+                path=download_audio(voice.audio_path, voice.name),
                 transcript=voice.audio_transcript,
             )
             for voice in voices
