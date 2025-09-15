@@ -100,6 +100,7 @@ class F5Client(SpeechGeneratorInterface):
 
     @staticmethod
     def _prepare_voices(voices: set[Voice]) -> dict[VoiceName, PreparedVoice]:
+        # TODO: Use preprocess_ref_audio_text,
         return {
             v.name: PreparedVoice(ref_audio=v.audio_path, ref_text=v.audio_transcript)
             for v in voices
