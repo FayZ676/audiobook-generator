@@ -14,7 +14,9 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
-dependencies = []
+dependencies = [
+  "tta_types==0.0.1",
+]
 
 [project.urls]
 Homepage = "https://github.com/FayZ676/audiobook-generator"
