@@ -67,9 +67,6 @@ class F5Client(SpeechGeneratorInterface):
         final_sample_rate = None
 
         for segment in segments:
-            if not segment.text.strip():
-                continue
-
             current_ref_audio = self.voices[segment.voice_name].ref_audio
             current_ref_text = self.voices[segment.voice_name].ref_text
             audio_segment, sample_rate, _ = infer_process(  # type: ignore
