@@ -100,11 +100,15 @@ class F5Client(SpeechGeneratorInterface):
 
     @staticmethod
     def _prepare_voices(voices: set[Voice]) -> dict[VoiceName, PreparedVoice]:
-        # TODO: Use preprocess_ref_audio_text,
-        return {
-            v.name: PreparedVoice(ref_audio=v.audio_path, ref_text=v.audio_transcript)
-            for v in voices
-        }
+        processed_voices: dict[VoiceName, PreparedVoice] = dict()
+        for v in voices:
+            processed_audio, processed_text = preprocess_ref_audio_text(
+                ref_audio_orig=v.audio_path, ref_text=v.audio_transcript
+            )
+            processed_voices[v.name] = PreparedVoice(
+                ref_audio=processed_audio, ref_text=processed_text
+            )
+        return processed_voices
 
 
 def _create_silence(sample_rate: int, duration_seconds: float) -> np.ndarray:
