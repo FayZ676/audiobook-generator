@@ -3,7 +3,6 @@ import numpy as np
 from pathlib import Path
 from importlib.resources import files
 from dataclasses import dataclass
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import soundfile as sf
 from hydra.utils import get_class
@@ -64,9 +63,9 @@ class F5Client(SpeechGeneratorInterface):
         self.voices = self._prepare_voices(voices=voices)
 
     def generate(self, segments: list[SpeechRequestSegment]) -> list[str]:
-        def process_segment(
-            index: int, segment: SpeechRequestSegment
-        ) -> tuple[int, str]:
+        processed_segments_paths: list[str] = []
+
+        for segment in segments:
             audio_segment, sample_rate, _ = infer_process(  # type: ignore
                 ref_audio=self.voices[segment.voice_name].ref_audio,
                 ref_text=self.voices[segment.voice_name].ref_text,
@@ -87,22 +86,12 @@ class F5Client(SpeechGeneratorInterface):
             if not isinstance(audio_segment, np.ndarray):
                 raise ValueError("Invalid audio segment generated.")
 
-            return index, self._save_result(
-                np.concatenate([audio_segment, _create_silence(sample_rate, 0.75)]),
-                sample_rate,
+            processed_segments_paths.append(
+                self._save_result(
+                    np.concatenate([audio_segment, _create_silence(sample_rate, 0.75)]),
+                    sample_rate,
+                ),
             )
-
-        # TODO: Not a fan of this approach.
-        processed_segments_paths: list[str] = [None] * len(segments)  # type: ignore
-        # TODO: Make max_workers an environment variable.
-        with ThreadPoolExecutor(max_workers=1) as executor:
-            future_to_index = {
-                executor.submit(process_segment, i, segment): i
-                for i, segment in enumerate(segments)
-            }
-            for future in as_completed(future_to_index):
-                index, result_path = future.result()
-                processed_segments_paths[index] = result_path
 
         return processed_segments_paths
 
