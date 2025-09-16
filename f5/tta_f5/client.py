@@ -1,8 +1,10 @@
+import tempfile
 import numpy as np
 from pathlib import Path
 from importlib.resources import files
 from dataclasses import dataclass
 
+import soundfile as sf
 from hydra.utils import get_class
 from omegaconf import OmegaConf
 
@@ -60,22 +62,15 @@ class F5Client(SpeechGeneratorInterface):
         )
         self.voices = self._prepare_voices(voices=voices)
 
-    def generate(self, segments: list[SpeechRequestSegment]):
-        """Synthesizes audio chunk by chunk based on voice tags."""
-        generated_audio_segments: list[np.ndarray] = []
-        # TODO: Why do we need this?
-        final_sample_rate = None
+    def generate(self, segments: list[SpeechRequestSegment]) -> list[str]:
+        processed_segments_paths: list[str] = []
 
+        # TODO: Do this in parallel while maintaining order?
         for segment in segments:
-            if not segment.text.strip():
-                continue
-
-            current_ref_audio = self.voices[segment.voice_name].ref_audio
-            current_ref_text = self.voices[segment.voice_name].ref_text
             audio_segment, sample_rate, _ = infer_process(  # type: ignore
-                current_ref_audio,
-                current_ref_text,
-                segment.text,
+                ref_audio=self.voices[segment.voice_name].ref_audio,
+                ref_text=self.voices[segment.voice_name].ref_text,
+                gen_text=segment.text,
                 model_obj=self.model,
                 vocoder=self.vocoder,
                 mel_spec_type=self.vocoder_name,
@@ -92,11 +87,13 @@ class F5Client(SpeechGeneratorInterface):
             if not isinstance(audio_segment, np.ndarray):
                 raise ValueError("Invalid audio segment generated.")
 
-            generated_audio_segments.append(audio_segment)
-            final_sample_rate = final_sample_rate or sample_rate
-            generated_audio_segments.append(_create_silence(sample_rate, 0.75))
+            processed_segments_paths.append(
+                self._save_result(
+                    audio_segment + _create_silence(sample_rate, 0.75), sample_rate
+                ),
+            )
 
-        return generated_audio_segments, final_sample_rate
+        return processed_segments_paths
 
     @staticmethod
     def _prepare_voices(voices: set[Voice]) -> dict[VoiceName, PreparedVoice]:
@@ -109,6 +106,16 @@ class F5Client(SpeechGeneratorInterface):
                 ref_audio=processed_audio, ref_text=processed_text
             )
         return processed_voices
+
+    @staticmethod
+    def _save_result(result: np.ndarray, sample_rate: int) -> str:
+        """Save audio numpy array to a temporary WAV file and return the file path."""
+        with tempfile.NamedTemporaryFile(
+            suffix=".wav", dir="/tmp", delete=False
+        ) as temp_file:
+            temp_path = temp_file.name
+        sf.write(temp_path, result, sample_rate, format="WAV", subtype="PCM_16")
+        return temp_path
 
 
 def _create_silence(sample_rate: int, duration_seconds: float) -> np.ndarray:
