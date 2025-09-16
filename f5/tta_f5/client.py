@@ -3,6 +3,7 @@ import numpy as np
 from pathlib import Path
 from importlib.resources import files
 from dataclasses import dataclass
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import soundfile as sf
 from hydra.utils import get_class
@@ -39,7 +40,7 @@ class PreparedVoice:
 
 
 class F5Client(SpeechGeneratorInterface):
-    def __init__(self, voices: set[Voice]) -> None:
+    def __init__(self, voices: list[Voice]) -> None:
         self._vocoder_path = f"{Path(__file__).parent}/vocos"
         self._model_config = OmegaConf.load(
             str(files("f5_tts").joinpath("configs/F5TTS_v1_Base.yaml"))
@@ -63,10 +64,9 @@ class F5Client(SpeechGeneratorInterface):
         self.voices = self._prepare_voices(voices=voices)
 
     def generate(self, segments: list[SpeechRequestSegment]) -> list[str]:
-        processed_segments_paths: list[str] = []
-
-        # TODO: Do this in parallel while maintaining order?
-        for segment in segments:
+        def process_segment(
+            index: int, segment: SpeechRequestSegment
+        ) -> tuple[int, str]:
             audio_segment, sample_rate, _ = infer_process(  # type: ignore
                 ref_audio=self.voices[segment.voice_name].ref_audio,
                 ref_text=self.voices[segment.voice_name].ref_text,
@@ -87,16 +87,27 @@ class F5Client(SpeechGeneratorInterface):
             if not isinstance(audio_segment, np.ndarray):
                 raise ValueError("Invalid audio segment generated.")
 
-            processed_segments_paths.append(
-                self._save_result(
-                    audio_segment + _create_silence(sample_rate, 0.75), sample_rate
-                ),
+            return index, self._save_result(
+                np.concatenate([audio_segment, _create_silence(sample_rate, 0.75)]),
+                sample_rate,
             )
+
+        # TODO: Not a fan of this approach.
+        processed_segments_paths: list[str] = [None] * len(segments)  # type: ignore
+        # TODO: Make max_workers an environment variable.
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future_to_index = {
+                executor.submit(process_segment, i, segment): i
+                for i, segment in enumerate(segments)
+            }
+            for future in as_completed(future_to_index):
+                index, result_path = future.result()
+                processed_segments_paths[index] = result_path
 
         return processed_segments_paths
 
     @staticmethod
-    def _prepare_voices(voices: set[Voice]) -> dict[VoiceName, PreparedVoice]:
+    def _prepare_voices(voices: list[Voice]) -> dict[VoiceName, PreparedVoice]:
         processed_voices: dict[VoiceName, PreparedVoice] = dict()
         for v in voices:
             processed_audio, processed_text = preprocess_ref_audio_text(
