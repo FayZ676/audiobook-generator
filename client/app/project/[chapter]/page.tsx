@@ -3,8 +3,13 @@ import React from "react";
 import { currentUser } from "@clerk/nextjs/server";
 
 import ProjectDashboardClient from "@/app/components/project/ProjectDashboardClient";
+import { getCurrentProjectName } from "@/app/actions/project";
+import { getChapters } from "@/app/actions/chapter";
 import { redirect } from "next/navigation";
-import { getDashboardData } from "@/app/actions/dashboard";
+import { getJobState } from "@/app/actions/job";
+import { getVoices } from "@/app/actions/voices";
+import { getScript } from "@/app/actions/script";
+import { getNarration } from "@/app/actions/narrate";
 
 // Force dynamic rendering since this page uses authentication
 export const dynamic = "force-dynamic";
@@ -26,21 +31,31 @@ export default async function ProjectChapterPage({
     const { chapter } = await params;
     const currentChapter = decodeURIComponent(chapter);
     
-    const dashboardData = await getDashboardData(currentChapter);
+    // Load critical data synchronously for validation
+    const [projectName, chapters] = await Promise.all([
+      getCurrentProjectName(),
+      getChapters(),
+    ]);
     
-    if (!dashboardData.chapters.includes(currentChapter)) {
+    if (!chapters.includes(currentChapter)) {
       redirect("/project");
     }
+
+    // Create promises for non-critical data (preserves Suspense behavior)
+    const jobStatePromise = getJobState();
+    const voicesPromise = getVoices();
+    const scriptPromise = getScript(currentChapter);
+    const narrationPromise = getNarration(currentChapter);
 
     return (
       <ProjectDashboardClient
         userId={user.id}
-        projectName={dashboardData.projectName}
-        chapters={dashboardData.chapters}
-        jobStatePromise={Promise.resolve(dashboardData.jobState)}
-        voicesPromise={Promise.resolve(dashboardData.voices)}
-        scriptPromise={Promise.resolve(dashboardData.script || null)}
-        narrationPromise={Promise.resolve(dashboardData.narration || null)}
+        projectName={projectName}
+        chapters={chapters}
+        jobStatePromise={jobStatePromise}
+        voicesPromise={voicesPromise}
+        scriptPromise={scriptPromise}
+        narrationPromise={narrationPromise}
       />
     );
   }
