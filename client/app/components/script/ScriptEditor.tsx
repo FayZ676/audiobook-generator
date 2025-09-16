@@ -77,7 +77,8 @@ export default function ScriptEditor({
   const handleCreateNarration = async (e: React.MouseEvent) => {
     e.preventDefault();
     setIsCreatingNarration(true);
-    await createNarration(chapterName);
+    const voices = voicesPromise ? await voicesPromise : undefined;
+    await createNarration(chapterName, voices);
     setIsCreatingNarration(false);
   };
 

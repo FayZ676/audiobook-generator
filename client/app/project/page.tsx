@@ -5,10 +5,7 @@ import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
 
 import ProjectDashboardClient from "@/app/components/project/ProjectDashboardClient";
-import { getCurrentProjectName } from "@/app/actions/project";
-import { getChapters } from "@/app/actions/chapter";
-import { getJobState } from "@/app/actions/job";
-import { getVoices } from "@/app/actions/voices";
+import { getDashboardData } from "@/app/actions/dashboard";
 
 export const dynamic = "force-dynamic";
 
@@ -18,21 +15,19 @@ export default async function ProjectHome() {
     // TODO: Redirect to signin page.
     redirect("/");
   } else {
-    const project = await getCurrentProjectName();
-    const chapters = await getChapters();
-    if (project && chapters.length > 0) {
-      redirect(`/project/${encodeURIComponent(chapters[0])}`);
+    const dashboardData = await getDashboardData();
+    
+    if (dashboardData.projectName && dashboardData.chapters.length > 0) {
+      redirect(`/project/${encodeURIComponent(dashboardData.chapters[0])}`);
     }
-    const jobStatePromise = getJobState();
-    const voicesPromise = getVoices();
 
     return (
       <ProjectDashboardClient
         userId={user.id}
-        projectName={project}
-        chapters={chapters}
-        jobStatePromise={jobStatePromise}
-        voicesPromise={voicesPromise}
+        projectName={dashboardData.projectName}
+        chapters={dashboardData.chapters}
+        jobStatePromise={Promise.resolve(dashboardData.jobState)}
+        voicesPromise={Promise.resolve(dashboardData.voices)}
         scriptPromise={null}
         narrationPromise={null}
       />

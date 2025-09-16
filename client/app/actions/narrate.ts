@@ -17,7 +17,7 @@ interface NarrationRequest {
 
 export type NarrationUrl = string;
 
-export async function createNarration(chapterName: string) {
+export async function createNarration(chapterName: string, voices?: Voice[]) {
   const endpointDetails = await getNarrationEndpoint();
   if (!endpointDetails.endpoint) {
     throw new Error(
@@ -26,11 +26,11 @@ export async function createNarration(chapterName: string) {
   }
 
   const userId = await getUserId();
-  const voices = await getVoices();
+  const voicesToUse = voices || await getVoices();
 
   const request: NarrationRequest = {
     user_id: userId,
-    voices: voices,
+    voices: voicesToUse,
     chapter_name: chapterName,
     endpoint: endpointDetails.endpoint,
   };
