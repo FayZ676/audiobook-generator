@@ -7,6 +7,7 @@ import { getJobState, AudiobookJob } from "./job";
 import { getVoices, Voice } from "./voices";
 import { getScript, Script } from "./script";
 import { getNarration, NarrationUrl } from "./narrate";
+import { getUserId } from "./user";
 
 export interface DashboardData {
   projectName: string;
@@ -47,11 +48,14 @@ async function getDashboardDataInternal(
   };
 }
 
-export const getDashboardData = unstable_cache(
-  getDashboardDataInternal,
-  ["dashboard-data"],
-  {
-    tags: ["project", "chapters", "job", "voices", "script", "narration"],
-    revalidate: 60,
-  }
-);
+export const getDashboardData = async (selectedChapter?: string) => {
+  const userId = await getUserId();
+  return unstable_cache(
+    getDashboardDataInternal,
+    [`dashboard-data-${userId}-${selectedChapter || 'root'}`],
+    {
+      tags: ["project", "chapters", "job", "voices", "script", "narration"],
+      revalidate: 60,
+    }
+  )(selectedChapter);
+};
