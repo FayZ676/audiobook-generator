@@ -25,10 +25,15 @@ def test_infer():
                 id="seg-000",
                 text="Hello, this is a test of the text-to-speech system.",
                 voice_name="faizi_standard",
-            )
+            ),
+            SpeechRequestSegment(
+                id="seg-000",
+                text="Can you hear me?.",
+                voice_name="faizi_standard",
+            ),
         ]
     )
-    print(f"RESULT SAVED TO {result[0]}")
+    print(f"RESULTS SAVED TO {result}")
 
 
 if __name__ == "__main__":
