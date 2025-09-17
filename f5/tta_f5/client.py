@@ -25,7 +25,12 @@ from f5_tts.infer.utils_infer import (
     device as default_device,
 )
 
-from tta_types.interfaces import SpeechGeneratorInterface, VoiceName
+from tta_types.interfaces import (
+    SpeechGeneratorInterface,
+    VoiceName,
+    SegmentId,
+    SpeechAudioPath,
+)
 from tta_types.types import SpeechRequestSegment, Voice
 
 from tta_f5.utils import create_silence
@@ -64,8 +69,8 @@ class F5Client(SpeechGeneratorInterface[PreparedVoice, SpeechResult]):
         )
         self.voices = self._prepare_voices(voices=voices)
 
-    def generate(self, segments: list[SpeechRequestSegment]) -> list[str]:
-        processed_segments_paths: list[str] = []
+    def generate(self, segments: list[SpeechRequestSegment]):
+        processed_segments_paths: dict[SegmentId, SpeechAudioPath] = {}
 
         for segment in segments:
             audio_segment, sample_rate, _ = infer_process(  # type: ignore
@@ -88,11 +93,9 @@ class F5Client(SpeechGeneratorInterface[PreparedVoice, SpeechResult]):
             if not isinstance(audio_segment, np.ndarray):
                 raise ValueError("Invalid audio segment generated.")
 
-            processed_segments_paths.append(
-                self._save_result(
-                    np.concatenate([audio_segment, create_silence(sample_rate, 0.75)]),
-                    sample_rate,
-                ),
+            processed_segments_paths[segment.id] = self._save_result(
+                np.concatenate([audio_segment, create_silence(sample_rate, 0.75)]),
+                sample_rate,
             )
 
         return processed_segments_paths

@@ -4,6 +4,8 @@ from typing import TypeVar, Generic
 from tta_types.types import SpeechRequestSegment, Voice
 
 
+SegmentId = str
+SpeechAudioPath = str
 VoiceName = str
 PreparedVoiceType = TypeVar("PreparedVoiceType")
 SpeechResult = TypeVar("SpeechResult")
@@ -14,7 +16,9 @@ class SpeechGeneratorInterface(ABC, Generic[PreparedVoiceType, SpeechResult]):
         pass
 
     @abstractmethod
-    def generate(self, segments: list[SpeechRequestSegment]) -> list[str]:
+    def generate(
+        self, segments: list[SpeechRequestSegment]
+    ) -> dict[SegmentId, SpeechAudioPath]:
         """Generate speech for each segment, returning the paths of the processed segments."""
 
     @staticmethod
