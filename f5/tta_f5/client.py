@@ -25,11 +25,10 @@ from f5_tts.infer.utils_infer import (
     device as default_device,
 )
 
-from tta_types.interfaces import SpeechGeneratorInterface
+from tta_types.interfaces import SpeechGeneratorInterface, VoiceName
 from tta_types.types import SpeechRequestSegment, Voice
 
-
-VoiceName = str
+from tta_f5.utils import create_silence
 
 
 @dataclass
@@ -38,7 +37,10 @@ class PreparedVoice:
     ref_text: str
 
 
-class F5Client(SpeechGeneratorInterface):
+SpeechResult = np.ndarray
+
+
+class F5Client(SpeechGeneratorInterface[PreparedVoice, SpeechResult]):
     def __init__(self, voices: list[Voice]) -> None:
         self._vocoder_path = f"{Path(__file__).parent}/vocos"
         self._model_config = OmegaConf.load(
@@ -88,7 +90,7 @@ class F5Client(SpeechGeneratorInterface):
 
             processed_segments_paths.append(
                 self._save_result(
-                    np.concatenate([audio_segment, _create_silence(sample_rate, 0.75)]),
+                    np.concatenate([audio_segment, create_silence(sample_rate, 0.75)]),
                     sample_rate,
                 ),
             )
@@ -108,7 +110,7 @@ class F5Client(SpeechGeneratorInterface):
         return processed_voices
 
     @staticmethod
-    def _save_result(result: np.ndarray, sample_rate: int) -> str:
+    def _save_result(result: SpeechResult, sample_rate: int) -> str:
         """Save audio numpy array to a temporary WAV file and return the file path."""
         with tempfile.NamedTemporaryFile(
             suffix=".wav", dir="/tmp", delete=False
@@ -116,9 +118,3 @@ class F5Client(SpeechGeneratorInterface):
             temp_path = temp_file.name
         sf.write(temp_path, result, sample_rate, format="WAV", subtype="PCM_16")
         return temp_path
-
-
-def _create_silence(sample_rate: int, duration_seconds: float) -> np.ndarray:
-    """Creates a numpy array of silence for the specified duration."""
-    num_samples = int(sample_rate * duration_seconds)
-    return np.zeros(num_samples, dtype=np.float32)
