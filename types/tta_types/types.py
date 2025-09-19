@@ -29,15 +29,6 @@ class Voice(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
-class ScriptSegment(BaseModel):
-    id: str
-    text: str
-    speaker_alias: str  # References speaker by first_alias()
-
-    def __str__(self) -> str:
-        return f"{self.speaker_alias}: {self.text}"
-
-
 class Speaker(BaseModel):
     character: Character
     voice: Voice
@@ -49,11 +40,6 @@ class Speaker(BaseModel):
 
     def first_alias(self) -> str:
         return self.character.first_alias()
-
-
-class Script(BaseModel):
-    segments: list[ScriptSegment]
-    speakers: list[Speaker]
 
 
 class SpeechRequestSegment(BaseModel):
@@ -120,14 +106,3 @@ class AudiobookJob(BaseModel):
     script_started_at: Optional[str] = None
     narration_started_at: Optional[str] = None
     processing_segment_ids: Optional[list[str]] = None
-
-
-class ManifestSegment(BaseModel):
-    id: str
-    index: int
-    key: str
-
-
-class AudioManifest(BaseModel):
-    narration: dict[str, str]
-    segments: list[ManifestSegment]

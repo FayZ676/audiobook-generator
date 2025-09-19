@@ -24,7 +24,7 @@ dependencies = [
   "runpod==1.7.9",
   "scikit-learn==1.6.1",
   "spacy==3.8.4",
-  "tta_data==0.0.1",
+  "tta_aws==0.0.1",
   "tta_types==0.0.1",
 ]
 

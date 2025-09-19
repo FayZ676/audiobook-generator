@@ -32,27 +32,27 @@ router = APIRouter()
 
 @router.get("/narration/endpoint")
 def get_endpoint() -> NarrationEndpointDetails:
-    # headers = {"Authorization": f"Bearer {SPEECH_SERVICE_API_KEY}"}
-    # gpu_response = requests.get(
-    #     url=f"{SPEECH_API_URL_GPU}/health", headers=headers, timeout=5
-    # )
-    # cpu_response = requests.get(
-    #     url=f"{SPEECH_API_URL_CPU}/health", headers=headers, timeout=5
-    # )
-    # is_gpu_ready = gpu_response.json()["workers"]["ready"] > 0
-    # is_cpu_ready = cpu_response.json()["workers"]["ready"] > 0
-    # endpoint = (
-    #     SPEECH_API_URL_GPU
-    #     if is_gpu_ready
-    #     else SPEECH_API_URL_CPU if is_cpu_ready else None
-    # )
-    # wpm = 15 if is_gpu_ready else 5 if is_cpu_ready else None
-    # if not endpoint:
-    #     raise HTTPException(status_code=503, detail="No endpoints are available")
-    # return NarrationEndpointDetails(endpoint=endpoint, words_per_minute=wpm)  # type: ignore
-    return NarrationEndpointDetails(
-        endpoint=SPEECH_API_URL_GPU, words_per_minute=5
-    )  # NOTE: For testing
+    headers = {"Authorization": f"Bearer {SPEECH_SERVICE_API_KEY}"}
+    gpu_response = requests.get(
+        url=f"{SPEECH_API_URL_GPU}/health", headers=headers, timeout=5
+    )
+    cpu_response = requests.get(
+        url=f"{SPEECH_API_URL_CPU}/health", headers=headers, timeout=5
+    )
+    is_gpu_ready = gpu_response.json()["workers"]["ready"] > 0
+    is_cpu_ready = cpu_response.json()["workers"]["ready"] > 0
+    endpoint = (
+        SPEECH_API_URL_GPU
+        if is_gpu_ready
+        else SPEECH_API_URL_CPU if is_cpu_ready else None
+    )
+    wpm = 15 if is_gpu_ready else 5 if is_cpu_ready else None
+    if not endpoint:
+        raise HTTPException(status_code=503, detail="No endpoints are available")
+    return NarrationEndpointDetails(endpoint=endpoint, words_per_minute=wpm)  # type: ignore
+    # return NarrationEndpointDetails(
+    #     endpoint=SPEECH_API_URL_GPU, words_per_minute=5
+    # )  # NOTE: For testing
 
 
 @router.post("/narration", status_code=status.HTTP_202_ACCEPTED)
@@ -190,7 +190,7 @@ async def send_narration_request(
     )
     # NOTE: Add /runsync endpoint when testing locally.
     send_async_request(
-        url=f"{url}/runsync",
+        url=f"{url}/run",
         payload={"input": request.model_dump()},
         headers={
             "Content-Type": "application/json",

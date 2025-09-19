@@ -15,7 +15,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "tta_data==0.0.1",
+    "tta_aws==0.0.1",
     "tta_f5==0.0.1",
     "tta_types==0.0.1",
 ]

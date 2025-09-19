@@ -1,13 +1,13 @@
 import json
 
-from tta_types.types import Script, ScriptSegment
-
 from tta_script.dialogue.prompts import label_prompt
 from tta_script.dialogue.types import (
     Dialogue,
     TextSegment,
     DialogueLabel,
     DialogueLabelResponse,
+    ScriptSegment,
+    Script,
 )
 from tta_script.speakers import Speaker
 from tta_script.models.text import generate_text

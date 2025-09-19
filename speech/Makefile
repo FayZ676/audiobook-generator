@@ -3,7 +3,7 @@ install:
 	python -m venv .venv
 	source .venv/bin/activate && \
 	pip install -r requirements.txt && \
-	pip install -e ../data \
+	pip install -e ../aws \
 	-e ../types \
 	-e ../f5 \
 	-e .

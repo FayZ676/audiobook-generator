@@ -1,7 +1,11 @@
+import os
+from io import BytesIO
+
 import requests
 import runpod
 
 from tta_f5.client import F5Client
+
 from tta_types.types import (
     Voice,
     WebhookRequest,
@@ -9,9 +13,42 @@ from tta_types.types import (
     WebhookResponse,
     Response,
 )
-from tta_data.client import TTADataClient
+from tta_aws.s3 import S3Client
 
-from tta_speech.audio_utils import concat_audio_from_files
+from tta_speech.audio_utils import (
+    concat_audio_from_files,
+    audio_file_to_bytesio,
+)
+from tta_speech.data_utils import (
+    download_audio,
+    create_manifest,
+    save_manifest_and_narration,
+    load_existing_manifest,
+)
+
+
+PROJECTS_BUCKET = os.environ.get("PROJECTS_BUCKET", "")
+VOICES_BUCKET = os.environ.get("VOICES_BUCKET", "")
+
+
+s3 = S3Client()
+
+
+# TODO: Can this be bundled with the Manifest code? Some sort of TTADataManager class?
+def download_voices(voices: list[Voice], voice_save_path: str) -> list[Voice]:
+    return [
+        voice.model_copy(
+            update={
+                "audio_path": download_audio(
+                    audio_path=voice.audio_path,
+                    voice_name=voice.name,
+                    voices_bucket=VOICES_BUCKET,
+                    save_path=voice_save_path,
+                )
+            }
+        )
+        for voice in voices
+    ]
 
 
 def handler(event: dict):
@@ -22,46 +59,37 @@ def handler(event: dict):
     data = Response(filename="", request_word_count=total_word_count)
     status = "failed"
 
-    data_client = TTADataClient()
-
     try:
-        voices = _download_voices(
-            data_client=data_client, voices=request.voices, voice_save_path="/tmp"
-        )
-        result = F5Client(voices=voices).generate(segments=request.text)
+        voices = download_voices(request.voices, "/tmp")
+        result = F5Client(voices=voices).generate(request.text)
 
         for segment in request.text:
-            data_client.upload_speech(
-                user_id=request.user_id,
-                chapter_name=request.chapter_name,
-                speech_file_path=result[segment.id],
+            s3.upload_fileobj(
+                bucket_name=PROJECTS_BUCKET,
+                file_name=f"{request.user_id}/{request.chapter_name}/audio/segments/{segment.id}.mp3",
+                file=audio_file_to_bytesio(result[segment.id]),
             )
 
-        existing_manifest = data_client.get_speech_manifest(
-            user_id=request.user_id, chapter_name=request.chapter_name
-        )
+        narration_key = f"{request.user_id}/{request.chapter_name}/audio/narration.mp3"
+        manifest_key = f"{request.user_id}/{request.chapter_name}/audio/manifest.json"
 
-        # NOTE: This whole manifest section doesn't make much sense to me.
+        existing_manifest = load_existing_manifest(manifest_key, PROJECTS_BUCKET)
         if existing_manifest:
             segment_ids = [s.id for s in existing_manifest.segments]
-            file_paths = [result[seg_id] for seg_id in segment_ids]
+            ordered_file_paths = [result[seg_id] for seg_id in segment_ids]
+            stitched = concat_audio_from_files(ordered_file_paths, audio_format="wav")
+            s3.upload_fileobj(PROJECTS_BUCKET, narration_key, BytesIO(stitched))
         else:
             segment_ids = [s.id for s in request.text]
-            file_paths = [result[seg_id] for seg_id in segment_ids]
-            data_client.upload_speech_manifest(
-                user_id=request.user_id,
-                chapter_name=request.chapter_name,
-                segment_ids=segment_ids,
+            manifest = create_manifest(
+                request.user_id, request.chapter_name, segment_ids, narration_key
+            )
+            save_manifest_and_narration(
+                manifest, manifest_key, narration_key, result, PROJECTS_BUCKET
             )
 
-        stitched_path = concat_audio_from_files(file_paths=file_paths)
-        narration_path = data_client.upload_speech(
-            user_id=request.user_id,
-            chapter_name=request.chapter_name,
-            speech_file_path=stitched_path,
-        )
         status = "complete"
-        data = Response(filename=narration_path, request_word_count=total_word_count)
+        data = Response(filename=narration_key, request_word_count=total_word_count)
     except Exception as e:
         raise e from e
     finally:
@@ -76,23 +104,6 @@ def handler(event: dict):
             ).model_dump(),
             timeout=120,
         )
-
-
-def _download_voices(
-    data_client: TTADataClient, voices: list[Voice], voice_save_path: str
-) -> list[Voice]:
-    return [
-        voice.model_copy(
-            update={
-                "audio_path": data_client.get_voice(
-                    voice_audio_file_path=voice.audio_path,
-                    voice_name=voice.name,
-                    save_path=voice_save_path,
-                )
-            }
-        )
-        for voice in voices
-    ]
 
 
 if __name__ == "__main__":
