@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "tta_aws"
+name = "tta_data"
 version = "0.0.1"
 authors = [
   { name="Faizi Fifita", email="author@example.com" },
@@ -14,7 +14,9 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
-dependencies = []
+dependencies = [
+  "tta_types==0.0.1"
+]
 
 [project.urls]
 Homepage = "https://github.com/FayZ676/audiobook-generator"
