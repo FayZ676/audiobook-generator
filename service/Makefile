@@ -1,8 +1,8 @@
 install:
 	python -m venv .venv
-	.venv/bin/pip install -r ../data/requirements.txt
+	.venv/bin/pip install -r ../aws/requirements.txt
 	.venv/bin/pip install -r ../types/requirements.txt
-	.venv/bin/pip install -e ../data -e ../types -e .
+	.venv/bin/pip install -e ../aws -e ../types -e .
 
 run:
 	@chmod +x ./run.sh
