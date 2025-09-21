@@ -52,7 +52,7 @@ def download_all_segments(user_id: str, chapter_name: str) -> list[str]:
     )
     ordered_file_paths = []
     for segment_key in sorted(
-        segment_keys, key=lambda k: int(k.split("/")[-1].split(".")[0])
+        segment_keys, key=lambda k: int(k.split("/")[-1].split(".")[0].split("-")[-1])
     ):
         temp_path = f"/tmp/{segment_key.split("/")[-1]}"
         with open(temp_path, "wb") as f:
