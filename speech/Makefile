@@ -2,6 +2,9 @@ install:
 	cd ../f5 && make download_vocos_model download_checkpoint
 	python -m venv .venv
 	source .venv/bin/activate && \
+	pip install -r ../aws/requirements.txt && \
+	pip install -r ../types/requirements.txt && \
+	pip install -r ../f5/requirements.txt && \
 	pip install -r requirements.txt && \
 	pip install -e ../aws \
 	-e ../types \
