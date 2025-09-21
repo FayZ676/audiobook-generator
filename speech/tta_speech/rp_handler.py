@@ -1,5 +1,6 @@
 import os
 from io import BytesIO
+import logging
 
 import requests
 import runpod
@@ -25,6 +26,10 @@ from tta_speech.data_utils import (
     save_manifest_and_narration,
     load_existing_manifest,
 )
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 PROJECTS_BUCKET = os.environ.get("PROJECTS_BUCKET", "")
@@ -91,7 +96,8 @@ def handler(event: dict):
         status = "complete"
         data = Response(filename=narration_key, request_word_count=total_word_count)
     except Exception as e:
-        raise e from e
+        logger.exception("Speech generation failed: %s", str(e))
+        status = "failed"
     finally:
         requests.post(
             url=input_data.callback,
