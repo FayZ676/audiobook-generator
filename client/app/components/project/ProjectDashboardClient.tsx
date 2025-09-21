@@ -62,7 +62,6 @@ export default function ProjectDashboardClient({
       handleRevalidateTag("chapters"),
       handleRevalidateTag("project"),
       handleRevalidateTag("job"),
-      handleRevalidateTag("audio-manifest"),
     ]);
     router.refresh();
   };

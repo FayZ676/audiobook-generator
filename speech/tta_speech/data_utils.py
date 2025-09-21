@@ -1,77 +1,9 @@
 import os
-import json
-from io import BytesIO
-from typing import Optional
-
-from pydantic import BaseModel
 
 from tta_aws.s3 import S3Client
 
-from tta_speech.audio_utils import concat_audio_from_files
-
 
 s3 = S3Client()
-
-
-class ManifestSegment(BaseModel):
-    id: str
-    index: int
-    key: str
-
-
-class AudioManifest(BaseModel):
-    narration: dict[str, str]
-    segments: list[ManifestSegment]
-
-
-# TODO: Create TTADataManagerClient class? Should it be its own package?
-
-
-def load_existing_manifest(
-    manifest_key: str, bucket_name: str
-) -> Optional[AudioManifest]:
-    """Load and validate existing manifest file from S3."""
-    manifest_exists = bool(s3.list_files(bucket_name, manifest_key))
-    if not manifest_exists:
-        return None
-
-    manifest_data = json.loads(s3.get_file(bucket_name, manifest_key).decode("utf-8"))
-    return AudioManifest.model_validate(manifest_data)
-
-
-def create_manifest(
-    user_id: str, chapter_name: str, segment_ids: list[str], narration_key: str
-) -> AudioManifest:
-    """Create a new manifest with the given segment IDs."""
-    manifest_segments = [
-        ManifestSegment(
-            id=seg_id,
-            index=idx,
-            key=f"{user_id}/{chapter_name}/audio/segments/{seg_id}.mp3",
-        )
-        for idx, seg_id in enumerate(segment_ids)
-    ]
-
-    return AudioManifest(
-        narration={"key": narration_key},
-        segments=manifest_segments,
-    )
-
-
-def save_manifest_and_narration(
-    manifest: AudioManifest,
-    manifest_key: str,
-    narration_key: str,
-    narration_audio: bytes,
-    bucket_name: str,
-) -> None:
-    """Save manifest and create stitched narration from audio segments."""
-    s3.upload_fileobj(bucket_name, narration_key, BytesIO(narration_audio))
-    s3.upload_fileobj(
-        bucket_name,
-        manifest_key,
-        BytesIO(manifest.model_dump_json().encode("utf-8")),
-    )
 
 
 def download_audio(

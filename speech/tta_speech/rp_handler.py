@@ -5,7 +5,7 @@ import logging
 import requests
 import runpod
 
-from tta_f5.client import F5Client
+from tta_f5.client import F5Client, SegmentId, SpeechAudioPath
 
 from tta_types.types import (
     Voice,
@@ -16,16 +16,8 @@ from tta_types.types import (
 )
 from tta_aws.s3 import S3Client
 
-from tta_speech.audio_utils import (
-    concat_audio_from_files,
-    audio_file_to_bytesio,
-)
-from tta_speech.data_utils import (
-    download_audio,
-    create_manifest,
-    save_manifest_and_narration,
-    load_existing_manifest,
-)
+from tta_speech.audio_utils import concat_audio_from_files, audio_file_to_bytesio
+from tta_speech.data_utils import download_audio
 
 
 logging.basicConfig(level=logging.INFO)
@@ -39,7 +31,49 @@ VOICES_BUCKET = os.environ.get("VOICES_BUCKET", "")
 s3 = S3Client()
 
 
-# TODO: Can this be bundled with the Manifest code? Some sort of TTADataManager class?
+def upload_narration_segments(
+    user_id: str,
+    chapter_name: str,
+    segments: dict[SegmentId, SpeechAudioPath],
+) -> None:
+    """Generate audio for segments and upload to S3."""
+    for seg_id, _segment in segments.items():
+        s3.upload_fileobj(
+            bucket_name=PROJECTS_BUCKET,
+            file_name=f"{user_id}/{chapter_name}/audio/segments/{seg_id}.mp3",
+            file=audio_file_to_bytesio(segments[seg_id]),
+        )
+
+
+def download_all_segments(user_id: str, chapter_name: str) -> list[str]:
+    """Download all segment audio files for a chapter and return ordered file paths."""
+    segment_keys = s3.list_files(
+        PROJECTS_BUCKET, f"{user_id}/{chapter_name}/audio/segments/"
+    )
+    ordered_file_paths = []
+    for segment_key in sorted(
+        segment_keys, key=lambda k: int(k.split("/")[-1].split(".")[0])
+    ):
+        temp_path = f"/tmp/{segment_key.split("/")[-1]}"
+        with open(temp_path, "wb") as f:
+            f.write(s3.get_file(PROJECTS_BUCKET, segment_key))
+        ordered_file_paths.append(temp_path)
+    return ordered_file_paths
+
+
+def build_final_narration(
+    user_id: str, chapter_name: str, file_paths: list[str]
+) -> str:
+    """Concatenate segment files and upload final narration to S3."""
+    narration_key = f"{user_id}/{chapter_name}/audio/narration.mp3"
+    if file_paths:
+        final_narration = concat_audio_from_files(
+            file_paths=file_paths, audio_format="wav"
+        )
+        s3.upload_fileobj(PROJECTS_BUCKET, narration_key, BytesIO(final_narration))
+    return narration_key
+
+
 def download_voices(voices: list[Voice], voice_save_path: str) -> list[Voice]:
     return [
         voice.model_copy(
@@ -66,49 +100,21 @@ def handler(event: dict):
 
     try:
         voices_local = download_voices(request.voices, "/tmp")
-        narration_result_map = F5Client(voices=voices_local).generate(request.text)
-        for segment in request.text:
-            s3.upload_fileobj(
-                bucket_name=PROJECTS_BUCKET,
-                file_name=f"{request.user_id}/{request.chapter_name}/audio/segments/{segment.id}.mp3",
-                file=audio_file_to_bytesio(narration_result_map[segment.id]),
-            )
-
-        # TODO: I don't think this block is correct. We should always save the individual segments, as well as the final narration, and update the manifest file accordingly.
-        narration_key = f"{request.user_id}/{request.chapter_name}/audio/narration.mp3"
-        manifest_key = f"{request.user_id}/{request.chapter_name}/audio/manifest.json"
-        existing_manifest = load_existing_manifest(manifest_key, PROJECTS_BUCKET)
-        if existing_manifest:
-            narration_segment_ids = [
-                segment.id for segment in existing_manifest.segments
-            ]
-            ordered_file_paths = [
-                narration_result_map[seg_id] for seg_id in narration_segment_ids
-            ]
-            final_narration = concat_audio_from_files(
-                file_paths=ordered_file_paths, audio_format="wav"
-            )
-            s3.upload_fileobj(PROJECTS_BUCKET, narration_key, BytesIO(final_narration))
-        else:  # NOTE: This is our first time narrating.
-            narration_segment_ids = [segment.id for segment in request.text]
-            manifest = create_manifest(
-                request.user_id,
-                request.chapter_name,
-                narration_segment_ids,
-                narration_key,
-            )
-            ordered_file_paths = [
-                narration_result_map[seg_id] for seg_id in narration_segment_ids
-            ]
-            save_manifest_and_narration(
-                manifest=manifest,
-                manifest_key=manifest_key,
-                narration_key=narration_key,
-                narration_audio=concat_audio_from_files(
-                    file_paths=ordered_file_paths, audio_format="wav"
-                ),
-                bucket_name=PROJECTS_BUCKET,
-            )
+        narrated_segments = F5Client(voices=voices_local).generate(request.text)
+        upload_narration_segments(
+            user_id=request.user_id,
+            chapter_name=request.chapter_name,
+            segments=narrated_segments,
+        )
+        segment_audio_paths = download_all_segments(
+            user_id=request.user_id,
+            chapter_name=request.chapter_name,
+        )
+        narration_key = build_final_narration(
+            user_id=request.user_id,
+            chapter_name=request.chapter_name,
+            file_paths=segment_audio_paths,
+        )
 
         status = "complete"
         data = Response(filename=narration_key, request_word_count=total_word_count)

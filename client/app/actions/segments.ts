@@ -6,31 +6,6 @@ import { apiCallJson, apiCallVoid } from "../lib/api";
 import { getVoices } from "./voices";
 import { getNarrationEndpoint } from "./narrate";
 
-export interface SegmentAudio {
-  id: string;
-  index: number;
-  key: string;
-  url: string;
-}
-
-export interface AudioManifest {
-  narration: { key: string; url: string };
-  segments: SegmentAudio[];
-}
-
-export async function getAudioManifest(
-  chapterName: string
-): Promise<AudioManifest> {
-  const userId = await getUserId();
-  return apiCallJson<AudioManifest>(
-    `${process.env.AUDIOBOOK_SERVICE_URL}/narration/${userId}/${chapterName}/audio`,
-    {
-      cache: "force-cache",
-      next: { revalidate: 2700, tags: ["audio-manifest"] },
-    }
-  );
-}
-
 export async function getSegmentAudioUrl(
   chapterName: string,
   segmentId: string

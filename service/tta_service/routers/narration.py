@@ -24,7 +24,6 @@ from tta_service.config import (
 )
 from tta_service.utils import send_async_request, update_status, validate_usage
 from tta_service.routers.job import get_job_status
-import json
 
 
 router = APIRouter()
@@ -118,48 +117,15 @@ def get_narration(user_id: str, chapter_name: str):
     return narration_url
 
 
-@router.get("/narration/{user_id}/{chapter_name}/audio")
-def get_narration_manifest(user_id: str, chapter_name: str):
-    manifest_key = f"{user_id}/{chapter_name}/audio/manifest.json"
-    if not s3_client.list_files(PROJECTS_BUCKET, manifest_key):
-        raise HTTPException(status_code=404, detail="manifest not found")
-    manifest = json.loads(
-        s3_client.get_file(PROJECTS_BUCKET, manifest_key).decode("utf-8")
-    )
-    narration = manifest.get("narration", {})
-    segments = manifest.get("segments", [])
-    result = {
-        "narration": {
-            "key": narration.get("key"),
-            "url": s3_client.presigned_url(PROJECTS_BUCKET, narration.get("key")),
-        },
-        "segments": [
-            {
-                "id": s.get("id"),
-                "index": s.get("index"),
-                "key": s.get("key"),
-                "url": s3_client.presigned_url(PROJECTS_BUCKET, s.get("key")),
-            }
-            for s in segments
-        ],
-    }
-    return result
-
-
 @router.get("/narration/{user_id}/{chapter_name}/segments/{segment_id}")
 def get_segment_audio(user_id: str, chapter_name: str, segment_id: str):
-    manifest_key = f"{user_id}/{chapter_name}/audio/manifest.json"
-    if not s3_client.list_files(PROJECTS_BUCKET, manifest_key):
-        raise HTTPException(status_code=404, detail="manifest not found")
-    manifest = json.loads(
-        s3_client.get_file(PROJECTS_BUCKET, manifest_key).decode("utf-8")
-    )
-    segments = manifest.get("segments", [])
-    match = next((s for s in segments if s.get("id") == segment_id), None)
-    if not match:
+    segment_key = f"{user_id}/{chapter_name}/audio/segments/{segment_id}.mp3"
+    if not s3_client.list_files(PROJECTS_BUCKET, segment_key):
         raise HTTPException(status_code=404, detail="segment not found")
-    key = match.get("key")
-    return {"key": key, "url": s3_client.presigned_url(PROJECTS_BUCKET, key)}
+    return {
+        "key": segment_key,
+        "url": s3_client.presigned_url(PROJECTS_BUCKET, segment_key),
+    }
 
 
 @router.delete("/narration/{user_id}/{chapter_name}")
