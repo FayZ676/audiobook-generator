@@ -65,32 +65,49 @@ def handler(event: dict):
     status = "failed"
 
     try:
-        voices = download_voices(request.voices, "/tmp")
-        result = F5Client(voices=voices).generate(request.text)
-
+        voices_local = download_voices(request.voices, "/tmp")
+        narration_result_map = F5Client(voices=voices_local).generate(request.text)
         for segment in request.text:
             s3.upload_fileobj(
                 bucket_name=PROJECTS_BUCKET,
                 file_name=f"{request.user_id}/{request.chapter_name}/audio/segments/{segment.id}.mp3",
-                file=audio_file_to_bytesio(result[segment.id]),
+                file=audio_file_to_bytesio(narration_result_map[segment.id]),
             )
 
+        # TODO: I don't think this block is correct. We should always save the individual segments, as well as the final narration, and update the manifest file accordingly.
         narration_key = f"{request.user_id}/{request.chapter_name}/audio/narration.mp3"
         manifest_key = f"{request.user_id}/{request.chapter_name}/audio/manifest.json"
-
         existing_manifest = load_existing_manifest(manifest_key, PROJECTS_BUCKET)
         if existing_manifest:
-            segment_ids = [s.id for s in existing_manifest.segments]
-            ordered_file_paths = [result[seg_id] for seg_id in segment_ids]
-            stitched = concat_audio_from_files(ordered_file_paths, audio_format="wav")
-            s3.upload_fileobj(PROJECTS_BUCKET, narration_key, BytesIO(stitched))
-        else:
-            segment_ids = [s.id for s in request.text]
-            manifest = create_manifest(
-                request.user_id, request.chapter_name, segment_ids, narration_key
+            narration_segment_ids = [
+                segment.id for segment in existing_manifest.segments
+            ]
+            ordered_file_paths = [
+                narration_result_map[seg_id] for seg_id in narration_segment_ids
+            ]
+            final_narration = concat_audio_from_files(
+                file_paths=ordered_file_paths, audio_format="wav"
             )
+            s3.upload_fileobj(PROJECTS_BUCKET, narration_key, BytesIO(final_narration))
+        else:  # NOTE: This is our first time narrating.
+            narration_segment_ids = [segment.id for segment in request.text]
+            manifest = create_manifest(
+                request.user_id,
+                request.chapter_name,
+                narration_segment_ids,
+                narration_key,
+            )
+            ordered_file_paths = [
+                narration_result_map[seg_id] for seg_id in narration_segment_ids
+            ]
             save_manifest_and_narration(
-                manifest, manifest_key, narration_key, result, PROJECTS_BUCKET
+                manifest=manifest,
+                manifest_key=manifest_key,
+                narration_key=narration_key,
+                narration_audio=concat_audio_from_files(
+                    file_paths=ordered_file_paths, audio_format="wav"
+                ),
+                bucket_name=PROJECTS_BUCKET,
             )
 
         status = "complete"

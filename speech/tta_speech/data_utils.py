@@ -62,15 +62,11 @@ def save_manifest_and_narration(
     manifest: AudioManifest,
     manifest_key: str,
     narration_key: str,
-    audio_results: dict[str, str],  # TODO: Be more specific about the str types
+    narration_audio: bytes,
     bucket_name: str,
 ) -> None:
     """Save manifest and create stitched narration from audio segments."""
-    segment_ids = [s.id for s in manifest.segments]
-    ordered_file_paths = [audio_results[seg_id] for seg_id in segment_ids]
-    stitched = concat_audio_from_files(ordered_file_paths, audio_format="wav")
-
-    s3.upload_fileobj(bucket_name, narration_key, BytesIO(stitched))
+    s3.upload_fileobj(bucket_name, narration_key, BytesIO(narration_audio))
     s3.upload_fileobj(
         bucket_name,
         manifest_key,
