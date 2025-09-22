@@ -25,8 +25,8 @@ run:
 	@./run.sh
 
 lint:
-	(source .venv/bin/activate || . .venv/bin/activate) && \
+	source .venv/bin/activate && \
 	pylint --rcfile=../.pylintrc tta_speech
 
 test:
-	@set -a && source .env.local && set +a && cd tta_speech && python rp_handler.py
+	@set -a && source .env.local && set +a && source .venv/bin/activate && cd tta_speech && python rp_handler.py
