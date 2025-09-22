@@ -119,7 +119,7 @@ def get_narration(user_id: str, chapter_name: str):
 
 @router.get("/narration/{user_id}/{chapter_name}/segments/{segment_id}")
 def get_segment_audio(user_id: str, chapter_name: str, segment_id: str):
-    segment_key = f"{user_id}/{chapter_name}/audio/segments/{segment_id}.mp3"
+    segment_key = f"{user_id}/{chapter_name}/audio/segments/{segment_id}.wav"
     if not s3_client.list_files(PROJECTS_BUCKET, segment_key):
         raise HTTPException(status_code=404, detail="segment not found")
     return {
