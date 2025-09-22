@@ -9,4 +9,5 @@ set -a
 source .env.local
 set +a
 
+source .venv/bin/activate
 python tta_script/rp_handler.py --rp_serve_api --rp_api_port 8001

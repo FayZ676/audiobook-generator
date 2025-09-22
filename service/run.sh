@@ -9,4 +9,5 @@ set -a
 source .env.local
 set +a
 
+source .venv/bin/activate
 uvicorn tta_service.main:app --reload --port 8000
