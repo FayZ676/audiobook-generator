@@ -14,7 +14,7 @@ def audio_file_to_bytesio(file_path: str) -> BytesIO:
 
 
 def concat_audio_from_files(file_paths: list[str], audio_format: str) -> bytes:
-    """Concatenate MP3 files from local file paths."""
+    """Concatenate audio files from local file paths."""
     combined = AudioSegment.empty()
     for file_path in file_paths:
         seg = AudioSegment.from_file(file_path, format=audio_format)

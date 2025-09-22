@@ -40,7 +40,7 @@ def upload_narration_segments(
     for seg_id, _segment in segments.items():
         s3.upload_fileobj(
             bucket_name=PROJECTS_BUCKET,
-            file_name=f"{user_id}/{chapter_name}/audio/segments/{seg_id}.mp3",
+            file_name=f"{user_id}/{chapter_name}/audio/segments/{seg_id}.wav",
             file=audio_file_to_bytesio(segments[seg_id]),
         )
 
