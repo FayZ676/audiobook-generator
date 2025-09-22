@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
 
 import {
   ClerkProvider,
@@ -51,6 +52,7 @@ export default function RootLayout({
           </header>
           <main className="prose prose-lg max-w-none">{children}</main>
           <SpeedInsights />
+          <Analytics />
         </body>
       </html>
     </ClerkProvider>
