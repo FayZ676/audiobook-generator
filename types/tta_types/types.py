@@ -16,7 +16,7 @@ class Character(BaseModel):
         return hash((tuple(self.names), self.age, self.gender))
 
     def first_alias(self) -> str:
-        return self.names[0] if self.names else ""
+        return self.names[0]
 
 
 class Voice(BaseModel):
