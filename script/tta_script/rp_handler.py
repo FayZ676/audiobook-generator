@@ -59,7 +59,7 @@ def handler(event: dict):
         speakers = get_speakers(
             characters=previous_characters | new_characters,
             voices=voices,
-            narrator_voice=voices[0],
+            narrator_voice=voices[0], # TODO: We shouldn't need this to be a distinct param. We should use whatever is abailable in voices.
             previous_speakers=previous_speakers,
         )
         script = get_script(text, speakers)
