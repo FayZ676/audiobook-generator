@@ -121,7 +121,7 @@ def handler(event: dict):
     except Exception as e:
         logger.exception("Speech generation failed: %s", str(e))
         status = "failed"
-    finally:
+    finally: # TODO: We don't do this in script rp_handler. Refer to our implementation there.
         requests.post(
             url=input_data.callback,
             json=WebhookResponse(
