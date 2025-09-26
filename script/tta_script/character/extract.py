@@ -27,6 +27,7 @@ class CharacterAliases:
         return next(iter(self.names))
 
 
+# TODO: I think we can just call this get_characters.
 def get_new_characters(
     text: str, existing_characters: set[Character]
 ) -> set[Character]:
