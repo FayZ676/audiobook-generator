@@ -18,3 +18,9 @@ dependencies = []
 
 [project.urls]
 Homepage = "https://github.com/FayZ676/audiobook-generator"
+
+[tool.hatch.build.targets.wheel]
+packages = ["tta_types"]
+
+[tool.hatch.build.targets.wheel.shared-data]
+"tta_types/py.typed" = "tta_types/py.typed"
