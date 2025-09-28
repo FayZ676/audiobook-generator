@@ -14,20 +14,6 @@ class LogEntry(BaseModel):
     total_cost: float
 
 
-class ScriptSegment(BaseModel):
-    id: str
-    text: str
-    speaker_alias: str  # References speaker by first_alias()
-
-    def __str__(self) -> str:
-        return f"{self.speaker_alias}: {self.text}"
-
-
-class Script(BaseModel):
-    segments: list[ScriptSegment]
-    speakers: list[Speaker]
-
-
 # TODO: We should be using actual types here. ScriptSegment and Speakers
 class ScriptPayload(BaseModel):
     segments: list[dict[str, str]]

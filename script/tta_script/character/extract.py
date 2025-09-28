@@ -27,10 +27,7 @@ class CharacterAliases:
         return next(iter(self.names))
 
 
-# TODO: I think we can just call this get_characters.
-def get_new_characters(
-    text: str, existing_characters: set[Character]
-) -> set[Character]:
+def get_characters(text: str, existing_characters: set[Character]) -> set[Character]:
     """Extract new speakers from text that don't overlap with existing ones."""
     new_characters = set()
     for chunk in get_chunks(text, 100000):

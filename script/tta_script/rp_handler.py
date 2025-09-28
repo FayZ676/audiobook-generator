@@ -4,12 +4,12 @@ import json
 import logging
 from typing import BinaryIO
 
-from tta_script.dialogue.types import Script
 from tta_script.dialogue.extract import get_script
-from tta_script.character.extract import get_new_characters
+from tta_script.character.extract import get_characters
 from tta_script.text_utils import normalize_quotes
 from tta_script.speakers import get_speakers
 
+from tta_types.script import Script
 from tta_types.types import WebhookResponse, WebhookRequest, Response, ScriptRequest
 from tta_aws.s3 import S3Client
 
@@ -55,11 +55,13 @@ def handler(event: dict):
             raise ValueError("No voices available")
 
         previous_characters = {s.character for s in previous_speakers}
-        new_characters = get_new_characters(text, previous_characters)
+        new_characters = get_characters(text, previous_characters)
         speakers = get_speakers(
             characters=previous_characters | new_characters,
             voices=voices,
-            narrator_voice=voices[0], # TODO: We shouldn't need this to be a distinct param. We should use whatever is abailable in voices.
+            narrator_voice=voices[
+                0
+            ],  # TODO: We shouldn't need this to be a distinct param. We should use whatever is abailable in voices.
             previous_speakers=previous_speakers,
         )
         script = get_script(text, speakers)
