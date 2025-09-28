@@ -6,11 +6,11 @@ from tta_script.dialogue.types import (
     TextSegment,
     DialogueLabel,
     DialogueLabelResponse,
-    ScriptSegment,
-    Script,
 )
 from tta_script.speakers import Speaker
 from tta_script.models.text import generate_text
+
+from tta_types.script import Script, ScriptSegment
 
 
 def get_script(text: str, speakers: set[Speaker]) -> Script:
