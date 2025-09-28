@@ -27,6 +27,7 @@ class CharacterAliases:
         return next(iter(self.names))
 
 
+# TODO: I think we can just call this get_characters.
 def get_new_characters(
     text: str, existing_characters: set[Character]
 ) -> set[Character]:
@@ -38,6 +39,7 @@ def get_new_characters(
         )
         new_characters.update(chunk_characters)
 
+    # TODO: This portion of code pertains to setting a narrator. I dont think it belongs here.
     if not existing_characters:
         new_characters.add(
             Character(names=["Narrator"], age="middle-aged", gender="male")
