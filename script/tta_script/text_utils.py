@@ -28,7 +28,7 @@ def get_chunks(text: str, max_words: int) -> list[str]:
 
     paragraphs = text.split("\n\n")
     chunks: list[str] = []
-    current_chunk = []
+    current_chunk: list[str] = []
     current_word_count = 0
 
     for paragraph in paragraphs:

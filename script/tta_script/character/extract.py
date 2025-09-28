@@ -29,7 +29,7 @@ class CharacterAliases:
 
 def get_characters(text: str, existing_characters: set[Character]) -> set[Character]:
     """Extract new speakers from text that don't overlap with existing ones."""
-    new_characters = set()
+    new_characters: set[Character] = set()
     for chunk in get_chunks(text, 100000):
         chunk_characters = _extract_characters_from_chunk(
             chunk, existing_characters | new_characters
