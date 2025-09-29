@@ -1,8 +1,4 @@
-import os
-import io
-import json
 import logging
-from typing import BinaryIO
 
 from tta_script.dialogue.extract import (
     get_dialogues,
@@ -12,38 +8,16 @@ from tta_script.dialogue.extract import (
 from tta_script.character.extract import get_characters
 from tta_script.text_utils import normalize_quotes
 from tta_script.speakers import get_speakers
+from tta_script.file_utils import upload_script_result
 
-from tta_types.script import Script
 from tta_types.types import WebhookResponse, WebhookRequest, Response, ScriptRequest
-from tta_aws.s3 import S3Client
 
 import requests
 import runpod
 
 
-PROJECTS_BUCKET = os.environ.get("PROJECTS_BUCKET", "")
-
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
-s3_client = S3Client()
-
-
-def _to_json_fileobject(filename: str, script_data: Script) -> BinaryIO:
-    json_data = script_data.model_dump()
-    json_bytes = json.dumps(json_data, indent=4).encode("utf-8")
-    file_obj = io.BytesIO(json_bytes)
-    file_obj.name = f"{filename}"
-    return file_obj
-
-
-def _upload_script_result(user_id: str, script_data: Script, chapter_name: str):
-    script_file = _to_json_fileobject("script.json", script_data)
-    project_script_path = f"{user_id}/{chapter_name}/script.json"
-    s3_client.upload_fileobj(f"{PROJECTS_BUCKET}", project_script_path, script_file)
-    return str(script_file.name)
 
 
 def handler(event: dict):
@@ -52,8 +26,7 @@ def handler(event: dict):
 
     try:
 
-        voices = request_data.voices
-        if len(voices) == 0:
+        if len(request_data.voices) == 0:
             raise ValueError("No voices available")
 
         text = normalize_quotes(request_data.text_content)
@@ -62,8 +35,8 @@ def handler(event: dict):
         new_characters = get_characters(text, previous_characters)
         speakers = get_speakers(
             characters=previous_characters | new_characters,
-            voices=voices,
-            narrator_voice=voices[
+            voices=request_data.voices,
+            narrator_voice=request_data.voices[
                 0
             ],  # TODO: We shouldn't need this to be a distinct param. We should use whatever is abailable in voices.
             previous_speakers=previous_speakers,
@@ -71,7 +44,7 @@ def handler(event: dict):
         text_segments = get_text_segments(text=text)
         dialogue = get_dialogues(text_segments=text_segments, speakers=speakers)
         script = dialogue_to_script(dialogue=dialogue)
-        script_filename = _upload_script_result(
+        script_filename = upload_script_result(
             request.user_id, script, request_data.chapter_name
         )
         status = "complete"
