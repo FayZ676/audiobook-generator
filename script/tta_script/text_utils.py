@@ -1,9 +1,7 @@
 import re
 
 
-def normalize_quotes(text: str) -> str:
-    """Convert curly quotes to straight quotes for consistent processing."""
-    return text.replace("\u201c", '"').replace("\u201d", '"')
+QUOTE_VARIANTS = {'"': ["\u201c", "\u201d"]}
 
 
 HONORIFICS = [
@@ -18,6 +16,16 @@ HONORIFICS = [
     "Aunt",
     "Professor",
 ]
+
+
+# TODO: What are preprocessing steps do we need to run on the text?
+def normalize_quotes(text: str) -> str:
+    """Convert curly quotes to straight quotes for consistent processing."""
+    for target_quote, variants in QUOTE_VARIANTS.items():
+        for variant in variants:
+            if variant in text:
+                text = text.replace(variant, target_quote)
+    return text
 
 
 def get_chunks(text: str, max_words: int) -> list[str]:
