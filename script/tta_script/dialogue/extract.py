@@ -1,5 +1,7 @@
 import json
 
+from tta_types.script import Script, ScriptSegment
+
 from tta_script.dialogue.prompts import label_prompt
 from tta_script.dialogue.types import (
     Dialogue,
@@ -10,22 +12,21 @@ from tta_script.dialogue.types import (
 from tta_script.speakers import Speaker
 from tta_script.models.text import generate_text
 
-from tta_types.script import Script, ScriptSegment
 
-
-def get_script(text: str, speakers: set[Speaker]) -> Script:
-    dialogues = get_dialogues(get_text_segments(text), speakers)
+def dialogue_to_script(dialogue: list[Dialogue]) -> Script:
     script_segments = [
         ScriptSegment(
             id=f"seg-{i:04d}", text=d.text, speaker_alias=d.speaker.first_alias()
         )
-        for i, d in enumerate(dialogues)
+        for i, d in enumerate(dialogue)
     ]
-    unique_speakers = list(set(d.speaker for d in dialogues))
+    unique_speakers = list(set(d.speaker for d in dialogue))
     return Script(segments=script_segments, speakers=unique_speakers)
 
 
-def get_dialogues(text_segments: list[TextSegment], speakers: set[Speaker]):
+def get_dialogues(
+    text_segments: list[TextSegment], speakers: set[Speaker]
+) -> list[Dialogue]:
     narrator = next(s for s in speakers if "Narrator" in s.character.names)
     label_dict = {
         label.index: label.speaker
