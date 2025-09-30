@@ -30,11 +30,18 @@ export default async function ProjectChapterPage({
   } else {
     const { chapter } = await params;
     const currentChapter = decodeURIComponent(chapter);
-    const projectName = await getCurrentProjectName();
-    const chapters = await getChapters();
+    
+    // Load critical data synchronously for validation
+    const [projectName, chapters] = await Promise.all([
+      getCurrentProjectName(),
+      getChapters(),
+    ]);
+    
     if (!chapters.includes(currentChapter)) {
       redirect("/project");
     }
+
+    // Create promises for non-critical data (preserves Suspense behavior)
     const jobStatePromise = getJobState();
     const voicesPromise = getVoices();
     const scriptPromise = getScript(currentChapter);

@@ -1,5 +1,18 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## API Optimization
+
+This project implements an optimized data fetching pattern to prevent duplicate API requests:
+
+- **Consolidated Data Fetching**: The `app/actions/dashboard.ts` file batches related API calls using `Promise.all()` to reduce network requests
+- **Smart Caching**: Uses Next.js `unstable_cache` with user-specific cache keys to prevent data leakage
+- **Request Deduplication**: Server-side API calls are coordinated to eliminate race conditions
+
+### Key Benefits
+- Reduced server load from duplicate requests
+- Improved page load performance
+- Better user experience through faster data loading
+
 ## Getting Started
 
 First, run the development server:

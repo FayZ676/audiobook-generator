@@ -18,18 +18,24 @@ export default async function ProjectHome() {
     // TODO: Redirect to signin page.
     redirect("/");
   } else {
-    const project = await getCurrentProjectName();
-    const chapters = await getChapters();
-    if (project && chapters.length > 0) {
+    // Load critical data synchronously for validation
+    const [projectName, chapters] = await Promise.all([
+      getCurrentProjectName(),
+      getChapters(),
+    ]);
+    
+    if (projectName && chapters.length > 0) {
       redirect(`/project/${encodeURIComponent(chapters[0])}`);
     }
+
+    // Create promises for non-critical data (preserves Suspense behavior)
     const jobStatePromise = getJobState();
     const voicesPromise = getVoices();
 
     return (
       <ProjectDashboardClient
         userId={user.id}
-        projectName={project}
+        projectName={projectName}
         chapters={chapters}
         jobStatePromise={jobStatePromise}
         voicesPromise={voicesPromise}
