@@ -6,9 +6,9 @@ from tta_script.dialogue.extract import (
     get_text_segments,
 )
 from tta_script.character.extract import get_characters
-from tta_script.text_utils import normalize_quotes
 from tta_script.speakers import get_speakers
-from tta_script.file_utils import upload_script_result
+from tta_script.utils.text import normalize_quotes
+from tta_script.utils.file import upload_script_result
 
 from tta_types.types import WebhookResponse, WebhookRequest, Response, ScriptRequest
 
@@ -25,7 +25,6 @@ def handler(event: dict):
     request_data = ScriptRequest.model_validate(request.data)
 
     try:
-
         if len(request_data.voices) == 0:
             raise ValueError("No voices available")
 
@@ -50,8 +49,8 @@ def handler(event: dict):
         status = "complete"
         message = ""
         data = Response(filename=script_filename, request_word_count=len(text.split()))
-    except (ValueError, KeyError, TypeError, RuntimeError) as e:
-        logger.exception("Exception occurred during script processing: %s", str(e))
+    except Exception as e:
+        logger.error("Exception occurred during script processing: %s", str(e))
         status = "failed"
         message = str(e)
         data = Response(filename="", request_word_count=0)

@@ -2,7 +2,7 @@ import spacy
 from spacy.language import Language
 from spacy.tokens import Span, Doc
 
-from tta_script.text_utils import HONORIFICS
+from tta_script.utils.text import HONORIFICS
 
 
 def is_plural(ent: Span):
