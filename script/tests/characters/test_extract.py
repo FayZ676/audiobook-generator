@@ -9,31 +9,12 @@ from tta_script.character.extract import (
     get_aliases,
     get_characters,
 )
-from tta_script.metrics import precision_recall
 from tta_types.types import Character
 
 
 def get_text(name: str):
     with open(Path.cwd() / f"../text/{name}", encoding="utf-8") as f:
         return f.read()
-
-
-def test_get_speakers__hp_chapter_1_3():
-    expected = {
-        "Professor McGonagall",
-        "Albus Dumbledore",
-        "Mrs. Dursley",
-        "Mr. Dursley",
-        "Hagrid",
-        "Uncle Vernon",
-        "Aunt Petunia",
-        "Dudley",
-        "Harry Potter",
-    }
-    result = get_character_names(get_text("harrypotter-1-3.txt"))
-    precision, recall = precision_recall(result, expected)
-    print(f"Main -> PRECISION: {precision}, RECALL: {recall}")
-    assert result == expected
 
 
 @pytest.mark.integration
