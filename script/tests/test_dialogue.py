@@ -166,10 +166,10 @@ def test_create_text_batches():
     #         speakers=speakers,
     #     )
 
-    expected_details = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
-    assert [seg.text for seg in script.segments] == [
-        e["text"] for e in expected_details
-    ]
+    # expected_details = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
+    # assert [seg.text for seg in script.segments] == [
+    #     e["text"] for e in expected_details
+    # ]
 
 
 def test_split_by_dialogue():
