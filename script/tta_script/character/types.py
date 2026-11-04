@@ -7,13 +7,11 @@ Age = Literal["young", "middle-aged", "old"]
 Gender = Literal["male", "female"]
 
 
-class AliasResponse(BaseModel):
-    aliases: list[list[str]]
+class FoundCharacter(BaseModel):
+    names: list[str]
+    age: Age
+    gender: Gender
 
 
-class AgesResponse(BaseModel):
-    ages: list[str]
-
-
-class GendersResponse(BaseModel):
-    genders: list[str]
+class CharactersResponse(BaseModel):
+    characters: list[FoundCharacter]

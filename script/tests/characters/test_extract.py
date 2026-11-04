@@ -1,104 +1,86 @@
-from pathlib import Path
+import json
 
 import pytest
 
-from tta_script.character.extract import (
-    get_character_names,
-    get_ages,
-    get_genders,
-    get_aliases,
-    get_characters,
-)
+from tta_script.character import extract
+from tta_script.character.extract import NARRATOR, get_characters
 from tta_types.types import Character
 
 
-def get_text(name: str):
-    with open(Path.cwd() / f"../text/{name}", encoding="utf-8") as f:
-        return f.read()
+def fake_model(monkeypatch, *replies: list[dict]):
+    """Make the model return each reply in turn; record the prompts it got."""
+    prompts: list[str] = []
+    replies_iter = iter(replies)
+
+    def generate_text(_system, prompt, _response_format):
+        prompts.append(prompt)
+        return json.dumps({"characters": next(replies_iter)})
+
+    monkeypatch.setattr(extract, "generate_text", generate_text)
+    return prompts
 
 
-@pytest.mark.integration
-def test_resolve_aliases():
-    expected = {
-        ("Professor McGonagall",),
-        ("Albus Dumbledore",),
-        ("Mrs. Dursley", "Aunt Petunia"),
-        ("Mr. Dursley", "Uncle Vernon"),
-        ("Hagrid",),
-        ("Dudley",),
-        ("Harry Potter",),
+VERNON = {"names": ["Mr. Dursley", "Uncle Vernon"], "age": "middle-aged", "gender": "male"}
+PETUNIA = {"names": ["Mrs. Dursley"], "age": "middle-aged", "gender": "female"}
+
+
+def test_first_chapter_adds_narrator(monkeypatch):
+    fake_model(monkeypatch, [VERNON, PETUNIA])
+
+    result = get_characters("text", set())
+
+    assert result == {
+        Character(names=["Mr. Dursley", "Uncle Vernon"], age="middle-aged", gender="male"),
+        Character(names=["Mrs. Dursley"], age="middle-aged", gender="female"),
+        NARRATOR,
     }
-    names = {
-        "Professor McGonagall",
-        "Albus Dumbledore",
-        "Mrs. Dursley",
-        "Aunt Petunia",
-        "Mr. Dursley",
-        "Uncle Vernon",
-        "Hagrid",
-        "Dudley",
-        "Harry Potter",
-    }
-    result = get_aliases(get_text("harrypotter-1-3.txt"), names)
-    assert result == expected
 
 
-@pytest.mark.integration
-def test_get_age__hp_chapter_1_3():
-    names_ages = {
-        "Professor McGonagall": "middle-aged",
-        "Albus Dumbledore": "old",
-        "Mrs. Dursley": "middle-aged",
-        "Mr. Dursley": "middle-aged",
-        "Hagrid": "middle-aged",
-        "Uncle Vernon": "middle-aged",
-        "Aunt Petunia": "middle-aged",
-        "Dudley": "young",
-        "Harry Potter": "young",
+def test_later_chapter_skips_known_characters_and_narrator(monkeypatch):
+    known = {
+        Character(names=["Mr. Dursley"], age="middle-aged", gender="male"),
+        NARRATOR,
     }
-    assert (
-        get_ages(get_text("harrypotter-1-3.txt"), [name for name in names_ages])
-        == names_ages
+    harry = {"names": ["Harry Potter", "Harry"], "age": "young", "gender": "male"}
+    prompts = fake_model(monkeypatch, [VERNON, harry])
+
+    result = get_characters("text", known)
+
+    # Vernon shares "Mr. Dursley" with a known character, so he isn't new.
+    assert result == {Character(names=["Harry Potter", "Harry"], age="young", gender="male")}
+    assert "- Mr. Dursley" in prompts[0]
+
+
+def test_model_listing_a_narrator_is_ignored(monkeypatch):
+    fake_model(monkeypatch, [{"names": ["Narrator"], "age": "old", "gender": "female"}])
+
+    assert get_characters("text", set()) == {NARRATOR}
+
+
+def test_blank_and_repeated_names_are_cleaned(monkeypatch):
+    fake_model(
+        monkeypatch,
+        [{"names": [" Hagrid ", "Hagrid", "", "Rubeus Hagrid"], "age": "middle-aged", "gender": "male"}],
     )
 
+    result = get_characters("text", {NARRATOR})
 
-@pytest.mark.integration
-def test_get_genders__hp_chapter_1_3():
-    names_genders = {
-        "Professor McGonagall": "female",
-        "Albus Dumbledore": "male",
-        "Mrs. Dursley": "female",
-        "Mr. Dursley": "male",
-        "Hagrid": "male",
-        "Uncle Vernon": "male",
-        "Aunt Petunia": "female",
-        "Dudley": "male",
-        "Harry Potter": "male",
-    }
-    assert (
-        get_genders(get_text("harrypotter-1-3.txt"), [name for name in names_genders])
-        == names_genders
-    )
+    assert result == {Character(names=["Hagrid", "Rubeus Hagrid"], age="middle-aged", gender="male")}
 
 
-@pytest.mark.integration
-def test_get_speaker_details_with_previous_speakers():
-    """Test that previous speakers are included and new ones are filtered correctly"""
-    previous_characters = {
-        Character(
-            names=["Harry Potter"],
-            age="young",
-            gender="male",
-        ),
-        Character(
-            names=["Professor McGonagall"],
-            age="middle-aged",
-            gender="female",
-        ),
-    }
-    result = get_characters(
-        'Harry Potter said "Hello!" Then Hermione replied "Hi there!"',
-        previous_characters,
-    )
-    assert any("Harry Potter" in speaker.names for speaker in result)
-    assert any("Professor McGonagall" in speaker.names for speaker in result)
+def test_long_text_is_split_and_later_chunks_see_earlier_finds(monkeypatch):
+    monkeypatch.setattr(extract, "CHUNK_WORDS", 3)
+    prompts = fake_model(monkeypatch, [VERNON], [VERNON, PETUNIA])
+
+    result = get_characters("one two three\n\nfour five six", {NARRATOR})
+
+    assert len(prompts) == 2
+    assert "- Mr. Dursley, Uncle Vernon" in prompts[1]
+    assert {c.first_alias() for c in result} == {"Mr. Dursley", "Mrs. Dursley"}
+
+
+def test_invalid_reply_raises(monkeypatch):
+    fake_model(monkeypatch, [{"names": ["Hagrid"], "age": "ancient", "gender": "male"}])
+
+    with pytest.raises(ValueError):
+        get_characters("text", set())

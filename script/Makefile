@@ -7,8 +7,7 @@ install:
 	-r requirements_dev.txt \
 	-e ../types \
 	-e ../aws \
-	-e . && \
-	python -m spacy download en_core_web_trf
+	-e .
 
 run:
 	@chmod +x ./run.sh

@@ -1,140 +1,49 @@
-import json
-from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
-
 from tta_script.models.text import generate_text
-from tta_script.ner import NER
-from tta_script.utils.text import (
-    remove_dialogue,
-    near_quotes,
-    reduce_names,
-    get_chunks,
-)
-from tta_script.character.prompts import alias, ages, genders
-from tta_script.character.types import (
-    AgesResponse,
-    AliasResponse,
-    GendersResponse,
-)
+from tta_script.utils.text import get_chunks
+from tta_script.character.prompts import characters as characters_prompt
+from tta_script.character.types import CharactersResponse
 from tta_types.types import Character
 
 
-@dataclass(frozen=True)
-class CharacterAliases:
-    names: frozenset[str]
+NARRATOR = Character(names=["Narrator"], age="middle-aged", gender="male")
 
-    def primary_name(self) -> str:
-        return next(iter(self.names))
+# Keeps each request under 100K tokens, where Claude Haiku 5.5's price rises.
+CHUNK_WORDS = 60_000
 
 
 def get_characters(text: str, existing_characters: set[Character]) -> set[Character]:
-    """Extract new speakers from text that don't overlap with existing ones."""
-    new_characters: set[Character] = set()
-    for chunk in get_chunks(text, 100000):
-        chunk_characters = _extract_characters_from_chunk(
-            chunk, existing_characters | new_characters
-        )
-        new_characters.update(chunk_characters)
+    """Find the speaking characters in text that aren't already known.
 
-    # TODO: This portion of code pertains to setting a narrator. I dont think it belongs here.
-    if not existing_characters:
-        new_characters.add(
-            Character(names=["Narrator"], age="middle-aged", gender="male")
+    The narrator is added on the first chapter, when nothing is known yet."""
+    new_characters: set[Character] = set()
+    for chunk in get_chunks(text, CHUNK_WORDS):
+        known = existing_characters | new_characters
+        new_characters.update(
+            c for c in _find_characters(chunk, known) if not _overlaps(c, known)
         )
+
+    if not existing_characters:
+        new_characters.add(NARRATOR)
     return new_characters
 
 
-def _extract_characters_from_chunk(
-    chunk: str, existing_characters: set[Character]
-) -> set[Character]:
-    """Extract new characters from a single text chunk."""
-    character_aliases = get_aliases(chunk, get_character_names(chunk))
-    new_aliases = _filter_overlapping_aliases(character_aliases, existing_characters)
-
-    if not new_aliases:
-        return set()
-
-    return _create_characters_with_traits(chunk, new_aliases)
-
-
-def _filter_overlapping_aliases(
-    character_aliases: set[CharacterAliases], existing_characters: set[Character]
-) -> list[CharacterAliases]:
-    """Filter out aliases that overlap with existing characters."""
-    non_overlapping = []
-    for aliases in character_aliases:
-        has_overlap = any(
-            any(name in existing_character.names for name in aliases.names)
-            for existing_character in existing_characters
-        )
-        if not has_overlap:
-            non_overlapping.append(aliases)
-    return non_overlapping
-
-
-def _get_traits(chunk: str, names: list[str]) -> tuple[dict[str, str], dict[str, str]]:
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        ages_future = executor.submit(get_ages, chunk, names)
-        genders_future = executor.submit(get_genders, chunk, names)
-        ages = ages_future.result()
-        genders = genders_future.result()
-    return ages, genders
-
-
-def _create_characters_with_traits(
-    chunk: str, aliases_list: list[CharacterAliases]
-) -> set[Character]:
-    """Create Character with LLM-determined traits."""
-    ages, genders = _get_traits(
-        chunk, [aliases.primary_name() for aliases in aliases_list]
+def _find_characters(text: str, known: set[Character]) -> list[Character]:
+    prompt = characters_prompt.substitute(
+        text=text,
+        known_characters="\n".join(f"- {', '.join(c.names)}" for c in known) or "(none)",
     )
-
-    return {
-        Character(
-            names=list(aliases.names),
-            age=age,
-            gender=gender,
-        )
-        for aliases, age, gender in zip(
-            aliases_list,
-            list(ages.values()),
-            list(genders.values()),
-        )
-        if aliases and age and gender
-    }
-
-
-def get_character_names(text: str) -> set[str]:
-    paragraphs = []
-    for p in text.split("\n\n"):
-        if p.count('"') % 2 == 0 and p.count('"') > 0:
-            paragraphs.append(remove_dialogue(p.replace("\n", " ")))
-    ner = NER()
-    names = reduce_names(
-        {name for paragraph in paragraphs for name in ner.find_names(paragraph)}
+    response = CharactersResponse.model_validate_json(
+        generate_text("", prompt, CharactersResponse)
     )
-    return {name for p in paragraphs for name in names if near_quotes(name, p)}
+    found = []
+    for c in response.characters:
+        names = list(dict.fromkeys(n.strip() for n in c.names if n.strip()))
+        if names and "Narrator" not in names:
+            found.append(Character(names=names, age=c.age, gender=c.gender))
+    return found
 
 
-def get_ages(text: str, names: list[str]) -> dict[str, str]:
-    result = generate_text(
-        "", ages.substitute({"text": text, "characters": names}), AgesResponse
-    )
-    return dict(zip(names, [str(age) for age in json.loads(result)["ages"]]))
-
-
-def get_genders(text: str, names: list[str]) -> dict[str, str]:
-    result = generate_text(
-        "", genders.substitute({"text": text, "characters": names}), GendersResponse
-    )
-    return dict(zip(names, [str(gender) for gender in json.loads(result)["genders"]]))
-
-
-def get_aliases(text: str, names: set[str]) -> set[CharacterAliases]:
-    result = generate_text(
-        "", alias.substitute({"text": text, "names": names}), AliasResponse
-    )
-    return {
-        CharacterAliases(frozenset(alias_group))
-        for alias_group in json.loads(result)["aliases"]
-    }
+def _overlaps(character: Character, known: set[Character]) -> bool:
+    """Whether character shares a name with someone already known."""
+    names = set(character.names)
+    return any(names & set(k.names) for k in known)
