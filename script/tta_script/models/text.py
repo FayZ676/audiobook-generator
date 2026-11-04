@@ -8,7 +8,7 @@ from pydantic import BaseModel
 logger = logging.getLogger(__name__)
 
 # "<provider>:<model>", e.g. "openai:gpt-5-nano" or "anthropic:claude-haiku-5-5".
-DEFAULT_MODEL = "openai:gpt-4.1"
+DEFAULT_MODEL = "anthropic:claude-haiku-5-5"
 # Reasoning depth for models that think before answering. Every call in this
 # pipeline is classification or extraction, which doesn't benefit from more.
 REASONING_EFFORT = "low"
