@@ -16,6 +16,8 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
+  "anthropic==2.4.0",
+  "brotli>=1.2",  # httpx2 (via anthropic) needs output_buffer_limit
   "openai==1.61.1",
   "pylint==3.3.1",
   "python-multipart==0.0.17",

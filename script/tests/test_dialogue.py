@@ -44,7 +44,7 @@ def get_dialogue_expectation(filename: str):
     details: list[dict] = []
     text = get_text(filename)
     for segment in text.split("\n"):
-        split = segment.split(":")
+        split = segment.split(":", 1)
         details.append(
             {
                 "speaker": split[0].strip(),
