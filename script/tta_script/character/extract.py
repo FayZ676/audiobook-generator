@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from tta_script.models.text import generate_text
 from tta_script.ner import NER
-from tta_script.text_utils import (
+from tta_script.utils.text import (
     remove_dialogue,
     near_quotes,
     reduce_names,
