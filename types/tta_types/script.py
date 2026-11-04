@@ -1,57 +1,31 @@
-"""
-Script type adapters for cross-service communication.
+"""A chapter's script: its text in order, each segment pointing at a cast member."""
 
-This module provides adapters to convert between the canonical script types
-(defined in script/tta_script/dialogue/types.py) and service-specific formats.
-"""
-
-from typing import List
 from pydantic import BaseModel
-from tta_types.types import SpeechRequestSegment, Speaker
 
-
-class ScriptData(BaseModel):
-    """
-    Script data adapter for narration service.
-
-    This adapter handles the JSON format used for script data storage
-    and provides conversion to speech request format.
-    """
-
-    segments: List[dict]
-    speakers: List[Speaker]
-
-    def to_speech_segments(self) -> List[SpeechRequestSegment]:
-        """Convert script data to speech request segments with proper voice mapping."""
-        speaker_alias_to_voice = {}
-        for speaker in self.speakers:
-            for name in speaker.character.names:
-                speaker_alias_to_voice[name] = speaker.voice.name
-
-        result: List[SpeechRequestSegment] = []
-        for segment in self.segments:
-            result.append(
-                SpeechRequestSegment(
-                    id=segment["id"],
-                    text=segment.get("text", ""),
-                    voice_name=speaker_alias_to_voice.get(
-                        segment.get("speaker_alias", ""),
-                        segment.get("speaker_alias", ""),
-                    ),
-                )
-            )
-        return result
+from tta_types.cast import Cast
+from tta_types.types import SpeechRequestSegment
 
 
 class ScriptSegment(BaseModel):
     id: str
     text: str
-    speaker_alias: str  # References speaker by first_alias()
+    speaker_id: str  # CastMember.id
 
     def __str__(self) -> str:
-        return f"{self.speaker_alias}: {self.text}"
+        return f"{self.speaker_id}: {self.text}"
 
 
 class Script(BaseModel):
     segments: list[ScriptSegment]
-    speakers: list[Speaker]
+
+    def to_speech_segments(self, cast: Cast) -> list[SpeechRequestSegment]:
+        """Pair every segment with its speaker's voice."""
+        result = []
+        for segment in self.segments:
+            member = cast.get(segment.speaker_id)
+            if member is None:
+                raise ValueError(f"Segment {segment.id} has unknown speaker {segment.speaker_id!r}")
+            result.append(
+                SpeechRequestSegment(id=segment.id, text=segment.text, voice_name=member.voice)
+            )
+        return result

@@ -1,17 +1,21 @@
-from typing import Literal
-
 from pydantic import BaseModel
 
-
-Age = Literal["young", "middle-aged", "old"]
-Gender = Literal["male", "female"]
+from tta_types.types import Age, Gender
 
 
-class FoundCharacter(BaseModel):
+class KnownCharacter(BaseModel):
+    id: str
+    new_names: list[str]
+
+
+class NewCharacter(BaseModel):
     names: list[str]
     age: Age
     gender: Gender
 
 
-class CharactersResponse(BaseModel):
-    characters: list[FoundCharacter]
+class CastUpdate(BaseModel):
+    """What the model reports for one chunk of text."""
+
+    known: list[KnownCharacter]
+    new: list[NewCharacter]

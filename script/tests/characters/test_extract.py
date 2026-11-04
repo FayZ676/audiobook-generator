@@ -2,85 +2,156 @@ import json
 
 import pytest
 
+from tta_types.cast import NARRATOR_ID, Cast, CastMember
+from tta_types.types import Voice
 from tta_script.character import extract
-from tta_script.character.extract import NARRATOR, get_characters
-from tta_types.types import Character
+from tta_script.character.extract import update_cast
 
 
-def fake_model(monkeypatch, *replies: list[dict]):
+def voice(name, age="middle-aged", gender="male"):
+    return Voice(name=name, age=age, gender=gender, audio_path="", audio_transcript="")
+
+
+VOICES = [
+    voice("narrator-voice"),
+    voice("man"),
+    voice("woman", gender="female"),
+    voice("boy", age="young"),
+]
+
+
+def fake_model(monkeypatch, *replies: dict):
     """Make the model return each reply in turn; record the prompts it got."""
     prompts: list[str] = []
     replies_iter = iter(replies)
 
     def generate_text(_system, prompt, _response_format):
         prompts.append(prompt)
-        return json.dumps({"characters": next(replies_iter)})
+        reply = next(replies_iter)
+        return json.dumps({"known": reply.get("known", []), "new": reply.get("new", [])})
 
     monkeypatch.setattr(extract, "generate_text", generate_text)
     return prompts
 
 
-VERNON = {"names": ["Mr. Dursley", "Uncle Vernon"], "age": "middle-aged", "gender": "male"}
-PETUNIA = {"names": ["Mrs. Dursley"], "age": "middle-aged", "gender": "female"}
+def new(*names, age="middle-aged", gender="male"):
+    return {"names": list(names), "age": age, "gender": gender}
 
 
-def test_first_chapter_adds_narrator(monkeypatch):
-    fake_model(monkeypatch, [VERNON, PETUNIA])
-
-    result = get_characters("text", set())
-
-    assert result == {
-        Character(names=["Mr. Dursley", "Uncle Vernon"], age="middle-aged", gender="male"),
-        Character(names=["Mrs. Dursley"], age="middle-aged", gender="female"),
-        NARRATOR,
-    }
+def member(member_id, *names, age="middle-aged", gender="male", voice_name="man"):
+    return CastMember(id=member_id, names=list(names), age=age, gender=gender, voice=voice_name)
 
 
-def test_later_chapter_skips_known_characters_and_narrator(monkeypatch):
-    known = {
-        Character(names=["Mr. Dursley"], age="middle-aged", gender="male"),
-        NARRATOR,
-    }
-    harry = {"names": ["Harry Potter", "Harry"], "age": "young", "gender": "male"}
-    prompts = fake_model(monkeypatch, [VERNON, harry])
-
-    result = get_characters("text", known)
-
-    # Vernon shares "Mr. Dursley" with a known character, so he isn't new.
-    assert result == {Character(names=["Harry Potter", "Harry"], age="young", gender="male")}
-    assert "- Mr. Dursley" in prompts[0]
-
-
-def test_model_listing_a_narrator_is_ignored(monkeypatch):
-    fake_model(monkeypatch, [{"names": ["Narrator"], "age": "old", "gender": "female"}])
-
-    assert get_characters("text", set()) == {NARRATOR}
-
-
-def test_blank_and_repeated_names_are_cleaned(monkeypatch):
-    fake_model(
-        monkeypatch,
-        [{"names": [" Hagrid ", "Hagrid", "", "Rubeus Hagrid"], "age": "middle-aged", "gender": "male"}],
+def first_chapter_cast():
+    return Cast(
+        members=[
+            member(NARRATOR_ID, "Narrator", voice_name="narrator-voice"),
+            member("c1", "Mr. Dursley"),
+        ]
     )
 
-    result = get_characters("text", {NARRATOR})
 
-    assert result == {Character(names=["Hagrid", "Rubeus Hagrid"], age="middle-aged", gender="male")}
+def test_first_chapter_adds_narrator_and_numbers_new_characters(monkeypatch):
+    fake_model(monkeypatch, {"new": [new("Mr. Dursley"), new("Mrs. Dursley", gender="female")]})
+
+    cast = update_cast("text", Cast(), VOICES)
+
+    assert cast.members == [
+        member(NARRATOR_ID, "Narrator", voice_name="narrator-voice"),
+        member("c1", "Mr. Dursley", voice_name="man"),
+        member("c2", "Mrs. Dursley", gender="female", voice_name="woman"),
+    ]
+
+
+def test_known_character_gains_new_names_and_keeps_id_and_voice(monkeypatch):
+    prompts = fake_model(
+        monkeypatch, {"known": [{"id": "c1", "new_names": ["Uncle Vernon", "mr. dursley"]}]}
+    )
+
+    cast = update_cast("text", first_chapter_cast(), VOICES)
+
+    assert cast.get("c1") == member("c1", "Mr. Dursley", "Uncle Vernon")
+    assert len(cast.members) == 2
+    assert "- c1: Mr. Dursley" in prompts[0]
+    assert "Narrator" not in prompts[0].split("<known_characters>")[1]
+
+
+def test_update_does_not_change_the_cast_passed_in(monkeypatch):
+    fake_model(monkeypatch, {"known": [{"id": "c1", "new_names": ["Uncle Vernon"]}]})
+    original = first_chapter_cast()
+
+    update_cast("text", original, VOICES)
+
+    assert original == first_chapter_cast()
+
+
+def test_unknown_or_narrator_ids_are_ignored(monkeypatch):
+    fake_model(
+        monkeypatch,
+        {"known": [{"id": "c99", "new_names": ["Ghost"]}, {"id": NARRATOR_ID, "new_names": ["Me"]}]},
+    )
+
+    cast = update_cast("text", first_chapter_cast(), VOICES)
+
+    assert cast == first_chapter_cast()
+
+
+def test_new_character_matching_one_known_name_is_merged_into_it(monkeypatch):
+    fake_model(monkeypatch, {"new": [new("Vernon Dursley", "Mr. Dursley")]})
+
+    cast = update_cast("text", first_chapter_cast(), VOICES)
+
+    assert [m.id for m in cast.members] == [NARRATOR_ID, "c1"]
+    assert cast.get("c1").names == ["Mr. Dursley", "Vernon Dursley"]
+
+
+def test_name_shared_by_several_known_characters_makes_a_new_character(monkeypatch):
+    cast = Cast(
+        members=[
+            member(NARRATOR_ID, "Narrator"),
+            member("c1", "Fred Weasley", "Weasley"),
+            member("c2", "George Weasley", "Weasley"),
+        ]
+    )
+    fake_model(monkeypatch, {"new": [new("Ron Weasley", "Weasley", age="young")]})
+
+    cast = update_cast("text", cast, VOICES)
+
+    assert cast.get("c3").names == ["Ron Weasley", "Weasley"]
+
+
+def test_narrator_and_blank_names_are_never_added(monkeypatch):
+    fake_model(monkeypatch, {"new": [new("Narrator"), new(" ", ""), new(" Hagrid ", "Hagrid", "")]})
+
+    cast = update_cast("text", first_chapter_cast(), VOICES)
+
+    assert [m.names for m in cast.members[2:]] == [["Hagrid"]]
+
+
+def test_ids_keep_counting_after_the_highest_existing_one(monkeypatch):
+    cast = Cast(members=[member(NARRATOR_ID, "Narrator"), member("c4", "Hagrid")])
+    fake_model(monkeypatch, {"new": [new("Dudley", age="young")]})
+
+    assert update_cast("text", cast, VOICES).members[-1].id == "c5"
 
 
 def test_long_text_is_split_and_later_chunks_see_earlier_finds(monkeypatch):
     monkeypatch.setattr(extract, "CHUNK_WORDS", 3)
-    prompts = fake_model(monkeypatch, [VERNON], [VERNON, PETUNIA])
+    prompts = fake_model(monkeypatch, {"new": [new("Hagrid")]}, {"known": [], "new": []})
 
-    result = get_characters("one two three\n\nfour five six", {NARRATOR})
+    update_cast("one two three\n\nfour five six", Cast(), VOICES)
 
     assert len(prompts) == 2
-    assert "- Mr. Dursley, Uncle Vernon" in prompts[1]
-    assert {c.first_alias() for c in result} == {"Mr. Dursley", "Mrs. Dursley"}
+    assert "- c1: Hagrid" in prompts[1]
+
+
+def test_no_voices_is_an_error():
+    with pytest.raises(ValueError, match="No voices"):
+        update_cast("text", Cast(), [])
 
 
 def test_invalid_reply_raises(monkeypatch):
-    fake_model(monkeypatch, [{"names": ["Hagrid"], "age": "ancient", "gender": "male"}])
+    fake_model(monkeypatch, {"new": [new("Hagrid", age="ancient")]})
 
     with pytest.raises(ValueError):
-        get_characters("text", set())
+        update_cast("text", Cast(), VOICES)

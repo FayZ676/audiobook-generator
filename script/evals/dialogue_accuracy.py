@@ -8,6 +8,7 @@ across chapters. Scores, per run:
   against the hand-checked tests/text/**/harrypotter-N-expected-dialogue.txt
 - speaker recall: share of each chapter's speaking characters that were found
 - extra characters: characters found that never speak (each costs a voice)
+- names: whether new names (chapter 2's "Uncle Vernon") join the right character
 - duplicates: one person split into several characters, such as
   "Mr. Dursley" in chapter 1 and "Uncle Vernon" in chapter 2
 - gender / age: share of found speakers whose voice traits are right
@@ -29,10 +30,11 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from tta_types.types import Character, Speaker, Voice
-from tta_script.character.extract import get_characters
-from tta_script.dialogue.extract import dialogue_to_script, get_dialogues, get_text_segments
-from tta_script.speakers import get_speakers
+from tta_types.cast import NARRATOR_ID, Cast, CastMember
+from tta_types.script import Script
+from tta_types.types import Voice
+from tta_script.dialogue.extract import get_text_segments
+from tta_script.pipeline import build_script
 from tta_script.utils.text import normalize_quotes
 
 
@@ -98,6 +100,13 @@ CHARACTERS = {
 }
 NARRATOR = "Narrator"
 
+# Names a chapter uses heavily that the cast must attach to the right person
+# by the end of that chapter. Chapter 1 only says "Mr. Dursley" and "Mrs.
+# Dursley"; chapter 2 switches to "Uncle Vernon" and "Aunt Petunia".
+NAME_LINKS = {
+    2: {"Uncle Vernon": "Uncle Vernon", "Mrs. Dursley": "Aunt Petunia", "Harry Potter": "Harry"},
+}
+
 # Listed prices per million tokens: (input, cached input, output). Verify
 # against the providers' pricing pages before trusting the cost column.
 PRICES = {
@@ -145,90 +154,97 @@ def fake_voices() -> list[Voice]:
     ]
 
 
-def who_is(character: Character) -> str | None:
-    """The expected character this predicted character stands for, if any."""
-    if NARRATOR in character.names:
+def who_is(member: CastMember | None) -> str | None:
+    """The expected character this cast member stands for, if any."""
+    if member is None:
+        return None
+    if member.id == NARRATOR_ID:
         return NARRATOR
-    names = set(character.names)
+    names = set(member.names)
     return next((key for key, c in CHARACTERS.items() if names & c["aliases"]), None)
 
 
-def score_labels(segments, dialogue, expected) -> dict:
-    if [d.text for d in dialogue] != [e[1] for e in expected]:
+def score_labels(script: Script, cast: Cast, segments, expected) -> dict:
+    if [s.text for s in script.segments] != [e[1] for e in expected]:
         raise RuntimeError("Segments no longer line up with the expected file.")
     total = correct = 0
     mistakes = []
-    for i, (segment, line, (want, _)) in enumerate(zip(segments, dialogue, expected)):
-        got = who_is(line.speaker.character)
+    for i, (segment, line, (want, _)) in enumerate(zip(segments, script.segments, expected)):
+        member = cast.get(line.speaker_id)
+        got = who_is(member)
         if segment.is_dialogue:
             total += 1
             correct += got == want
         if got != want:
             mistakes.append(
-                {"index": i, "expected": want, "got": line.speaker.character.names, "text": line.text}
+                {
+                    "index": i,
+                    "expected": want,
+                    "got": member.names if member else line.speaker_id,
+                    "text": line.text,
+                }
             )
     return {"dialogue_total": total, "dialogue_correct": correct, "mistakes": mistakes}
 
 
-def score_characters(new: set[Character], known: set[Character], expected) -> dict:
-    """Score the characters known after a chapter: everything carried over
-    from earlier chapters plus what this chapter found."""
+def score_characters(before: Cast, after: Cast, number: int, expected) -> dict:
+    """Score the cast after a chapter against who speaks in it."""
     speaking = {want for want, _ in expected if want != NARRATOR}
-    everyone = known | new
-    found = {who_is(c) for c in everyone} - {None, NARRATOR}
+    members = [m for m in after.members if m.id != NARRATOR_ID]
+    new = [m for m in members if before.get(m.id) is None]
 
-    by_person: dict[str, list[Character]] = {}
-    for c in everyone:
-        if (key := who_is(c)) not in (None, NARRATOR):
-            by_person.setdefault(key, []).append(c)
+    by_person: dict[str, list[CastMember]] = {}
+    for m in members:
+        if (key := who_is(m)) is not None:
+            by_person.setdefault(key, []).append(m)
 
     traits = [
-        (c.gender == CHARACTERS[key]["gender"], c.age in CHARACTERS[key]["ages"], key, c)
-        for c in new
-        if (key := who_is(c)) not in (None, NARRATOR)
+        (m.gender == CHARACTERS[key]["gender"], m.age in CHARACTERS[key]["ages"], key, m)
+        for m in new
+        if (key := who_is(m)) is not None
+    ]
+    links = NAME_LINKS.get(number, {})
+    unlinked = [
+        f"{key} lacks {name!r}"
+        for key, name in links.items()
+        if not any(name in m.names for m in by_person.get(key, []))
     ]
     return {
         "speakers": len(speaking),
-        "speakers_found": len(speaking & found),
-        "missing": sorted(speaking - found),
-        "extras": sorted(c.first_alias() for c in new if who_is(c) is None),
-        "duplicates": {k: [c.names for c in cs] for k, cs in by_person.items() if len(cs) > 1},
+        "speakers_found": len(speaking & set(by_person)),
+        "missing": sorted(speaking - set(by_person)),
+        "extras": sorted(m.name for m in new if who_is(m) is None),
+        "duplicates": {k: [m.names for m in ms] for k, ms in by_person.items() if len(ms) > 1},
+        "names_checked": len(links),
+        "names_linked": len(links) - len(unlinked),
+        "unlinked": unlinked,
         "gender_right": sum(t[0] for t in traits),
         "age_right": sum(t[1] for t in traits),
         "traits_checked": len(traits),
         "wrong_traits": [
-            {"who": key, "age": c.age, "gender": c.gender} for g, a, key, c in traits if not (g and a)
+            {"who": key, "age": m.age, "gender": m.gender} for g, a, key, m in traits if not (g and a)
         ],
     }
 
 
 def run_once(chapters: list[int]) -> dict:
     voices = fake_voices()
-    known_speakers: set[Speaker] = set()
+    cast = Cast()
     per_chapter = {}
     for number in chapters:
         text_path, expected_path = CHAPTERS[number]
-        text = normalize_quotes(text_path.read_text(encoding="utf-8"))
+        text = text_path.read_text(encoding="utf-8")
         expected = load_expected(expected_path)
 
-        # Same steps as tta_script.rp_handler.handler.
-        known = {s.character for s in known_speakers}
-        new = get_characters(text, known)
-        speakers = get_speakers(
-            characters=known | new,
-            voices=voices,
-            narrator_voice=voices[0],
-            previous_speakers=known_speakers,
-        )
-        segments = get_text_segments(text)
-        dialogue = get_dialogues(text_segments=segments, speakers=speakers)
+        before = cast
+        script, cast = build_script(text, cast, voices)
+        segments = get_text_segments(normalize_quotes(text))
 
         per_chapter[number] = {
-            **score_labels(segments, dialogue, expected),
-            **score_characters(new, known, expected),
-            "characters": sorted(sorted(c.names) for c in new),
+            **score_labels(script, cast, segments, expected),
+            **score_characters(before, cast, number, expected),
+            "cast": [m.model_dump() for m in cast.members],
         }
-        known_speakers |= set(dialogue_to_script(dialogue).speakers)
     return {"chapters": per_chapter, **totals(per_chapter)}
 
 
@@ -241,8 +257,9 @@ def totals(per_chapter: dict) -> dict:
         "dialogue": total("dialogue_correct") / total("dialogue_total"),
         "recall": total("speakers_found") / total("speakers"),
         "extras": sum(len(c["extras"]) for c in per_chapter.values()),
-        # Characters accumulate, so the last chapter sees every duplicate.
+        # The cast accumulates, so the last chapter sees every duplicate.
         "duplicates": len(last["duplicates"]),
+        "names": total("names_linked") / max(1, total("names_checked")),
         "gender": total("gender_right") / max(1, total("traits_checked")),
         "age": total("age_right") / max(1, total("traits_checked")),
     }
@@ -297,7 +314,7 @@ def summarise(result: dict) -> str:
     cost = f"${result['cost']:.4f}" if result["cost"] is not None else "$?"
     return (
         f"dialogue {result['dialogue']:.1%} ({chapters}), recall {result['recall']:.0%}, "
-        f"extras {result['extras']}, duplicates {result['duplicates']}, "
+        f"extras {result['extras']}, duplicates {result['duplicates']}, names {result['names']:.0%}, "
         f"gender {result['gender']:.0%}, age {result['age']:.0%}, {cost}, {result['seconds']}s"
     )
 
@@ -305,7 +322,7 @@ def summarise(result: dict) -> str:
 def print_table(results: dict[str, list[dict]]):
     header = (
         f"\n{'model':28} {'dialogue (min-max)':>22} {'recall':>7} {'extras':>7}"
-        f" {'dupes':>6} {'gender':>7} {'age':>6} {'$/run':>8} {'s/run':>6} {'failed':>6}"
+        f" {'dupes':>6} {'names':>6} {'gender':>7} {'age':>6} {'$/run':>8} {'s/run':>6} {'failed':>6}"
     )
     print(header)
     for model, runs in results.items():
@@ -324,7 +341,7 @@ def print_table(results: dict[str, list[dict]]):
         spread = f"{statistics.mean(acc):.1%} ({min(acc):.1%}-{max(acc):.1%})"
         print(
             f"{model:28} {spread:>22} {mean('recall'):>7.0%} {mean('extras'):>7.1f}"
-            f" {mean('duplicates'):>6.1f} {mean('gender'):>7.0%} {mean('age'):>6.0%}"
+            f" {mean('duplicates'):>6.1f} {mean('names'):>6.0%} {mean('gender'):>7.0%} {mean('age'):>6.0%}"
             f" {cost:>8} {mean('seconds'):>6.0f} {failed:>6}"
         )
 

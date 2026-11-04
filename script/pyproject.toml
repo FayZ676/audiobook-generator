@@ -23,8 +23,6 @@ dependencies = [
   "python-multipart==0.0.17",
   "pytest==8.3.3",
   "pytest-cov==5.0.0",
-  "runpod==1.7.9",
-  "tta_aws==0.0.1",
   "tta_types==0.0.1",
 ]
 

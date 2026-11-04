@@ -1,179 +1,150 @@
+import json
+import re
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
-from tta_script.dialogue.extract import (
-    create_text_batches,
-    assign_speakers_to_dialogue,
-    label,
-    get_text_segments,
+from tta_types.cast import NARRATOR_ID, Cast, CastMember
+from tta_script.dialogue import extract
+from tta_script.dialogue.extract import get_text_segments, label_script
+from tta_script.dialogue.types import TextSegment
+
+
+TEXT_DIR = Path(__file__).parent / "text"
+
+CAST = Cast(
+    members=[
+        CastMember(id=NARRATOR_ID, names=["Narrator"], age="middle-aged", gender="male", voice="n"),
+        CastMember(id="c1", names=["Bob", "Robert"], age="middle-aged", gender="male", voice="b"),
+        CastMember(id="c2", names=["Mary"], age="young", gender="female", voice="m"),
+    ]
 )
-from tta_script.dialogue.types import TextSegment, DialogueLabel
-from tta_script.character.types import Age, Gender
-from tta_script.speakers import Speaker
-from tta_types.types import Voice, Character
 
 
-def build_speaker_voice(
-    names: set[str],
-    gender: Gender = "male",
-    age: Age = "middle-aged",
-    voice_name: str = "default_voice",
-    audio_path: str = "foo",
-    audio_transcript: str = "foo",
-):
-    return Speaker(
-        character=Character(names=list(names), age=age, gender=gender),
-        voice=Voice(
-            name=voice_name,
-            age=age,
-            gender=gender,
-            audio_path=audio_path,
-            audio_transcript=audio_transcript,
-        ),
-    )
-
-
-def get_text(filename: str) -> str:
-    current_dir = Path(__file__).parent
-    with open(f"{current_dir}/text/{filename}", "r", encoding="utf-8") as f:
-        return f.read()
-
-
-def get_dialogue_expectation(filename: str):
-    details: list[dict] = []
-    text = get_text(filename)
-    for segment in text.split("\n"):
-        split = segment.split(":", 1)
-        details.append(
-            {
-                "speaker": split[0].strip(),
-                "text": split[1].strip(),
-            }
-        )
-    return details
-
-
-@pytest.mark.integration
-def test_assign_speakers_to_dialogue():
-    texts = [
-        TextSegment("Hello, how are you?", True),
-        TextSegment("asked Bob.", False),
-        TextSegment("Great! How about you?", True),
-        TextSegment("replied Mary.", False),
-    ]
-    speakers = {
-        build_speaker_voice({"Bob"}, gender="male", voice_name="bob_voice"),
-        build_speaker_voice({"Mary"}, gender="female", voice_name="mary_voice"),
-    }
-    assert assign_speakers_to_dialogue(texts, speakers, batch_size=2) == [
-        DialogueLabel(index=0, speaker="Bob"),
-        DialogueLabel(index=2, speaker="Mary"),
+def get_dialogue_expectation(filename: str) -> list[dict]:
+    lines = (TEXT_DIR / filename).read_text(encoding="utf-8").splitlines()
+    return [
+        {"speaker": speaker.strip(), "text": text.strip()}
+        for speaker, text in (line.split(":", 1) for line in lines if line)
     ]
 
 
-@pytest.mark.integration
-def test_assign_speakers_to_dialogue__large():
-    speakers = {
-        build_speaker_voice({"Narrator"}, age="middle-aged", gender="male"),
-        build_speaker_voice({"Professor McGonagall"}, age="old", gender="female"),
-        build_speaker_voice({"Albus Dumbledore"}, age="old", gender="male"),
-        build_speaker_voice(
-            {"Mrs. Dursley", "Aunt Petunia"}, age="middle-aged", gender="female"
-        ),
-        build_speaker_voice(
-            {"Mr. Dursley", "Uncle Vernon"}, age="middle-aged", gender="male"
-        ),
-        build_speaker_voice({"Hagrid"}, age="middle-aged", gender="male"),
-        build_speaker_voice({"Dudley"}, age="young", gender="male"),
-        build_speaker_voice({"Harry Potter"}, age="young", gender="male"),
-    }
-    dialogues = [
-        TextSegment(e["text"], not e["speaker"] == "Narrator")
-        for e in get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
+def fake_labeller(monkeypatch, speaker_for):
+    """Label every segment in each batch with speaker_for(index, segment_line).
+    Records each prompt and validates replies with the real response model."""
+    prompts: list[str] = []
+
+    def generate_text(_system, prompt, response_format):
+        prompts.append(prompt)
+        batch = prompt.split("## Text")[1].split("## Speakers")[0]
+        lines = re.findall(r"^(\d+)\. (.*)$", batch, re.M)
+        reply = {"dialogue": [{"index": int(i), "speaker": speaker_for(int(i), line)} for i, line in lines]}
+        return response_format.model_validate(reply).model_dump_json()
+
+    monkeypatch.setattr(extract, "generate_text", generate_text)
+    return prompts
+
+
+SEGMENTS = [
+    TextSegment("Hello, how are you?", True, 0),
+    TextSegment("asked Bob.", False, 0),
+    TextSegment("Great! How about you?", True, 1),
+    TextSegment("replied Mary.", False, 1),
+]
+
+
+def test_script_points_each_segment_at_a_cast_id(monkeypatch):
+    fake_labeller(monkeypatch, lambda i, _: {0: "c1", 2: "c2"}.get(i, NARRATOR_ID))
+
+    script = label_script(SEGMENTS, CAST)
+
+    assert [(s.id, s.speaker_id) for s in script.segments] == [
+        ("seg-0000", "c1"),
+        ("seg-0001", NARRATOR_ID),
+        ("seg-0002", "c2"),
+        ("seg-0003", NARRATOR_ID),
     ]
-    result = assign_speakers_to_dialogue(dialogues, speakers)
-    expectated_dialogues = [
-        DialogueLabel(i, e["speaker"])
-        for i, e in enumerate(
-            get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
-        )
-    ]
-
-    failures = []
-    for r, e in zip(result, expectated_dialogues):
-        if r.index == e.index and r.speaker in e.speaker:
-            continue
-        failures.append(f"({r.index}) Expected any of {e.speaker} but got {r.speaker}")
-    assert len(failures) == 0, "\n".join(failures)
+    assert [s.text for s in script.segments] == [s.text for s in SEGMENTS]
 
 
-@pytest.mark.integration
-def test_label():
-    dialogues = {
-        0: TextSegment("Hello, how are you?", True),
-        1: TextSegment("asked Bob.", False),
-        2: TextSegment("Great! How about you?", True),
-        3: TextSegment("replied Mary.", False),
-    }
-    speakers = {
-        build_speaker_voice({"Bob"}, gender="male", voice_name="bob_voice"),
-        build_speaker_voice({"Mary"}, gender="female", voice_name="mary_voice"),
-    }
-    assert label(dialogues, speakers) == [
-        DialogueLabel(index=0, speaker="Bob"),
-        DialogueLabel(index=2, speaker="Mary"),
-    ]
+def test_narration_is_always_read_by_the_narrator(monkeypatch):
+    fake_labeller(monkeypatch, lambda *_: "c1")
+
+    script = label_script(SEGMENTS, CAST)
+
+    assert [s.speaker_id for s in script.segments] == ["c1", NARRATOR_ID, "c1", NARRATOR_ID]
 
 
-def test_create_text_batches():
-    texts = [
-        TextSegment("Hello, how are you?", True),
-        TextSegment("asked Bob.", False),
-        TextSegment("Great! How about you?", True),
-        TextSegment("replied Mary.", False),
-    ]
-    expected_batches = [
-        {
-            0: TextSegment("Hello, how are you?", True),
-            1: TextSegment("asked Bob.", False),
-        },
-        {
-            2: TextSegment("Great! How about you?", True),
-            3: TextSegment("replied Mary.", False),
-        },
-    ]
-    assert create_text_batches(texts, 2) == expected_batches
+def test_prompt_lists_every_name_for_each_speaker_and_breaks_paragraphs(monkeypatch):
+    prompts = fake_labeller(monkeypatch, lambda *_: NARRATOR_ID)
+
+    label_script(SEGMENTS, CAST)
+
+    assert "- narrator: Narrator\n- c1: Bob, Robert\n- c2: Mary" in prompts[0]
+    assert "1. (N) asked Bob.\n\n2. (D) Great! How about you?" in prompts[0]
 
 
-# # TODO: Update this test.
-# @pytest.mark.integration
-# def test_get_script():
-#     """Test the get_script function that returns Script structure."""
+def test_speaker_ids_outside_the_cast_are_rejected(monkeypatch):
+    fake_labeller(monkeypatch, lambda *_: "Bob")
 
-#     speakers = {
-#         build_speaker_voice({"Professor McGonagall"}),
-#         build_speaker_voice({"Albus Dumbledore"}),
-#         build_speaker_voice({"Mrs. Dursley", "Aunt Petunia"}),
-#         build_speaker_voice({"Mr. Dursley", "Uncle Vernon"}),
-#         build_speaker_voice({"Hagrid"}),
-#         build_speaker_voice({"Dudley"}),
-#         build_speaker_voice({"Harry Potter"}),
-#         build_speaker_voice({"Narrator"}),
-#     }
+    with pytest.raises(ValidationError):
+        label_script(SEGMENTS, CAST)
 
-#     script = get_script(
-#         text=get_text("harrypotter-1.txt"),
-#         speakers=speakers,
-#     )
 
-# expected_details = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
-# assert [seg.text for seg in script.segments] == [
-#     e["text"] for e in expected_details
-# ]
+def test_later_batches_see_earlier_labels_as_context(monkeypatch):
+    monkeypatch.setattr(extract, "BATCH_SIZE", 2)
+    monkeypatch.setattr(extract, "CONTEXT_SIZE", 1)
+    prompts = fake_labeller(monkeypatch, lambda i, _: "c1" if i == 0 else NARRATOR_ID)
+
+    script = label_script(SEGMENTS, CAST)
+
+    assert len(prompts) == 2
+    context = prompts[1].split("## Preceding Segments")[1].split("## Text")[0]
+    assert "1. (N) asked Bob. -> narrator" in context
+    assert "0." not in context
+    assert "(start of chapter)" in prompts[0]
+    assert script.segments[0].speaker_id == "c1"
+
+
+def test_labels_the_model_gives_to_context_segments_are_ignored(monkeypatch):
+    monkeypatch.setattr(extract, "BATCH_SIZE", 2)
+
+    def generate_text(_system, prompt, response_format):
+        # Labels segment 0 again while labelling the batch of 2 and 3.
+        indices = [0, 2, 3] if "2. (D)" in prompt else [0, 1]
+        reply = {"dialogue": [{"index": i, "speaker": "c2"} for i in indices]}
+        if indices == [0, 1]:
+            reply["dialogue"][0]["speaker"] = "c1"
+        return response_format.model_validate(reply).model_dump_json()
+
+    monkeypatch.setattr(extract, "generate_text", generate_text)
+
+    assert label_script(SEGMENTS, CAST).segments[0].speaker_id == "c1"
+
+
+def test_unlabelled_dialogue_is_read_by_the_narrator(monkeypatch):
+    def generate_text(_system, _prompt, _response_format):
+        return json.dumps({"dialogue": []})
+
+    monkeypatch.setattr(extract, "generate_text", generate_text)
+
+    assert {s.speaker_id for s in label_script(SEGMENTS, CAST).segments} == {NARRATOR_ID}
 
 
 def test_split_by_dialogue():
-    result = get_text_segments(get_text("harrypotter-1.txt"))
+    result = get_text_segments((TEXT_DIR / "harrypotter-1.txt").read_text(encoding="utf-8"))
     expectation = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
     assert [r.text for r in result] == [e["text"] for e in expectation]
+
+
+def test_segments_record_their_paragraph():
+    segments = get_text_segments('"Hi," said Bob. "Bye."\n\n"Hello," said Mary.')
+
+    assert [(s.text, s.paragraph) for s in segments] == [
+        ("Hi,", 0),
+        ("said Bob.", 0),
+        ("Bye.", 0),
+        ("Hello,", 1),
+        ("said Mary.", 1),
+    ]
