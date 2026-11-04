@@ -51,13 +51,23 @@ def get_dialogues(
 
 
 def assign_speakers_to_dialogue(
-    texts: list[TextSegment], speakers: set[Speaker], batch_size: int = 100
+    texts: list[TextSegment],
+    speakers: set[Speaker],
+    batch_size: int = 100,
+    context_size: int = 30,
 ):
+    """Label segments batch by batch. Each batch also sees the last
+    context_size segments before it, with their labels, so a conversation
+    that crosses a batch boundary keeps track of who is speaking."""
     labels: list[DialogueLabel] = []
-    batches = create_text_batches(texts, batch_size)
-    for batch in batches:
-        result = label(batch, speakers)
-        labels.extend(result)
+    for batch in create_text_batches(texts, batch_size):
+        start = min(batch)
+        labelled = {l.index: l.speaker for l in labels}
+        context = {
+            i: (texts[i], labelled.get(i, "Narrator"))
+            for i in range(max(0, start - context_size), start)
+        }
+        labels.extend(label(batch, speakers, context))
     return labels
 
 
@@ -72,14 +82,31 @@ def create_text_batches(texts: list[TextSegment], batch_size: int):
     ]
 
 
-def label(texts: dict[int, TextSegment], speakers: set[Speaker]):
+def label(
+    texts: dict[int, TextSegment],
+    speakers: set[Speaker],
+    context: dict[int, tuple[TextSegment, str]] | None = None,
+):
+    context = context or {}
     prompt = label_prompt.substitute(
-        text="\n".join([f"{i}. {d}" for i, d in texts.items()]),
+        context=_render_segments(
+            {i: f"{s} -> {speaker}" for i, (s, speaker) in context.items()},
+            {i: s.paragraph for i, (s, _) in context.items()},
+        )
+        or "(start of chapter)",
+        text=_render_segments(
+            {i: str(s) for i, s in texts.items()},
+            {i: s.paragraph for i, s in texts.items()},
+        ),
         speakers="\n".join([f"- {s.first_alias()}" for s in speakers]),
-        num_segments=len(texts),
     )
     response = generate_text("", prompt, DialogueLabelResponse)
-    result = [DialogueLabel(**d) for d in json.loads(response)["dialogue"]]
+    # Ignore any labels the model gives to the context segments.
+    result = [
+        DialogueLabel(**d)
+        for d in json.loads(response)["dialogue"]
+        if d["index"] in texts
+    ]
     if len(result) > len(texts):
         raise RuntimeError(
             f"Invalid number of labels returned: "
@@ -88,16 +115,26 @@ def label(texts: dict[int, TextSegment], speakers: set[Speaker]):
     return result
 
 
+def _render_segments(lines: dict[int, str], paragraphs: dict[int, int]) -> str:
+    """Number each segment, with a blank line wherever a paragraph ends."""
+    rendered: list[str] = []
+    for i, line in lines.items():
+        if rendered and paragraphs[i] != paragraphs[i - 1]:
+            rendered.append("")
+        rendered.append(f"{i}. {line}")
+    return "\n".join(rendered)
+
+
 def get_text_segments(text: str) -> list[TextSegment]:
     def clean_text(text: str) -> str:
         return text.strip().replace("\n", " ")
 
     result: list[TextSegment] = []
     paragraphs = [clean_text(p) for p in text.split("\n\n") if p.strip()]
-    for paragraph in paragraphs:
+    for p_index, paragraph in enumerate(paragraphs):
         if paragraph.count('"') % 2 != 0:
             # TODO: Handle with LLM.
-            result.append(TextSegment(paragraph, is_dialogue=False))
+            result.append(TextSegment(paragraph, False, p_index))
         else:
             in_quotes = False
             current_text = ""
@@ -105,12 +142,12 @@ def get_text_segments(text: str) -> list[TextSegment]:
                 if char == '"':
                     if current_text:
                         result.append(
-                            TextSegment(current_text.strip(), is_dialogue=in_quotes)
+                            TextSegment(current_text.strip(), in_quotes, p_index)
                         )
                         current_text = ""
                     in_quotes = not in_quotes
                 else:
                     current_text += char
             if current_text:
-                result.append(TextSegment(current_text.strip(), is_dialogue=in_quotes))
+                result.append(TextSegment(current_text.strip(), in_quotes, p_index))
     return result
