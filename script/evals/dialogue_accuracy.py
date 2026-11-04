@@ -97,6 +97,13 @@ CHARACTERS = {
         "gender": "male",
         "ages": {"middle-aged", "old"},
     },
+    # The TV newscaster and weatherman in chapter 1. Their ages aren't given.
+    "Ted": {"aliases": {"Ted"}, "gender": "male", "ages": {"middle-aged", "old"}},
+    "Jim McGuffin": {
+        "aliases": {"Jim McGuffin", "Jim", "McGuffin"},
+        "gender": "male",
+        "ages": {"middle-aged", "old"},
+    },
 }
 NARRATOR = "Narrator"
 
