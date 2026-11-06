@@ -34,7 +34,8 @@ class CastMember(BaseModel):
     names: list[str]  # The first name is the one shown to people.
     age: Age
     gender: Gender
-    voice: str  # Voice.name
+    # Voice.name; None when no matching voice was free, for a person to choose.
+    voice: str | None = None
 
     @property
     def name(self) -> str:

@@ -150,9 +150,12 @@ def test_long_text_is_split_and_later_chunks_see_earlier_finds(monkeypatch):
     assert "- c1: Hagrid" in prompts[1]
 
 
-def test_no_voices_is_an_error():
-    with pytest.raises(ValueError, match="No voices"):
-        update_cast("text", Cast(), [])
+def test_without_voices_everyone_is_left_for_a_person_to_voice(monkeypatch):
+    fake_model(monkeypatch, {"new": [new("Hagrid")]})
+
+    cast = update_cast("text", Cast(), [])
+
+    assert [m.voice for m in cast.members] == [None, None]
 
 
 def test_invalid_reply_raises(monkeypatch):

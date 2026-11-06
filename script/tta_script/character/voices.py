@@ -1,17 +1,14 @@
-from tta_script.cast import NARRATOR_ID, Age, Cast, Gender, Voice
+from tta_script.cast import Age, Cast, Gender, Voice
 
 
-def choose_voice(age: Age, gender: Gender, voices: list[Voice], cast: Cast) -> str:
-    """The first unused voice matching age and gender, else the narrator's.
+def choose_voice(age: Age, gender: Gender, voices: list[Voice], cast: Cast) -> str | None:
+    """The first voice matching age and gender that no cast member has yet,
+    or None once those run out.
 
-    A voice is used once any cast member has it, so every character keeps a
-    distinct voice until matching voices run out."""
+    Every character keeps a distinct voice. None is left for a person to fill
+    rather than reusing a voice, which would make two characters sound alike."""
     used = {m.voice for m in cast.members}
-    match = next(
-        (v for v in voices if v.age == age and v.gender == gender and v.name not in used),
+    return next(
+        (v.name for v in voices if v.age == age and v.gender == gender and v.name not in used),
         None,
     )
-    if match:
-        return match.name
-    narrator = cast.get(NARRATOR_ID)
-    return narrator.voice if narrator else voices[0].name

@@ -28,19 +28,19 @@ def test_matching_unused_voice_is_chosen():
     assert choose_voice("young", "female", voices, cast_with()) == "young-female"
 
 
-def test_no_matching_voice_falls_back_to_narrator():
+def test_no_matching_voice_leaves_the_voice_unset():
     voices = [NARRATOR_VOICE, YOUNG_MALE]
 
-    assert choose_voice("old", "female", voices, cast_with()) == "narrator-voice"
+    assert choose_voice("old", "female", voices, cast_with()) is None
 
 
 def test_voice_already_in_the_cast_is_not_reused():
     voices = [NARRATOR_VOICE, YOUNG_FEMALE]
 
-    assert choose_voice("young", "female", voices, cast_with("young-female")) == "narrator-voice"
+    assert choose_voice("young", "female", voices, cast_with("young-female")) is None
 
 
-def test_without_a_narrator_the_first_voice_is_the_fallback():
-    voices = [NARRATOR_VOICE, YOUNG_MALE]
+def test_the_narrators_voice_is_never_given_to_a_character():
+    voices = [NARRATOR_VOICE]
 
-    assert choose_voice("old", "female", voices, Cast()) == "narrator-voice"
+    assert choose_voice("middle-aged", "male", voices, cast_with()) is None

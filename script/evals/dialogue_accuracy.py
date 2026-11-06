@@ -193,8 +193,8 @@ def load_expected(path: Path) -> list[tuple[str, str]]:
 
 
 def fake_voices() -> list[Voice]:
-    """Enough voices for every age/gender pair, so no character falls back to
-    the narrator's voice. Voices don't affect scoring; speakers do."""
+    """Enough voices for every age/gender pair, so no character is left without
+    one. Voices don't affect scoring; speakers do."""
     return [
         Voice(name=f"{age}-{gender}-{i}", age=age, gender=gender, audio_path="", audio_transcript="")
         for i in range(4)

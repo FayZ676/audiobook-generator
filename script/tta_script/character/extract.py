@@ -19,9 +19,8 @@ def update_cast(text: str, cast: Cast, voices: list[Voice]) -> Cast:
 
     New characters get the next id and a voice; known characters gain any new
     names the text uses for them. The first chapter also adds the narrator,
-    who reads in the first voice."""
-    if not voices:
-        raise ValueError("No voices available")
+    who reads in the first voice. Anyone left without a voice (voices ran
+    out, or none were given) has voice None, for a person to choose."""
     cast = cast.model_copy(deep=True)
     if cast.get(NARRATOR_ID) is None:
         cast.members.append(
@@ -30,7 +29,7 @@ def update_cast(text: str, cast: Cast, voices: list[Voice]) -> Cast:
                 names=["Narrator"],
                 age="middle-aged",
                 gender="male",
-                voice=voices[0].name,
+                voice=voices[0].name if voices else None,
             )
         )
 

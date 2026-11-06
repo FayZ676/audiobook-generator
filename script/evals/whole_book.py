@@ -131,8 +131,6 @@ def summary_line(row: dict) -> str:
 
 
 def report(rows: list[dict], cast: Cast) -> str:
-    narrator = cast.get(NARRATOR_ID)
-    assert narrator is not None
     members = [m for m in cast.members if m.id != NARRATOR_ID]
     dialogue = sum(r["dialogue"] for r in rows)
     flagged = sum(r["flagged"] for r in rows)
@@ -144,8 +142,7 @@ def report(rows: list[dict], cast: Cast) -> str:
         f"(median chapter {statistics.median(r['seconds'] for r in rows):.0f}s)",
         f"- Dialogue lines: {dialogue}; flagged for review (confidence < {REVIEW_BELOW}): "
         f"{flagged} ({flagged / dialogue:.0%})" if dialogue else "- No dialogue",
-        f"- Characters: {len(members)}; sharing the narrator's voice: "
-        f"{sum(m.voice == narrator.voice for m in members)}",
+        f"- Characters: {len(members)}; without a voice: {sum(m.voice is None for m in members)}",
         "",
         "| Chapter | Words | Dialogue | Flagged | Cast | Cost | Seconds | Scored |",
         "|---|---|---|---|---|---|---|---|",
