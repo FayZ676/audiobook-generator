@@ -33,6 +33,9 @@ Labelling rules, so every book is labelled the same way:
   mentioned (the "pecking" ended), something left unsaid (she didn't say
   "perhaps never"), words imagined on someone's lips.
 - Lines a group speaks together ("No room!" they cried) belong to the narrator.
+- A speaker known only by description ("Scrooge's nephew", "the keeper") is a
+  character like any other. Only voices that can't be told apart ("a voice
+  cried") belong to the narrator.
 - A letter read aloud belongs to the reader.
 - In a first-person book the narrator is a character: their own spoken lines
   belong to the narrator, so one voice reads all of them (Watson's "said I").
@@ -108,7 +111,19 @@ class Book:
         if member.id == NARRATOR_ID:
             return NARRATOR
         names = {name_key(n) for n in member.names}
-        return next((key for key, c in self.characters.items() if names & c["aliases"]), None)
+        exact = next((key for key, c in self.characters.items() if names & c["aliases"]), None)
+        if exact is not None:
+            return exact
+        # Unnamed characters are described differently each run ("the tiny
+        # old man" for "old man"), so fall back to overlapping names.
+        return next(
+            (
+                key
+                for key, c in self.characters.items()
+                if any(names_overlap(n, a) for n in names for a in c["aliases"])
+            ),
+            None,
+        )
 
 
 def name_key(name: str) -> str:

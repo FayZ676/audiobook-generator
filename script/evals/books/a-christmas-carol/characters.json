@@ -1,0 +1,11 @@
+{
+  "characters": {
+    "Scrooge": {"aliases": ["Scrooge", "Ebenezer Scrooge", "Mr. Scrooge", "Ebenezer"], "gender": "male", "ages": ["old"]},
+    "Scrooge's nephew": {"aliases": ["Scrooge's nephew", "nephew", "Fred"], "gender": "male", "ages": ["young", "middle-aged"]},
+    "Gentleman": {"aliases": ["gentleman", "portly gentleman", "first gentleman", "charity gentleman"], "gender": "male", "ages": ["middle-aged", "old"]},
+    "Clerk": {"aliases": ["clerk", "Scrooge's clerk", "Bob Cratchit", "Bob"], "gender": "male", "ages": ["young", "middle-aged"]},
+    "Singer": {"aliases": ["singer", "carol singer", "caroler", "boy"], "gender": "male", "ages": ["young"]},
+    "Marley's Ghost": {"aliases": ["Marley's Ghost", "Ghost", "Jacob Marley", "Marley", "Jacob", "spectre", "phantom", "apparition"], "gender": "male", "ages": ["middle-aged", "old"]}
+  },
+  "name_links": {}
+}

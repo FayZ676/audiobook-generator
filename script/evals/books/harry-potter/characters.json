@@ -9,7 +9,11 @@
     "Albus Dumbledore": {"aliases": ["Albus", "Albus Dumbledore", "Dumbledore", "Professor Dumbledore"], "gender": "male", "ages": ["old"]},
     "Hagrid": {"aliases": ["Hagrid", "Rubeus Hagrid"], "gender": "male", "ages": ["middle-aged", "old"]},
     "Ted": {"aliases": ["Ted"], "gender": "male", "ages": ["middle-aged", "old"]},
-    "Jim McGuffin": {"aliases": ["Jim", "Jim McGuffin", "McGuffin"], "gender": "male", "ages": ["middle-aged", "old"]}
+    "Jim McGuffin": {"aliases": ["Jim", "Jim McGuffin", "McGuffin"], "gender": "male", "ages": ["middle-aged", "old"]},
+    "Old Man": {"aliases": ["old man", "tiny old man", "man in the violet cloak"], "gender": "male", "ages": ["old"]},
+    "Snake": {"aliases": ["snake", "boa constrictor", "the boa constrictor"], "gender": "male", "ages": ["young", "middle-aged", "old"]},
+    "Keeper": {"aliases": ["keeper", "keeper of the reptile house", "zookeeper", "reptile house keeper"], "gender": "male", "ages": ["middle-aged", "old"]},
+    "Hotel Owner": {"aliases": ["hotel owner", "owner of the hotel", "owner"], "gender": "female", "ages": ["middle-aged", "old"]}
   },
   "name_links": {"2": {"Uncle Vernon": "Uncle Vernon", "Mrs. Dursley": "Aunt Petunia", "Harry Potter": "Harry"}}
 }

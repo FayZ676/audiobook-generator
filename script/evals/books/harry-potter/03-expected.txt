@@ -154,7 +154,7 @@ Narrator: he would mutter whenever he did this.
 Narrator: They didn't stop to eat or drink all day. By nightfall Dudley was howling. He'd never had such a bad day in his life. He was hungry, he'd missed five television programs he'd wanted to see, and he'd never gone so long without blowing up an alien on his computer.
 Narrator: Uncle Vernon stopped at last outside a gloomy-looking hotel on the outskirts of a big city. Dudley and Harry shared a room with twin beds and damp, musty sheets. Dudley snored but Harry stayed awake, sitting on the windowsill, staring down at the lights of passing cars and wondering....
 Narrator: They ate stale cornflakes and cold tinned tomatoes on toast for breakfast the next day. They had just finished when the owner of the hotel came over to their table.
-Narrator: 'Scuse me, but is one of you Mr. H. Potter? Only I got about an 'undred of these at the front desk.
+Hotel Owner: 'Scuse me, but is one of you Mr. H. Potter? Only I got about an 'undred of these at the front desk.
 Narrator: She held up a letter so they could read the green ink address:
 Narrator: Mr. H. Potter
 Narrator: Room 17
