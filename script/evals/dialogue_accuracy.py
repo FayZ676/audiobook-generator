@@ -93,7 +93,7 @@ class Book:
             for p in sorted(folder.glob("*-expected.txt"))
         ]
         characters = {
-            name: {**c, "aliases": set(c["aliases"]), "ages": set(c["ages"])}
+            name: {**c, "aliases": {name_key(a) for a in c["aliases"]}, "ages": set(c["ages"])}
             for name, c in data["characters"].items()
         }
         links = {int(n): names for n, names in data.get("name_links", {}).items()}
@@ -105,8 +105,13 @@ class Book:
             return None
         if member.id == NARRATOR_ID:
             return NARRATOR
-        names = set(member.names)
+        names = {name_key(n) for n in member.names}
         return next((key for key, c in self.characters.items() if names & c["aliases"]), None)
+
+
+def name_key(name: str) -> str:
+    """Names match ignoring case and a leading "the": "the Hatter" is "Hatter"."""
+    return name.lower().removeprefix("the ").strip()
 
 
 def all_books() -> list[str]:
@@ -216,7 +221,7 @@ def score_characters(book: Book, before: Cast, after: Cast, number: int, expecte
     unlinked = [
         f"{key} lacks {name!r}"
         for key, name in links.items()
-        if not any(name in m.names for m in by_person.get(key, []))
+        if not any(name_key(name) in map(name_key, m.names) for m in by_person.get(key, []))
     ]
     return {
         "speakers": len(speaking),
