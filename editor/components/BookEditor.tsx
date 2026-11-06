@@ -275,9 +275,6 @@ export default function BookEditor({ initial }: { initial: Book }) {
         onClearFocus={() => setFocusSpeaker(null)}
       />
 
-      {/* Each side bar opens and closes from its own corner. */}
-      <SideToggle side="left" open={listOpen} onClick={toggleList} title="Lines to check  [" />
-      <SideToggle side="right" open={castOpen} onClick={toggleCast} title="Cast  ]" />
       <CastPanel
         book={book}
         open={castOpen}
@@ -296,7 +293,10 @@ export default function BookEditor({ initial }: { initial: Book }) {
 
       <div className={`${listOpen ? "xl:pl-80" : ""} ${castOpen ? "xl:pr-80" : ""}`}>
         <header className="sticky top-0 z-20 bg-bg/85 backdrop-blur-sm">
-          <div className="mx-auto flex h-12 max-w-[40rem] items-center gap-5 px-6 text-[13px]">
+          {/* Each side bar's button at its own end; the book's name and chapter over the text. */}
+          <div className="flex h-12 items-center px-2 text-[13px]">
+            <SideToggle side="left" open={listOpen} onClick={toggleList} title="Lines to check  [" />
+            <div className="mx-auto flex min-w-0 max-w-[40rem] flex-1 items-center gap-5 px-4">
             <Link href="/" className="font-display text-[20px] capitalize tracking-tight">
               {book.name}
             </Link>
@@ -313,6 +313,8 @@ export default function BookEditor({ initial }: { initial: Book }) {
                 </option>
               ))}
             </select>
+            </div>
+            <SideToggle side="right" open={castOpen} onClick={toggleCast} title="Cast  ]" />
           </div>
         </header>
 

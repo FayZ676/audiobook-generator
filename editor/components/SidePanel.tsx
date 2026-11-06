@@ -1,7 +1,8 @@
 "use client";
 
-/** A side bar: the same on either side. It sits beside the book on wide
- * screens and over it on narrow ones, opens from its corner's button, has one
+/** A side bar: the same on either side. It runs the full height beside the
+ * book on wide screens and drops over it, below the header, on narrow ones.
+ * It opens from its button at that end of the header, has one
  * quiet line at its top, and holds rows made with SideRow. */
 export default function SidePanel({
   side,
@@ -16,11 +17,11 @@ export default function SidePanel({
 }) {
   return (
     <aside
-      className={`fixed bottom-0 top-12 z-30 w-80 max-w-[85vw] flex-col border-line bg-bg shadow-2xl xl:shadow-none ${
+      className={`fixed bottom-0 top-12 z-30 w-80 xl:top-0 max-w-[85vw] flex-col border-line bg-bg shadow-2xl xl:shadow-none ${
         side === "left" ? "left-0 border-r" : "right-0 border-l"
       } ${open ? "flex" : "hidden"}`}
     >
-      <div className="flex h-10 shrink-0 items-center gap-2 px-5 text-xs text-muted">{head}</div>
+      <div className="flex h-12 shrink-0 items-center gap-2 px-5 text-xs text-muted">{head}</div>
       <div className="flex-1 overflow-y-auto pb-6">{children}</div>
     </aside>
   );
@@ -50,15 +51,15 @@ export function SideRow({
   );
 }
 
-/** The button for a side bar, in the top corner on its side: a page with
- * that side's bar drawn in, filled while the bar is open. */
+/** The button for a side bar, at that end of the header: a page with that
+ * side's bar drawn in, filled while the bar is open. */
 export function SideToggle({ side, open, onClick, title }: { side: "left" | "right"; open: boolean; onClick: () => void; title: string }) {
   return (
     <button
       onClick={onClick}
       title={title}
       aria-pressed={open}
-      className={`fixed top-0 z-40 flex h-12 items-center px-4 transition-colors ${side === "left" ? "left-0" : "right-0"} ${
+      className={`flex h-12 shrink-0 items-center px-2 transition-colors ${
         open ? "text-ink" : "text-muted hover:text-ink"
       }`}
     >

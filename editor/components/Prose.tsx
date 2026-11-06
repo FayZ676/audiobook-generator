@@ -1,6 +1,6 @@
 import { memo } from "react";
 import type { CastMember, Segment } from "@/lib/model";
-import { NARRATOR_ID, displayName, mark, speakerHue, splitTitle } from "@/lib/model";
+import { NARRATOR_ID, displayName, mark, speakerHue } from "@/lib/model";
 
 /** A chapter's segments laid out as its paragraphs, each line of dialogue
  * tinted in its speaker's colour and tagged with their name. Lines worth a
@@ -26,13 +26,12 @@ function Prose({
     if (last && last[0].paragraph === s.paragraph) last.push(s);
     else paragraphs.push([s]);
   }
-  // The chapter's title is its first paragraph.
+  // The chapter's title is its first paragraph; the header shows it, so it's left out here.
   const first = paragraphs[0];
   const title = first?.length === 1 && !first[0].is_dialogue ? first[0] : null;
   const body = title ? paragraphs.slice(1) : paragraphs;
   return (
     <div className="font-serif text-[18px] leading-[1.9] text-ink/90">
-      {title && <ChapterTitle text={title.text} />}
       {body.map((p, n) => (
         <p
           key={p[0].id}
@@ -67,20 +66,6 @@ function Prose({
 }
 
 export default memo(Prose);
-
-/** "CHAPTER I. Down the Rabbit-Hole" as a small label over the title. */
-function ChapterTitle({ text }: { text: string }) {
-  const { label, name } = splitTitle(text);
-  return (
-    <header className="mb-14 text-center">
-      {label && <p className="font-sans text-[11px] uppercase tracking-[0.28em] text-muted">{label}</p>}
-      <h2 className="mt-3 font-display text-[34px] font-normal leading-tight text-ink">{name}</h2>
-      <p className="mt-5 text-[13px] text-muted/70" aria-hidden>
-        ❦
-      </p>
-    </header>
-  );
-}
 
 function Line({
   id,
