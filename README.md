@@ -1,35 +1,31 @@
-# Text-To-Audiobook
+# Text to Audiobook
 
-## Project overview
+An experiment: turn a book's text into a multi-voice audiobook script, where
+every line of dialogue is read by its character's voice.
 
-There are 4 key services that make up the project.
+It is split into two steps with a person checking the script in between:
 
-1. **`/speech`:** Custom text to speech generator.
-2. **`/script`:** Converts text into JSON format needed for speech generation.
-3. **`/service`:** Recieves requests from `client` and orchestrates `speech` and `script` processes in order to generate audiobook segments.
-4. **`/client`:** User interface for interacting with the audiobook generator.
+1. **Script** (`script/`): find the characters in a chapter, then label who
+   speaks every line. This is the hard part and where the work is focused.
+2. **Narration** (`f5/`): read a checked script aloud with F5-TTS voices.
 
-## Installation and Setup
+## Script
 
-> ‼️ **Make sure you have Python 3.12 and Node.js installed on your system.**
+```sh
+cd script
+make install                  # needs Python 3.12
+cp .env.example .env.local    # add ANTHROPIC_API_KEY and OPENAI_API_KEY
+make lint types test          # offline checks, no API calls
+.venv/bin/python -m evals.dialogue_accuracy --runs 5   # scores the models on hand-labelled chapters (paid, ~1 cent a run)
+```
 
-#### (Option 1/2) Quick Setup
+`tta_script.pipeline.build_script(text, cast, voices)` is the entry point: a
+chapter's text and the book's cast so far in, the labelled script and updated
+cast out. Run chapters in order.
 
-**Run `make setup` in root**: This command will setup the virtual environments and install dependencies for all 4 services.
+## Narration
 
-#### (Option 2/2) Manual Service Installation
-
-Alternatively, you can install the services individually by running the `make install` command in their respective directories.
-
-### Environment Variables
-
-Each service has a `.env.example` file with all the environment variables required.
-
-1. Copy the `.env.example` file and rename the duplicate to `.env.local`.
-2. Populate `.env.local` with your keys.
-
-### Running Locally
-
-To run the application locally run the `make run` command in a separate terminal for each service.
-
-> ‼️ **When running services locally, you need to add `/runsync` to the endpoint URLs for the `script` and `speech` services. This is required to enable synchronous communication. Refer to the service router files (`service/tta_service/routers/script.py` and `service/tta_service/routers/narration.py`).**
+```sh
+cd f5
+make install    # downloads the F5-TTS checkpoint and vocoder
+```
