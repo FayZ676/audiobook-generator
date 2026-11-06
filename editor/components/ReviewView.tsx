@@ -21,16 +21,18 @@ export default function ReviewView({
   edits: Edits;
   onOpenInChapter: (chapter: string, segment: string) => void;
 }) {
-  const queue = useMemo<Item[]>(
+  const unreviewed = useMemo<Item[]>(
     () =>
       book.chapters
         .flatMap((c) =>
           c.segments.map((segment, index) => ({ chapter: c.id, index, segment })).filter((i) => i.segment.is_dialogue),
         )
         .filter((i) => !i.segment.reviewed)
-        .sort((a, b) => (a.segment.confidence ?? -1) - (b.segment.confidence ?? -1)),
+        .sort((a, b) => confidence(a) - confidence(b)),
     [book],
   );
+  const [below, setBelow] = useState(DEFAULT_BELOW);
+  const queue = useMemo(() => unreviewed.filter((i) => confidence(i) < below), [unreviewed, below]);
   const [focusId, setFocusId] = useState<string | null>(null);
   const [undos, setUndos] = useState<Undo[]>([]);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -87,13 +89,33 @@ export default function ReviewView({
     focusedRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [focusId]);
 
+  const header = (
+    <div className="sticky top-14 z-10 -mx-6 mb-4 flex items-center justify-between gap-3 bg-bg/90 px-6 py-3 text-xs text-muted backdrop-blur">
+      <Thresholds unreviewed={unreviewed} below={below} onChange={setBelow} />
+    </div>
+  );
+
   if (!focused) {
+    const higher = THRESHOLDS.find((t) => t > below && unreviewed.some((i) => confidence(i) < t));
     return (
-      <main className="mx-auto max-w-3xl px-6 py-24 text-center">
-        <p className="text-2xl font-semibold tracking-tight">Every line is reviewed.</p>
-        <p className="mt-2 text-sm text-muted">
-          {undos.length > 0 ? "Press Z to undo the last one." : "Use Read to look through any chapter."}
-        </p>
+      <main className="mx-auto max-w-3xl px-6 pb-32 pt-4">
+        {header}
+        <div className="py-20 text-center">
+          <p className="text-2xl font-semibold tracking-tight">
+            {unreviewed.length === 0 ? "Every line is reviewed." : `Every line below ${label(below)} is reviewed.`}
+          </p>
+          <p className="mt-2 text-sm text-muted">
+            {higher !== undefined ? (
+              <button onClick={() => setBelow(higher)} className="text-accent hover:underline">
+                Keep going with lines below {label(higher)}
+              </button>
+            ) : undos.length > 0 ? (
+              "Press Z to undo the last one."
+            ) : (
+              "Use Read to look through any chapter."
+            )}
+          </p>
+        </div>
       </main>
     );
   }
@@ -103,26 +125,14 @@ export default function ReviewView({
   const rest = queue.slice(at + 1, at + 40);
 
   return (
-    <main className="mx-auto max-w-3xl px-6 pb-32 pt-10">
-      <div className="mb-6 flex items-baseline justify-between text-xs text-muted">
-        <span>
-          Least confident first · <span className="tabular-nums">{queue.length.toLocaleString()}</span> to go
-        </span>
-        <span className="hidden gap-3 sm:flex">
-          <Hint k="↵">correct</Hint>
-          <Hint k="1–9">pick</Hint>
-          <Hint k="/">search</Hint>
-          <Hint k="↑↓">move</Hint>
-          <Hint k="Z">undo</Hint>
-          <Hint k="O">open in chapter</Hint>
-        </span>
-      </div>
+    <main className="mx-auto max-w-3xl px-6 pb-32 pt-4">
+      {header}
 
       {queue.slice(Math.max(0, at - 2), at).map((item) => (
         <Row key={key(item)} item={item} book={book} onClick={() => setFocusId(key(item))} />
       ))}
 
-      <div ref={focusedRef} className="my-3 scroll-mt-24 rounded-xl border border-line bg-panel p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_-12px_rgba(0,0,0,0.12)]">
+      <div ref={focusedRef} className="my-3 scroll-mt-32 rounded-xl border border-line bg-panel p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_-12px_rgba(0,0,0,0.12)]">
         <div className="mb-5 flex items-center gap-3 text-xs text-muted">
           <Confidence value={focused.segment.confidence} />
           <button onClick={() => onOpenInChapter(focused.chapter, focused.segment.id)} className="truncate hover:text-ink">
@@ -147,6 +157,14 @@ export default function ReviewView({
             onAdd={(name) => decide(focused, edits.addCharacter(name).id)}
           />
         </div>
+        <div className="mt-4 hidden gap-3 text-[11px] text-muted sm:flex">
+          <Hint k="↵">correct</Hint>
+          <Hint k="1–9">pick</Hint>
+          <Hint k="/">search</Hint>
+          <Hint k="↑↓">move</Hint>
+          <Hint k="Z">undo</Hint>
+          <Hint k="O">open in chapter</Hint>
+        </div>
       </div>
 
       {rest.map((item) => (
@@ -156,6 +174,51 @@ export default function ReviewView({
         <p className="py-4 text-center text-xs text-muted">and {(queue.length - at - 41).toLocaleString()} more</p>
       )}
     </main>
+  );
+}
+
+// Review stops at lines this confident unless a person asks for more.
+const THRESHOLDS = [0.5, 0.7, 0.8, 0.9, Infinity];
+const DEFAULT_BELOW = 0.8;
+
+function confidence(item: Item) {
+  return item.segment.confidence ?? -1; // unknown confidence comes first
+}
+
+function label(below: number) {
+  return below === Infinity ? "any confidence" : below.toFixed(1);
+}
+
+/** Choose how far up to review: only lines less confident than this. */
+function Thresholds({
+  unreviewed,
+  below,
+  onChange,
+}: {
+  unreviewed: Item[];
+  below: number;
+  onChange: (below: number) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="whitespace-nowrap">Review lines below</span>
+      <div className="flex rounded-lg bg-ink/[0.05] p-0.5">
+        {THRESHOLDS.map((t) => (
+          <button
+            key={t}
+            onClick={() => onChange(t)}
+            className={`rounded-md px-2.5 py-1 transition-colors ${
+              t === below ? "bg-panel font-medium text-ink shadow-sm" : "hover:text-ink"
+            }`}
+          >
+            {t === Infinity ? "All" : t.toFixed(1)}
+            <span className="ml-1.5 font-mono tabular-nums opacity-60">
+              {unreviewed.filter((i) => confidence(i) < t).length}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
