@@ -26,6 +26,8 @@ Fiction starts a new paragraph when the speaker changes, so use the paragraph br
 - Segments marked (N) are narration: always label them "narrator".
 - Segments marked (D) are dialogue: label them with the speaker's id, or "narrator" if the speaker isn't in the list or can't be identified.
 - A (D) segment that is not spoken aloud, such as a word or name being mentioned or emphasised (he had heard the name "Potter"), is labeled "narrator".
+- A (D) segment spoken by several characters together ("No room!" they cried) is labeled "narrator".
+- Quoted thoughts, and text a character reads aloud such as a letter, are labeled with that character's id.
 - Keep each segment's index exactly as given.
 """
 )

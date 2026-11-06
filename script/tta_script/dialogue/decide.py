@@ -19,6 +19,9 @@ attribution such as "said Mr. Dursley".
 dialogue alternate between them.
 - A (D) segment that is not spoken aloud, such as a word or name being mentioned or \
 emphasised (he had heard the name "Potter"), belongs to the narrator.
+- Dialogue spoken by several characters together ("No room!" they cried) belongs to the \
+narrator.
+- Quoted thoughts, and text a character reads aloud such as a letter, belong to that character.
 - Dialogue from a speaker who isn't in the list, or can't be identified, belongs to the narrator."""
 
 
@@ -41,8 +44,8 @@ def decide_speakers(
         Choice(
             value=m.id,
             description=(
-                "The narrator: narration, words not spoken aloud, or a speaker who "
-                "isn't listed or can't be identified"
+                "The narrator: narration, words not spoken aloud, several characters "
+                "speaking together, or a speaker who isn't listed or can't be identified"
                 if m.id == NARRATOR_ID
                 else ", ".join(m.names)
             ),
