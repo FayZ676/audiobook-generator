@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { askClaude, changeSegment, saveCharacter } from "@/app/actions";
 import type { Book, CastMember, LineRef, Segment, SegmentChange } from "@/lib/model";
-import { applyChange, fixOrder, likelySpeakers, lineKey, nextId, readiness, splitTitle } from "@/lib/model";
+import type { Sort } from "@/lib/model";
+import { DEFAULT_UNDER, THRESHOLDS, applyChange, fixLines, likelySpeakers, lineKey, nextId, readiness, splitTitle } from "@/lib/model";
 import CastPanel from "./CastPanel";
 import FixList from "./FixList";
 import LinePanel from "./LinePanel";
@@ -127,7 +128,26 @@ export default function BookEditor({ initial }: { initial: Book }) {
   };
 
   const ready = useMemo(() => readiness(book), [book]);
-  const order = useMemo(() => fixOrder(book), [book]);
+  // Which lines to look at, and in what order: the person's choice, kept in
+  // this browser.
+  const [under, setUnder] = useState<number>(DEFAULT_UNDER);
+  const [sort, setSort] = useState<Sort>("least-sure");
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("fix-list") ?? "{}");
+      if (THRESHOLDS.includes(saved.under)) setUnder(saved.under);
+      if (saved.sort === "book" || saved.sort === "least-sure") setSort(saved.sort);
+    } catch {}
+  }, []);
+  const chooseList = (next: { under?: number; sort?: Sort }) => {
+    const value = { under: next.under ?? under, sort: next.sort ?? sort };
+    setUnder(value.under);
+    setSort(value.sort);
+    try {
+      localStorage.setItem("fix-list", JSON.stringify(value));
+    } catch {}
+  };
+  const order = useMemo(() => fixLines(book, under, sort), [book, under, sort]);
   const selected: LineRef | null = useMemo(() => {
     if (!selection) return null;
     const chapter = book.chapters.find((c) => c.id === selection.chapter);
@@ -276,6 +296,9 @@ export default function BookEditor({ initial }: { initial: Book }) {
         lines={listed}
         selected={selected}
         ready={ready}
+        under={under}
+        sort={sort}
+        onChooseList={chooseList}
         claude={claude}
         focusSpeaker={focusSpeaker}
         open={listOpen}
@@ -345,6 +368,7 @@ export default function BookEditor({ initial }: { initial: Book }) {
               cast={book.cast}
               selected={selected?.chapter === chapter.id ? selected.segment.id : undefined}
               focusSpeaker={focusSpeaker}
+              under={under}
               onPick={pickers.get(chapter.id)}
             />
           )}

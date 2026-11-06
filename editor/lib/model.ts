@@ -182,30 +182,36 @@ export function claudeDisagreed(segment: Segment): boolean {
   return !!segment.recheck_speaker_id && segment.recheck_speaker_id !== first;
 }
 
-// Below this confidence an unchecked line is marked as worth a look.
-export const UNSURE_BELOW = 0.8;
+// The confidences a person can choose to look under; 1 means every line.
+export const THRESHOLDS = [0.5, 0.6, 0.7, 0.8, 0.9, 1] as const;
+export const DEFAULT_UNDER = 0.8;
 
-/** How a line is marked in the text, if at all. */
-export function mark(segment: Segment): "disagrees" | "unsure" | "fixed" | null {
+/** How sure the model was of a line, as a whole percent. */
+export function percent(segment: Segment): number {
+  return Math.round((segment.confidence ?? 0) * 100);
+}
+
+/** How a line is marked in the text, if at all: unsure means under the
+ * confidence the person chose to look under. */
+export function mark(segment: Segment, under: number): "disagrees" | "unsure" | "fixed" | null {
   if (!segment.is_dialogue) return null;
   if (segment.reviewed) return wasCorrected(segment) ? "fixed" : null;
   if (opinion(segment) === "disagrees") return "disagrees";
-  if (opinion(segment) === null && (segment.confidence ?? 0) < UNSURE_BELOW) return "unsure";
+  if (opinion(segment) === null && (segment.confidence ?? 0) < under) return "unsure";
   return null;
 }
 
-/** Lines most likely wrong first: those Claude Opus disagreed with, then
- * the least confident. The order depends only on what the models said, so
- * checking a line never moves it. */
-export function fixOrder(book: Book): LineRef[] {
+export type Sort = "least-sure" | "book";
+
+/** The lines to look at: those under the chosen confidence, and any Claude
+ * Opus disagreed with, least sure first or in the book's order. Lines already
+ * checked stay in (the list hides them) so the order never shifts as they are. */
+export function fixLines(book: Book, under: number, sort: Sort): LineRef[] {
   const lines: LineRef[] = [];
   for (const c of book.chapters)
     c.segments.forEach((segment, index) => {
-      if (segment.reviewed || needsLook(segment)) lines.push({ chapter: c.id, index, segment });
+      const chosen = (segment.confidence ?? 0) < under || claudeDisagreed(segment);
+      if (chosen && (segment.reviewed || needsLook(segment))) lines.push({ chapter: c.id, index, segment });
     });
-  return lines.sort(
-    (a, b) =>
-      Number(claudeDisagreed(b.segment)) - Number(claudeDisagreed(a.segment)) ||
-      (a.segment.confidence ?? -1) - (b.segment.confidence ?? -1),
-  );
+  return sort === "book" ? lines : lines.sort((a, b) => (a.segment.confidence ?? 0) - (b.segment.confidence ?? 0));
 }

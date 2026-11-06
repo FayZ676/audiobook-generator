@@ -1,6 +1,6 @@
 import { memo } from "react";
 import type { CastMember, Segment } from "@/lib/model";
-import { NARRATOR_ID, displayName, mark, speakerHue } from "@/lib/model";
+import { NARRATOR_ID, displayName, mark, percent, speakerHue } from "@/lib/model";
 
 /** A chapter's segments laid out as its paragraphs, each line of dialogue
  * tinted in its speaker's colour and tagged with their name. Lines worth a
@@ -11,6 +11,7 @@ function Prose({
   cast,
   selected,
   focusSpeaker,
+  under,
   onPick,
 }: {
   chapter: string;
@@ -18,6 +19,7 @@ function Prose({
   cast: CastMember[];
   selected?: string; // segment id
   focusSpeaker?: string | null; // other speakers' lines fade
+  under: number; // lines less sure than this are marked
   onPick?: (segment: Segment) => void;
 }) {
   const paragraphs: Segment[][] = [];
@@ -52,6 +54,7 @@ function Prose({
                   showName={i === 0 || p[i - 1].speaker_id !== s.speaker_id || !p[i - 1].is_dialogue}
                   selected={s.id === selected}
                   faded={!!focusSpeaker && s.speaker_id !== focusSpeaker}
+                  under={under}
                   onPick={onPick}
                 />
               ) : (
@@ -74,6 +77,7 @@ function Line({
   showName,
   selected,
   faded,
+  under,
   onPick,
 }: {
   id: string;
@@ -82,6 +86,7 @@ function Line({
   showName: boolean;
   selected: boolean;
   faded: boolean;
+  under: number;
   onPick?: (segment: Segment) => void;
 }) {
   const hue = speakerHue(segment.speaker_id);
@@ -98,7 +103,7 @@ function Line({
       }`}
       style={style}
     >
-      <Mark kind={mark(segment)} />
+      <Mark kind={mark(segment, under)} sure={percent(segment)} />
       {showName && (
         <span className="mr-1 align-[0.15em] font-sans text-[10px] font-semibold uppercase tracking-wider text-muted">
           {name}
@@ -111,11 +116,11 @@ function Line({
 
 /** A quiet sign before a line: Claude disagrees, the model was unsure, or a
  * person fixed it. */
-function Mark({ kind }: { kind: ReturnType<typeof mark> }) {
+function Mark({ kind, sure }: { kind: ReturnType<typeof mark>; sure: number }) {
   if (kind === null) return null;
   const look = {
     disagrees: { text: "✦", className: "text-accent", title: "Claude Opus disagrees" },
-    unsure: { text: "●", className: "text-amber-500 text-[8px]", title: "The model was unsure" },
+    unsure: { text: "●", className: "text-amber-500 text-[8px]", title: `The model was ${sure}% sure` },
     fixed: { text: "✎", className: "text-muted", title: "You fixed this" },
   }[kind];
   return (
