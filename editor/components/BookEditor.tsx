@@ -63,7 +63,7 @@ export default function BookEditor({ initial }: { initial: Book }) {
     const line = pending.current;
     pending.current = null;
     const el = line?.chapter === reading ? document.getElementById(`line-${line.chapter}-${line.segment}`) : null;
-    if (el) el.scrollIntoView({ block: "center" });
+    if (el) jumpTo(el);
     else window.scrollTo(0, 0);
   }, [reading]);
 
@@ -135,15 +135,16 @@ export default function BookEditor({ initial }: { initial: Book }) {
     return chapter && index >= 0 ? { chapter: chapter.id, index, segment: chapter.segments[index] } : null;
   }, [book, selection]);
 
-  /** To a line: smoothly within the chapter showing, or straight there in another. */
+  /** Straight to a line, no scrolling: showing its chapter first if need be. */
   const scrollTo = (chapter: string, segmentId: string) => {
     if (chapter !== reading) {
       pending.current = { chapter, segment: segmentId };
       setReading(chapter);
     } else
-      requestAnimationFrame(() =>
-        document.getElementById(`line-${chapter}-${segmentId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }),
-      );
+      requestAnimationFrame(() => {
+        const el = document.getElementById(`line-${chapter}-${segmentId}`);
+        if (el) jumpTo(el);
+      });
   };
   const openChapter = (id: string) => {
     setSelection(null);
@@ -384,3 +385,10 @@ export default function BookEditor({ initial }: { initial: Book }) {
   );
 }
 
+/** Puts a line in view at once, unless it already is: clear of the header
+ * above and the line editor below, the page doesn't move. */
+function jumpTo(el: HTMLElement) {
+  const { top, bottom } = el.getBoundingClientRect();
+  if (top >= 64 && bottom <= window.innerHeight - 200) return;
+  el.scrollIntoView({ block: "center", behavior: "instant" });
+}

@@ -45,7 +45,7 @@ export default function FixList({
   useEffect(() => setLimit(PAGE), [focusSpeaker]);
 
   useEffect(() => {
-    if (selectedKey) document.getElementById(`fix-${selectedKey}`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    if (selectedKey) document.getElementById(`fix-${selectedKey}`)?.scrollIntoView({ block: "nearest", behavior: "instant" });
   }, [selectedKey]);
 
   const left = lines.filter((l) => !l.segment.reviewed).length;
