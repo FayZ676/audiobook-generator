@@ -42,9 +42,11 @@ npm install
 npm run dev     # http://localhost:3000
 ```
 
-- **Review**: every line of dialogue, least confident first. Confirm it
-  (Enter) or pick the speaker (1-9, or / to search or add a character); work
-  up until the lines look right. Z undoes.
+- **Overview**: what is left before the book is ready to narrate.
+- **Fix lines**: the lines the model was least sure of, 25 at a time. Confirm one
+  (Enter) or pick the speaker (1-9, or / to search or add a character); Z
+  undoes. Once 20 lines in a row need no fix, the rest are very likely right
+  and the book shows as ready to narrate.
 - **Cast**: names, age and gender for everyone, most lines first. Characters
   the voice library had no match for show "No voice".
 - **Read**: a chapter as a script; click any line to change its speaker.

@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { changeSegment, saveCharacter } from "@/app/actions";
 import type { Book, CastMember, SegmentChange } from "@/lib/model";
-import { nextId } from "@/lib/model";
+import { applyChange, nextId, readiness } from "@/lib/model";
 import CastView from "./CastView";
 import ReadView from "./ReadView";
-import ReviewView from "./ReviewView";
+import FixView from "./FixView";
+import Overview from "./Overview";
 
 export type Edits = {
   changeSegment(chapterId: string, segmentId: string, change: SegmentChange): void;
@@ -16,14 +17,15 @@ export type Edits = {
   addCharacter(name: string): CastMember;
 };
 
-const VIEWS = ["Review", "Cast", "Read"] as const;
-type View = (typeof VIEWS)[number];
+const VIEWS = ["Overview", "Cast", "Fix", "Read"] as const;
+export type View = (typeof VIEWS)[number];
+const TAB_LABELS: Record<View, string> = { Overview: "Overview", Cast: "Cast", Fix: "Fix lines", Read: "Read" };
 
 /** Holds the book in memory and saves every edit to disk as it's made. */
 export default function BookEditor({ initial, initialView }: { initial: Book; initialView?: string }) {
   const [book, setBook] = useState(initial);
   const [view, setViewState] = useState<View>(
-    VIEWS.find((v) => v.toLowerCase() === initialView) ?? "Review",
+    VIEWS.find((v) => v.toLowerCase() === initialView) ?? "Overview",
   );
   const setView = (v: View) => {
     setViewState(v);
@@ -44,7 +46,10 @@ export default function BookEditor({ initial, initialView }: { initial: Book; in
         chapters: b.chapters.map((c) =>
           c.id !== chapterId
             ? c
-            : { ...c, segments: c.segments.map((s) => (s.id === segmentId ? { ...s, ...change } : s)) },
+            : {
+                ...c,
+                segments: c.segments.map((s) => (s.id === segmentId ? applyChange(s, change, new Date().toISOString()) : s)),
+              },
         ),
       }));
       save(changeSegment(book.name, chapterId, segmentId, change));
@@ -61,10 +66,7 @@ export default function BookEditor({ initial, initialView }: { initial: Book; in
     },
   };
 
-  const progress = useMemo(() => {
-    const lines = book.chapters.flatMap((c) => c.segments.filter((s) => s.is_dialogue));
-    return { reviewed: lines.filter((s) => s.reviewed).length, total: lines.length };
-  }, [book]);
+  const ready = useMemo(() => readiness(book), [book]);
 
   return (
     <div className="min-h-screen">
@@ -82,20 +84,20 @@ export default function BookEditor({ initial, initialView }: { initial: Book; in
                   view === v ? "bg-ink/[0.06] font-medium" : "text-muted hover:text-ink"
                 }`}
               >
-                {v}
+                {TAB_LABELS[v]}
               </button>
             ))}
           </nav>
-          <div className="ml-auto flex items-center gap-3 text-xs text-muted">
-            <span className="tabular-nums">
-              {progress.reviewed.toLocaleString()} / {progress.total.toLocaleString()} lines reviewed
-            </span>
-            <div className="h-1 w-24 overflow-hidden rounded-full bg-line">
-              <div
-                className="h-full rounded-full bg-accent transition-[width] duration-500"
-                style={{ width: `${(100 * progress.reviewed) / Math.max(1, progress.total)}%` }}
-              />
-            </div>
+          <div className="ml-auto text-xs">
+            {ready.ready ? (
+              <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400">
+                <span className="size-1.5 rounded-full bg-current" /> Ready to narrate
+              </span>
+            ) : ready.reviewed > 0 ? (
+              <span className="text-muted">
+                {ready.reviewed} checked · {ready.corrected} fixed
+              </span>
+            ) : null}
           </div>
         </div>
       </header>
@@ -106,10 +108,12 @@ export default function BookEditor({ initial, initialView }: { initial: Book; in
         </div>
       )}
 
-      {view === "Review" && (
-        <ReviewView
+      {view === "Overview" && <Overview book={book} ready={ready} onOpen={setView} />}
+      {view === "Fix" && (
+        <FixView
           book={book}
           edits={edits}
+          onDone={() => setView("Overview")}
           onOpenInChapter={(chapter, segment) => {
             setReadAt({ chapter, segment });
             setView("Read");

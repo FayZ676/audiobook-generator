@@ -12,7 +12,11 @@ class ScriptSegment(BaseModel):
     # How sure the labeller was of speaker_id, from 0 to 1, when it reports
     # that. Low values are the lines worth a person checking.
     confidence: float | None = None
-    reviewed: bool = False  # a person has checked speaker_id
+    # Set by the editor when a person checks the line: the speaker the model
+    # gave before any correction, and when it was checked (ISO 8601).
+    reviewed: bool = False
+    model_speaker_id: str | None = None
+    reviewed_at: str | None = None
 
     def __str__(self) -> str:
         return f"{self.speaker_id}: {self.text}"

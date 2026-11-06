@@ -1,15 +1,15 @@
 "use server";
 
 import { updateCast, updateSegments } from "@/lib/storage";
-import type { CastMember, SegmentChange } from "@/lib/model";
+import { applyChange, type CastMember, type SegmentChange } from "@/lib/model";
 
 export async function changeSegment(book: string, chapter: string, segmentId: string, change: SegmentChange) {
   await updateSegments(book, chapter, (segments) => {
-    const segment = segments.find((s) => s.id === segmentId);
-    if (!segment) throw new Error(`No segment ${segmentId} in ${chapter}`);
-    // Only the fields a person edits, whatever the client sends.
-    if (change.speaker_id !== undefined) segment.speaker_id = change.speaker_id;
-    if (change.reviewed !== undefined) segment.reviewed = change.reviewed;
+    const i = segments.findIndex((s) => s.id === segmentId);
+    if (i === -1) throw new Error(`No segment ${segmentId} in ${chapter}`);
+    // Only the fields a person edits, whatever else the client sends.
+    const { speaker_id, reviewed } = change;
+    segments[i] = applyChange(segments[i], { speaker_id, reviewed }, new Date().toISOString());
   });
 }
 

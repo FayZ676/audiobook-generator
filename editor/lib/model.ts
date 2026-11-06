@@ -20,9 +20,56 @@ export type Segment = {
   paragraph: number;
   confidence: number | null;
   reviewed: boolean;
+  model_speaker_id?: string | null; // the model's speaker, kept once a person changes it
+  reviewed_at?: string | null;
 };
 
 export type SegmentChange = Partial<Pick<Segment, "speaker_id" | "reviewed">>;
+
+/** A person's edit to a line. Changing the speaker keeps the model's
+ * original, so a correction can be told apart from a confirmation. */
+export function applyChange(segment: Segment, change: SegmentChange, now: string): Segment {
+  const next = { ...segment };
+  if (change.speaker_id !== undefined && change.speaker_id !== segment.speaker_id) {
+    next.model_speaker_id ??= segment.speaker_id;
+    next.speaker_id = change.speaker_id;
+  }
+  if (change.reviewed !== undefined) {
+    next.reviewed = change.reviewed;
+    next.reviewed_at = change.reviewed ? now : null;
+  }
+  return next;
+}
+
+export function wasCorrected(segment: Segment): boolean {
+  return segment.model_speaker_id != null && segment.model_speaker_id !== segment.speaker_id;
+}
+
+// Confirming this many lines in a row without a correction means the rest,
+// which the model is surer of, are very likely right.
+export const READY_AFTER = 20;
+
+export type Readiness = {
+  reviewed: number;
+  corrected: number;
+  confirmedInARow: number; // most recent reviews with no correction
+  ready: boolean;
+};
+
+export function readiness(book: Book): Readiness {
+  const reviewed = book.chapters
+    .flatMap((c) => c.segments)
+    .filter((s) => s.is_dialogue && s.reviewed)
+    .sort((a, b) => (b.reviewed_at ?? "").localeCompare(a.reviewed_at ?? ""));
+  const firstFix = reviewed.findIndex(wasCorrected);
+  const confirmedInARow = firstFix === -1 ? reviewed.length : firstFix;
+  return {
+    reviewed: reviewed.length,
+    corrected: reviewed.filter(wasCorrected).length,
+    confirmedInARow,
+    ready: confirmedInARow >= READY_AFTER,
+  };
+}
 
 export type Chapter = { id: string; title: string; segments: Segment[] };
 
