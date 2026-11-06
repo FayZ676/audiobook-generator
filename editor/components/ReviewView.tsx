@@ -91,12 +91,25 @@ export default function ReviewView({
 
   const header = (
     <div className="sticky top-14 z-10 -mx-6 mb-4 flex items-center justify-between gap-3 bg-bg/90 px-6 py-3 text-xs text-muted backdrop-blur">
-      <Thresholds unreviewed={unreviewed} below={below} onChange={setBelow} />
+      <Thresholds
+        unreviewed={unreviewed}
+        below={below}
+        onChange={(t) => {
+          setBelow(t);
+          setFocusId(null);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
+      />
+      <span className="whitespace-nowrap text-sm text-ink">
+        <span className="font-semibold tabular-nums">{queue.length.toLocaleString()}</span>{" "}
+        <span className="text-muted">{queue.length === 1 ? "line" : "lines"} left</span>
+      </span>
     </div>
   );
 
+  const higher = THRESHOLDS.find((t) => t > below && unreviewed.some((i) => confidence(i) < t));
+
   if (!focused) {
-    const higher = THRESHOLDS.find((t) => t > below && unreviewed.some((i) => confidence(i) < t));
     return (
       <main className="mx-auto max-w-3xl px-6 pb-32 pt-4">
         {header}
@@ -170,8 +183,24 @@ export default function ReviewView({
       {rest.map((item) => (
         <Row key={key(item)} item={item} book={book} onClick={() => setFocusId(key(item))} />
       ))}
-      {queue.length > at + 41 && (
+      {queue.length > at + 41 ? (
         <p className="py-4 text-center text-xs text-muted">and {(queue.length - at - 41).toLocaleString()} more</p>
+      ) : (
+        <div className="mt-6 flex items-center gap-4 text-xs text-muted">
+          <span className="h-px flex-1 bg-line" />
+          <span>
+            End of lines below {label(below)}
+            {higher !== undefined && (
+              <>
+                {" · "}
+                <button onClick={() => setBelow(higher)} className="text-accent hover:underline">
+                  keep going below {label(higher)}
+                </button>
+              </>
+            )}
+          </span>
+          <span className="h-px flex-1 bg-line" />
+        </div>
       )}
     </main>
   );
