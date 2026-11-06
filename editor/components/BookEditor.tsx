@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { askClaude, changeSegment, saveCharacter } from "@/app/actions";
 import type { Book, CastMember, LineRef, Segment, SegmentChange } from "@/lib/model";
 import { applyChange, fixOrder, likelySpeakers, lineKey, nextId, readiness, splitTitle } from "@/lib/model";
@@ -47,28 +47,25 @@ export default function BookEditor({ initial }: { initial: Book }) {
   const [error, setError] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  // The chapter being read: the last whose start has scrolled up under the header.
+  // One chapter at a time, kept in the URL so a reload comes back to it.
   const [reading, setReading] = useState(initial.chapters[0]?.id ?? "");
-  useEffect(() => {
-    let frame = 0;
-    const update = () => {
-      frame = 0;
-      let current = initial.chapters[0]?.id ?? "";
-      for (const c of initial.chapters) {
-        const top = document.getElementById(`chapter-${c.id}`)?.getBoundingClientRect().top;
-        if (top === undefined || top > 120) break;
-        current = c.id;
-      }
-      setReading(current);
-    };
-    const onScroll = () => (frame ||= requestAnimationFrame(update));
-    window.addEventListener("scroll", onScroll, { passive: true });
-    update();
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      cancelAnimationFrame(frame);
-    };
+  // A line to scroll to once its chapter is showing.
+  const pending = useRef<{ chapter: string; segment: string } | null>(null);
+  // Read before the effect below writes the URL (layout effects run in order).
+  useLayoutEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("chapter");
+    if (id && initial.chapters.some((c) => c.id === id)) setReading(id);
   }, [initial.chapters]);
+  useLayoutEffect(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("chapter", reading);
+    window.history.replaceState(null, "", url);
+    const line = pending.current;
+    pending.current = null;
+    const el = line?.chapter === reading ? document.getElementById(`line-${line.chapter}-${line.segment}`) : null;
+    if (el) el.scrollIntoView({ block: "center" });
+    else window.scrollTo(0, 0);
+  }, [reading]);
 
   const report = (what: string) => (e: Error) => setError(`${what}: ${e.message}. Reload to see what's on disk.`);
 
@@ -138,10 +135,23 @@ export default function BookEditor({ initial }: { initial: Book }) {
     return chapter && index >= 0 ? { chapter: chapter.id, index, segment: chapter.segments[index] } : null;
   }, [book, selection]);
 
-  const scrollTo = (chapter: string, segmentId: string) =>
-    requestAnimationFrame(() =>
-      document.getElementById(`line-${chapter}-${segmentId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }),
-    );
+  /** To a line: smoothly within the chapter showing, or straight there in another. */
+  const scrollTo = (chapter: string, segmentId: string) => {
+    if (chapter !== reading) {
+      pending.current = { chapter, segment: segmentId };
+      setReading(chapter);
+    } else
+      requestAnimationFrame(() =>
+        document.getElementById(`line-${chapter}-${segmentId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }),
+      );
+  };
+  const openChapter = (id: string) => {
+    setSelection(null);
+    setReading(id);
+  };
+  const at = book.chapters.findIndex((c) => c.id === reading);
+  const chapter = book.chapters[at];
+  const [prev, next] = [book.chapters[at - 1], book.chapters[at + 1]];
 
   const select = (line: { chapter: string; segment: Segment }, stepping: boolean) => {
     setSelection({ chapter: line.chapter, segment: line.segment.id, stepping });
@@ -303,10 +313,10 @@ export default function BookEditor({ initial }: { initial: Book }) {
             <Link href="/" className="font-display text-[20px] capitalize tracking-tight">
               {book.name}
             </Link>
-            {/* The chapter being read, as a book's running head; choosing another goes there. */}
+            {/* The chapter showing, as a book's running head; choosing another shows it. */}
             <select
               value={reading}
-              onChange={(e) => document.getElementById(`chapter-${e.target.value}`)?.scrollIntoView({ behavior: "smooth" })}
+              onChange={(e) => openChapter(e.target.value)}
               className="ml-auto min-w-0 max-w-64 cursor-pointer appearance-none truncate bg-transparent py-1 text-right font-display text-[17px] text-muted outline-none hover:text-ink"
               title="Go to chapter"
             >
@@ -325,19 +335,30 @@ export default function BookEditor({ initial }: { initial: Book }) {
           <p className="mx-auto mt-2 max-w-[40rem] rounded-md bg-red-500/10 px-4 py-2 text-sm text-red-600">{error}</p>
         )}
 
-        <main className="mx-auto max-w-[40rem] px-6 pb-[60vh] pt-16">
-          {book.chapters.map((c) => (
-            <section key={c.id} id={`chapter-${c.id}`} className="scroll-mt-16 pb-28 last:pb-0">
-              <Prose
-                chapter={c.id}
-                segments={c.segments}
-                cast={book.cast}
-                selected={selected?.chapter === c.id ? selected.segment.id : undefined}
-                focusSpeaker={focusSpeaker}
-                onPick={pickers.get(c.id)}
-              />
-            </section>
-          ))}
+        <main className="mx-auto max-w-[40rem] px-6 pb-[40vh] pt-16">
+          {chapter && (
+            <Prose
+              key={chapter.id}
+              chapter={chapter.id}
+              segments={chapter.segments}
+              cast={book.cast}
+              selected={selected?.chapter === chapter.id ? selected.segment.id : undefined}
+              focusSpeaker={focusSpeaker}
+              onPick={pickers.get(chapter.id)}
+            />
+          )}
+          <nav className="mt-24 flex items-baseline gap-6 font-display text-[17px] text-muted">
+            {prev && (
+              <button onClick={() => openChapter(prev.id)} className="min-w-0 truncate text-left hover:text-ink">
+                ← {splitTitle(prev.title).name}
+              </button>
+            )}
+            {next && (
+              <button onClick={() => openChapter(next.id)} className="ml-auto min-w-0 truncate text-right hover:text-ink">
+                {splitTitle(next.title).name} →
+              </button>
+            )}
+          </nav>
         </main>
       </div>
 
