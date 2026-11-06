@@ -43,7 +43,7 @@ npm run dev     # http://localhost:3000
 ```
 
 - **Overview**: what is left before the book is ready to narrate.
-- **Fix lines**: the lines the model was least sure of, 25 at a time. Confirm one
+- **Fix lines**: one list of the lines most likely wrong, in order. Confirm one
   (Enter) or pick the speaker (1-9, or / to search or add a character); Z
   undoes. Once 20 lines in a row need no fix, the rest are very likely right
   and the book shows as ready to narrate.

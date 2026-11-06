@@ -98,12 +98,12 @@ function fixStatus(ready: Readiness): string {
       ? "Every line has been checked, by you or Claude Opus."
       : `You confirmed the last ${ready.confirmedInARow} lines without changing any, so the rest are very likely right.`;
   if (ready.reviewed === 0)
-    return "Go through the lines the model was least sure of, a batch at a time, and stop when you stop finding mistakes. Or have Claude Opus read the book and point out the lines it disagrees with.";
+    return "Go through the lines most likely to be wrong, in order, and stop when they stop needing fixes. Or have Claude Opus read the book and point out the lines it disagrees with.";
   return (
     `You've checked ${ready.reviewed} lines and fixed ${ready.corrected || "none"}. ` +
     (ready.confirmedInARow > 0
       ? `Once ${READY_AFTER} in a row need no fix (${ready.confirmedInARow} so far), the rest are very likely right.`
-      : "Still finding mistakes, so another batch is worth it.")
+      : "Still finding mistakes, so keep going.")
   );
 }
 
