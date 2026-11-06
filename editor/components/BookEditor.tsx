@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { askClaude, changeSegment, saveCharacter } from "@/app/actions";
 import type { Book, CastMember, LineRef, Segment, SegmentChange } from "@/lib/model";
-import { applyChange, fixOrder, likelySpeakers, lineKey, nextId, readiness } from "@/lib/model";
+import { applyChange, fixOrder, likelySpeakers, lineKey, nextId, readiness, splitTitle } from "@/lib/model";
 import CastPanel from "./CastPanel";
 import FixList from "./FixList";
 import LinePanel from "./LinePanel";
@@ -39,6 +39,29 @@ export default function BookEditor({ initial }: { initial: Book }) {
   const [undos, setUndos] = useState<Undo[]>([]);
   const [error, setError] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+
+  // The chapter being read: the last whose start has scrolled up under the header.
+  const [reading, setReading] = useState(initial.chapters[0]?.id ?? "");
+  useEffect(() => {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      let current = initial.chapters[0]?.id ?? "";
+      for (const c of initial.chapters) {
+        const top = document.getElementById(`chapter-${c.id}`)?.getBoundingClientRect().top;
+        if (top === undefined || top > 120) break;
+        current = c.id;
+      }
+      setReading(current);
+    };
+    const onScroll = () => (frame ||= requestAnimationFrame(update));
+    window.addEventListener("scroll", onScroll, { passive: true });
+    update();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(frame);
+    };
+  }, [initial.chapters]);
 
   const report = (what: string) => (e: Error) => setError(`${what}: ${e.message}. Reload to see what's on disk.`);
 
@@ -241,17 +264,16 @@ export default function BookEditor({ initial }: { initial: Book }) {
             <Link href="/" className="font-display text-[19px] capitalize italic tracking-tight">
               {book.name}
             </Link>
+            {/* The chapter being read, as a book's running head; choosing another goes there. */}
             <select
-              value=""
+              value={reading}
               onChange={(e) => document.getElementById(`chapter-${e.target.value}`)?.scrollIntoView({ behavior: "smooth" })}
-              className="ml-auto max-w-52 truncate bg-transparent py-1 text-muted outline-none hover:text-ink"
+              className="ml-auto min-w-0 max-w-64 cursor-pointer appearance-none truncate bg-transparent py-1 text-right font-display text-[16px] italic text-muted outline-none hover:text-ink"
+              title="Go to chapter"
             >
-              <option value="" disabled>
-                Go to chapter…
-              </option>
               {book.chapters.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.title}
+                  {splitTitle(c.title).name}
                 </option>
               ))}
             </select>

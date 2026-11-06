@@ -112,6 +112,12 @@ export type Chapter = { id: string; title: string; segments: Segment[] };
 
 export type Book = { name: string; cast: CastMember[]; chapters: Chapter[] };
 
+/** "CHAPTER I. Down the Rabbit-Hole" → { label: "CHAPTER I", name: "Down the Rabbit-Hole" }. */
+export function splitTitle(text: string): { label: string | null; name: string } {
+  const parts = /^((?:chapter|book|part)\s+\w+)[.:]?\s+(.+)$/i.exec(text);
+  return parts ? { label: parts[1], name: parts[2] } : { label: null, name: text };
+}
+
 export function displayName(cast: CastMember[], id: string): string {
   return cast.find((m) => m.id === id)?.names[0] ?? id;
 }

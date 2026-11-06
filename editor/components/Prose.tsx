@@ -1,6 +1,6 @@
 import { memo } from "react";
 import type { CastMember, Segment } from "@/lib/model";
-import { NARRATOR_ID, displayName, mark, speakerHue } from "@/lib/model";
+import { NARRATOR_ID, displayName, mark, speakerHue, splitTitle } from "@/lib/model";
 
 /** A chapter's segments laid out as its paragraphs, each line of dialogue
  * tinted in its speaker's colour and tagged with their name. Lines worth a
@@ -70,11 +70,11 @@ export default memo(Prose);
 
 /** "CHAPTER I. Down the Rabbit-Hole" as a small label over the title. */
 function ChapterTitle({ text }: { text: string }) {
-  const parts = /^((?:chapter|book|part)\s+[\w]+)[.:]?\s+(.+)$/i.exec(text);
+  const { label, name } = splitTitle(text);
   return (
     <header className="mb-14 text-center">
-      {parts && <p className="font-sans text-[11px] uppercase tracking-[0.28em] text-muted">{parts[1]}</p>}
-      <h2 className="mt-3 font-display text-[34px] font-normal italic leading-tight text-ink">{parts ? parts[2] : text}</h2>
+      {label && <p className="font-sans text-[11px] uppercase tracking-[0.28em] text-muted">{label}</p>}
+      <h2 className="mt-3 font-display text-[34px] font-normal italic leading-tight text-ink">{name}</h2>
       <p className="mt-5 text-[13px] text-muted/70" aria-hidden>
         ❦
       </p>
