@@ -10,6 +10,7 @@ import SpeakerPicker from "./SpeakerPicker";
 const BATCH = 25;
 
 type Item = { chapter: string; index: number; segment: Segment };
+export type FixBatch = { keys: string[]; number: number }; // keys are "chapter/segment"
 type Undo = { chapter: string; segment: string; before: SegmentChange };
 
 /** The lines most likely wrong, a batch at a time: those Claude Opus
@@ -19,12 +20,17 @@ export default function FixView({
   book,
   edits,
   claude,
+  batch: saved,
+  onBatch,
   onDone,
   onOpenInChapter,
 }: {
   book: Book;
   edits: Edits;
   claude: Claude;
+  /** The batch in progress, kept by the caller so leaving the view keeps it. */
+  batch: FixBatch | null;
+  onBatch: (batch: FixBatch) => void;
   onDone: () => void;
   onOpenInChapter: (chapter: string, segment: string) => void;
 }) {
@@ -45,14 +51,17 @@ export default function FixView({
       .slice(0, BATCH)
       .map(([k]) => k);
 
-  const [batch, setBatch] = useState<string[]>(leastSure);
-  const [batchNumber, setBatchNumber] = useState(1);
+  const [first] = useState<FixBatch>(() => ({ keys: leastSure(), number: 1 }));
+  useEffect(() => {
+    if (!saved) onBatch(first); // keep the first batch from the first visit
+  }, [saved, first, onBatch]);
+  const { keys: batch, number: batchNumber } = saved ?? first;
   const [focusKey, setFocusKey] = useState<string | null>(null);
   const [undos, setUndos] = useState<Undo[]>([]);
   const searchRef = useRef<HTMLInputElement>(null);
   const focusedRef = useRef<HTMLDivElement>(null);
 
-  const lines = batch.map((k) => items.get(k)!);
+  const lines = batch.flatMap((k) => items.get(k) ?? []); // a rebuilt chapter may drop lines
   const done = lines.filter((i) => i.segment.reviewed).length;
   const firstOpen = lines.find((i) => !i.segment.reviewed);
   const focused = (focusKey && items.get(focusKey)) || firstOpen;
@@ -90,8 +99,7 @@ export default function FixView({
   };
 
   const nextBatch = () => {
-    setBatch(leastSure());
-    setBatchNumber((n) => n + 1);
+    onBatch({ keys: leastSure(), number: batchNumber + 1 });
     setFocusKey(null);
     window.scrollTo({ top: 0 });
   };

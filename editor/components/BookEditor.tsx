@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { askClaude, changeSegment, saveCharacter } from "@/app/actions";
 import type { Book, CastMember, SegmentChange } from "@/lib/model";
 import { applyChange, nextId, readiness } from "@/lib/model";
 import CastView from "./CastView";
 import ReadView from "./ReadView";
-import FixView from "./FixView";
+import FixView, { type FixBatch } from "./FixView";
 import Overview from "./Overview";
 
 export type Edits = {
@@ -45,6 +45,31 @@ export default function BookEditor({ initial, initialView }: { initial: Book; in
     chapter: initial.chapters[0]?.id ?? "",
   });
   const [error, setError] = useState<string | null>(null);
+
+  // The Fix lines batch outlives the view, and a reload (kept in this browser).
+  const batchKey = `fix-batch:${initial.name}`;
+  const [fixBatch, setFixBatchState] = useState<FixBatch | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(batchKey);
+      if (stored) setFixBatchState(JSON.parse(stored));
+    } catch {
+      // No storage (private window, blocked site data): the batch lasts until reload.
+    }
+    setLoaded(true);
+  }, [batchKey]);
+  const setFixBatch = useCallback(
+    (batch: FixBatch) => {
+      setFixBatchState(batch);
+      try {
+        localStorage.setItem(batchKey, JSON.stringify(batch));
+      } catch {
+        // As above: kept in memory only.
+      }
+    },
+    [batchKey],
+  );
 
   const save = (write: Promise<void>) =>
     write.catch((e: Error) => setError(`Couldn't save: ${e.message}. Reload to see what's on disk.`));
@@ -159,11 +184,13 @@ export default function BookEditor({ initial, initialView }: { initial: Book; in
       )}
 
       {view === "Overview" && <Overview book={book} ready={ready} claude={claude} onOpen={setView} />}
-      {view === "Fix" && (
+      {view === "Fix" && loaded && (
         <FixView
           book={book}
           edits={edits}
           claude={claude}
+          batch={fixBatch}
+          onBatch={setFixBatch}
           onDone={() => setView("Overview")}
           onOpenInChapter={(chapter, segment) => {
             setReadAt({ chapter, segment });
