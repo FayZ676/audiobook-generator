@@ -34,6 +34,8 @@ Labelling rules, so every book is labelled the same way:
   "perhaps never"), words imagined on someone's lips.
 - Lines a group speaks together ("No room!" they cried) belong to the narrator.
 - A letter read aloud belongs to the reader.
+- In a first-person book the narrator is a character: their own spoken lines
+  belong to the narrator, so one voice reads all of them (Watson's "said I").
 - Speech the splitter leaves inside narration is still labelled with its
   speaker, which is what the missed dialogue count measures.
 

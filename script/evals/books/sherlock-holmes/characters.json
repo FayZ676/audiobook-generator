@@ -1,0 +1,7 @@
+{
+  "characters": {
+    "Sherlock Holmes": {"aliases": ["Sherlock Holmes", "Holmes", "Mr. Holmes", "Sherlock"], "gender": "male", "ages": ["young", "middle-aged"]},
+    "King of Bohemia": {"aliases": ["King of Bohemia", "The King", "King", "Count Von Kramm", "Von Kramm", "Wilhelm Gottsreich Sigismond von Ormstein", "His Majesty", "Your Majesty"], "gender": "male", "ages": ["young", "middle-aged"]}
+  },
+  "name_links": {"1": {"King of Bohemia": "Count Von Kramm"}}
+}
