@@ -115,12 +115,14 @@ class Book:
         if exact is not None:
             return exact
         # Unnamed characters are described differently each run ("the tiny
-        # old man" for "old man"), so fall back to overlapping names.
+        # old man" for "old man"), so fall back to overlapping descriptions.
+        # Single words are left out: "Bingley" would match "Miss Bingley".
+        descriptions = [n for n in names if len(n.split()) > 1]
         return next(
             (
                 key
                 for key, c in self.characters.items()
-                if any(names_overlap(n, a) for n in names for a in c["aliases"])
+                if any(names_overlap(n, a) for n in descriptions for a in c["aliases"])
             ),
             None,
         )
