@@ -11,13 +11,12 @@ docstring. Each book is here to cover something the others don't.
 | little-women | 1 | Five women with similar voices; nicknames (Jo/Josephine, Marmee); a letter read aloud; words quoted but not said |
 | pride-and-prejudice | 18 | A crowded ball with eleven speakers; long exchanges without attributions; characters who are named but don't speak |
 | sherlock-holmes | 1 | A first-person narrator who speaks (Watson); an alias revealed (Count Von Kramm is the King); 50-line unattributed exchanges; letters quoted, not spoken |
+| treasure-island | 1 | British-style single quotes (converted from the Gutenberg text), with pirate dialect full of apostrophes (o', 'em, goin'); a sung shanty; a first-person narrator who doesn't speak |
 | a-christmas-carol | 1 | Speakers known only by description (Scrooge's nephew, the gentleman, the clerk); a ghost; lines tried but not said |
 
 Not covered yet:
 
-- Single quotes for dialogue (British editions), where an apostrophe and a
-  closing quote are the same character
-- Heavy dialect and contractions
+- Heavy dialect throughout a long chapter (Huckleberry Finn)
 - Dialogue without quote marks (dashes, or none at all)
 - Several first-person narrators in one book (letters, diaries)
 - Speakers with code names or shared names

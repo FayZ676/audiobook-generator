@@ -1,0 +1,7 @@
+{
+  "characters": {
+    "Captain": {"aliases": ["captain", "the captain", "Billy Bones", "Bones", "old sea-dog", "old seaman"], "gender": "male", "ages": ["middle-aged", "old"]},
+    "Dr. Livesey": {"aliases": ["Dr. Livesey", "Livesey", "doctor", "the doctor"], "gender": "male", "ages": ["middle-aged"]}
+  },
+  "name_links": {}
+}
