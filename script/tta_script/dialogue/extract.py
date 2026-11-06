@@ -196,6 +196,14 @@ def get_text_segments(text: str) -> list[TextSegment]:
     return segments
 
 
+def has_dialogue_marks(text: str) -> bool:
+    """Whether the text marks speech in a way the splitter reads: double or
+    single quotes, or dashes opening paragraphs."""
+    paragraphs = [" ".join(p.split()) for p in text.split("\n\n") if p.strip()]
+    double_quotes = text.count(OPEN) + text.count('"')
+    return double_quotes >= 2 or _uses_single_quotes(text) or _uses_dashes(paragraphs)
+
+
 def _quote_continues(following: list[str]) -> bool:
     """Whether a quote left open at a paragraph's end carries on into the next."""
     for distance, paragraph in enumerate(following[:MAX_QUOTED_PARAGRAPHS]):
@@ -238,9 +246,12 @@ SPEECH_END = ".,!?;:-\u2014\u2013\u2026)\ue001\ue002"
 
 
 def _uses_single_quotes(text: str) -> bool:
-    """Whether dialogue is in single quotes: they far outnumber double ones."""
-    singles = text.count("\u2018") + len(re.findall(r"(?:^|[\s(])'(?=\S)", text))
-    doubles = text.count(OPEN) + text.count('"')
+    """Whether dialogue is in single quotes. Speech opens many paragraphs,
+    while single quotes that only mention a word (the \u2018Mouse\u2019) sit
+    inside them, so count the paragraphs each kind of quote opens."""
+    openings = [p.lstrip()[:1] for p in text.split("\n\n") if p.strip()]
+    singles = sum(o in ("\u2018", "'") for o in openings)
+    doubles = sum(o in (OPEN, '"') for o in openings)
     return singles >= 3 and singles > 2 * doubles
 
 

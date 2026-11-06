@@ -272,7 +272,8 @@ def test_single_quotes_mark_dialogue_in_british_style_text():
     text = (
         "‘I’m goin’ home,’ says he, ‘an’ you’ll not stop me.’\n\n"
         "They called him a ‘true sea-dog’ and a ‘real old salt’.\n\n"
-        "‘He said “no” to me,’ said Jim."
+        "‘He said “no” to me,’ said Jim.\n\n"
+        "‘Aye,’ said Bob."
     )
 
     assert split(text) == [
@@ -286,6 +287,8 @@ def test_single_quotes_mark_dialogue_in_british_style_text():
         (".", False),
         ("He said “no” to me,", True),
         ("said Jim.", False),
+        ("Aye,", True),
+        ("said Bob.", False),
     ]
 
 
@@ -293,7 +296,8 @@ def test_straight_single_quotes_tell_apostrophes_from_quotes():
     text = (
         "'It's late,' said Bob, ''tis very late.'\n\n"
         "Crinkle, crinkle, 'ittle 'tar, she sang.\n\n"
-        "'Yes,' said Mary. 'Go on."
+        "'Yes,' said Mary. 'Go on.\n\n"
+        "'Aye,' said Tom."
     )
 
     assert split(text) == [
@@ -304,6 +308,8 @@ def test_straight_single_quotes_tell_apostrophes_from_quotes():
         ("Yes,", True),
         ("said Mary.", False),
         ("Go on.", True),
+        ("Aye,", True),
+        ("said Tom.", False),
     ]
 
 
