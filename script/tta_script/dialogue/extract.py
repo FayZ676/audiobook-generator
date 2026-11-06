@@ -48,6 +48,8 @@ def label_script(segments: list[TextSegment], cast: Cast) -> Script:
                 id=f"seg-{i:04d}",
                 text=s.text,
                 speaker_id=labels.get(i, NARRATOR_ID) if s.is_dialogue else NARRATOR_ID,
+                is_dialogue=s.is_dialogue,
+                paragraph=s.paragraph,
                 confidence=confidence.get(i) if s.is_dialogue else None,
             )
             for i, s in enumerate(segments)

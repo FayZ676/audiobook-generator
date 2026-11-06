@@ -9,3 +9,4 @@ __pycache__
 pytorch_model.bin
 *.pt
 *.safetensors
+books/

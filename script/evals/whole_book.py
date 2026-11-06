@@ -65,13 +65,13 @@ def main():
             "cost": collector.cost() or 0.0,
             "words": len(text.split()),
             "cast_size": len(cast.members),
-            **review_counts(script, text),
+            **review_counts(script),
         }
         expected = BOOKS_DIR / args.book / f"{path.stem}-expected.txt" if book else None
         if book and expected and expected.exists():
             row["score"] = score(book, script, cast, text, expected)
         rows.append(row)
-        (args.out / f"{path.stem}-script.txt").write_text(render(script, cast, text), encoding="utf-8")
+        (args.out / f"{path.stem}-script.txt").write_text(render(script, cast), encoding="utf-8")
         (args.out / "cast.json").write_text(cast.model_dump_json(indent=2), encoding="utf-8")
         print(summary_line(row), flush=True)
 
@@ -79,19 +79,10 @@ def main():
     print(f"\nReport: {args.out / 'report.md'}")
 
 
-def review_counts(script: Script, text: str) -> dict:
-    dialogue = dialogue_lines(script, text)
+def review_counts(script: Script) -> dict:
+    dialogue = [s for s in script.segments if s.is_dialogue]
     flagged = [s for s in dialogue if (s.confidence or 0) < REVIEW_BELOW]
     return {"segments": len(script.segments), "dialogue": len(dialogue), "flagged": len(flagged)}
-
-
-def dialogue_lines(script: Script, text: str):
-    """Lines a character speaks or the splitter marked as speech. Narration the
-    narrator reads isn't worth reviewing; speech given to the narrator is."""
-    segments = get_text_segments(text)
-    if len(segments) == len(script.segments):
-        return [s for s, t in zip(script.segments, segments) if t.is_dialogue]
-    return [s for s in script.segments if s.speaker_id != NARRATOR_ID]
 
 
 def score(book: Book, script: Script, cast: Cast, text: str, expected_path: Path) -> dict:
@@ -105,13 +96,12 @@ def score(book: Book, script: Script, cast: Cast, text: str, expected_path: Path
     }
 
 
-def render(script: Script, cast: Cast, text: str) -> str:
-    dialogue = {s.id for s in dialogue_lines(script, text)}
+def render(script: Script, cast: Cast) -> str:
     lines = []
     for s in script.segments:
         member = cast.get(s.speaker_id)
         name = member.names[0] if member else s.speaker_id
-        if s.id in dialogue:
+        if s.is_dialogue:
             flag = " REVIEW" if (s.confidence or 0) < REVIEW_BELOW else ""
             lines.append(f"{name} ({s.confidence or 0:.2f}){flag}: {s.text}")
         else:
