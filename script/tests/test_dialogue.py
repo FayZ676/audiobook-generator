@@ -266,3 +266,49 @@ def test_narrator_labels_and_long_narration_are_left_alone(monkeypatch):
     script = label_script(segments, CAST)
 
     assert [script.segments[i].speaker_id for i in (0, 2, 4, 6)] == ["c1", "c2", NARRATOR_ID, "c2"]
+
+
+def test_single_quotes_mark_dialogue_in_british_style_text():
+    text = (
+        "‘I’m goin’ home,’ says he, ‘an’ you’ll not stop me.’\n\n"
+        "They called him a ‘true sea-dog’ and a ‘real old salt’.\n\n"
+        "‘He said “no” to me,’ said Jim."
+    )
+
+    assert split(text) == [
+        ("I’m goin’ home,", True),
+        ("says he,", False),
+        ("an’ you’ll not stop me.", True),
+        ("They called him a", False),
+        ("true sea-dog", True),
+        ("and a", False),
+        ("real old salt", True),
+        (".", False),
+        ("He said “no” to me,", True),
+        ("said Jim.", False),
+    ]
+
+
+def test_straight_single_quotes_tell_apostrophes_from_quotes():
+    text = (
+        "'It's late,' said Bob, ''tis very late.'\n\n"
+        "Crinkle, crinkle, 'ittle 'tar, she sang.\n\n"
+        "'Yes,' said Mary. 'Go on."
+    )
+
+    assert split(text) == [
+        ("It's late,", True),
+        ("said Bob,", False),
+        ("'tis very late.", True),
+        ("Crinkle, crinkle, 'ittle 'tar, she sang.", False),
+        ("Yes,", True),
+        ("said Mary.", False),
+        ("Go on.", True),
+    ]
+
+
+def test_apostrophes_in_double_quote_text_are_not_dialogue():
+    assert split("\"'Scuse me,\" said the owner. They'd come in 'cause of the rain.") == [
+        ("'Scuse me,", True),
+        ("said the owner. They'd come in 'cause of the rain.", False),
+    ]

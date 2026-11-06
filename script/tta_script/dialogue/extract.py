@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from typing import Literal
 
 from pydantic import BaseModel, create_model
@@ -140,16 +141,26 @@ def get_text_segments(text: str) -> list[TextSegment]:
     """Split a chapter into narration and dialogue segments, in order.
 
     Paragraphs are separated by blank lines. Double quotes mark dialogue,
-    straight or curly. Quotes inside a quote stay part of it. A quote may run
+    straight or curly, or single quotes in a text that uses them for dialogue
+    (British style, with double quotes for a quote inside a quote). Quotes
+    inside a quote stay part of it. A quote may run
     over several paragraphs, as a long speech or a song does; it is carried
     into the next paragraph only when a later paragraph shows it continuing,
     so one unclosed quote can't turn the rest of the chapter into dialogue."""
-    paragraphs = [_curly_quotes(" ".join(p.split())) for p in text.split("\n\n") if p.strip()]
+    paragraphs = [" ".join(p.split()) for p in text.split("\n\n") if p.strip()]
+    if _uses_single_quotes(text):
+        paragraphs = [
+            _single_quotes_as_double(p, paragraphs[k + 1 : k + 1 + MAX_QUOTED_PARAGRAPHS])
+            for k, p in enumerate(paragraphs)
+        ]
+    else:
+        paragraphs = [_curly_quotes(p) for p in paragraphs]
     segments: list[TextSegment] = []
 
     def add(segment_text: str, is_dialogue: bool, paragraph: int):
-        if segment_text.strip():
-            segments.append(TextSegment(segment_text.strip(), is_dialogue, paragraph))
+        segment_text = segment_text.translate(_UNHIDE).strip()
+        if segment_text:
+            segments.append(TextSegment(segment_text, is_dialogue, paragraph))
 
     depth = 0  # 1 inside a quote, 2+ inside a quote within it
     for index, paragraph in enumerate(paragraphs):
@@ -207,3 +218,84 @@ def _curly_quotes(paragraph: str) -> str:
     return "".join(
         (OPEN if opens(i) else CLOSE) if char == '"' else char for i, char in enumerate(paragraph)
     )
+
+
+# Where single quotes mark dialogue, double quotes in the text quote something
+# inside it or mention a word; they are hidden from the splitter as these
+# placeholders, and restored in each segment's text.
+_HIDE = str.maketrans({OPEN: "\ue000", CLOSE: "\ue001", '"': "\ue002"})
+_UNHIDE = str.maketrans({"\ue000": OPEN, "\ue001": CLOSE, "\ue002": '"'})
+# Speech ends with punctuation, or with a quote inside it, so a single quote
+# after one of these closes the speech.
+SPEECH_END = ".,!?;:-\u2014\u2013\u2026)\ue001\ue002"
+
+
+def _uses_single_quotes(text: str) -> bool:
+    """Whether dialogue is in single quotes: they far outnumber double ones."""
+    singles = text.count("\u2018") + len(re.findall(r"(?:^|[\s(])'(?=\S)", text))
+    doubles = text.count(OPEN) + text.count('"')
+    return singles >= 3 and singles > 2 * doubles
+
+
+def _single_quotes_as_double(paragraph: str, following: list[str]) -> str:
+    """Turn the single quotes that mark dialogue into double ones, leaving
+    apostrophes (don\u2019t, goin\u2019, \u2019em) alone. Double quotes already in
+    the text quote something inside the speech, so they are hidden."""
+    paragraph = paragraph.translate(_HIDE)
+    marked = []
+    in_quote = False
+    for i, char in enumerate(paragraph):
+        if _opens_single(paragraph, i) and not in_quote and _straight_quote_closes(paragraph, i, following):
+            marked.append(OPEN)
+            in_quote = True
+        elif char in "\u2019'" and not _opens_single(paragraph, i) and _closes_single(paragraph, i, in_quote):
+            marked.append(CLOSE)
+            in_quote = False
+        else:
+            marked.append(char)
+    return "".join(marked)
+
+
+def _opens_single(paragraph: str, i: int) -> bool:
+    if paragraph[i] == "\u2018":
+        return True
+    before = paragraph[i - 1] if i else " "
+    after = paragraph[i + 1] if i + 1 < len(paragraph) else " "
+    return paragraph[i] == "'" and (before.isspace() or before in "([") and not after.isspace()
+
+
+def _straight_quote_closes(paragraph: str, i: int, following: list[str]) -> bool:
+    """A straight quote before a lowercase letter can be an apostrophe (\'tis,
+    \'ittle), so it only opens a quote that closes later, in this paragraph or
+    one of the following ones. Speech that opens with a capital or a dash
+    always opens a quote."""
+    if paragraph[i] != "'" or not paragraph[i + 1].islower():
+        return True
+    for start, text in [(i + 1, paragraph)] + [(0, p) for p in following]:
+        for j in range(start, len(text)):
+            if _opens_single(text, j):
+                if j + 1 < len(text) and not text[j + 1].islower():
+                    return False  # a new speech opens before this one closes
+            elif text[j] in "\u2019'" and _closes_single(text, j, True):
+                return True
+    return False
+
+
+def _closes_single(paragraph: str, i: int, in_quote: bool) -> bool:
+    before = paragraph[i - 1] if i else " "
+    after = paragraph[i + 1] if i + 1 < len(paragraph) else " "
+    if after.isalpha():
+        return False  # inside a word: don\u2019t, o\u2019clock
+    if before in SPEECH_END:
+        return True
+    if not in_quote:
+        return False  # a word cut short outside any quote: goin\u2019
+    # A word cut short inside speech (goin\u2019 home), or the end of a quoted
+    # phrase (\u2018true sea-dog\u2019)? It ends the quote unless the speech's own
+    # closing quote still comes before any new opening one.
+    for j in range(i + 1, len(paragraph)):
+        if _opens_single(paragraph, j):
+            return True
+        if paragraph[j] in "\u2019'" and paragraph[j - 1] in SPEECH_END:
+            return False
+    return True
