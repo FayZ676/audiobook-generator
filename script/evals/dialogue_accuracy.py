@@ -58,6 +58,7 @@ import logging
 import os
 import statistics
 import time
+from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -65,7 +66,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from tta_script.cast import NARRATOR_ID, Cast, CastMember, Voice
-from tta_script.script import Script
+from tta_script.script import Script, ScriptSegment
 from tta_script.dialogue.extract import DEFAULT_LABEL_MODEL, get_text_segments
 from tta_script.models.text import DEFAULT_MODEL
 from tta_script.pipeline import build_script
@@ -192,39 +193,70 @@ def fake_voices() -> list[Voice]:
     ]
 
 
+def align(script: Script, expected) -> list[ScriptSegment] | None:
+    """The script's segment for each expected one, or None if they line up
+    exactly. Where the model finds the speech (a text without quote marks),
+    its segments start and end in slightly different places, so each
+    expected segment takes the script segment covering most of its letters."""
+    if [s.text for s in script.segments] == [e[1] for e in expected]:
+        return None
+    owner = [k for k, s in enumerate(script.segments) for c in s.text if c.isalnum()]
+    lines, at = [], 0
+    for _, text in expected:
+        span = owner[at : at + sum(c.isalnum() for c in text)]
+        at += len(span)
+        if not span:
+            raise RuntimeError(f"Expected segment {text[:40]!r} is not in the script.")
+        lines.append(script.segments[Counter(span).most_common(1)[0][0]])
+    if at != len(owner):
+        raise RuntimeError("The script's text differs from the expected file's.")
+    return lines
+
+
+def dialogue_flags(lined_up: bool, segments, expected) -> list[bool]:
+    """Which expected segments are dialogue. When the script lines up with
+    the expected file, the splitter says. Otherwise (the model found the
+    speech) dialogue is whatever a character says, and missed dialogue is
+    speech the narrator reads."""
+    if lined_up:
+        return [s.is_dialogue for s in segments]
+    return [want != NARRATOR for want, _ in expected]
+
+
+def missed_dialogue(lined_up: bool, is_dialogue: list[bool], lines, expected) -> int:
+    """Speech the narrator reads: left as narration by the splitter, or (when
+    the model found the speech) given to the narrator."""
+    if lined_up:
+        return sum(not d and want != NARRATOR for d, (want, _) in zip(is_dialogue, expected))
+    return sum(w != NARRATOR and line.speaker_id == NARRATOR_ID for line, (w, _) in zip(lines, expected))
+
+
 def score_labels(book: Book, script: Script, cast: Cast, segments, expected) -> dict:
-    if [s.text for s in script.segments] != [e[1] for e in expected]:
-        raise RuntimeError("Segments no longer line up with the expected file.")
-    total = correct = 0
-    mistakes = []
-    confidences: list[tuple[float, bool]] = []
-    for i, (segment, line, (want, _)) in enumerate(zip(segments, script.segments, expected)):
-        member = cast.get(line.speaker_id)
-        got = book.who_is(member)
-        if segment.is_dialogue:
-            total += 1
-            correct += got == want
-            if line.confidence is not None:
-                confidences.append((line.confidence, got == want))
-        if got != want:
-            mistakes.append(
-                {
-                    "index": i,
-                    "expected": want,
-                    "got": member.names if member else line.speaker_id,
-                    "text": line.text,
-                }
-            )
+    aligned = align(script, expected)
+    lines = aligned or script.segments
+    is_dialogue = dialogue_flags(aligned is None, segments, expected)
+    got = [book.who_is(cast.get(line.speaker_id)) for line in lines]
+    right = [g == want for g, (want, _) in zip(got, expected)]
     return {
-        "dialogue_total": total,
-        "dialogue_correct": correct,
-        "missed_dialogue": sum(
-            not segment.is_dialogue and want != NARRATOR
-            for segment, (want, _) in zip(segments, expected)
-        ),
-        "mistakes": mistakes,
-        "confidences": confidences,
+        "dialogue_total": sum(is_dialogue),
+        "dialogue_correct": sum(d and r for d, r in zip(is_dialogue, right)),
+        "missed_dialogue": missed_dialogue(aligned is None, is_dialogue, lines, expected),
+        "mistakes": [
+            {"index": i, "expected": want, "got": speaker_names(cast, line), "text": text}
+            for i, (line, (want, text), r) in enumerate(zip(lines, expected, right))
+            if not r
+        ],
+        "confidences": [
+            (line.confidence, r)
+            for line, d, r in zip(lines, is_dialogue, right)
+            if d and line.confidence is not None
+        ],
     }
+
+
+def speaker_names(cast: Cast, line: ScriptSegment) -> list[str] | str:
+    member = cast.get(line.speaker_id)
+    return member.names if member else line.speaker_id
 
 
 def score_characters(book: Book, before: Cast, after: Cast, number: int, expected) -> dict:
