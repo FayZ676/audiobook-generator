@@ -28,7 +28,7 @@ export default function FixList({
   ready: Readiness;
   claude: Claude;
   focusSpeaker: string | null;
-  open: boolean; // shown as a drawer on screens too narrow for it to sit beside the book
+  open: boolean; // beside the book on wide screens, over it as a drawer on narrow ones
   onPick: (line: LineRef) => void;
   onClearFocus: () => void;
 }) {
@@ -52,7 +52,7 @@ export default function FixList({
   const cost = recheckCost(book.chapters);
 
   return (
-    <aside className={`fixed bottom-0 left-0 top-12 z-30 w-72 flex-col bg-bg xl:flex ${open ? "flex shadow-2xl" : "hidden"}`}>
+    <aside className={`fixed bottom-0 left-0 top-12 z-30 w-72 flex-col bg-bg shadow-2xl xl:shadow-none ${open ? "flex" : "hidden"}`}>
       <div className="flex h-10 shrink-0 items-center gap-2 px-5 text-xs text-muted">
         {focusSpeaker ? (
           <>

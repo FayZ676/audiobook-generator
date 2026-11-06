@@ -45,7 +45,7 @@ export default function LinePanel({
       )}
 
       <div className="flex items-start gap-3">
-        <span className="mt-1 shrink-0 font-display text-[17px] italic text-muted">Who says this?</span>
+        <span className="mt-1 shrink-0 text-sm text-muted">Who says this?</span>
         <div className="min-w-0 flex-1">
           <SpeakerPicker
             ref={searchRef}

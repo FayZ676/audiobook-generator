@@ -13,13 +13,11 @@ export default function CastPanel({
   focused,
   onFocus,
   onChange,
-  onClose,
 }: {
   book: Book;
   focused: string | null;
   onFocus: (id: string | null) => void;
   onChange: (member: CastMember) => void;
-  onClose: () => void;
 }) {
   const lines = useMemo(() => {
     const count = new Map<string, number>();
@@ -33,7 +31,7 @@ export default function CastPanel({
   const unvoiced = book.cast.filter((m) => m.voice === null).length;
 
   return (
-    <aside className="fixed inset-y-0 right-0 z-40 flex w-[440px] max-w-full flex-col border-l border-line bg-panel shadow-2xl">
+    <aside className="fixed bottom-0 right-0 top-12 z-40 flex w-[440px] max-w-full flex-col border-l border-line bg-panel shadow-2xl">
       <div className="flex items-center justify-between border-b border-line px-5 py-4">
         <div>
           <h2 className="font-semibold">Cast</h2>
@@ -47,9 +45,6 @@ export default function CastPanel({
             )}
           </p>
         </div>
-        <button onClick={onClose} className="rounded-md px-2 py-1 text-sm text-muted hover:bg-ink/[0.05] hover:text-ink">
-          Close <kbd className="ml-1 font-mono text-[10px]">Esc</kbd>
-        </button>
       </div>
       <div className="flex-1 overflow-y-auto">
         {members.map((m) => (

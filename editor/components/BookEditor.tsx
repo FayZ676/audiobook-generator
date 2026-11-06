@@ -35,7 +35,13 @@ export default function BookEditor({ initial }: { initial: Book }) {
   const [selection, setSelection] = useState<Selection | null>(null);
   const [focusSpeaker, setFocusSpeaker] = useState<string | null>(null);
   const [castOpen, setCastOpen] = useState(false);
-  const [listOpen, setListOpen] = useState(false); // the list as a drawer, on narrow screens
+  // The list of lines worth a look: open beside the book on wide screens, a
+  // drawer over it on narrow ones, so closed there to begin with.
+  const [listOpen, setListOpen] = useState(true);
+  const narrow = () => window.innerWidth < 1280; // Tailwind's xl
+  useEffect(() => {
+    if (narrow()) setListOpen(false);
+  }, []);
   const [undos, setUndos] = useState<Undo[]>([]);
   const [error, setError] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -211,7 +217,7 @@ export default function BookEditor({ initial }: { initial: Book }) {
     if (e.key === "Escape") {
       if (selection) setSelection(null);
       else if (castOpen) setCastOpen(false);
-      else if (listOpen) setListOpen(false);
+      else if (listOpen && narrow()) setListOpen(false);
       else setFocusSpeaker(null);
     } else if (e.key === "n" || e.key === "j") step(1);
     else if (e.key === "N" || e.key === "p" || e.key === "k") step(-1);
@@ -250,25 +256,26 @@ export default function BookEditor({ initial }: { initial: Book }) {
         open={listOpen}
         onPick={(line) => {
           select(line, true);
-          setListOpen(false);
+          if (narrow()) setListOpen(false);
         }}
         onClearFocus={() => setFocusSpeaker(null)}
       />
 
-      <div className="xl:pl-72">
+      {/* Each side bar opens and closes from its own corner. */}
+      <SideToggle side="left" open={listOpen} onClick={() => setListOpen((o) => !o)} title="Lines worth a look" />
+      <SideToggle side="right" open={castOpen} onClick={() => setCastOpen((o) => !o)} title="Cast (C)" />
+
+      <div className={listOpen ? "xl:pl-72" : ""}>
         <header className="sticky top-0 z-20 bg-bg/85 backdrop-blur-sm">
           <div className="mx-auto flex h-12 max-w-[40rem] items-center gap-5 px-6 text-[13px]">
-            <button onClick={() => setListOpen((o) => !o)} className="text-muted hover:text-ink xl:hidden" title="Lines worth a look">
-              ☰
-            </button>
-            <Link href="/" className="font-display text-[19px] capitalize italic tracking-tight">
+            <Link href="/" className="font-display text-[20px] capitalize tracking-tight">
               {book.name}
             </Link>
             {/* The chapter being read, as a book's running head; choosing another goes there. */}
             <select
               value={reading}
               onChange={(e) => document.getElementById(`chapter-${e.target.value}`)?.scrollIntoView({ behavior: "smooth" })}
-              className="ml-auto min-w-0 max-w-64 cursor-pointer appearance-none truncate bg-transparent py-1 text-right font-display text-[16px] italic text-muted outline-none hover:text-ink"
+              className="ml-auto min-w-0 max-w-64 cursor-pointer appearance-none truncate bg-transparent py-1 text-right font-display text-[17px] text-muted outline-none hover:text-ink"
               title="Go to chapter"
             >
               {book.chapters.map((c) => (
@@ -277,9 +284,6 @@ export default function BookEditor({ initial }: { initial: Book }) {
                 </option>
               ))}
             </select>
-            <button onClick={() => setCastOpen((o) => !o)} className="flex items-center gap-1.5 text-muted hover:text-ink">
-              Cast <kbd className="rounded border border-line px-1 font-mono text-[10px]">C</kbd>
-            </button>
           </div>
         </header>
 
@@ -304,7 +308,7 @@ export default function BookEditor({ initial }: { initial: Book }) {
       </div>
 
       {selected && (
-        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pb-6 xl:left-72">
+        <div className={`pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pb-6 ${listOpen ? "xl:left-72" : ""}`}>
           <div className="pointer-events-auto">
             <LinePanel
               book={book}
@@ -333,9 +337,29 @@ export default function BookEditor({ initial }: { initial: Book }) {
             if (first) scrollTo(first.chapter, first.segment.id);
           }}
           onChange={saveMember}
-          onClose={() => setCastOpen(false)}
         />
       )}
     </div>
+  );
+}
+
+/** A side bar's button, in the top corner on its side: a page with that side's
+ * bar drawn in, filled while the bar is open. */
+function SideToggle({ side, open, onClick, title }: { side: "left" | "right"; open: boolean; onClick: () => void; title: string }) {
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      aria-pressed={open}
+      className={`fixed top-0 z-50 flex h-12 items-center px-4 transition-colors ${side === "left" ? "left-0" : "right-0"} ${
+        open ? "text-ink" : "text-muted hover:text-ink"
+      }`}
+    >
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden>
+        <rect x="1.5" y="2.5" width="15" height="13" rx="2.5" />
+        <path d={side === "left" ? "M6.5 2.5v13" : "M11.5 2.5v13"} />
+        {open && <rect x={side === "left" ? 1.5 : 11.5} y="2.5" width="5" height="13" rx="0" fill="currentColor" opacity="0.18" stroke="none" />}
+      </svg>
+    </button>
   );
 }

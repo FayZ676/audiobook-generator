@@ -74,7 +74,7 @@ function ChapterTitle({ text }: { text: string }) {
   return (
     <header className="mb-14 text-center">
       {label && <p className="font-sans text-[11px] uppercase tracking-[0.28em] text-muted">{label}</p>}
-      <h2 className="mt-3 font-display text-[34px] font-normal italic leading-tight text-ink">{name}</h2>
+      <h2 className="mt-3 font-display text-[34px] font-normal leading-tight text-ink">{name}</h2>
       <p className="mt-5 text-[13px] text-muted/70" aria-hidden>
         ❦
       </p>

@@ -10,7 +10,6 @@ const display = Cormorant_Garamond({
   variable: "--font-display",
   subsets: ["latin"],
   weight: ["400", "500"],
-  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = { title: "Script editor" };
