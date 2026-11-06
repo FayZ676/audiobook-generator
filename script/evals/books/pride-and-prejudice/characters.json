@@ -1,0 +1,16 @@
+{
+  "characters": {
+    "Elizabeth": {"aliases": ["Elizabeth", "Elizabeth Bennet", "Lizzy", "Eliza", "Miss Eliza", "Miss Elizabeth", "Miss Elizabeth Bennet"], "gender": "female", "ages": ["young"]},
+    "Mr. Darcy": {"aliases": ["Mr. Darcy", "Darcy", "Fitzwilliam Darcy"], "gender": "male", "ages": ["young", "middle-aged"]},
+    "Mr. Denny": {"aliases": ["Mr. Denny", "Denny"], "gender": "male", "ages": ["young", "middle-aged"]},
+    "Charlotte Lucas": {"aliases": ["Charlotte Lucas", "Charlotte", "Miss Lucas"], "gender": "female", "ages": ["young", "middle-aged"]},
+    "Sir William Lucas": {"aliases": ["Sir William Lucas", "Sir William"], "gender": "male", "ages": ["middle-aged", "old"]},
+    "Miss Bingley": {"aliases": ["Miss Bingley", "Caroline Bingley", "Caroline"], "gender": "female", "ages": ["young"]},
+    "Jane": {"aliases": ["Jane", "Jane Bennet"], "gender": "female", "ages": ["young"]},
+    "Mr. Collins": {"aliases": ["Mr. Collins", "Collins", "William Collins"], "gender": "male", "ages": ["young", "middle-aged"]},
+    "Mrs. Bennet": {"aliases": ["Mrs. Bennet"], "gender": "female", "ages": ["middle-aged"]},
+    "Mr. Bennet": {"aliases": ["Mr. Bennet"], "gender": "male", "ages": ["middle-aged", "old"]},
+    "Lydia": {"aliases": ["Lydia", "Lydia Bennet"], "gender": "female", "ages": ["young"]}
+  },
+  "name_links": {}
+}

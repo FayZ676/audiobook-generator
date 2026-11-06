@@ -26,6 +26,17 @@ characters.json:
 - name_links: per chapter number, names that chapter uses heavily which the
   cast must attach to the right character by the end of it.
 
+Labelling rules, so every book is labelled the same way:
+
+- Quoted thoughts belong to the thinker ("Very uncomfortable," thought Alice).
+- Words quoted but not spoken aloud belong to the narrator: a word being
+  mentioned (the "pecking" ended), something left unsaid (she didn't say
+  "perhaps never"), words imagined on someone's lips.
+- Lines a group speaks together ("No room!" they cried) belong to the narrator.
+- A letter read aloud belongs to the reader.
+- Speech the splitter leaves inside narration is still labelled with its
+  speaker, which is what the missed dialogue count measures.
+
 Calls paid model APIs, which is why it is a script and not a pytest test.
 
 --models picks the model that finds characters; --label-model the speaker

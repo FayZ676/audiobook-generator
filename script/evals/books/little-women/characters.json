@@ -1,0 +1,10 @@
+{
+  "characters": {
+    "Jo": {"aliases": ["Jo", "Jo March", "Josephine", "Josephine March"], "gender": "female", "ages": ["young"]},
+    "Meg": {"aliases": ["Meg", "Meg March", "Margaret", "Margaret March"], "gender": "female", "ages": ["young"]},
+    "Beth": {"aliases": ["Beth", "Beth March", "Elizabeth", "Elizabeth March"], "gender": "female", "ages": ["young"]},
+    "Amy": {"aliases": ["Amy", "Amy March"], "gender": "female", "ages": ["young"]},
+    "Mrs. March": {"aliases": ["Mrs. March", "Marmee", "Mother", "Margaret March"], "gender": "female", "ages": ["middle-aged"]}
+  },
+  "name_links": {"1": {"Jo": "Josephine", "Meg": "Margaret", "Mrs. March": "Marmee"}}
+}

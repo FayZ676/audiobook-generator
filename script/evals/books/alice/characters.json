@@ -1,0 +1,9 @@
+{
+  "characters": {
+    "Alice": {"aliases": ["Alice"], "gender": "female", "ages": ["young"]},
+    "Hatter": {"aliases": ["Hatter", "The Hatter", "Mad Hatter", "The Mad Hatter"], "gender": "male", "ages": ["middle-aged", "old"]},
+    "March Hare": {"aliases": ["March Hare", "The March Hare"], "gender": "male", "ages": ["young", "middle-aged", "old"]},
+    "Dormouse": {"aliases": ["Dormouse", "The Dormouse"], "gender": "male", "ages": ["young", "middle-aged", "old"]}
+  },
+  "name_links": {}
+}
