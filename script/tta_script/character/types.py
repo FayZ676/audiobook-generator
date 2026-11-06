@@ -19,3 +19,5 @@ class CastUpdate(BaseModel):
 
     known: list[KnownCharacter]
     new: list[NewCharacter]
+    # Names of the character who narrates in the first person, if one does.
+    narrator_names: list[str]

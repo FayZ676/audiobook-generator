@@ -27,7 +27,13 @@ def fake_model(monkeypatch, *replies: dict):
     def generate_text(_system, prompt, _response_format):
         prompts.append(prompt)
         reply = next(replies_iter)
-        return json.dumps({"known": reply.get("known", []), "new": reply.get("new", [])})
+        return json.dumps(
+            {
+                "known": reply.get("known", []),
+                "new": reply.get("new", []),
+                "narrator_names": reply.get("narrator_names", []),
+            }
+        )
 
     monkeypatch.setattr(extract, "generate_text", generate_text)
     return prompts
@@ -154,3 +160,18 @@ def test_invalid_reply_raises(monkeypatch):
 
     with pytest.raises(ValueError):
         update_cast("text", Cast(), VOICES)
+
+
+def test_a_first_person_narrator_joins_the_narrator_instead_of_the_cast(monkeypatch):
+    prompts = fake_model(
+        monkeypatch,
+        {"narrator_names": ["Dr. Watson", "Watson"], "new": [new("Watson"), new("Sherlock Holmes")]},
+        {"known": [{"id": NARRATOR_ID, "new_names": ["John"]}]},
+    )
+
+    cast = update_cast("text", Cast(), VOICES)
+    cast = update_cast("more text", cast, VOICES)
+
+    assert cast.get(NARRATOR_ID).names == ["Narrator", "Dr. Watson", "Watson", "John"]
+    assert [m.names for m in cast.members if m.id != NARRATOR_ID] == [["Sherlock Holmes"]]
+    assert "- narrator: Narrator, Dr. Watson, Watson" in prompts[1]

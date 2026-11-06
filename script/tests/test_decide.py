@@ -87,3 +87,15 @@ def test_decide_splits_questions_into_requests_of_at_most_400(monkeypatch):
     assert requests == [400, 1]
     assert len(answers) == 401
     assert answers["q400"] == Answer("a", 0.5)
+
+
+def test_a_named_narrator_is_described_as_the_first_person_narrator(monkeypatch):
+    monkeypatch.setenv("TTA_LABEL_MODEL", "openai-decisions:gpt-6-luna")
+    calls = fake_decide(monkeypatch, {"s0": Answer(NARRATOR_ID, 0.9), "s2": Answer("c1", 0.9)})
+    cast = CAST.model_copy(deep=True)
+    cast.get(NARRATOR_ID).names.append("Watson")
+
+    label_script(SEGMENTS, cast)
+
+    narrator_choice = calls[0][2][0].choices[0]
+    assert narrator_choice.description.endswith('also Watson, who tells the story as "I"')

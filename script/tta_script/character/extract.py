@@ -42,22 +42,32 @@ def update_cast(text: str, cast: Cast, voices: list[Voice]) -> Cast:
 
 
 def _render_known(cast: Cast) -> str:
-    lines = [f"- {m.id}: {', '.join(m.names)}" for m in cast.members if m.id != NARRATOR_ID]
+    # The narrator is only shown once they have a name, as a first-person narrator.
+    lines = [
+        f"- {m.id}: {', '.join(m.names)}"
+        for m in cast.members
+        if m.id != NARRATOR_ID or len(m.names) > 1
+    ]
     return "\n".join(lines) or "(none)"
 
 
 def _apply(update: CastUpdate, cast: Cast, voices: list[Voice]) -> None:
+    narrator = cast.get(NARRATOR_ID)
+    assert narrator is not None
+    _add_names(narrator, update.narrator_names)
+
     for known in update.known:
         member = cast.get(known.id)
-        if member is None or member.id == NARRATOR_ID:
+        # Only a narrator already named as a first-person narrator gains names here.
+        if member is None or (member is narrator and len(narrator.names) == 1):
             logger.warning("Model referred to unknown character id %r; ignoring", known.id)
             continue
         _add_names(member, known.new_names)
 
     for new in update.new:
         names = _clean(new.names)
-        if not names or "Narrator" in names:
-            continue
+        if not names or _shares_name(narrator, names):
+            continue  # the narrator, perhaps a first-person narrator by name
         # Safety net: a "new" character whose name exactly matches exactly one
         # known character is almost certainly that character.
         matches = [m for m in cast.members if m.id != NARRATOR_ID and _shares_name(m, names)]

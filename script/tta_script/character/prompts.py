@@ -21,10 +21,12 @@ For any other character, add them to "new" with:
 - age: "young" (a child or teenager), "middle-aged" (an adult who is not elderly), or "old" (clearly or explicitly elderly).
 - gender: "male" or "female".
 
+If the <text> is told in the first person by one of its characters ("said I"), put the names the <text> uses for that narrator in "narrator_names", such as "Watson" and "Dr. Watson", and leave them out of "known" and "new": the narrator reads their own lines. Otherwise use an empty list. A known character with the id "narrator" is a first-person narrator found earlier.
+
 ## Rules
 - Only include characters who speak. Leave out characters who are only mentioned or described.
 - Only include characters the <text> names. Leave out unnamed speakers such as "the old man" or "the keeper".
 - Never put a character from <known_characters> in "new", even when the <text> calls them something different.
-- Never include a narrator.
+- Never put the narrator in "known" or "new".
 """
 )

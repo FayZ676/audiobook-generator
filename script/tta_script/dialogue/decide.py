@@ -22,7 +22,9 @@ emphasised (he had heard the name "Potter"), belongs to the narrator.
 - Dialogue spoken by several characters together ("No room!" they cried) belongs to the \
 narrator.
 - Quoted thoughts, and text a character reads aloud such as a letter, belong to that character.
-- Dialogue from a speaker who isn't in the list, or can't be identified, belongs to the narrator."""
+- Dialogue from a speaker who isn't in the list, or can't be identified, belongs to the narrator.
+- When the narrator has a name, the book is told in the first person by that character, and \
+their own spoken lines ("said I") belong to the narrator."""
 
 
 def decide_speakers(
@@ -43,12 +45,7 @@ def decide_speakers(
     choices = tuple(
         Choice(
             value=m.id,
-            description=(
-                "The narrator: narration, words not spoken aloud, several characters "
-                "speaking together, or a speaker who isn't listed or can't be identified"
-                if m.id == NARRATOR_ID
-                else ", ".join(m.names)
-            ),
+            description=_narrator_description(m.names) if m.id == NARRATOR_ID else ", ".join(m.names),
         )
         for m in speaker_order(cast)
     )
@@ -69,3 +66,13 @@ def decide_speakers(
         labels[i] = answer.choice or NARRATOR_ID
         confidence[i] = answer.confidence
     return labels, confidence
+
+
+def _narrator_description(names: list[str]) -> str:
+    description = (
+        "The narrator: narration, words not spoken aloud, several characters "
+        "speaking together, or a speaker who isn't listed or can't be identified"
+    )
+    if first_person := [n for n in names if n != "Narrator"]:
+        description += f"; also {', '.join(first_person)}, who tells the story as \"I\""
+    return description

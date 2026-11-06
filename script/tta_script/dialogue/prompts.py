@@ -28,6 +28,7 @@ Fiction starts a new paragraph when the speaker changes, so use the paragraph br
 - A (D) segment that is not spoken aloud, such as a word or name being mentioned or emphasised (he had heard the name "Potter"), is labeled "narrator".
 - A (D) segment spoken by several characters together ("No room!" they cried) is labeled "narrator".
 - Quoted thoughts, and text a character reads aloud such as a letter, are labeled with that character's id.
+- When the narrator has a name, the book is told in the first person by that character: their own spoken lines ("said I") are labeled "narrator".
 - Keep each segment's index exactly as given.
 """
 )
