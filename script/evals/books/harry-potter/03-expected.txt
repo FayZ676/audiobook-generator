@@ -65,11 +65,15 @@ Narrator: he gasped.
 Narrator: Dudley tried to grab the letter to read it, but Uncle Vernon held it high out of his reach. Aunt Petunia took it curiously and read the first line. For a moment it looked as though she might faint. She clutched her throat and made a choking noise.
 Mrs. Dursley: Vernon! Oh my goodness -- Vernon!
 Narrator: They stared at each other, seeming to have forgotten that Harry and Dudley were still in the room. Dudley wasn't used to being ignored. He gave his father a sharp tap on the head with his Smelting stick.
-Narrator: "I want to read that letter," he said loudly. want to read it," said Harry furiously, "as it's mine."
+Dudley: I want to read that letter,
+Narrator: he said loudly. want to read it,
+Narrator: said Harry furiously,
+Harry Potter: as it's mine.
 Uncle Vernon: Get out, both of you,
 Narrator: croaked Uncle Vernon, stuffing the letter back inside its envelope.
 Narrator: Harry didn't move.
-Narrator: I WANT MY LETTER!" he shouted.
+Harry Potter: I WANT MY LETTER!
+Narrator: he shouted.
 Dudley: Let me see it!
 Narrator: demanded Dudley.
 Uncle Vernon: OUT!
@@ -81,7 +85,9 @@ Uncle Vernon: Watching -- spying -- might be following us,
 Narrator: muttered Uncle Vernon wildly.
 Mrs. Dursley: But what should we do, Vernon? Should we write back? Tell them we don't want --
 Narrator: Harry could see Uncle Vernon's shiny black shoes pacing up and down the kitchen.
-Narrator: "No," he said finally. "No, we'll ignore it. If they don't get an answer... Yes, that's best... we won't do anything....
+Uncle Vernon: No,
+Narrator: he said finally.
+Uncle Vernon: No, we'll ignore it. If they don't get an answer... Yes, that's best... we won't do anything....
 Mrs. Dursley: But --
 Uncle Vernon: I'm not having one in the house, Petunia! Didn't we swear when we took him in we'd stamp out that dangerous nonsense?
 Narrator: That evening when he got back from work, Uncle Vernon did something he'd never done before; he visited Harry in his cupboard.
@@ -96,14 +102,14 @@ Narrator: said Harry angrily,
 Harry Potter: it had my cupboard on it.
 Uncle Vernon: SILENCE!
 Narrator: yelled Uncle Vernon, and a couple of spiders fell from the ceiling. He took a few deep breaths and then forced his face into a smile, which looked quite painful.
-Narrator: "Er -- yes, Harry -- about this cupboard. Your aunt and I have been thinking... you're really getting a bit big for it... we think it might be nice if you moved into Dudley's second bedroom.
+Uncle Vernon: Er -- yes, Harry -- about this cupboard. Your aunt and I have been thinking... you're really getting a bit big for it... we think it might be nice if you moved into Dudley's second bedroom.
 Harry Potter: Why?
 Narrator: said Harry.
 Uncle Vernon: Don't ask questions!
 Narrator: snapped his uncle.
 Uncle Vernon: Take this stuff upstairs, now.
 Narrator: The Dursleys' house had four bedrooms: one for Uncle Vernon and Aunt Petunia, one for visitors (usually Uncle Vernon's sister, Marge), one where Dudley slept, and one where Dudley kept all the toys and things that wouldn't fit into his first bedroom. It only took Harry one trip upstairs to move everything he owned from the cupboard to this room. He sat down on the bed and stared around him. Nearly everything in here was broken. The month-old video camera was lying on top of a small, working tank Dudley had once driven over the next door neighbor's dog; in the corner was Dudley's first-ever television set, which he'd put his foot through when his favorite program had been canceled; there was a large birdcage, which had once held a parrot that Dudley had swapped at school for a real air rifle, which was up on a shelf with the end all bent because Dudley had sat on it. Other shelves were full of books. They were the only things in the room that looked as though they'd never been touched.
-Narrator: From downstairs came the sound of Dudley bawling at his mother, I don't want him in there... I need that room... make him get out...."
+Dudley: From downstairs came the sound of Dudley bawling at his mother, I don't want him in there... I need that room... make him get out....
 Narrator: Harry sighed and stretched out on the bed. Yesterday he'd have given anything to be up here. Today he'd rather be back in his cupboard with that letter than up here without it.
 Narrator: Next morning at breakfast, everyone was rather quiet. Dudley was in shock. He'd screamed, whacked his father with his Smelting stick, been sick on purpose, kicked his mother, and thrown his tortoise through the greenhouse roof, and he still didn't have his room back. Harry was thinking about this time yesterday and bitterly wishing he'd opened the letter in the hall. Uncle Vernon and Aunt Petunia kept looking at each other darkly.
 Narrator: When the mail arrived, Uncle Vernon, who seemed to be trying to be nice to Harry, made Dudley go and get it. They heard him banging things with his Smelting stick all the way down the hall. Then he shouted,
@@ -117,7 +123,8 @@ Narrator: The repaired alarm clock rang at six o'clock the next morning. Harry t
 Narrator: He was going to wait for the postman on the corner of Privet Drive and get the letters for number four first. His heart hammered as he crept across the dark hall toward the front door --
 Narrator: Harry leapt into the air; he'd trodden on something big and squashy on the doormat -- something alive!
 Narrator: Lights clicked on upstairs and to his horror Harry realized that the big, squashy something had been his uncle's face. Uncle Vernon had been lying at the foot of the front door in a sleeping bag, clearly making sure that Harry didn't do exactly what he'd been trying to do. He shouted at Harry for about half an hour and then told him to go and make a cup of tea. Harry shuffled miserably off into the kitchen and by the time he got back, the mail had arrived, right into Uncle Vernon's lap. Harry could see three letters addressed in green ink.
-Narrator: I want --" he began, but Uncle Vernon was tearing the letters into pieces before his eyes. Uncle Vernon didnt go to work that day. He stayed at home and nailed up the mail slot.
+Harry Potter: I want --
+Narrator: he began, but Uncle Vernon was tearing the letters into pieces before his eyes. Uncle Vernon didnt go to work that day. He stayed at home and nailed up the mail slot.
 Uncle Vernon: See,
 Narrator: he explained to Aunt Petunia through a mouthful of nails,
 Uncle Vernon: if they can't deliver them they'll just give up.
@@ -138,7 +145,8 @@ Uncle Vernon: no damn letters today --
 Narrator: Something came whizzing down the kitchen chimney as he spoke and caught him sharply on the back of the head. Next moment, thirty or forty letters came pelting out of the fireplace like bullets. The Dursleys ducked, but Harry leapt into the air trying to catch one.
 Uncle Vernon: Out! OUT!
 Narrator: Uncle Vernon seized Harry around the waist and threw him into the hall. When Aunt Petunia and Dudley had run out with their arms over their faces, Uncle Vernon slammed the door shut. They could hear the letters still streaming into the room, bouncing off the walls and floor.
-Narrator: "That does it," said Uncle Vernon, trying to speak calmly but pulling great tufts out of his mustache at the same time. I want you all back here in five minutes ready to leave. We're going away. Just pack some clothes. No arguments!"
+Uncle Vernon: That does it,
+Narrator: said Uncle Vernon, trying to speak calmly but pulling great tufts out of his mustache at the same time. I want you all back here in five minutes ready to leave. We're going away. Just pack some clothes. No arguments!
 Narrator: He looked so dangerous with half his mustache missing that no one dared argue. Ten minutes later they had wrenched their way through the boarded-up doors and were in the car, speeding toward the highway. Dudley was sniffling in the back seat; his father had hit him round the head for holding them up while he tried to pack his television, VCR, and computer in his sports bag.
 Narrator: They drove. And they drove. Even Aunt Petunia didn't dare ask where they were going. Every now and then Uncle Vernon would take a sharp turn and drive in the opposite direction for a while.
 Uncle Vernon: Shake'em off... shake 'em off,
@@ -155,7 +163,8 @@ Narrator: Cokeworth
 Narrator: Harry made a grab for the letter but Uncle Vernon knocked his hand out of the way. The woman stared.
 Uncle Vernon: I'll take them,
 Narrator: said Uncle Vernon, standing up quickly and following her from the dining room.
-Narrator: Wouldn't it be better just to go home, dear?" Aunt Petunia suggested timidly, hours later, but Uncle Vernon didn't seem to hear her. Exactly what he was looking for, none of them knew. He drove them into the middle of a forest, got out, looked around, shook his head, got back in the car, and off they went again. The same thing happened in the middle of a plowed field, halfway across a suspension bridge, and at the top of a multilevel parking garage.
+Mrs. Dursley: Wouldn't it be better just to go home, dear?
+Narrator: Aunt Petunia suggested timidly, hours later, but Uncle Vernon didn't seem to hear her. Exactly what he was looking for, none of them knew. He drove them into the middle of a forest, got out, looked around, shook his head, got back in the car, and off they went again. The same thing happened in the middle of a plowed field, halfway across a suspension bridge, and at the top of a multilevel parking garage.
 Dudley: Daddy's gone mad, hasn't he?
 Narrator: Dudley asked Aunt Petunia dully late that afternoon. Uncle Vernon had parked at the coast, locked them all inside the car, and disappeared.
 Narrator: It started to rain. Great drops beat on the roof of the car. Dud ley sniveled.

@@ -100,29 +100,79 @@ def _response_format(cast: Cast) -> type[BaseModel]:
     return create_model("DialogueLabels", dialogue=(list[label_model], ...))  # type: ignore[valid-type]
 
 
-def get_text_segments(text: str) -> list[TextSegment]:
-    def clean_text(text: str) -> str:
-        return text.strip().replace("\n", " ")
+OPEN, CLOSE = "\u201c", "\u201d"
+# How far ahead to look for the end of a quote left open at a paragraph's end.
+MAX_QUOTED_PARAGRAPHS = 3
 
-    result: list[TextSegment] = []
-    paragraphs = [clean_text(p) for p in text.split("\n\n") if p.strip()]
-    for p_index, paragraph in enumerate(paragraphs):
-        if paragraph.count('"') % 2 != 0:
-            # TODO: Handle with LLM.
-            result.append(TextSegment(paragraph, False, p_index))
-        else:
-            in_quotes = False
-            current_text = ""
-            for _, char in enumerate(paragraph):
-                if char == '"':
-                    if current_text:
-                        result.append(
-                            TextSegment(current_text.strip(), in_quotes, p_index)
-                        )
-                        current_text = ""
-                    in_quotes = not in_quotes
-                else:
-                    current_text += char
-            if current_text:
-                result.append(TextSegment(current_text.strip(), in_quotes, p_index))
-    return result
+
+def get_text_segments(text: str) -> list[TextSegment]:
+    """Split a chapter into narration and dialogue segments, in order.
+
+    Paragraphs are separated by blank lines. Double quotes mark dialogue,
+    straight or curly. Quotes inside a quote stay part of it. A quote may run
+    over several paragraphs, as a long speech or a song does; it is carried
+    into the next paragraph only when a later paragraph shows it continuing,
+    so one unclosed quote can't turn the rest of the chapter into dialogue."""
+    paragraphs = [_curly_quotes(" ".join(p.split())) for p in text.split("\n\n") if p.strip()]
+    segments: list[TextSegment] = []
+
+    def add(segment_text: str, is_dialogue: bool, paragraph: int):
+        if segment_text.strip():
+            segments.append(TextSegment(segment_text.strip(), is_dialogue, paragraph))
+
+    depth = 0  # 1 inside a quote, 2+ inside a quote within it
+    for index, paragraph in enumerate(paragraphs):
+        if depth and paragraph.startswith(OPEN):
+            paragraph = paragraph[1:]  # marks a speech continuing from the last paragraph
+        current = ""
+        opened = depth > 0
+        for char in paragraph:
+            if char == OPEN and depth == 0:
+                add(current, False, index)
+                current, depth, opened = "", 1, True
+            elif char == CLOSE and depth == 1:
+                add(current, True, index)
+                current, depth = "", 0
+            elif char == CLOSE and depth == 0:
+                # A closing quote before any opening one: the paragraph began
+                # in dialogue and lost its opening quote. Later ones are strays.
+                add(current, not opened, index)
+                current, opened = "", True
+            else:
+                depth += char == OPEN
+                depth -= char == CLOSE
+                current += char
+        add(current, depth > 0, index)
+        depth = 1 if depth and _quote_continues(paragraphs[index + 1 :]) else 0
+    return segments
+
+
+def _quote_continues(following: list[str]) -> bool:
+    """Whether a quote left open at a paragraph's end carries on into the next."""
+    for distance, paragraph in enumerate(following[:MAX_QUOTED_PARAGRAPHS]):
+        if distance == 0 and paragraph.startswith(OPEN):
+            return True  # the usual way a speech carries on into a new paragraph
+        first_open, first_close = paragraph.find(OPEN), paragraph.find(CLOSE)
+        if first_close != -1 and (first_open == -1 or first_close < first_open):
+            return True
+        if first_open != -1:
+            return False  # a new quote opens first, so the last one was never closed
+    return False
+
+
+def _curly_quotes(paragraph: str) -> str:
+    """Turn straight double quotes into opening and closing ones: a quote
+    with text after it and a space or bracket (or nothing) before it opens,
+    any other closes."""
+    if '"' not in paragraph:
+        return paragraph
+    paragraph = paragraph.replace("\'\'", '"')  # a typo for a closing quote
+
+    def opens(i: int) -> bool:
+        before = paragraph[i - 1] if i else " "
+        after = paragraph[i + 1] if i + 1 < len(paragraph) else " "
+        return (before.isspace() or before in "([") and not after.isspace()
+
+    return "".join(
+        (OPEN if opens(i) else CLOSE) if char == '"' else char for i, char in enumerate(paragraph)
+    )

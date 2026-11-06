@@ -154,3 +154,67 @@ def test_segments_record_their_paragraph():
         ("Hello,", 1),
         ("said Mary.", 1),
     ]
+
+
+def split(text: str) -> list[tuple[str, bool]]:
+    return [(s.text, s.is_dialogue) for s in get_text_segments(text)]
+
+
+def test_quotes_inside_a_quote_stay_part_of_it():
+    text = "“You say things are “much of a muchness”, don’t you?” said the Dormouse."
+
+    assert split(text) == [
+        ("You say things are “much of a muchness”, don’t you?", True),
+        ("said the Dormouse.", False),
+    ]
+
+
+def test_a_quote_can_run_over_several_paragraphs():
+    text = (
+        "The Hatter said, “I had to sing\n\n"
+        "‘Twinkle, twinkle, little bat!’\n\n"
+        "You know the song?”\n\n"
+        "“I do,” said Alice."
+    )
+
+    assert split(text) == [
+        ("The Hatter said,", False),
+        ("I had to sing", True),
+        ("‘Twinkle, twinkle, little bat!’", True),
+        ("You know the song?", True),
+        ("I do,", True),
+        ("said Alice.", False),
+    ]
+
+
+def test_a_speech_continues_when_the_next_paragraph_reopens_the_quote():
+    text = '"It was a long speech.\n\n"And it went on," said Bob.'
+
+    assert split(text) == [
+        ("It was a long speech.", True),
+        ("And it went on,", True),
+        ("said Bob.", False),
+    ]
+
+
+def test_an_unclosed_quote_does_not_turn_the_next_paragraphs_into_dialogue():
+    text = '"Is that all right, he asked.\n\nThey left.\n\n"Yes," said Bob.'
+
+    assert split(text) == [
+        ("Is that all right, he asked.", True),
+        ("They left.", False),
+        ("Yes,", True),
+        ("said Bob.", False),
+    ]
+
+
+def test_a_paragraph_that_lost_its_opening_quote_starts_in_dialogue():
+    assert split('I had a dream," said Harry. "It was flying."') == [
+        ("I had a dream,", True),
+        ("said Harry.", False),
+        ("It was flying.", True),
+    ]
+
+
+def test_wrapped_lines_join_into_one_paragraph():
+    assert split('"Hello\nthere," said\n  Bob.') == [("Hello there,", True), ("said Bob.", False)]

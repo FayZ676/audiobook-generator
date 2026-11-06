@@ -64,7 +64,6 @@ from tta_script.script import Script
 from tta_script.dialogue.extract import DEFAULT_LABEL_MODEL, get_text_segments
 from tta_script.models.text import DEFAULT_MODEL
 from tta_script.pipeline import build_script
-from tta_script.utils.text import normalize_quotes
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent.parent
@@ -248,7 +247,7 @@ def run_once(books: list[Book]) -> dict:
 
             before = cast
             script, cast = build_script(text, cast, voices)
-            segments = get_text_segments(normalize_quotes(text))
+            segments = get_text_segments(text)
 
             per_chapter[f"{book.name} ch{chapter.number}"] = {
                 **score_labels(book, script, cast, segments, expected),

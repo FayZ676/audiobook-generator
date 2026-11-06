@@ -36,7 +36,8 @@ Dudley: That's two less than last year.
 Mrs. Dursley: Darling, you haven't counted Auntie Marge's present, see, it's here under this big one from Mommy and Daddy.
 Dudley: All right, thirty-seven then,
 Narrator: said Dudley, going red in the face. Harry, who could see a huge Dudley tantrum coming on, began wolfing down his bacon as fast as possible in case Dudley turned the table over.
-Narrator: Aunt Petunia obviously scented danger, too, because she said quickly, "And we'll buy you another two presents while we're out today. How's that, popkin? Two more presents. Is that all right''
+Narrator: Aunt Petunia obviously scented danger, too, because she said quickly,
+Mrs. Dursley: And we'll buy you another two presents while we're out today. How's that, popkin? Two more presents. Is that all right
 Narrator: Dudley thought for a moment. It looked like hard work. Finally he said slowly,
 Dudley: So I'll have thirty ... thirty...
 Mrs. Dursley: Thirty-nine, sweetums,
@@ -87,7 +88,9 @@ Narrator: Half an hour later, Harry, who couldn't believe his luck, was sitting 
 Uncle Vernon: I'm warning you,
 Narrator: he had said, putting his large purple face right up close to Harry's,
 Uncle Vernon: I'm warning you now, boy -- any funny business, anything at all -- and you'll be in that cupboard from now until Christmas.
-Narrator: "I'm not going to do anything," said Harry, "honestly..
+Harry Potter: I'm not going to do anything,
+Narrator: said Harry,
+Harry Potter: honestly..
 Narrator: But Uncle Vernon didn't believe him. No one ever did.
 Narrator: The problem was, strange things often happened around Harry and it was just no good telling the Dursleys he didn't make them happen.
 Narrator: Once, Aunt Petunia, tired of Harry coming back from the barbers looking as though he hadn't been at all, had taken a pair of kitchen scissors and cut his hair so short he was almost bald except for his bangs, which she left
@@ -99,11 +102,15 @@ Narrator: But today, nothing was going to go wrong. It was even worth being with
 Narrator: While he drove, Uncle Vernon complained to Aunt Petunia. He liked to complain about things: people at work, Harry, the council, Harry, the bank, and Harry were just a few of his favorite subjects. This morning, it was motorcycles.
 Uncle Vernon: ... roaring along like maniacs, the young hoodlums,
 Narrator: he said, as a motorcycle overtook them.
-Narrator: I had a dream about a motorcycle," said Harry, remembering suddenly. "It was flying."
+Harry Potter: I had a dream about a motorcycle,
+Narrator: said Harry, remembering suddenly.
+Harry Potter: It was flying.
 Narrator: Uncle Vernon nearly crashed into the car in front. He turned right around in his seat and yelled at Harry, his face like a gigantic beet with a mustache:
 Uncle Vernon: MOTORCYCLES DON'T FLY!
 Narrator: Dudley and Piers sniggered.
-Narrator: I know they don't," said Harry. "It was only a dream."
+Harry Potter: I know they don't,
+Narrator: said Harry.
+Harry Potter: It was only a dream.
 Narrator: But he wished he hadn't said anything. If there was one thing the Dursleys hated even more than his asking questions, it was his talking about anything acting in a way it shouldn't, no matter if it was in a dream or even a cartoon -- they seemed to think he might get dangerous ideas.
 Narrator: It was a very sunny Saturday and the zoo was crowded with families. The Dursleys bought Dudley and Piers large chocolate ice creams at the entrance and then, because the smiling lady in the van had asked Harry what he wanted before they could hurry him away, they bought him a cheap lemon ice pop. It wasn't bad, either, Harry thought, licking it as they watched a gorilla scratching its head who looked remarkably like Dudley, except that it wasn't blond.
 Narrator: Harry had the best morning he'd had in a long time. He was careful to walk a little way apart from the Dursleys so that Dudley and Piers, who were starting to get bored with the animals by lunchtime, wouldn't fall back on their favorite hobby of hitting him. They ate in the zoo restaurant, and when Dudley had a tantrum because his knickerbocker glory didn't have enough ice cream on top, Uncle Vernon bought him another one and Harry was allowed to finish the first.
@@ -121,7 +128,7 @@ Narrator: The snake suddenly opened its beady eyes. Slowly, very slowly, it rais
 Narrator: It winked.
 Narrator: Harry stared. Then he looked quickly around to see if anyone was watching. They weren't. He looked back at the snake and winked, too.
 Narrator: The snake jerked its head toward Uncle Vernon and Dudley, then raised its eyes to the ceiling. It gave Harry a look that said quite plainly:
-Narrator: "I get that all the time.
+Narrator: I get that all the time.
 Harry Potter: I know,
 Narrator: Harry murmured through the glass, though he wasn't sure the snake could hear him.
 Harry Potter: It must be really annoying.

@@ -126,13 +126,20 @@ Narrator: said the Hatter:
 Hatter: but you could keep it to half-past one as long as you liked.
 Alice: Is that the way you manage?
 Narrator: Alice asked.
-Hatter: The Hatter shook his head mournfully. "Not I!" he replied. "We quarrelled last March—just before he went mad, you know—" (pointing with his tea spoon at the March Hare,) "—it was at the great concert given by the Queen of Hearts, and I had to sing
+Narrator: The Hatter shook his head mournfully.
+Hatter: Not I!
+Narrator: he replied.
+Hatter: We quarrelled last March—just before he went mad, you know—
+Narrator: (pointing with his tea spoon at the March Hare,)
+Hatter: —it was at the great concert given by the Queen of Hearts, and I had to sing
 Hatter: ‘Twinkle, twinkle, little bat! How I wonder what you’re at!’
-Hatter: You know the song, perhaps?"
+Hatter: You know the song, perhaps?
 Alice: I’ve heard something like it,
 Narrator: said Alice.
-Hatter: "It goes on, you know," the Hatter continued, "in this way:—
-Hatter: ‘Up above the world you fly, Like a tea-tray in the sky.                     Twinkle, twinkle—’"
+Hatter: It goes on, you know,
+Narrator: the Hatter continued,
+Hatter: in this way:—
+Hatter: ‘Up above the world you fly, Like a tea-tray in the sky. Twinkle, twinkle—’
 Narrator: Here the Dormouse shook itself, and began singing in its sleep
 Dormouse: Twinkle, twinkle, twinkle, twinkle—
 Narrator: and went on so long that they had to pinch it to make it stop.
@@ -247,9 +254,7 @@ March Hare: Why not?
 Narrator: said the March Hare.
 Narrator: Alice was silent.
 Narrator: The Dormouse had closed its eyes by this time, and was going off into a doze; but, on being pinched by the Hatter, it woke up again with a little shriek, and went on:
-Dormouse: —that begins with an M, such as mouse-traps, and the moon, and memory, and muchness—you know you say things are
-Dormouse: much of a muchness
-Dormouse: —did you ever see such a thing as a drawing of a muchness?
+Dormouse: —that begins with an M, such as mouse-traps, and the moon, and memory, and muchness—you know you say things are “much of a muchness”—did you ever see such a thing as a drawing of a muchness?
 Alice: Really, now you ask me,
 Narrator: said Alice, very much confused,
 Alice: I don’t think—
