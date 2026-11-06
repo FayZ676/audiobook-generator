@@ -65,7 +65,7 @@ export default function FixList({
             </button>
           </div>
         ) : ready.ready ? (
-          <p className="flex items-center gap-2 font-medium text-emerald-700 dark:text-emerald-400">
+          <p className="flex items-center gap-2 font-medium text-emerald-700">
             <span className="size-1.5 rounded-full bg-current" /> Ready to narrate
           </p>
         ) : (

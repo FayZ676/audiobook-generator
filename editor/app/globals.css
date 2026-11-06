@@ -12,17 +12,9 @@
   --dot-l: 0.68;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #181614;
-    --panel: #201e1b;
-    --ink: #ebe6de;
-    --muted: #8f897f;
-    --line: #2d2a26;
-    --accent: #e08a6b;
-    --tint-l: 0.3;
-    --dot-l: 0.72;
-  }
+/* Always light, like a page, whatever the system's appearance. */
+:root {
+  color-scheme: light;
 }
 
 @theme inline {

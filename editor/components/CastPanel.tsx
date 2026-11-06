@@ -40,7 +40,7 @@ export default function CastPanel({
           <p className="text-xs text-muted">
             {book.cast.length - 1} characters
             {unvoiced > 0 && (
-              <span className="text-amber-700 dark:text-amber-300">
+              <span className="text-amber-700">
                 {" "}
                 · {unvoiced === book.cast.length ? "no voices chosen yet" : `${unvoiced} without a voice`}
               </span>

@@ -262,7 +262,7 @@ export default function BookEditor({ initial }: { initial: Book }) {
         </header>
 
         {error && (
-          <p className="mx-auto mt-2 max-w-[40rem] rounded-md bg-red-500/10 px-4 py-2 text-sm text-red-600 dark:text-red-400">{error}</p>
+          <p className="mx-auto mt-2 max-w-[40rem] rounded-md bg-red-500/10 px-4 py-2 text-sm text-red-600">{error}</p>
         )}
 
         <main className="mx-auto max-w-[40rem] px-6 pb-[60vh] pt-16">
