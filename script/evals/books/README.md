@@ -13,12 +13,14 @@ docstring. Each book is here to cover something the others don't.
 | sherlock-holmes | 1 | A first-person narrator who speaks (Watson); an alias revealed (Count Von Kramm is the King); 50-line unattributed exchanges; letters quoted, not spoken |
 | treasure-island | 1 | British-style single quotes (converted from the Gutenberg text), with pirate dialect full of apostrophes (o', 'em, goin'); a sung shanty; a first-person narrator who doesn't speak |
 | ulysses | 1 | Dialogue marked by a dash opening the paragraph, with no closing mark; attributions run straight on from the speech; nicknames (Kinch, Malachi); songs and mimicry with no dash; unmarked stream of consciousness |
+| little-women-unmarked | 1 | Little Women chapter 1 with its quote marks removed, so the model has to find the speech; scored against the same labels as the quoted original |
 | a-christmas-carol | 1 | Speakers known only by description (Scrooge's nephew, the gentleman, the clerk); a ghost; lines tried but not said |
 
 Not covered yet:
 
 - Heavy dialect throughout a long chapter (Huckleberry Finn)
-- Dialogue with no marks at all, or French-style dashes that also close the speech
+- French-style dashes that also close the speech
+- A real book written without speech marks (the unmarked test is a stripped classic)
 - Several first-person narrators in one book (letters, diaries)
 - Speakers with code names or shared names
 - Modern prose
