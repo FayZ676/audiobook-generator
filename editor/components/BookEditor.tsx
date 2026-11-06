@@ -6,7 +6,7 @@ import { askClaude, changeSegment, saveCharacter } from "@/app/actions";
 import type { Book, CastMember, LineRef, Segment, SegmentChange } from "@/lib/model";
 import { applyChange, fixOrder, likelySpeakers, lineKey, nextId, readiness } from "@/lib/model";
 import CastPanel from "./CastPanel";
-import ControlBar from "./ControlBar";
+import FixList from "./FixList";
 import LinePanel from "./LinePanel";
 import Prose from "./Prose";
 
@@ -35,6 +35,7 @@ export default function BookEditor({ initial }: { initial: Book }) {
   const [selection, setSelection] = useState<Selection | null>(null);
   const [focusSpeaker, setFocusSpeaker] = useState<string | null>(null);
   const [castOpen, setCastOpen] = useState(false);
+  const [listOpen, setListOpen] = useState(false); // the list as a drawer, on narrow screens
   const [undos, setUndos] = useState<Undo[]>([]);
   const [error, setError] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -117,16 +118,20 @@ export default function BookEditor({ initial }: { initial: Book }) {
     scrollTo(line.chapter, line.segment.id);
   };
 
-  const linesOf = (speaker: string) =>
+  const linesOf = (speaker: string): LineRef[] =>
     book.chapters.flatMap((c) =>
-      c.segments.filter((s) => s.is_dialogue && s.speaker_id === speaker).map((segment) => ({ chapter: c.id, segment })),
+      c.segments.flatMap((segment, index) =>
+        segment.is_dialogue && segment.speaker_id === speaker ? [{ chapter: c.id, index, segment }] : [],
+      ),
     );
+  // What the left list shows, and what N steps through.
+  const listed = focusSpeaker ? linesOf(focusSpeaker) : order;
 
   /** N: the next line most likely wrong, or, finding one character, their next line. */
   const step = (by: 1 | -1) => {
     const isSelected = (l: { chapter: string; segment: Segment }) =>
       !!selected && l.chapter === selected.chapter && l.segment.id === selected.segment.id;
-    const candidates = focusSpeaker ? linesOf(focusSpeaker) : order.filter((l) => !l.segment.reviewed || isSelected(l));
+    const candidates = focusSpeaker ? listed : order.filter((l) => !l.segment.reviewed || isSelected(l));
     if (!candidates.length) return;
     const at = candidates.findIndex(isSelected);
     select(candidates[(at + by + candidates.length) % candidates.length], true);
@@ -183,6 +188,7 @@ export default function BookEditor({ initial }: { initial: Book }) {
     if (e.key === "Escape") {
       if (selection) setSelection(null);
       else if (castOpen) setCastOpen(false);
+      else if (listOpen) setListOpen(false);
       else setFocusSpeaker(null);
     } else if (e.key === "n" || e.key === "j") step(1);
     else if (e.key === "N" || e.key === "p" || e.key === "k") step(-1);
@@ -211,50 +217,73 @@ export default function BookEditor({ initial }: { initial: Book }) {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-20 bg-bg/80 backdrop-blur">
-        <div className="mx-auto flex h-12 max-w-3xl items-center gap-4 px-6 text-sm">
-          <Link href="/" className="font-semibold capitalize tracking-tight">
-            {book.name}
-          </Link>
-          <select
-            value=""
-            onChange={(e) => document.getElementById(`chapter-${e.target.value}`)?.scrollIntoView({ behavior: "smooth" })}
-            className="ml-auto max-w-56 truncate rounded-md bg-transparent py-1 text-muted outline-none hover:text-ink"
-          >
-            <option value="" disabled>
-              Go to chapter…
-            </option>
-            {book.chapters.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.title}
+      <FixList
+        book={book}
+        lines={listed}
+        selected={selected}
+        ready={ready}
+        claude={claude}
+        focusSpeaker={focusSpeaker}
+        open={listOpen}
+        onPick={(line) => {
+          select(line, true);
+          setListOpen(false);
+        }}
+        onClearFocus={() => setFocusSpeaker(null)}
+      />
+
+      <div className="xl:pl-72">
+        <header className="sticky top-0 z-20 bg-bg/85 backdrop-blur-sm">
+          <div className="mx-auto flex h-12 max-w-[40rem] items-center gap-5 px-6 text-[13px]">
+            <button onClick={() => setListOpen((o) => !o)} className="text-muted hover:text-ink xl:hidden" title="Lines worth a look">
+              ☰
+            </button>
+            <Link href="/" className="font-display text-[19px] capitalize italic tracking-tight">
+              {book.name}
+            </Link>
+            <select
+              value=""
+              onChange={(e) => document.getElementById(`chapter-${e.target.value}`)?.scrollIntoView({ behavior: "smooth" })}
+              className="ml-auto max-w-52 truncate bg-transparent py-1 text-muted outline-none hover:text-ink"
+            >
+              <option value="" disabled>
+                Go to chapter…
               </option>
-            ))}
-          </select>
-        </div>
-      </header>
+              {book.chapters.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.title}
+                </option>
+              ))}
+            </select>
+            <button onClick={() => setCastOpen((o) => !o)} className="flex items-center gap-1.5 text-muted hover:text-ink">
+              Cast <kbd className="rounded border border-line px-1 font-mono text-[10px]">C</kbd>
+            </button>
+          </div>
+        </header>
 
-      {error && (
-        <p className="mx-auto mt-2 max-w-3xl rounded-md bg-red-500/10 px-4 py-2 text-sm text-red-600 dark:text-red-400">{error}</p>
-      )}
+        {error && (
+          <p className="mx-auto mt-2 max-w-[40rem] rounded-md bg-red-500/10 px-4 py-2 text-sm text-red-600 dark:text-red-400">{error}</p>
+        )}
 
-      <main className="mx-auto max-w-3xl px-6 pb-[60vh] pt-10">
-        {book.chapters.map((c) => (
-          <section key={c.id} id={`chapter-${c.id}`} className="scroll-mt-16 border-t border-line pb-16 pt-12 first:border-0 first:pt-0">
-            <Prose
-              chapter={c.id}
-              segments={c.segments}
-              cast={book.cast}
-              selected={selected?.chapter === c.id ? selected.segment.id : undefined}
-              focusSpeaker={focusSpeaker}
-              onPick={pickers.get(c.id)}
-            />
-          </section>
-        ))}
-      </main>
+        <main className="mx-auto max-w-[40rem] px-6 pb-[60vh] pt-16">
+          {book.chapters.map((c) => (
+            <section key={c.id} id={`chapter-${c.id}`} className="scroll-mt-16 pb-28 last:pb-0">
+              <Prose
+                chapter={c.id}
+                segments={c.segments}
+                cast={book.cast}
+                selected={selected?.chapter === c.id ? selected.segment.id : undefined}
+                focusSpeaker={focusSpeaker}
+                onPick={pickers.get(c.id)}
+              />
+            </section>
+          ))}
+        </main>
+      </div>
 
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pb-5">
-        <div className="pointer-events-auto">
-          {selected ? (
+      {selected && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pb-6 xl:left-72">
+          <div className="pointer-events-auto">
             <LinePanel
               book={book}
               line={selected}
@@ -263,22 +292,12 @@ export default function BookEditor({ initial }: { initial: Book }) {
               searchRef={searchRef}
               onPick={decide}
               onAdd={addCharacter}
-              onClaude={useClaude}
               onClose={() => setSelection(null)}
+              onClaude={useClaude}
             />
-          ) : (
-            <ControlBar
-              book={book}
-              ready={ready}
-              claude={claude}
-              focusSpeaker={focusSpeaker}
-              onNext={() => step(1)}
-              onClearFocus={() => setFocusSpeaker(null)}
-              onCast={() => setCastOpen(true)}
-            />
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
       {castOpen && (
         <CastPanel

@@ -1,24 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #fbfaf8;
+  /* Warm paper and soft ink, with a bookbinder's red for the few things to act on. */
+  --bg: #fdfbf7;
   --panel: #ffffff;
-  --ink: #1c1b19;
-  --muted: #8a867f;
-  --line: #ebe8e3;
-  --accent: #4f46e5;
-  --tint-l: 0.93; /* lightness of speaker tints */
-  --dot-l: 0.62;
+  --ink: #2b2824;
+  --muted: #9b958b;
+  --line: #efeae2;
+  --accent: #b0553a;
+  --tint-l: 0.955; /* lightness of speaker tints */
+  --dot-l: 0.68;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #141413;
-    --panel: #1c1c1a;
-    --ink: #ecebe8;
-    --muted: #8d8a84;
-    --line: #2b2a27;
-    --accent: #8b85ff;
+    --bg: #181614;
+    --panel: #201e1b;
+    --ink: #ebe6de;
+    --muted: #8f897f;
+    --line: #2d2a26;
+    --accent: #e08a6b;
     --tint-l: 0.3;
     --dot-l: 0.72;
   }
@@ -34,6 +35,7 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-serif: var(--font-serif);
+  --font-display: var(--font-display);
 }
 
 body {

@@ -6,7 +6,7 @@ export default async function Home() {
   return (
     <main className="mx-auto max-w-xl px-6 py-24">
       <h1 className="text-sm font-medium text-muted">Script editor</h1>
-      <h2 className="mt-1 text-2xl font-semibold tracking-tight">Books</h2>
+      <h2 className="mt-1 font-display text-4xl italic">Books</h2>
       {books.length === 0 ? (
         <p className="mt-8 text-sm leading-6 text-muted">
           No books yet. Put a book&apos;s chapters in <code className="font-mono">books/&lt;name&gt;/chapters/</code>{" "}
@@ -19,7 +19,7 @@ export default async function Home() {
             <li key={book}>
               <Link
                 href={`/${encodeURIComponent(book)}`}
-                className="flex items-center justify-between py-4 text-[15px] transition-colors hover:text-accent"
+                className="flex items-center justify-between py-5 font-display text-[22px] capitalize transition-colors hover:text-accent"
               >
                 {book}
                 <span className="text-muted">→</span>

@@ -26,10 +26,22 @@ function Prose({
     if (last && last[0].paragraph === s.paragraph) last.push(s);
     else paragraphs.push([s]);
   }
+  // The chapter's title is its first paragraph.
+  const first = paragraphs[0];
+  const title = first?.length === 1 && !first[0].is_dialogue ? first[0] : null;
+  const body = title ? paragraphs.slice(1) : paragraphs;
   return (
-    <div className="space-y-5 font-serif text-[18px] leading-[1.85]">
-      {paragraphs.map((p) => (
-        <p key={p[0].id}>
+    <div className="font-serif text-[18px] leading-[1.9] text-ink/90">
+      {title && <ChapterTitle text={title.text} />}
+      {body.map((p, n) => (
+        <p
+          key={p[0].id}
+          className={`mt-6 first-of-type:mt-0 ${
+            n === 0 && !p[0].is_dialogue
+              ? "first-letter:float-left first-letter:mr-2 first-letter:mt-1 first-letter:font-display first-letter:text-[3.6em] first-letter:leading-[0.8] first-letter:text-accent"
+              : ""
+          }`}
+        >
           {p.map((s, i) => (
             <span key={s.id}>
               {i > 0 && " "}
@@ -55,6 +67,20 @@ function Prose({
 }
 
 export default memo(Prose);
+
+/** "CHAPTER I. Down the Rabbit-Hole" as a small label over the title. */
+function ChapterTitle({ text }: { text: string }) {
+  const parts = /^((?:chapter|book|part)\s+[\w]+)[.:]?\s+(.+)$/i.exec(text);
+  return (
+    <header className="mb-14 text-center">
+      {parts && <p className="font-sans text-[11px] uppercase tracking-[0.28em] text-muted">{parts[1]}</p>}
+      <h2 className="mt-3 font-display text-[34px] font-normal italic leading-tight text-ink">{parts ? parts[2] : text}</h2>
+      <p className="mt-5 text-[13px] text-muted/70" aria-hidden>
+        ❦
+      </p>
+    </header>
+  );
+}
 
 function Line({
   id,

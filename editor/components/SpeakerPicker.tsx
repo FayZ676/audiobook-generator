@@ -12,11 +12,12 @@ const SpeakerPicker = forwardRef<
   {
     likely: string[];
     current: string;
+    claudePick: string | null; // marked with ✦
     cast: CastMember[];
     onPick: (id: string) => void;
     onAdd: (name: string) => void;
   }
->(function SpeakerPicker({ likely, current, cast, onPick, onAdd }, searchRef) {
+>(function SpeakerPicker({ likely, current, claudePick, cast, onPick, onAdd }, searchRef) {
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
   const matches = q ? cast.filter((m) => m.names.some((n) => n.toLowerCase().includes(q))).slice(0, 6) : [];
@@ -36,11 +37,16 @@ const SpeakerPicker = forwardRef<
           className={`flex items-center gap-2 rounded-full border px-3 py-1 text-[13px] transition-colors ${
             id === current
               ? "border-ink/80 bg-ink text-bg"
-              : "border-line bg-panel hover:border-ink/30"
+              : "border-line bg-panel hover:border-ink/25"
           }`}
         >
           <SpeakerDot id={id} />
           {displayName(cast, id)}
+          {id === claudePick && (
+            <span className={id === current ? "opacity-70" : "text-accent"} title="Claude Opus's pick">
+              ✦
+            </span>
+          )}
           {i < 9 && <kbd className={`font-mono text-[10px] ${id === current ? "opacity-60" : "text-muted"}`}>{i + 1}</kbd>}
         </button>
       ))}
@@ -66,7 +72,7 @@ const SpeakerPicker = forwardRef<
           className="w-44 rounded-full border border-dashed border-line bg-transparent px-3 py-1 text-[13px] outline-none placeholder:text-muted focus:border-solid focus:border-accent"
         />
         {q && (
-          <div className="absolute left-0 top-full z-10 mt-1 w-64 overflow-hidden rounded-lg border border-line bg-panel py-1 shadow-lg">
+          <div className="absolute bottom-full left-0 z-10 mb-1 w-64 overflow-hidden rounded-lg border border-line bg-panel py-1 shadow-lg">
             {matches.map((m) => (
               <button
                 key={m.id}
