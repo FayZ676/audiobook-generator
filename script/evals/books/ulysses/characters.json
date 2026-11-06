@@ -1,0 +1,12 @@
+{
+  "characters": {
+    "Buck Mulligan": {"aliases": ["Buck Mulligan", "Mulligan", "Malachi Mulligan", "Malachi", "Buck"], "gender": "male", "ages": ["young", "middle-aged"]},
+    "Stephen Dedalus": {"aliases": ["Stephen Dedalus", "Stephen", "Dedalus", "Kinch"], "gender": "male", "ages": ["young", "middle-aged"]},
+    "Haines": {"aliases": ["Haines"], "gender": "male", "ages": ["young", "middle-aged"]},
+    "Old Woman": {"aliases": ["old woman", "milkwoman", "the milkwoman", "milk woman"], "gender": "female", "ages": ["old"]},
+    "Businessman": {"aliases": ["businessman"], "gender": "male", "ages": ["middle-aged", "old"]},
+    "Boatman": {"aliases": ["boatman"], "gender": "male", "ages": ["middle-aged", "old"]},
+    "Young Man": {"aliases": ["young man", "swimmer", "the young man"], "gender": "male", "ages": ["young", "middle-aged"]}
+  },
+  "name_links": {"1": {"Stephen Dedalus": "Kinch"}}
+}
