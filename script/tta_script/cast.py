@@ -5,9 +5,25 @@ character gains names as the book goes on ("Mr. Dursley", later "Uncle
 Vernon"), and one name can belong to several characters ("Professor").
 """
 
-from pydantic import BaseModel, Field
+from typing import Literal
 
-from tta_types.types import Age, Gender
+from pydantic import BaseModel, ConfigDict, Field
+
+
+Age = Literal["young", "middle-aged", "old"]
+Gender = Literal["male", "female"]
+
+
+class Voice(BaseModel):
+    """A recorded voice sample a cast member can be given."""
+
+    name: str
+    age: Age
+    gender: Gender
+    audio_path: str
+    audio_transcript: str
+
+    model_config = ConfigDict(frozen=True)
 
 
 NARRATOR_ID = "narrator"

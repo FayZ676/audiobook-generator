@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from tta_types.cast import NARRATOR_ID, Cast, CastMember
+from tta_script.cast import NARRATOR_ID, Cast, CastMember
 from tta_script.dialogue import decide as decide_module
 from tta_script.dialogue.extract import label_script
 from tta_script.dialogue.types import TextSegment

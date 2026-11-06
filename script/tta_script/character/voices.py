@@ -1,5 +1,4 @@
-from tta_types.cast import NARRATOR_ID, Cast
-from tta_types.types import Age, Gender, Voice
+from tta_script.cast import NARRATOR_ID, Age, Cast, Gender, Voice
 
 
 def choose_voice(age: Age, gender: Gender, voices: list[Voice], cast: Cast) -> str:

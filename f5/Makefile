@@ -7,8 +7,7 @@ download_checkpoint:
 install: download_vocos_model download_checkpoint
 	test -d .venv || python -m venv .venv
 	source .venv/bin/activate && \
-	cd ../types && pip install -r requirements.txt && pip install -e . \
-	&& cd ../f5 && pip install -r requirements.txt && pip install -e .
+	pip install -r requirements.txt && pip install -e .
 
 test:
 	source .venv/bin/activate && \

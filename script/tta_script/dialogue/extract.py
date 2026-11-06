@@ -4,8 +4,8 @@ from typing import Literal
 
 from pydantic import BaseModel, create_model
 
-from tta_types.cast import NARRATOR_ID, Cast
-from tta_types.script import Script, ScriptSegment
+from tta_script.cast import NARRATOR_ID, Cast
+from tta_script.script import Script, ScriptSegment
 from tta_script.dialogue.prompts import label_prompt
 from tta_script.dialogue.types import TextSegment
 from tta_script.dialogue.decide import DECISIONS_PREFIX, decide_speakers

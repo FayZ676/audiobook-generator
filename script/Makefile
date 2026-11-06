@@ -2,9 +2,7 @@ install:
 	python -m venv .venv
 	source .venv/bin/activate && \
 	pip install \
-	-r ../types/requirements.txt \
 	-r requirements_dev.txt \
-	-e ../types \
 	-e .
 
 lint:
@@ -14,4 +12,4 @@ types:
 	.venv/bin/python -m mypy tta_script tests
 
 test:
-	pytest --cov=tta --cov-report=term-missing --cov-fail-under=80 tests
+	pytest --cov=tta_script --cov-report=term-missing --cov-fail-under=80 tests

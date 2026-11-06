@@ -34,9 +34,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from tta_types.cast import NARRATOR_ID, Cast, CastMember
-from tta_types.script import Script
-from tta_types.types import Voice
+from tta_script.cast import NARRATOR_ID, Cast, CastMember, Voice
+from tta_script.script import Script
 from tta_script.dialogue.extract import DEFAULT_LABEL_MODEL, get_text_segments
 from tta_script.pipeline import build_script
 from tta_script.utils.text import normalize_quotes

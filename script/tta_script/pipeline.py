@@ -1,6 +1,5 @@
-from tta_types.cast import Cast
-from tta_types.script import Script
-from tta_types.types import Voice
+from tta_script.cast import Cast, Voice
+from tta_script.script import Script
 from tta_script.character.extract import update_cast
 from tta_script.dialogue.extract import get_text_segments, label_script
 from tta_script.utils.text import normalize_quotes

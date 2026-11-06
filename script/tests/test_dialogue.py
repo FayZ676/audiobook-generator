@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from tta_types.cast import NARRATOR_ID, Cast, CastMember
+from tta_script.cast import NARRATOR_ID, Cast, CastMember
 from tta_script.dialogue import extract
 from tta_script.dialogue.extract import get_text_segments, label_script
 from tta_script.dialogue.types import TextSegment

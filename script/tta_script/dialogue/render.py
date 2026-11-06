@@ -1,6 +1,6 @@
 """How segments and speakers are shown to a model."""
 
-from tta_types.cast import NARRATOR_ID, Cast, CastMember
+from tta_script.cast import NARRATOR_ID, Cast, CastMember
 
 
 def render_segments(lines: dict[int, str], paragraphs: dict[int, int]) -> str:

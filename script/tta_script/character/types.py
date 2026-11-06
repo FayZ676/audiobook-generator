@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from tta_types.types import Age, Gender
+from tta_script.cast import Age, Gender
 
 
 class KnownCharacter(BaseModel):

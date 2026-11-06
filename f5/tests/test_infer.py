@@ -1,8 +1,6 @@
 from pathlib import Path
 
-from tta_types.types import Voice, SpeechRequestSegment
-
-from tta_f5.client import F5Client
+from tta_f5.client import F5Client, SpeechSegment, Voice
 
 
 def test_infer():
@@ -13,20 +11,18 @@ def test_infer():
         voices=[
             Voice(
                 name="faizi_standard",
-                age="middle-aged",
-                gender="male",
                 audio_path=str(test_data_dir / "faizi_standard.mp3"),
                 audio_transcript="I chase the quiet stories—rooftop gardens at dawn, old songs on street corners. Every question is a doorway to something deeper.",
             )
         ]
     ).generate(
         segments=[
-            SpeechRequestSegment(
+            SpeechSegment(
                 id="seg-000",
                 text="Hello, this is a test of the text-to-speech system.",
                 voice_name="faizi_standard",
             ),
-            SpeechRequestSegment(
+            SpeechSegment(
                 id="seg-000",
                 text="Can you hear me?.",
                 voice_name="faizi_standard",

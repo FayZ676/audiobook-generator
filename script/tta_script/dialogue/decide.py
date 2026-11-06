@@ -1,7 +1,7 @@
 """Label speakers with a decision model: one choice question per dialogue
 segment, with the whole chapter as shared evidence, and a confidence per answer."""
 
-from tta_types.cast import NARRATOR_ID, Cast
+from tta_script.cast import NARRATOR_ID, Cast
 from tta_script.dialogue.render import render_segments, render_speakers, speaker_order
 from tta_script.dialogue.types import TextSegment
 from tta_script.models.decisions import Choice, Question, decide

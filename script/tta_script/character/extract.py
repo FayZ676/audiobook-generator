@@ -1,7 +1,6 @@
 import logging
 
-from tta_types.cast import NARRATOR_ID, Cast, CastMember
-from tta_types.types import Voice
+from tta_script.cast import NARRATOR_ID, Cast, CastMember, Voice
 from tta_script.models.text import generate_text
 from tta_script.utils.text import get_chunks
 from tta_script.character.prompts import cast_update

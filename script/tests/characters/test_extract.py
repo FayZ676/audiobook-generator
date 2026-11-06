@@ -2,8 +2,7 @@ import json
 
 import pytest
 
-from tta_types.cast import NARRATOR_ID, Cast, CastMember
-from tta_types.types import Voice
+from tta_script.cast import NARRATOR_ID, Cast, CastMember, Voice
 from tta_script.character import extract
 from tta_script.character.extract import update_cast
 
