@@ -19,6 +19,9 @@ from tta_script.models.text import generate_text
 DEFAULT_LABEL_MODEL = "openai-decisions:gpt-6-luna"
 
 BATCH_SIZE = 100
+# Narration this short between two quotes in one paragraph is an attribution
+# ("said he,", "added the March Hare,"), and both quotes are one speaker's.
+MAX_ATTRIBUTION_WORDS = 5
 # How many already-labelled segments each batch sees, so a conversation that
 # crosses a batch boundary keeps track of who is speaking.
 CONTEXT_SIZE = 30
@@ -36,6 +39,7 @@ def label_script(segments: list[TextSegment], cast: Cast) -> Script:
         labels, confidence = decide_speakers(segments, cast, model.removeprefix(DECISIONS_PREFIX))
     else:
         labels = _llm_labels(segments, cast)
+    _keep_speaker_across_attributions(segments, labels, confidence)
 
     return Script(
         segments=[
@@ -48,6 +52,33 @@ def label_script(segments: list[TextSegment], cast: Cast) -> Script:
             for i, s in enumerate(segments)
         ]
     )
+
+
+def _keep_speaker_across_attributions(
+    segments: list[TextSegment], labels: dict[int, str], confidence: dict[int, float]
+) -> None:
+    """Give both quotes around a short attribution in one paragraph the same
+    speaker: the one the labeller was surer of, or the first without
+    confidences. Only two characters are reconciled; a narrator label is
+    left alone, since a quote beside an attribution can be words not said
+    aloud ("She didn't say "perhaps never"")."""
+    for i in range(len(segments) - 2):
+        before, between, after = segments[i : i + 3]
+        speakers = labels.get(i, NARRATOR_ID), labels.get(i + 2, NARRATOR_ID)
+        if not (
+            before.is_dialogue
+            and after.is_dialogue
+            and not between.is_dialogue
+            and before.paragraph == between.paragraph == after.paragraph
+            and len(between.text.split()) <= MAX_ATTRIBUTION_WORDS
+            and NARRATOR_ID not in speakers
+            and speakers[0] != speakers[1]
+        ):
+            continue
+        keep, change = (i, i + 2) if confidence.get(i, 1.0) >= confidence.get(i + 2, 0.0) else (i + 2, i)
+        labels[change] = labels[keep]
+        if keep in confidence:
+            confidence[change] = confidence[keep]
 
 
 def _llm_labels(segments: list[TextSegment], cast: Cast) -> dict[int, str]:

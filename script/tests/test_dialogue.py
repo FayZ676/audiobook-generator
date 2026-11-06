@@ -218,3 +218,51 @@ def test_a_paragraph_that_lost_its_opening_quote_starts_in_dialogue():
 
 def test_wrapped_lines_join_into_one_paragraph():
     assert split('"Hello\nthere," said\n  Bob.') == [("Hello there,", True), ("said Bob.", False)]
+
+
+ATTRIBUTED = [
+    TextSegment("This is no resemblance,", True, 0),
+    TextSegment("said he.", False, 0),
+    TextSegment("You think it a faithful portrait.", True, 0),
+]
+
+
+def test_quotes_around_a_short_attribution_get_one_speaker(monkeypatch):
+    fake_labeller(monkeypatch, lambda i, _: {0: "c1", 2: "c2"}.get(i, NARRATOR_ID))
+
+    script = label_script(ATTRIBUTED, CAST)
+
+    assert [s.speaker_id for s in script.segments] == ["c1", NARRATOR_ID, "c1"]
+
+
+def test_the_more_confident_label_wins_across_an_attribution(monkeypatch):
+    monkeypatch.setattr(
+        extract, "decide_speakers", lambda *_: ({0: "c1", 2: "c2"}, {0: 0.55, 2: 0.9})
+    )
+    monkeypatch.setenv("TTA_LABEL_MODEL", "openai-decisions:gpt-6-luna")
+
+    script = label_script(ATTRIBUTED, CAST)
+
+    assert [(s.speaker_id, s.confidence) for s in script.segments] == [
+        ("c2", 0.9),
+        (NARRATOR_ID, None),
+        ("c2", 0.9),
+    ]
+
+
+def test_narrator_labels_and_long_narration_are_left_alone(monkeypatch):
+    segments = [
+        TextSegment("Hi,", True, 0),
+        TextSegment("began Bob, but Mary cut in with a decided,", False, 0),
+        TextSegment("No!", True, 0),
+        TextSegment("She didn't say", False, 1),
+        TextSegment("never", True, 1),
+        TextSegment("but", False, 1),
+        TextSegment("Bye.", True, 1),
+    ]
+    labels = {0: "c1", 2: "c2", 4: NARRATOR_ID, 6: "c2"}
+    fake_labeller(monkeypatch, lambda i, _: labels.get(i, NARRATOR_ID))
+
+    script = label_script(segments, CAST)
+
+    assert [script.segments[i].speaker_id for i in (0, 2, 4, 6)] == ["c1", "c2", NARRATOR_ID, "c2"]
