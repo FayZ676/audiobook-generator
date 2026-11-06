@@ -36,7 +36,8 @@ Labelling rules, so every book is labelled the same way:
 - A speaker known only by description ("Scrooge's nephew", "the keeper") is a
   character like any other. Only voices that can't be told apart ("a voice
   cried") belong to the narrator.
-- A letter read aloud belongs to the reader.
+- A letter read aloud belongs to the reader, and so does a poem, song or story
+  recited, including the speech of anyone quoted inside it.
 - In a first-person book the narrator is a character: their own spoken lines
   belong to the narrator, so one voice reads all of them (Watson's "said I").
 - Speech the splitter leaves inside narration is still labelled with its

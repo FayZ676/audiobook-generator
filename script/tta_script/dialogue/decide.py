@@ -22,6 +22,9 @@ emphasised (he had heard the name "Potter"), belongs to the narrator.
 - Dialogue spoken by several characters together ("No room!" they cried) belongs to the \
 narrator.
 - Quoted thoughts, and text a character reads aloud such as a letter, belong to that character.
+- A poem, song, story or letter a character recites or reads aloud belongs to that character \
+from beginning to end, including the speech of anyone quoted inside it (Alice reciting a poem \
+in which "Father William replied" is still Alice speaking).
 - Dialogue from a speaker who isn't in the list, or can't be identified, belongs to the narrator.
 - When the narrator has a name, the book is told in the first person by that character, and \
 their own spoken lines ("said I") belong to the narrator."""
