@@ -23,6 +23,32 @@ make lint types test          # offline checks, no API calls
 chapter's text and the book's cast so far in, the labelled script and updated
 cast out. Run chapters in order.
 
+To build a whole book, put its chapters in `books/<name>/chapters/` (one
+`.txt` per chapter, named to sort in reading order; `books/` is git-ignored)
+and run:
+
+```sh
+.venv/bin/python -m tta_script ../books/<name>   # writes scripts/*.json and cast.json; about 3s a chapter
+```
+
+## Editor
+
+Where a person checks the script (`editor/`, Next.js). It reads and writes
+`books/` directly.
+
+```sh
+cd editor
+npm install
+npm run dev     # http://localhost:3000
+```
+
+- **Review**: every line of dialogue, least confident first. Confirm it
+  (Enter) or pick the speaker (1-9, or / to search or add a character); work
+  up until the lines look right. Z undoes.
+- **Cast**: names, age and gender for everyone, most lines first. Characters
+  the voice library had no match for show "No voice".
+- **Read**: a chapter as a script; click any line to change its speaker.
+
 ## Narration
 
 ```sh
