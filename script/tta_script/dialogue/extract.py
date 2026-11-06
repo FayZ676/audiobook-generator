@@ -1,4 +1,5 @@
 import json
+import os
 from typing import Literal
 
 from pydantic import BaseModel, create_model
@@ -7,7 +8,9 @@ from tta_types.cast import NARRATOR_ID, Cast
 from tta_types.script import Script, ScriptSegment
 from tta_script.dialogue.prompts import label_prompt
 from tta_script.dialogue.types import TextSegment
-from tta_script.models.text import generate_text
+from tta_script.dialogue.decide import DECISIONS_PREFIX, decide_speakers
+from tta_script.dialogue.render import render_segments, render_speakers
+from tta_script.models.text import current_model, generate_text
 
 
 BATCH_SIZE = 100
@@ -19,7 +22,30 @@ CONTEXT_SIZE = 30
 def label_script(segments: list[TextSegment], cast: Cast) -> Script:
     """Turn segments into a script, with every segment pointing at a cast member.
 
-    Narration, and dialogue the model didn't label, is read by the narrator."""
+    Narration, and dialogue the model didn't label, is read by the narrator.
+    TTA_LABEL_MODEL picks the labeller (default: TTA_SCRIPT_MODEL). An
+    "openai-decisions:<model>" labeller also reports each line's confidence."""
+    model = os.getenv("TTA_LABEL_MODEL") or current_model()
+    confidence: dict[int, float] = {}
+    if model.startswith(DECISIONS_PREFIX):
+        labels, confidence = decide_speakers(segments, cast, model.removeprefix(DECISIONS_PREFIX))
+    else:
+        labels = _llm_labels(segments, cast)
+
+    return Script(
+        segments=[
+            ScriptSegment(
+                id=f"seg-{i:04d}",
+                text=s.text,
+                speaker_id=labels.get(i, NARRATOR_ID) if s.is_dialogue else NARRATOR_ID,
+                confidence=confidence.get(i) if s.is_dialogue else None,
+            )
+            for i, s in enumerate(segments)
+        ]
+    )
+
+
+def _llm_labels(segments: list[TextSegment], cast: Cast) -> dict[int, str]:
     labels: dict[int, str] = {}
     for start in range(0, len(segments), BATCH_SIZE):
         batch = {i: segments[i] for i in range(start, min(start + BATCH_SIZE, len(segments)))}
@@ -28,17 +54,7 @@ def label_script(segments: list[TextSegment], cast: Cast) -> Script:
             for i in range(max(0, start - CONTEXT_SIZE), start)
         }
         labels.update(label(batch, cast, context))
-
-    return Script(
-        segments=[
-            ScriptSegment(
-                id=f"seg-{i:04d}",
-                text=s.text,
-                speaker_id=labels.get(i, NARRATOR_ID) if s.is_dialogue else NARRATOR_ID,
-            )
-            for i, s in enumerate(segments)
-        ]
-    )
+    return labels
 
 
 def label(
@@ -49,18 +65,16 @@ def label(
     """Ask the model who speaks each segment. Returns index -> cast member id."""
     context = context or {}
     prompt = label_prompt.substitute(
-        context=_render_segments(
+        context=render_segments(
             {i: f"{s} -> {speaker}" for i, (s, speaker) in context.items()},
             {i: s.paragraph for i, (s, _) in context.items()},
         )
         or "(start of chapter)",
-        text=_render_segments(
+        text=render_segments(
             {i: str(s) for i, s in segments.items()},
             {i: s.paragraph for i, s in segments.items()},
         ),
-        speakers="\n".join(
-            f"- {m.id}: {', '.join(m.names)}" for m in sorted(cast.members, key=_speaker_order)
-        ),
+        speakers=render_speakers(cast),
     )
     response = generate_text("", prompt, _response_format(cast))
     return {
@@ -79,24 +93,6 @@ def _response_format(cast: Cast) -> type[BaseModel]:
         speaker=(Literal[speaker_ids], ...),  # type: ignore[valid-type]
     )
     return create_model("DialogueLabels", dialogue=(list[label_model], ...))  # type: ignore[valid-type]
-
-
-def _speaker_order(member) -> tuple[int, str]:
-    # Narrator first, then c1, c2, ... in a stable order, so prompts repeat
-    # exactly and can be cached.
-    if member.id == NARRATOR_ID:
-        return (0, "")
-    return (1, member.id[1:].zfill(6))
-
-
-def _render_segments(lines: dict[int, str], paragraphs: dict[int, int]) -> str:
-    """Number each segment, with a blank line wherever a paragraph ends."""
-    rendered: list[str] = []
-    for i, line in lines.items():
-        if rendered and paragraphs[i] != paragraphs[i - 1]:
-            rendered.append("")
-        rendered.append(f"{i}. {line}")
-    return "\n".join(rendered)
 
 
 def get_text_segments(text: str) -> list[TextSegment]:

@@ -121,6 +121,7 @@ PRICES = {
     "gpt-5-mini": (0.25, 0.025, 2.00),
     "gpt-5-nano": (0.05, 0.005, 0.40),
     "claude-haiku-5-5": (0.10, 0.01, 0.50),
+    "gpt-6-luna": (0.10, 0.01, 0.0),  # Decisions API: output is free
 }
 
 
@@ -176,12 +177,15 @@ def score_labels(script: Script, cast: Cast, segments, expected) -> dict:
         raise RuntimeError("Segments no longer line up with the expected file.")
     total = correct = 0
     mistakes = []
+    confidences: list[tuple[float, bool]] = []
     for i, (segment, line, (want, _)) in enumerate(zip(segments, script.segments, expected)):
         member = cast.get(line.speaker_id)
         got = who_is(member)
         if segment.is_dialogue:
             total += 1
             correct += got == want
+            if line.confidence is not None:
+                confidences.append((line.confidence, got == want))
         if got != want:
             mistakes.append(
                 {
@@ -191,7 +195,12 @@ def score_labels(script: Script, cast: Cast, segments, expected) -> dict:
                     "text": line.text,
                 }
             )
-    return {"dialogue_total": total, "dialogue_correct": correct, "mistakes": mistakes}
+    return {
+        "dialogue_total": total,
+        "dialogue_correct": correct,
+        "mistakes": mistakes,
+        "confidences": confidences,
+    }
 
 
 def score_characters(before: Cast, after: Cast, number: int, expected) -> dict:
@@ -269,12 +278,39 @@ def totals(per_chapter: dict) -> dict:
         "names": total("names_linked") / max(1, total("names_checked")),
         "gender": total("gender_right") / max(1, total("traits_checked")),
         "age": total("age_right") / max(1, total("traits_checked")),
+        **calibration([pair for c in per_chapter.values() for pair in c["confidences"]]),
+    }
+
+
+def calibration(pairs: list[tuple[float, bool]]) -> dict:
+    """If a person reviews the least confident lines, how many mistakes do
+    they catch? catch10 = share of all mistakes in the least confident 10%."""
+    if not pairs:
+        return {"catch10": None, "catch20": None}
+    mistakes = sum(not right for _, right in pairs)
+    ranked = sorted(pairs, key=lambda p: p[0])
+
+    def catch(share: float) -> float | None:
+        flagged = ranked[: max(1, round(len(ranked) * share))]
+        return sum(not right for _, right in flagged) / mistakes if mistakes else None
+
+    right = [c for c, ok in pairs if ok]
+    wrong = [c for c, ok in pairs if not ok]
+    return {
+        "catch10": catch(0.10),
+        "catch20": catch(0.20),
+        "confidence_right": statistics.mean(right) if right else None,
+        "confidence_wrong": statistics.mean(wrong) if wrong else None,
     }
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n", maxsplit=1)[0])
     parser.add_argument("--models", nargs="+", required=True, help='e.g. "openai:gpt-5-nano"')
+    parser.add_argument(
+        "--label-model",
+        help='labeller, if not the same as --models, e.g. "openai-decisions:gpt-6-luna"',
+    )
     parser.add_argument("--runs", type=int, default=5)
     parser.add_argument("--chapters", nargs="+", type=int, default=list(CHAPTERS))
     parser.add_argument("--out", type=Path, default=SCRIPT_DIR / "evals" / "results")
@@ -289,8 +325,11 @@ def main():
     usage_logger.propagate = False  # collect usage without printing every call
 
     results: dict[str, list[dict]] = {}
-    for model in args.models:
-        os.environ["TTA_SCRIPT_MODEL"] = model
+    if args.label_model:
+        os.environ["TTA_LABEL_MODEL"] = args.label_model
+    for script_model in args.models:
+        os.environ["TTA_SCRIPT_MODEL"] = script_model
+        model = f"{script_model} + {args.label_model}" if args.label_model else script_model
         results[model] = []
         for run in range(1, args.runs + 1):
             collector.calls.clear()
@@ -309,6 +348,14 @@ def main():
     out_file = args.out / f"{datetime.now():%Y%m%d-%H%M%S}.json"
     out_file.write_text(json.dumps({"chapters": args.chapters, "results": results}, indent=2))
     print_table(results)
+    for model, runs in results.items():
+        catches = [r for r in runs if r.get("catch10") is not None]
+        if catches:
+            print(
+                f"{model}: reviewing the least confident 10% / 20% of dialogue catches "
+                f"{statistics.mean(r['catch10'] for r in catches):.0%} / "
+                f"{statistics.mean(r['catch20'] for r in catches):.0%} of mistakes"
+            )
     print(f"\nPer-segment mistakes and characters: {out_file}")
 
 
@@ -322,7 +369,18 @@ def summarise(result: dict) -> str:
     return (
         f"dialogue {result['dialogue']:.1%} ({chapters}), recall {result['recall']:.0%}, "
         f"extras {result['extras']}, duplicates {result['duplicates']}, names {result['names']:.0%}, "
-        f"gender {result['gender']:.0%}, age {result['age']:.0%}, {cost}, {result['seconds']}s"
+        f"gender {result['gender']:.0%}, age {result['age']:.0%}, {catch_text(result)}"
+        f"{cost}, {result['seconds']}s"
+    )
+
+
+def catch_text(result: dict) -> str:
+    if result.get("catch10") is None:
+        return ""
+    return (
+        f"review 10%/20% catches {result['catch10']:.0%}/{result['catch20']:.0%} of mistakes "
+        f"(confidence right {result['confidence_right']:.2f}, "
+        f"wrong {result['confidence_wrong'] or 0:.2f}), "
     )
 
 

@@ -57,7 +57,7 @@ def _call_openai(model, system_prompt, prompt, response_format) -> str:
     )
     usage = response.usage
     cached = usage.prompt_tokens_details.cached_tokens if usage.prompt_tokens_details else 0
-    _log_usage(model, usage.prompt_tokens - cached, cached, usage.completion_tokens)
+    log_usage(model, usage.prompt_tokens - cached, cached, usage.completion_tokens)
     return str(response.choices[0].message.content)
 
 
@@ -73,7 +73,7 @@ def _call_anthropic(model, system_prompt, prompt, response_format) -> str:
     if response.stop_reason == "refusal":
         raise RuntimeError(f"{model} declined the request: {response.stop_details}")
     usage = response.usage
-    _log_usage(
+    log_usage(
         model,
         usage.input_tokens,
         usage.cache_read_input_tokens or 0,
@@ -82,7 +82,7 @@ def _call_anthropic(model, system_prompt, prompt, response_format) -> str:
     return response.parsed_output.model_dump_json()
 
 
-def _log_usage(model: str, input_tokens: int, cached_tokens: int, output_tokens: int):
+def log_usage(model: str, input_tokens: int, cached_tokens: int, output_tokens: int):
     # Uncached input, cached input and output tokens, so callers can price a run.
     logger.info(
         "usage model=%s input=%d cached=%d output=%d",
