@@ -115,7 +115,7 @@ def label(
         ),
         speakers=render_speakers(cast),
     )
-    response = generate_text("", prompt, _response_format(cast))
+    response = generate_text("", prompt, speaker_labels_format(cast))
     return {
         label["index"]: label["speaker"]
         for label in json.loads(response)["dialogue"]
@@ -123,7 +123,7 @@ def label(
     }
 
 
-def _response_format(cast: Cast) -> type[BaseModel]:
+def speaker_labels_format(cast: Cast) -> type[BaseModel]:
     """A response model that only accepts ids of this cast."""
     speaker_ids = tuple(m.id for m in cast.members)
     label_model = create_model(

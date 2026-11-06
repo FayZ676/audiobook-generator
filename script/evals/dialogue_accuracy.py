@@ -153,6 +153,7 @@ PRICES = {
     "gpt-5-nano": (0.05, 0.005, 0.40),
     "claude-haiku-5-5": (0.10, 0.01, 0.50),
     "gpt-6-luna": (0.10, 0.01, 0.0),  # Decisions API: output is free
+    "claude-opus-5-5": (4.00, 0.20, 20.00),
 }
 
 
@@ -261,6 +262,30 @@ def score_labels(book: Book, script: Script, cast: Cast, segments, expected) -> 
             for line, d, r in zip(lines, is_dialogue, right)
             if d and line.confidence is not None
         ],
+        **score_recheck(
+            book,
+            cast,
+            [(line, want, r) for line, d, r, (want, _) in zip(lines, is_dialogue, right, expected) if d],
+        ),
+    }
+
+
+def score_recheck(book: Book, cast: Cast, dialogue: list[tuple[ScriptSegment, str, bool]]) -> dict:
+    """How the stronger model's second opinion on doubtful lines compares:
+    lines it would fix or break if its answer replaced the first, and how
+    many first-label mistakes fall where the two disagree (the lines a person
+    would be shown)."""
+    checked = [
+        (right, book.who_is(cast.get(line.recheck_speaker_id)) == want, line.recheck_speaker_id != line.speaker_id)
+        for line, want, right in dialogue
+        if line.recheck_speaker_id is not None
+    ]
+    return {
+        "rechecked": len(checked),
+        "recheck_fixed": sum(not first and second for first, second, _ in checked),
+        "recheck_broke": sum(first and not second for first, second, _ in checked),
+        "disagreements": sum(differ for _, _, differ in checked),
+        "mistakes_in_disagreements": sum(not first and differ for first, _, differ in checked),
     }
 
 
@@ -337,6 +362,10 @@ def totals(per_chapter: dict) -> dict:
 
     return {
         "dialogue": total("dialogue_correct") / total("dialogue_total"),
+        "dialogue_rechecked": (total("dialogue_correct") + total("recheck_fixed") - total("recheck_broke"))
+        / total("dialogue_total"),
+        "mistakes": total("dialogue_total") - total("dialogue_correct"),
+        **{k: total(k) for k in ("rechecked", "recheck_fixed", "recheck_broke", "disagreements", "mistakes_in_disagreements")},
         "missed_dialogue": total("missed_dialogue"),
         "recall": total("speakers_found") / total("speakers"),
         "extras": sum(len(c["extras"]) for c in per_chapter.values()),
@@ -444,8 +473,18 @@ def summarise(result: dict) -> str:
     return (
         f"dialogue {result['dialogue']:.1%} ({chapters}), missed dialogue {result['missed_dialogue']}, recall {result['recall']:.0%}, "
         f"extras {result['extras']}, duplicates {result['duplicates']}, names {result['names']:.0%}, "
-        f"gender {result['gender']:.0%}, age {result['age']:.0%}, {catch_text(result)}"
+        f"gender {result['gender']:.0%}, age {result['age']:.0%}, {catch_text(result)}{recheck_text(result)}"
         f"{cost}, {result['seconds']}s"
+    )
+
+
+def recheck_text(result: dict) -> str:
+    if not result.get("rechecked"):
+        return ""
+    return (
+        f"recheck: {result['rechecked']} lines, fixed {result['recheck_fixed']}, broke {result['recheck_broke']} "
+        f"(dialogue {result['dialogue_rechecked']:.1%} if applied); {result['disagreements']} disagreements hold "
+        f"{result['mistakes_in_disagreements']}/{result['mistakes']} mistakes, "
     )
 
 

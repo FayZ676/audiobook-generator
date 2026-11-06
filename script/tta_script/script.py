@@ -12,6 +12,9 @@ class ScriptSegment(BaseModel):
     # How sure the labeller was of speaker_id, from 0 to 1, when it reports
     # that. Low values are the lines worth a person checking.
     confidence: float | None = None
+    # A stronger model's own answer for the least confident lines (None when
+    # it wasn't asked). Where it differs from speaker_id, a person should look.
+    recheck_speaker_id: str | None = None
     # Set by the editor when a person checks the line: the speaker the model
     # gave before any correction, and when it was checked (ISO 8601).
     reviewed: bool = False

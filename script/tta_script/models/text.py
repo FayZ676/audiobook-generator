@@ -12,6 +12,7 @@ DEFAULT_MODEL = "anthropic:claude-haiku-5-5"
 # Reasoning depth for models that think before answering. Every call in this
 # pipeline is classification or extraction, which doesn't benefit from more.
 REASONING_EFFORT = "low"
+MAX_RETRIES = 3
 
 
 def current_model() -> str:
@@ -22,30 +23,36 @@ def generate_text(
     system_prompt: str,
     prompt: str,
     response_format: type[BaseModel],
-    max_retries: int = 3,
+    *,
+    model_name: str | None = None,
+    effort: str = REASONING_EFFORT,
 ) -> str:
-    """Return the model's reply as a JSON string matching response_format."""
-    provider, model = current_model().split(":", 1)
+    """Return the model's reply as a JSON string matching response_format.
+
+    model_name ("<provider>:<model>") and effort override the defaults, for
+    the few calls that need a stronger model thinking harder."""
+    model_name = model_name or current_model()
+    provider, model = model_name.split(":", 1)
     call = {"openai": _call_openai, "anthropic": _call_anthropic}.get(provider)
     if call is None:
         raise ValueError(f"Unknown model provider: {provider!r}")
 
     last_exception = None
-    for _ in range(max_retries):
+    for _ in range(MAX_RETRIES):
         try:
-            return call(model, system_prompt, prompt, response_format)
+            return call(model, system_prompt, prompt, response_format, effort)
         except Exception as e:  # pylint: disable=broad-exception-caught
-            logger.warning("Model call failed (%s): %s", current_model(), e)
+            logger.warning("Model call failed (%s): %s", model_name, e)
             last_exception = e
 
     raise RuntimeError(
-        f"Failed to generate text from {current_model()} after {max_retries} retries: {last_exception}"
+        f"Failed to generate text from {model_name} after {MAX_RETRIES} retries: {last_exception}"
     ) from last_exception
 
 
-def _call_openai(model, system_prompt, prompt, response_format) -> str:
+def _call_openai(model, system_prompt, prompt, response_format, effort) -> str:
     # GPT-5-family models reason before answering; older models reject the parameter.
-    extra = {"reasoning_effort": REASONING_EFFORT} if model.startswith("gpt-5") else {}
+    extra = {"reasoning_effort": effort} if model.startswith("gpt-5") else {}
     response = _openai_client().beta.chat.completions.parse(
         model=model,
         messages=[
@@ -61,11 +68,11 @@ def _call_openai(model, system_prompt, prompt, response_format) -> str:
     return str(response.choices[0].message.content)
 
 
-def _call_anthropic(model, system_prompt, prompt, response_format) -> str:
+def _call_anthropic(model, system_prompt, prompt, response_format, effort) -> str:
     response = _anthropic_client().messages.parse(
         model=model,
         max_tokens=16000,
-        output_config={"effort": REASONING_EFFORT},
+        output_config={"effort": effort},
         messages=[{"role": "user", "content": prompt}],
         output_format=response_format,
         **({"system": system_prompt} if system_prompt else {}),
