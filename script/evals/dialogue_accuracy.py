@@ -1,26 +1,39 @@
 """Score the script pipeline's characters and speaker labels, per model.
 
-Processes Harry Potter chapters 1-3 in order, the way production does: each
-chapter's speakers are passed to the next, so a character keeps one voice
-across chapters. Scores, per run:
+Runs every book in evals/books/ (or those named with --books). A book's
+chapters run in order, the way a user would build them: each chapter's cast
+is passed to the next, so a character keeps one voice. Each book starts with
+an empty cast. Scores, per run:
 
-- dialogue accuracy: share of dialogue segments given the right speaker,
-  against the hand-checked tests/text/**/harrypotter-N-expected-dialogue.txt
+- dialogue accuracy: share of dialogue segments given the right speaker
+- missed dialogue: segments the splitter left as narration that someone
+  speaks (a quote spanning paragraphs, say); the narrator reads them, wrongly
 - speaker recall: share of each chapter's speaking characters that were found
 - extra characters: characters found that never speak (each costs a voice)
-- names: whether new names (chapter 2's "Uncle Vernon") join the right character
+- names: whether new names (Harry Potter chapter 2's "Uncle Vernon") join the
+  right character
 - duplicates: one person split into several characters, such as
   "Mr. Dursley" in chapter 1 and "Uncle Vernon" in chapter 2
 - gender / age: share of found speakers whose voice traits are right
+
+A book folder holds, per chapter, NN.txt and its hand-checked labels
+NN-expected.txt (one "Speaker: segment text" line per segment), plus
+characters.json:
+
+- characters: every speaking character, keyed by the name the expected files
+  use. "aliases" are names the pipeline may legitimately give them; "ages"
+  lists every acceptable age group, since some characters sit between two.
+- name_links: per chapter number, names that chapter uses heavily which the
+  cast must attach to the right character by the end of it.
 
 Calls paid model APIs, which is why it is a script and not a pytest test.
 
 --models picks the model that finds characters; --label-model the speaker
 labeller (default: the Decisions API, which also reports confidence).
 
-    .venv/bin/python -m evals.dialogue_accuracy --models anthropic:claude-haiku-5-5 --runs 5
-    .venv/bin/python -m evals.dialogue_accuracy --models anthropic:claude-haiku-5-5 \
-        --label-model anthropic:claude-haiku-5-5 --runs 5
+    .venv/bin/python -m evals.dialogue_accuracy --runs 5
+    .venv/bin/python -m evals.dialogue_accuracy --books alice --runs 1
+    .venv/bin/python -m evals.dialogue_accuracy --label-model anthropic:claude-haiku-5-5
 """
 
 import argparse
@@ -29,6 +42,7 @@ import logging
 import os
 import statistics
 import time
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
@@ -37,85 +51,57 @@ from dotenv import load_dotenv
 from tta_script.cast import NARRATOR_ID, Cast, CastMember, Voice
 from tta_script.script import Script
 from tta_script.dialogue.extract import DEFAULT_LABEL_MODEL, get_text_segments
+from tta_script.models.text import DEFAULT_MODEL
 from tta_script.pipeline import build_script
 from tta_script.utils.text import normalize_quotes
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent.parent
-TEXT_DIR = SCRIPT_DIR / "tests" / "text"
-CHAPTERS = {
-    1: (TEXT_DIR / "harrypotter-1.txt", TEXT_DIR / "harrypotter-1-expected-dialogue.txt"),
-    2: (
-        TEXT_DIR / "chapters" / "harrypotter-2.txt",
-        TEXT_DIR / "chapters" / "harrypotter-2-expected-dialogue.txt",
-    ),
-    3: (
-        TEXT_DIR / "chapters" / "harrypotter-3.txt",
-        TEXT_DIR / "chapters" / "harrypotter-3-expected-dialogue.txt",
-    ),
-}
-
-# Every character who speaks in chapters 1-3, keyed by the name the expected
-# files use. "aliases" are the names the pipeline may legitimately use (chapter
-# 1 only ever says "Mr. Dursley"; chapter 2 says "Uncle Vernon"). "ages" lists
-# every acceptable age group, since some characters sit between two.
-CHARACTERS = {
-    "Uncle Vernon": {
-        "aliases": {"Uncle Vernon", "Vernon", "Vernon Dursley", "Mr. Dursley"},
-        "gender": "male",
-        "ages": {"middle-aged"},
-    },
-    "Mrs. Dursley": {
-        "aliases": {"Mrs. Dursley", "Aunt Petunia", "Petunia", "Petunia Dursley"},
-        "gender": "female",
-        "ages": {"middle-aged"},
-    },
-    "Dudley": {
-        "aliases": {"Dudley", "Dudley Dursley", "Duddy"},
-        "gender": "male",
-        "ages": {"young"},
-    },
-    "Harry Potter": {
-        "aliases": {"Harry Potter", "Harry", "Mr. H. Potter"},
-        "gender": "male",
-        "ages": {"young"},
-    },
-    "Piers Polkiss": {
-        "aliases": {"Piers Polkiss", "Piers"},
-        "gender": "male",
-        "ages": {"young"},
-    },
-    "Professor McGonagall": {
-        "aliases": {"Professor McGonagall", "McGonagall", "Minerva McGonagall"},
-        "gender": "female",
-        "ages": {"middle-aged", "old"},
-    },
-    "Albus Dumbledore": {
-        "aliases": {"Albus Dumbledore", "Dumbledore", "Professor Dumbledore", "Albus"},
-        "gender": "male",
-        "ages": {"old"},
-    },
-    "Hagrid": {
-        "aliases": {"Hagrid", "Rubeus Hagrid"},
-        "gender": "male",
-        "ages": {"middle-aged", "old"},
-    },
-    # The TV newscaster and weatherman in chapter 1. Their ages aren't given.
-    "Ted": {"aliases": {"Ted"}, "gender": "male", "ages": {"middle-aged", "old"}},
-    "Jim McGuffin": {
-        "aliases": {"Jim McGuffin", "Jim", "McGuffin"},
-        "gender": "male",
-        "ages": {"middle-aged", "old"},
-    },
-}
+BOOKS_DIR = SCRIPT_DIR / "evals" / "books"
 NARRATOR = "Narrator"
 
-# Names a chapter uses heavily that the cast must attach to the right person
-# by the end of that chapter. Chapter 1 only says "Mr. Dursley" and "Mrs.
-# Dursley"; chapter 2 switches to "Uncle Vernon" and "Aunt Petunia".
-NAME_LINKS = {
-    2: {"Uncle Vernon": "Uncle Vernon", "Mrs. Dursley": "Aunt Petunia", "Harry Potter": "Harry"},
-}
+
+@dataclass
+class Chapter:
+    number: int
+    text: Path
+    expected: Path
+
+
+@dataclass
+class Book:
+    name: str
+    chapters: list[Chapter]
+    characters: dict[str, dict]
+    name_links: dict[int, dict[str, str]]
+
+    @classmethod
+    def load(cls, folder: Path) -> "Book":
+        data = json.loads((folder / "characters.json").read_text(encoding="utf-8"))
+        chapters = [
+            Chapter(int(p.name.split("-")[0]), folder / p.name.replace("-expected", ""), p)
+            for p in sorted(folder.glob("*-expected.txt"))
+        ]
+        characters = {
+            name: {**c, "aliases": set(c["aliases"]), "ages": set(c["ages"])}
+            for name, c in data["characters"].items()
+        }
+        links = {int(n): names for n, names in data.get("name_links", {}).items()}
+        return cls(folder.name, chapters, characters, links)
+
+    def who_is(self, member: CastMember | None) -> str | None:
+        """The expected character this cast member stands for, if any."""
+        if member is None:
+            return None
+        if member.id == NARRATOR_ID:
+            return NARRATOR
+        names = set(member.names)
+        return next((key for key, c in self.characters.items() if names & c["aliases"]), None)
+
+
+def all_books() -> list[str]:
+    return sorted(p.name for p in BOOKS_DIR.iterdir() if (p / "characters.json").exists())
+
 
 # Listed prices per million tokens: (input, cached input, output). Verify
 # against the providers' pricing pages before trusting the cost column.
@@ -165,17 +151,7 @@ def fake_voices() -> list[Voice]:
     ]
 
 
-def who_is(member: CastMember | None) -> str | None:
-    """The expected character this cast member stands for, if any."""
-    if member is None:
-        return None
-    if member.id == NARRATOR_ID:
-        return NARRATOR
-    names = set(member.names)
-    return next((key for key, c in CHARACTERS.items() if names & c["aliases"]), None)
-
-
-def score_labels(script: Script, cast: Cast, segments, expected) -> dict:
+def score_labels(book: Book, script: Script, cast: Cast, segments, expected) -> dict:
     if [s.text for s in script.segments] != [e[1] for e in expected]:
         raise RuntimeError("Segments no longer line up with the expected file.")
     total = correct = 0
@@ -183,7 +159,7 @@ def score_labels(script: Script, cast: Cast, segments, expected) -> dict:
     confidences: list[tuple[float, bool]] = []
     for i, (segment, line, (want, _)) in enumerate(zip(segments, script.segments, expected)):
         member = cast.get(line.speaker_id)
-        got = who_is(member)
+        got = book.who_is(member)
         if segment.is_dialogue:
             total += 1
             correct += got == want
@@ -201,12 +177,16 @@ def score_labels(script: Script, cast: Cast, segments, expected) -> dict:
     return {
         "dialogue_total": total,
         "dialogue_correct": correct,
+        "missed_dialogue": sum(
+            not segment.is_dialogue and want != NARRATOR
+            for segment, (want, _) in zip(segments, expected)
+        ),
         "mistakes": mistakes,
         "confidences": confidences,
     }
 
 
-def score_characters(before: Cast, after: Cast, number: int, expected) -> dict:
+def score_characters(book: Book, before: Cast, after: Cast, number: int, expected) -> dict:
     """Score the cast after a chapter against who speaks in it."""
     speaking = {want for want, _ in expected if want != NARRATOR}
     members = [m for m in after.members if m.id != NARRATOR_ID]
@@ -214,15 +194,15 @@ def score_characters(before: Cast, after: Cast, number: int, expected) -> dict:
 
     by_person: dict[str, list[CastMember]] = {}
     for m in members:
-        if (key := who_is(m)) is not None:
+        if (key := book.who_is(m)) is not None:
             by_person.setdefault(key, []).append(m)
 
     traits = [
-        (m.gender == CHARACTERS[key]["gender"], m.age in CHARACTERS[key]["ages"], key, m)
+        (m.gender == book.characters[key]["gender"], m.age in book.characters[key]["ages"], key, m)
         for m in new
-        if (key := who_is(m)) is not None
+        if (key := book.who_is(m)) is not None
     ]
-    links = NAME_LINKS.get(number, {})
+    links = book.name_links.get(number, {})
     unlinked = [
         f"{key} lacks {name!r}"
         for key, name in links.items()
@@ -232,7 +212,7 @@ def score_characters(before: Cast, after: Cast, number: int, expected) -> dict:
         "speakers": len(speaking),
         "speakers_found": len(speaking & set(by_person)),
         "missing": sorted(speaking - set(by_person)),
-        "extras": sorted(m.name for m in new if who_is(m) is None),
+        "extras": sorted(m.name for m in new if book.who_is(m) is None),
         "duplicates": {k: [m.names for m in ms] for k, ms in by_person.items() if len(ms) > 1},
         "names_checked": len(links),
         "names_linked": len(links) - len(unlinked),
@@ -246,24 +226,25 @@ def score_characters(before: Cast, after: Cast, number: int, expected) -> dict:
     }
 
 
-def run_once(chapters: list[int]) -> dict:
+def run_once(books: list[Book]) -> dict:
     voices = fake_voices()
-    cast = Cast()
     per_chapter = {}
-    for number in chapters:
-        text_path, expected_path = CHAPTERS[number]
-        text = text_path.read_text(encoding="utf-8")
-        expected = load_expected(expected_path)
+    for book in books:
+        cast = Cast()
+        for chapter in book.chapters:
+            text = chapter.text.read_text(encoding="utf-8")
+            expected = load_expected(chapter.expected)
 
-        before = cast
-        script, cast = build_script(text, cast, voices)
-        segments = get_text_segments(normalize_quotes(text))
+            before = cast
+            script, cast = build_script(text, cast, voices)
+            segments = get_text_segments(normalize_quotes(text))
 
-        per_chapter[number] = {
-            **score_labels(script, cast, segments, expected),
-            **score_characters(before, cast, number, expected),
-            "cast": [m.model_dump() for m in cast.members],
-        }
+            per_chapter[f"{book.name} ch{chapter.number}"] = {
+                **score_labels(book, script, cast, segments, expected),
+                **score_characters(book, before, cast, chapter.number, expected),
+                "cast": [m.model_dump() for m in cast.members],
+                "last_of_book": chapter is book.chapters[-1],
+            }
     return {"chapters": per_chapter, **totals(per_chapter)}
 
 
@@ -271,13 +252,13 @@ def totals(per_chapter: dict) -> dict:
     def total(key):
         return sum(c[key] for c in per_chapter.values())
 
-    last = per_chapter[max(per_chapter)]
     return {
         "dialogue": total("dialogue_correct") / total("dialogue_total"),
+        "missed_dialogue": total("missed_dialogue"),
         "recall": total("speakers_found") / total("speakers"),
         "extras": sum(len(c["extras"]) for c in per_chapter.values()),
-        # The cast accumulates, so the last chapter sees every duplicate.
-        "duplicates": len(last["duplicates"]),
+        # A book's cast accumulates, so its last chapter sees every duplicate.
+        "duplicates": sum(len(c["duplicates"]) for c in per_chapter.values() if c["last_of_book"]),
         "names": total("names_linked") / max(1, total("names_checked")),
         "gender": total("gender_right") / max(1, total("traits_checked")),
         "age": total("age_right") / max(1, total("traits_checked")),
@@ -310,7 +291,10 @@ def calibration(pairs: list[tuple[float, bool]]) -> dict:
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n", maxsplit=1)[0])
     parser.add_argument(
-        "--models", nargs="+", required=True, help='character-finding models, e.g. "openai:gpt-4.1"'
+        "--models",
+        nargs="+",
+        default=[DEFAULT_MODEL],
+        help=f'character-finding models (default "{DEFAULT_MODEL}"), e.g. "openai:gpt-4.1"',
     )
     parser.add_argument(
         "--label-model",
@@ -319,7 +303,7 @@ def main():
         '"anthropic:claude-haiku-5-5" to label with it',
     )
     parser.add_argument("--runs", type=int, default=5)
-    parser.add_argument("--chapters", nargs="+", type=int, default=list(CHAPTERS))
+    parser.add_argument("--books", nargs="+", choices=all_books(), default=all_books())
     parser.add_argument("--out", type=Path, default=SCRIPT_DIR / "evals" / "results")
     args = parser.parse_args()
 
@@ -331,6 +315,7 @@ def main():
     usage_logger.addHandler(collector)
     usage_logger.propagate = False  # collect usage without printing every call
 
+    books = [Book.load(BOOKS_DIR / name) for name in args.books]
     results: dict[str, list[dict]] = {}
     os.environ["TTA_LABEL_MODEL"] = args.label_model
     for script_model in args.models:
@@ -341,7 +326,7 @@ def main():
             collector.calls.clear()
             started = time.monotonic()
             try:
-                result = run_once(args.chapters)
+                result = run_once(books)
             except Exception as e:  # pylint: disable=broad-exception-caught
                 result = {"error": f"{type(e).__name__}: {e}"}
             result["seconds"] = round(time.monotonic() - started, 1)
@@ -352,7 +337,7 @@ def main():
 
     args.out.mkdir(parents=True, exist_ok=True)
     out_file = args.out / f"{datetime.now():%Y%m%d-%H%M%S}.json"
-    out_file.write_text(json.dumps({"chapters": args.chapters, "results": results}, indent=2))
+    out_file.write_text(json.dumps({"books": args.books, "results": results}, indent=2))
     print_table(results)
     for model, runs in results.items():
         catches = [r for r in runs if r.get("catch10") is not None]
@@ -369,11 +354,11 @@ def summarise(result: dict) -> str:
     if "error" in result:
         return f"FAILED after {result['seconds']}s: {result['error']}"
     chapters = ", ".join(
-        f"ch{n} {c['dialogue_correct']}/{c['dialogue_total']}" for n, c in result["chapters"].items()
+        f"{name} {c['dialogue_correct']}/{c['dialogue_total']}" for name, c in result["chapters"].items()
     )
     cost = f"${result['cost']:.4f}" if result["cost"] is not None else "$?"
     return (
-        f"dialogue {result['dialogue']:.1%} ({chapters}), recall {result['recall']:.0%}, "
+        f"dialogue {result['dialogue']:.1%} ({chapters}), missed dialogue {result['missed_dialogue']}, recall {result['recall']:.0%}, "
         f"extras {result['extras']}, duplicates {result['duplicates']}, names {result['names']:.0%}, "
         f"gender {result['gender']:.0%}, age {result['age']:.0%}, {catch_text(result)}"
         f"{cost}, {result['seconds']}s"

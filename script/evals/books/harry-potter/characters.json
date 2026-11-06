@@ -1,0 +1,15 @@
+{
+  "characters": {
+    "Uncle Vernon": {"aliases": ["Mr. Dursley", "Uncle Vernon", "Vernon", "Vernon Dursley"], "gender": "male", "ages": ["middle-aged"]},
+    "Mrs. Dursley": {"aliases": ["Aunt Petunia", "Mrs. Dursley", "Petunia", "Petunia Dursley"], "gender": "female", "ages": ["middle-aged"]},
+    "Dudley": {"aliases": ["Duddy", "Dudley", "Dudley Dursley"], "gender": "male", "ages": ["young"]},
+    "Harry Potter": {"aliases": ["Harry", "Harry Potter", "Mr. H. Potter"], "gender": "male", "ages": ["young"]},
+    "Piers Polkiss": {"aliases": ["Piers", "Piers Polkiss"], "gender": "male", "ages": ["young"]},
+    "Professor McGonagall": {"aliases": ["McGonagall", "Minerva McGonagall", "Professor McGonagall"], "gender": "female", "ages": ["middle-aged", "old"]},
+    "Albus Dumbledore": {"aliases": ["Albus", "Albus Dumbledore", "Dumbledore", "Professor Dumbledore"], "gender": "male", "ages": ["old"]},
+    "Hagrid": {"aliases": ["Hagrid", "Rubeus Hagrid"], "gender": "male", "ages": ["middle-aged", "old"]},
+    "Ted": {"aliases": ["Ted"], "gender": "male", "ages": ["middle-aged", "old"]},
+    "Jim McGuffin": {"aliases": ["Jim", "Jim McGuffin", "McGuffin"], "gender": "male", "ages": ["middle-aged", "old"]}
+  },
+  "name_links": {"2": {"Uncle Vernon": "Uncle Vernon", "Mrs. Dursley": "Aunt Petunia", "Harry Potter": "Harry"}}
+}

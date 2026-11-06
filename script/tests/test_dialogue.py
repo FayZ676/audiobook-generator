@@ -11,7 +11,7 @@ from tta_script.dialogue.extract import get_text_segments, label_script
 from tta_script.dialogue.types import TextSegment
 
 
-TEXT_DIR = Path(__file__).parent / "text"
+HARRY_POTTER = Path(__file__).parent.parent / "evals" / "books" / "harry-potter"
 
 
 @pytest.fixture(autouse=True)
@@ -29,7 +29,7 @@ CAST = Cast(
 
 
 def get_dialogue_expectation(filename: str) -> list[dict]:
-    lines = (TEXT_DIR / filename).read_text(encoding="utf-8").splitlines()
+    lines = (HARRY_POTTER / filename).read_text(encoding="utf-8").splitlines()
     return [
         {"speaker": speaker.strip(), "text": text.strip()}
         for speaker, text in (line.split(":", 1) for line in lines if line)
@@ -139,8 +139,8 @@ def test_unlabelled_dialogue_is_read_by_the_narrator(monkeypatch):
 
 
 def test_split_by_dialogue():
-    result = get_text_segments((TEXT_DIR / "harrypotter-1.txt").read_text(encoding="utf-8"))
-    expectation = get_dialogue_expectation("harrypotter-1-expected-dialogue.txt")
+    result = get_text_segments((HARRY_POTTER / "01.txt").read_text(encoding="utf-8"))
+    expectation = get_dialogue_expectation("01-expected.txt")
     assert [r.text for r in result] == [e["text"] for e in expectation]
 
 

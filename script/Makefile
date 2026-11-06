@@ -6,7 +6,7 @@ install:
 	-e .
 
 lint:
-	.venv/bin/python -m pylint --rcfile=../.pylintrc tta_script tests
+	.venv/bin/python -m pylint --rcfile=../.pylintrc tta_script tests evals
 
 types:
 	.venv/bin/python -m mypy tta_script tests
