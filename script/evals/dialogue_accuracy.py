@@ -177,6 +177,16 @@ class UsageCollector(logging.Handler):
         return total
 
 
+def collect_usage() -> UsageCollector:
+    """Start collecting every model call's token usage, without printing each call."""
+    collector = UsageCollector()
+    usage_logger = logging.getLogger("tta_script.models.text")
+    usage_logger.setLevel(logging.INFO)
+    usage_logger.addHandler(collector)
+    usage_logger.propagate = False
+    return collector
+
+
 def load_expected(path: Path) -> list[tuple[str, str]]:
     lines = path.read_text(encoding="utf-8").splitlines()
     return [tuple(s.strip() for s in line.split(":", 1)) for line in lines if line]
@@ -387,11 +397,7 @@ def main():
 
     load_dotenv(SCRIPT_DIR / ".env.local")
     logging.basicConfig(level=logging.WARNING)
-    collector = UsageCollector()
-    usage_logger = logging.getLogger("tta_script.models.text")
-    usage_logger.setLevel(logging.INFO)
-    usage_logger.addHandler(collector)
-    usage_logger.propagate = False  # collect usage without printing every call
+    collector = collect_usage()
 
     books = [Book.load(BOOKS_DIR / name) for name in args.books]
     results: dict[str, list[dict]] = {}
