@@ -9,6 +9,7 @@ import CastPanel from "./CastPanel";
 import FixList from "./FixList";
 import LinePanel from "./LinePanel";
 import Prose from "./Prose";
+import { SideToggle } from "./SidePanel";
 
 /** Asking Claude Opus about lines, which happens only when a person asks. */
 export type Claude = {
@@ -210,18 +211,31 @@ export default function BookEditor({ initial }: { initial: Book }) {
     decide(member.id);
   };
 
+  // On a narrow screen the bars cover the book, so only one is open at a time.
+  const toggleList = () => {
+    if (!listOpen && narrow()) setCastOpen(false);
+    setListOpen(!listOpen);
+  };
+  const toggleCast = () => {
+    if (!castOpen && narrow()) setListOpen(false);
+    setCastOpen(!castOpen);
+  };
+
   // Keys, with the latest handlers, without re-adding the listener every render.
   const keys = useRef<(e: KeyboardEvent) => void>(() => {});
   keys.current = (e) => {
     if (e.metaKey || e.ctrlKey || e.altKey || (e.target as HTMLElement).closest("input, textarea, select")) return;
     if (e.key === "Escape") {
       if (selection) setSelection(null);
-      else if (castOpen) setCastOpen(false);
-      else if (listOpen && narrow()) setListOpen(false);
+      else if (narrow() && (castOpen || listOpen)) {
+        setCastOpen(false);
+        setListOpen(false);
+      }
       else setFocusSpeaker(null);
     } else if (e.key === "n" || e.key === "j") step(1);
     else if (e.key === "N" || e.key === "p" || e.key === "k") step(-1);
-    else if (e.key === "c") setCastOpen((o) => !o);
+    else if (e.key === "[") toggleList();
+    else if (e.key === "]" || e.key === "c") toggleCast();
     else if (e.key === "z" || e.key === "u") undo();
     else if (!selected) return;
     else if (e.key === "Enter") decide(selected.segment.speaker_id);
@@ -262,10 +276,25 @@ export default function BookEditor({ initial }: { initial: Book }) {
       />
 
       {/* Each side bar opens and closes from its own corner. */}
-      <SideToggle side="left" open={listOpen} onClick={() => setListOpen((o) => !o)} title="Lines worth a look" />
-      <SideToggle side="right" open={castOpen} onClick={() => setCastOpen((o) => !o)} title="Cast (C)" />
+      <SideToggle side="left" open={listOpen} onClick={toggleList} title="Lines to check  [" />
+      <SideToggle side="right" open={castOpen} onClick={toggleCast} title="Cast  ]" />
+      <CastPanel
+        book={book}
+        open={castOpen}
+        focused={focusSpeaker}
+        onFocus={(id) => {
+          setFocusSpeaker(id);
+          setSelection(null);
+          // Their lines are listed on the left.
+          if (id && narrow()) setCastOpen(false);
+          if (id) setListOpen(true);
+          const first = id ? linesOf(id)[0] : undefined;
+          if (first) scrollTo(first.chapter, first.segment.id);
+        }}
+        onChange={saveMember}
+      />
 
-      <div className={listOpen ? "xl:pl-72" : ""}>
+      <div className={`${listOpen ? "xl:pl-80" : ""} ${castOpen ? "xl:pr-80" : ""}`}>
         <header className="sticky top-0 z-20 bg-bg/85 backdrop-blur-sm">
           <div className="mx-auto flex h-12 max-w-[40rem] items-center gap-5 px-6 text-[13px]">
             <Link href="/" className="font-display text-[20px] capitalize tracking-tight">
@@ -308,7 +337,7 @@ export default function BookEditor({ initial }: { initial: Book }) {
       </div>
 
       {selected && (
-        <div className={`pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pb-6 ${listOpen ? "xl:left-72" : ""}`}>
+        <div className={`pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pb-6 ${listOpen ? "xl:left-80" : ""} ${castOpen ? "xl:right-80" : ""}`}>
           <div className="pointer-events-auto">
             <LinePanel
               book={book}
@@ -325,41 +354,7 @@ export default function BookEditor({ initial }: { initial: Book }) {
         </div>
       )}
 
-      {castOpen && (
-        <CastPanel
-          book={book}
-          focused={focusSpeaker}
-          onFocus={(id) => {
-            setFocusSpeaker(id);
-            setSelection(null);
-            setCastOpen(false);
-            const first = id ? linesOf(id)[0] : undefined;
-            if (first) scrollTo(first.chapter, first.segment.id);
-          }}
-          onChange={saveMember}
-        />
-      )}
     </div>
   );
 }
 
-/** A side bar's button, in the top corner on its side: a page with that side's
- * bar drawn in, filled while the bar is open. */
-function SideToggle({ side, open, onClick, title }: { side: "left" | "right"; open: boolean; onClick: () => void; title: string }) {
-  return (
-    <button
-      onClick={onClick}
-      title={title}
-      aria-pressed={open}
-      className={`fixed top-0 z-50 flex h-12 items-center px-4 transition-colors ${side === "left" ? "left-0" : "right-0"} ${
-        open ? "text-ink" : "text-muted hover:text-ink"
-      }`}
-    >
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden>
-        <rect x="1.5" y="2.5" width="15" height="13" rx="2.5" />
-        <path d={side === "left" ? "M6.5 2.5v13" : "M11.5 2.5v13"} />
-        {open && <rect x={side === "left" ? 1.5 : 11.5} y="2.5" width="5" height="13" rx="0" fill="currentColor" opacity="0.18" stroke="none" />}
-      </svg>
-    </button>
-  );
-}

@@ -5,6 +5,7 @@ import type { Book, LineRef, Readiness } from "@/lib/model";
 import { READY_AFTER, displayName, lineKey, opinion, recheckCost } from "@/lib/model";
 import type { Claude } from "./BookEditor";
 import { SpeakerDot } from "./Prose";
+import SidePanel, { SideRow } from "./SidePanel";
 
 const PAGE = 60;
 
@@ -28,7 +29,7 @@ export default function FixList({
   ready: Readiness;
   claude: Claude;
   focusSpeaker: string | null;
-  open: boolean; // beside the book on wide screens, over it as a drawer on narrow ones
+  open: boolean;
   onPick: (line: LineRef) => void;
   onClearFocus: () => void;
 }) {
@@ -52,12 +53,14 @@ export default function FixList({
   const cost = recheckCost(book.chapters);
 
   return (
-    <aside className={`fixed bottom-0 left-0 top-12 z-30 w-72 flex-col bg-bg shadow-2xl xl:shadow-none ${open ? "flex" : "hidden"}`}>
-      <div className="flex h-10 shrink-0 items-center gap-2 px-5 text-xs text-muted">
-        {focusSpeaker ? (
+    <SidePanel
+      side="left"
+      open={open}
+      head={
+        focusSpeaker ? (
           <>
             <SpeakerDot id={focusSpeaker} />
-            <span className="flex-1 truncate text-ink">{displayName(book.cast, focusSpeaker)}</span>
+            <span className="flex-1 truncate">{displayName(book.cast, focusSpeaker)}&apos;s lines</span>
             <button onClick={onClearFocus} className="hover:text-ink" title="Show everyone (Esc)">
               ✕
             </button>
@@ -93,36 +96,25 @@ export default function FixList({
               )
             )}
           </>
-        )}
-      </div>
-
-      <ol className="flex-1 overflow-y-auto pb-6">
-        {rows.slice(0, shown).map((l) => {
-          const key = lineKey(l.chapter, l.segment.id);
-          const s = l.segment;
-          return (
-            <li key={key} id={`fix-${key}`}>
-              <button
-                onClick={() => onPick(l)}
-                className={`flex w-full items-center gap-2.5 px-5 py-1.5 text-left transition-colors ${
-                  key === selectedKey ? "bg-accent/10" : "hover:bg-ink/[0.035]"
-                }`}
-              >
-                <SpeakerDot id={s.speaker_id} />
-                <span className="min-w-0 flex-1 truncate font-serif text-[13px] text-ink/75">{s.text}</span>
-                {opinion(s) === "disagrees" && <span className="text-[11px] text-accent">✦</span>}
-              </button>
-            </li>
-          );
-        })}
-        {rows.length > shown && (
-          <li>
-            <button onClick={() => setLimit(shown + PAGE)} className="px-5 py-2 text-xs text-muted hover:text-ink">
-              More
-            </button>
-          </li>
-        )}
-      </ol>
-    </aside>
+        )
+      }
+    >
+      {rows.slice(0, shown).map((l) => {
+        const key = lineKey(l.chapter, l.segment.id);
+        const s = l.segment;
+        return (
+          <SideRow key={key} id={`fix-${key}`} chosen={key === selectedKey} onClick={() => onPick(l)}>
+            <SpeakerDot id={s.speaker_id} />
+            <span className="min-w-0 flex-1 truncate font-serif text-[13px] text-ink/80">{s.text}</span>
+            {opinion(s) === "disagrees" && <span className="text-[11px] text-accent">✦</span>}
+          </SideRow>
+        );
+      })}
+      {rows.length > shown && (
+        <button onClick={() => setLimit(shown + PAGE)} className="px-5 py-2 text-xs text-muted hover:text-ink">
+          More
+        </button>
+      )}
+    </SidePanel>
   );
 }
