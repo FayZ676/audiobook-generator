@@ -142,12 +142,19 @@ def get_text_segments(text: str) -> list[TextSegment]:
 
     Paragraphs are separated by blank lines. Double quotes mark dialogue,
     straight or curly, or single quotes in a text that uses them for dialogue
-    (British style, with double quotes for a quote inside a quote). Quotes
-    inside a quote stay part of it. A quote may run
+    (British style, with double quotes for a quote inside a quote), or a dash
+    opening the paragraph in a text that marks speech that way (\u2014Back to
+    barracks! he said sternly.). Quotes inside a quote stay part of it. A quote may run
     over several paragraphs, as a long speech or a song does; it is carried
     into the next paragraph only when a later paragraph shows it continuing,
     so one unclosed quote can't turn the rest of the chapter into dialogue."""
     paragraphs = [" ".join(p.split()) for p in text.split("\n\n") if p.strip()]
+    if _uses_dashes(paragraphs):
+        return [
+            TextSegment(part, is_dialogue, index)
+            for index, paragraph in enumerate(paragraphs)
+            for part, is_dialogue in _split_dash_paragraph(paragraph)
+        ]
     if _uses_single_quotes(text):
         paragraphs = [
             _single_quotes_as_double(p, paragraphs[k + 1 : k + 1 + MAX_QUOTED_PARAGRAPHS])
@@ -299,3 +306,56 @@ def _closes_single(paragraph: str, i: int, in_quote: bool) -> bool:
         if paragraph[j] in "\u2019'" and paragraph[j - 1] in SPEECH_END:
             return False
     return True
+
+
+DASH = "\u2014"
+_ATTRIBUTION_VERBS = (
+    "said|says|asked|asks|cried|cries|answered|answers|replied|replies|began|added|adds|"
+    "shouted|whispered|murmured|called|laughed|sighed|exclaimed|returned|repeated|continued|"
+    "muttered|demanded|inquired|enquired|observed|remarked|declared|went on|broke in|"
+    "interrupted|suggested|explained|agreed|protested|chanted|intoned|sang|told"
+)
+# Who speaks: he/she/they, a capitalised name of up to three words, or "the
+# old woman". Capitalised pronouns and "I" are left out: "She asked you" and
+# "I said" begin sentences inside speech, while attributions say "he said".
+_NAME_WORD = r"(?:(?:Mr|Mrs|Ms|Dr|St)\.|[A-Z][\w\u2019'-]*)"
+_SPEAKER = (
+    rf"(?:he|she|they|(?!(?:He|She|They|It|We|You|I)\b){_NAME_WORD}(?: {_NAME_WORD}){{0,2}}"
+    r"|(?:the|his|her|a|an) [a-z]+(?: [a-z]+)?)"
+)
+# An attribution follows the speech's punctuation and ends at its own:
+# "he said sternly.", "Buck Mulligan said.", "said Stephen,". A participle
+# straight after it is still narration: "Stephen said, turning."
+_ATTRIBUTION = re.compile(
+    rf"(?<=[,.!?;:\u2026])\s+(?:{_SPEAKER} (?:[a-z]+ly )?(?:{_ATTRIBUTION_VERBS})"
+    rf"|(?:{_ATTRIBUTION_VERBS}) {_SPEAKER})\b[^.!?,;:]*[.!?,;:]"
+    r"(?:\s+[a-z]+ing\b[^.!?,]*[.!?,])?"
+)
+
+
+def _uses_dashes(paragraphs: list[str]) -> bool:
+    """Whether speech is marked by a dash opening its paragraph, not quotes."""
+    dashed = sum(_opens_with_dash(p) for p in paragraphs)
+    quoted = sum(any(mark in p for mark in (OPEN, '"', "\u2018")) for p in paragraphs)
+    return dashed >= 3 and dashed > quoted
+
+
+def _opens_with_dash(paragraph: str) -> bool:
+    # "\u2014 I \u2014", a heading, has a space after its dash; speech doesn't.
+    return paragraph.startswith(DASH) and len(paragraph) > 1 and not paragraph[1].isspace()
+
+
+def _split_dash_paragraph(paragraph: str) -> list[tuple[str, bool]]:
+    """Split a paragraph into (text, is_dialogue) parts. Speech runs from the
+    opening dash to the end of the paragraph, except for attributions."""
+    if not _opens_with_dash(paragraph):
+        return [(paragraph, False)]
+    speech = paragraph[1:]
+    parts: list[tuple[str, bool]] = []
+    start = 0
+    for match in _ATTRIBUTION.finditer(speech):
+        parts.append((speech[start : match.start()].strip(), True))
+        parts.append((match.group().strip(), False))
+        start = match.end()
+    parts.append((speech[start:].strip(), True))
+    return [(text, is_dialogue) for text, is_dialogue in parts if text]

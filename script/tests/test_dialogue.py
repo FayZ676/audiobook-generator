@@ -312,3 +312,44 @@ def test_apostrophes_in_double_quote_text_are_not_dialogue():
         ("'Scuse me,", True),
         ("said the owner. They'd come in 'cause of the rain.", False),
     ]
+
+
+DASHED = (
+    "— I —\n\n"
+    "Buck Mulligan came from the stairhead.\n\n"
+    "—Thanks, old chap, he cried briskly. That will do nicely.\n\n"
+    "—I was, Stephen said with energy. Out here in the dark.\n\n"
+    "—You were making tea, Stephen said, and went across the landing. She asked you who was in.\n\n"
+    "—It’s in the lock, Stephen said, coming forward.\n\n"
+    "—Grand is no name for it, said Buck Mulligan. Wonderful entirely.\n\n"
+    "—Have you the key? a voice asked."
+)
+
+
+def test_a_dash_opening_a_paragraph_marks_speech_up_to_its_attributions():
+    assert split(DASHED) == [
+        ("— I —", False),
+        ("Buck Mulligan came from the stairhead.", False),
+        ("Thanks, old chap,", True),
+        ("he cried briskly.", False),
+        ("That will do nicely.", True),
+        ("I was,", True),
+        ("Stephen said with energy.", False),
+        ("Out here in the dark.", True),
+        ("You were making tea,", True),
+        ("Stephen said,", False),
+        ("and went across the landing. She asked you who was in.", True),
+        ("It’s in the lock,", True),
+        ("Stephen said, coming forward.", False),
+        ("Grand is no name for it,", True),
+        ("said Buck Mulligan.", False),
+        ("Wonderful entirely.", True),
+        ("Have you the key?", True),
+        ("a voice asked.", False),
+    ]
+
+
+def test_a_few_dashes_in_a_quoted_text_are_not_speech():
+    text = '"Hello," said Bob.\n\n"Hi," said Mary.\n\n"Bye," said Bob.\n\n—and then they left.'
+
+    assert split(text)[-1] == ("—and then they left.", False)
