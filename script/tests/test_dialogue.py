@@ -13,6 +13,12 @@ from tta_script.dialogue.types import TextSegment
 
 TEXT_DIR = Path(__file__).parent / "text"
 
+
+@pytest.fixture(autouse=True)
+def llm_labeller(monkeypatch):
+    """These tests cover the LLM labeller; test_decide.py covers the default."""
+    monkeypatch.setenv("TTA_LABEL_MODEL", "anthropic:claude-haiku-5-5")
+
 CAST = Cast(
     members=[
         CastMember(id=NARRATOR_ID, names=["Narrator"], age="middle-aged", gender="male", voice="n"),

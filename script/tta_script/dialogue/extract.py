@@ -10,8 +10,13 @@ from tta_script.dialogue.prompts import label_prompt
 from tta_script.dialogue.types import TextSegment
 from tta_script.dialogue.decide import DECISIONS_PREFIX, decide_speakers
 from tta_script.dialogue.render import render_segments, render_speakers
-from tta_script.models.text import current_model, generate_text
+from tta_script.models.text import generate_text
 
+
+# Labels dialogue with OpenAI's Decisions API, which also reports each line's
+# confidence. Set TTA_LABEL_MODEL to an LLM ("anthropic:claude-haiku-5-5")
+# to label with that instead.
+DEFAULT_LABEL_MODEL = "openai-decisions:gpt-6-luna"
 
 BATCH_SIZE = 100
 # How many already-labelled segments each batch sees, so a conversation that
@@ -23,9 +28,9 @@ def label_script(segments: list[TextSegment], cast: Cast) -> Script:
     """Turn segments into a script, with every segment pointing at a cast member.
 
     Narration, and dialogue the model didn't label, is read by the narrator.
-    TTA_LABEL_MODEL picks the labeller (default: TTA_SCRIPT_MODEL). An
+    TTA_LABEL_MODEL picks the labeller (default: DEFAULT_LABEL_MODEL). An
     "openai-decisions:<model>" labeller also reports each line's confidence."""
-    model = os.getenv("TTA_LABEL_MODEL") or current_model()
+    model = os.getenv("TTA_LABEL_MODEL") or DEFAULT_LABEL_MODEL
     confidence: dict[int, float] = {}
     if model.startswith(DECISIONS_PREFIX):
         labels, confidence = decide_speakers(segments, cast, model.removeprefix(DECISIONS_PREFIX))

@@ -15,8 +15,12 @@ across chapters. Scores, per run:
 
 Calls paid model APIs, which is why it is a script and not a pytest test.
 
-    .venv/bin/python -m evals.dialogue_accuracy \
-        --models anthropic:claude-haiku-5-5 openai:gpt-4.1 --runs 5
+--models picks the model that finds characters; --label-model the speaker
+labeller (default: the Decisions API, which also reports confidence).
+
+    .venv/bin/python -m evals.dialogue_accuracy --models anthropic:claude-haiku-5-5 --runs 5
+    .venv/bin/python -m evals.dialogue_accuracy --models anthropic:claude-haiku-5-5 \
+        --label-model anthropic:claude-haiku-5-5 --runs 5
 """
 
 import argparse
@@ -33,7 +37,7 @@ from dotenv import load_dotenv
 from tta_types.cast import NARRATOR_ID, Cast, CastMember
 from tta_types.script import Script
 from tta_types.types import Voice
-from tta_script.dialogue.extract import get_text_segments
+from tta_script.dialogue.extract import DEFAULT_LABEL_MODEL, get_text_segments
 from tta_script.pipeline import build_script
 from tta_script.utils.text import normalize_quotes
 
@@ -306,10 +310,14 @@ def calibration(pairs: list[tuple[float, bool]]) -> dict:
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n", maxsplit=1)[0])
-    parser.add_argument("--models", nargs="+", required=True, help='e.g. "openai:gpt-5-nano"')
+    parser.add_argument(
+        "--models", nargs="+", required=True, help='character-finding models, e.g. "openai:gpt-4.1"'
+    )
     parser.add_argument(
         "--label-model",
-        help='labeller, if not the same as --models, e.g. "openai-decisions:gpt-6-luna"',
+        default=DEFAULT_LABEL_MODEL,
+        help=f'speaker labeller (default "{DEFAULT_LABEL_MODEL}"); pass an LLM such as '
+        '"anthropic:claude-haiku-5-5" to label with it',
     )
     parser.add_argument("--runs", type=int, default=5)
     parser.add_argument("--chapters", nargs="+", type=int, default=list(CHAPTERS))
@@ -325,11 +333,10 @@ def main():
     usage_logger.propagate = False  # collect usage without printing every call
 
     results: dict[str, list[dict]] = {}
-    if args.label_model:
-        os.environ["TTA_LABEL_MODEL"] = args.label_model
+    os.environ["TTA_LABEL_MODEL"] = args.label_model
     for script_model in args.models:
         os.environ["TTA_SCRIPT_MODEL"] = script_model
-        model = f"{script_model} + {args.label_model}" if args.label_model else script_model
+        model = f"{script_model} + {args.label_model}"
         results[model] = []
         for run in range(1, args.runs + 1):
             collector.calls.clear()

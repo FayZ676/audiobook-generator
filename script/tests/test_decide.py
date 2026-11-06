@@ -68,7 +68,7 @@ def test_refused_question_goes_to_the_narrator(monkeypatch):
 def test_decide_splits_questions_into_requests_of_at_most_400(monkeypatch):
     requests = []
 
-    def create(model, input, questions):  # pylint: disable=redefined-builtin
+    def create(model, input, questions):  # pylint: disable=redefined-builtin,unused-argument
         requests.append(len(questions))
         answers = [
             SimpleNamespace(type="choice", name=q["name"], choice="a", confidence=0.5) for q in questions
