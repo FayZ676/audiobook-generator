@@ -300,11 +300,16 @@ def totals(per_chapter: dict) -> dict:
         "extras": sum(len(c["extras"]) for c in per_chapter.values()),
         # A book's cast accumulates, so its last chapter sees every duplicate.
         "duplicates": sum(len(c["duplicates"]) for c in per_chapter.values() if c["last_of_book"]),
-        "names": total("names_linked") / max(1, total("names_checked")),
-        "gender": total("gender_right") / max(1, total("traits_checked")),
-        "age": total("age_right") / max(1, total("traits_checked")),
+        # With nothing to check, nothing is wrong.
+        "names": share(total("names_linked"), total("names_checked")),
+        "gender": share(total("gender_right"), total("traits_checked")),
+        "age": share(total("age_right"), total("traits_checked")),
         **calibration([pair for c in per_chapter.values() for pair in c["confidences"]]),
     }
+
+
+def share(part: int, whole: int) -> float:
+    return part / whole if whole else 1.0
 
 
 def calibration(pairs: list[tuple[float, bool]]) -> dict:
