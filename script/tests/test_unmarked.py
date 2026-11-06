@@ -45,7 +45,47 @@ def test_words_the_paragraph_doesnt_contain_are_skipped(monkeypatch):
 
 def test_text_that_marks_its_speech_is_left_alone(monkeypatch):
     prompts = fake_model(monkeypatch, [])
-    text = '"Hi," he said.\n\n"Bye," she said.'
+    text = '\n\n'.join(f'"Line {i}," he said.' for i in range(5))
+
+    assert mark_spoken_lines(text) == text
+    assert not prompts
+
+
+def test_a_few_quoted_lines_dont_stop_the_model_finding_the_rest(monkeypatch):
+    text = (
+        "The sign said \u201cNo Trespassing\u201d in red.\n\n"
+        "Where you headed? he said.\n\n"
+        "\u201cNowhere,\u201d the boy said. Just walking.\n\n"
+        "You hungry? the man said.\n\n"
+        "Some, said the boy."
+    )
+    prompts = fake_model(
+        monkeypatch,
+        [
+            {"paragraph": 1, "spoken": ["Where you headed?"]},
+            {"paragraph": 2, "spoken": ["Nowhere,", "Just walking."]},
+            {"paragraph": 3, "spoken": ["You hungry?"]},
+            {"paragraph": 4, "spoken": ["Some,"]},
+        ],
+    )
+
+    marked = mark_spoken_lines(text)
+
+    assert prompts
+    assert marked.split("\n\n") == [
+        "The sign said \u201cNo Trespassing\u201d in red.",
+        "\u201cWhere you headed?\u201d he said.",
+        "\u201cNowhere,\u201d the boy said. \u201cJust walking.\u201d",
+        "\u201cYou hungry?\u201d the man said.",
+        "\u201cSome,\u201d said the boy.",
+    ]
+
+
+def test_indirect_speech_in_a_quoted_book_doesnt_call_the_model(monkeypatch):
+    prompts = fake_model(monkeypatch, [])
+    text = "\n\n".join(
+        [f"“Line {i},” said Bob." for i in range(3)] + ["Scrooge said that he would see him first."]
+    )
 
     assert mark_spoken_lines(text) == text
     assert not prompts

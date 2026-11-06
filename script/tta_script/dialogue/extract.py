@@ -196,14 +196,6 @@ def get_text_segments(text: str) -> list[TextSegment]:
     return segments
 
 
-def has_dialogue_marks(text: str) -> bool:
-    """Whether the text marks speech in a way the splitter reads: double or
-    single quotes, or dashes opening paragraphs."""
-    paragraphs = [" ".join(p.split()) for p in text.split("\n\n") if p.strip()]
-    double_quotes = text.count(OPEN) + text.count('"')
-    return double_quotes >= 2 or _uses_single_quotes(text) or _uses_dashes(paragraphs)
-
-
 def _quote_continues(following: list[str]) -> bool:
     """Whether a quote left open at a paragraph's end carries on into the next."""
     for distance, paragraph in enumerate(following[:MAX_QUOTED_PARAGRAPHS]):
@@ -370,3 +362,30 @@ def _split_dash_paragraph(paragraph: str) -> list[tuple[str, bool]]:
         start = match.end()
     parts.append((speech[start:].strip(), True))
     return [(text, is_dialogue) for text, is_dialogue in parts if text]
+
+
+# Paragraphs that report speech: "he said", "Stephen asked", "said I".
+_REPORTS_SPEECH = re.compile(
+    r"\b(?:he|she|they|I|He|She|They|[A-Z][\w\u2019'-]+(?: [A-Z][\w\u2019'-]+)?|(?:the|his|her|a|an) [a-z]+)"
+    rf" (?:[a-z]+ly )?(?:{_ATTRIBUTION_VERBS})\b"
+    rf"|\b(?:{_ATTRIBUTION_VERBS}) (?:he|she|I|[A-Z][\w\u2019'-]+)\b"
+)
+
+
+def marks_its_speech(text: str) -> bool:
+    """Whether the text marks its speech with quotes or dashes, which the
+    splitter reads. Paragraphs that report speech ("he said") are checked for
+    marks: in books that mark speech nearly all have them (the rest report it
+    indirectly: "he said that..."), while in books that don't, nearly none
+    do, whatever stray quotes elsewhere. With no such paragraphs, any marks
+    at all will do."""
+    paragraphs = [" ".join(p.split()) for p in text.split("\n\n") if p.strip()]
+    reporting = [p for p in paragraphs if _REPORTS_SPEECH.search(p)]
+    if not reporting:
+        return any(_has_speech_mark(p) for p in paragraphs)
+    unmarked = sum(not _has_speech_mark(p) for p in reporting)
+    return unmarked <= len(reporting) / 2
+
+
+def _has_speech_mark(paragraph: str) -> bool:
+    return any(mark in paragraph for mark in (OPEN, '"', "\u2018")) or _opens_with_dash(paragraph)
