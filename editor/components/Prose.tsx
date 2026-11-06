@@ -1,20 +1,24 @@
+import { memo } from "react";
 import type { CastMember, Segment } from "@/lib/model";
-import { NARRATOR_ID, displayName, speakerHue } from "@/lib/model";
+import { NARRATOR_ID, displayName, mark, speakerHue } from "@/lib/model";
 
-/** Segments laid out as the book's paragraphs, each line of dialogue tinted
- * in its speaker's colour and tagged with their name. */
-export default function Prose({
+/** A chapter's segments laid out as its paragraphs, each line of dialogue
+ * tinted in its speaker's colour and tagged with their name. Lines worth a
+ * look carry a small mark. */
+function Prose({
+  chapter,
   segments,
   cast,
-  highlight,
+  selected,
+  focusSpeaker,
   onPick,
-  dim = false,
 }: {
+  chapter: string;
   segments: Segment[];
   cast: CastMember[];
-  highlight?: string;
+  selected?: string; // segment id
+  focusSpeaker?: string | null; // other speakers' lines fade
   onPick?: (segment: Segment) => void;
-  dim?: boolean; // context around a highlighted line
 }) {
   const paragraphs: Segment[][] = [];
   for (const s of segments) {
@@ -23,7 +27,7 @@ export default function Prose({
     else paragraphs.push([s]);
   }
   return (
-    <div className="space-y-4 font-serif text-[17px] leading-[1.8]">
+    <div className="space-y-5 font-serif text-[18px] leading-[1.85]">
       {paragraphs.map((p) => (
         <p key={p[0].id}>
           {p.map((s, i) => (
@@ -31,15 +35,16 @@ export default function Prose({
               {i > 0 && " "}
               {s.is_dialogue ? (
                 <Line
+                  id={`line-${chapter}-${s.id}`}
                   segment={s}
                   name={displayName(cast, s.speaker_id)}
                   showName={i === 0 || p[i - 1].speaker_id !== s.speaker_id || !p[i - 1].is_dialogue}
-                  highlighted={s.id === highlight}
-                  dim={dim && s.id !== highlight}
+                  selected={s.id === selected}
+                  faded={!!focusSpeaker && s.speaker_id !== focusSpeaker}
                   onPick={onPick}
                 />
               ) : (
-                <span className={dim ? "text-muted" : ""}>{s.text}</span>
+                <span className={focusSpeaker ? "opacity-45" : ""}>{s.text}</span>
               )}
             </span>
           ))}
@@ -49,39 +54,62 @@ export default function Prose({
   );
 }
 
+export default memo(Prose);
+
 function Line({
+  id,
   segment,
   name,
   showName,
-  highlighted,
-  dim,
+  selected,
+  faded,
   onPick,
 }: {
+  id: string;
   segment: Segment;
   name: string;
   showName: boolean;
-  highlighted: boolean;
-  dim: boolean;
+  selected: boolean;
+  faded: boolean;
   onPick?: (segment: Segment) => void;
 }) {
   const hue = speakerHue(segment.speaker_id);
   const narrator = segment.speaker_id === NARRATOR_ID;
-  const style = hue === null ? {} : { background: `oklch(var(--tint-l) 0.05 ${hue})` };
+  const style = hue === null || faded ? {} : { background: `oklch(var(--tint-l) 0.05 ${hue})` };
   return (
     <span
-      id={`line-${segment.id}`}
+      id={id}
       onClick={onPick && (() => onPick(segment))}
-      className={`rounded-[4px] px-[3px] py-[1px] [box-decoration-break:clone] ${onPick ? "cursor-pointer" : ""} ${
-        highlighted ? "outline-2 outline-offset-2 outline-accent" : ""
-      } ${dim ? "opacity-55" : ""} ${narrator ? "underline decoration-muted/60 decoration-dashed underline-offset-4" : ""}`}
+      className={`scroll-my-40 rounded-[4px] px-[3px] py-[1px] [box-decoration-break:clone] transition-[outline-color] ${
+        onPick ? "cursor-pointer hover:outline hover:outline-1 hover:outline-offset-2 hover:outline-ink/20" : ""
+      } ${selected ? "!outline-2 !outline-offset-2 !outline-accent" : ""} ${faded ? "opacity-45" : ""} ${
+        narrator ? "underline decoration-muted/60 decoration-dashed underline-offset-4" : ""
+      }`}
       style={style}
     >
+      <Mark kind={mark(segment)} />
       {showName && (
         <span className="mr-1 align-[0.15em] font-sans text-[10px] font-semibold uppercase tracking-wider text-muted">
           {name}
         </span>
       )}
       “{segment.text}”
+    </span>
+  );
+}
+
+/** A quiet sign before a line: Claude disagrees, the model was unsure, or a
+ * person fixed it. */
+function Mark({ kind }: { kind: ReturnType<typeof mark> }) {
+  if (kind === null) return null;
+  const look = {
+    disagrees: { text: "✦", className: "text-accent", title: "Claude Opus disagrees" },
+    unsure: { text: "●", className: "text-amber-500 text-[8px]", title: "The model was unsure" },
+    fixed: { text: "✎", className: "text-muted", title: "You fixed this" },
+  }[kind];
+  return (
+    <span title={look.title} className={`mr-1 inline-block align-[0.2em] font-sans text-[11px] ${look.className}`}>
+      {look.text}
     </span>
   );
 }

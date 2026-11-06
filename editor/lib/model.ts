@@ -162,3 +162,44 @@ function mentions(text: string, name: string): boolean {
   const bare = name.replace(/^the /i, "");
   return new RegExp(`\\b${bare.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(text);
 }
+
+/** A line of dialogue and where it is. */
+export type LineRef = { chapter: string; index: number; segment: Segment };
+
+export function lineKey(chapter: string, segmentId: string): string {
+  return `${chapter}/${segmentId}`;
+}
+
+/** Claude Opus disagreed with the models' first answer (not the person's). */
+export function claudeDisagreed(segment: Segment): boolean {
+  const first = segment.model_speaker_id ?? segment.speaker_id;
+  return !!segment.recheck_speaker_id && segment.recheck_speaker_id !== first;
+}
+
+// Below this confidence an unchecked line is marked as worth a look.
+export const UNSURE_BELOW = 0.8;
+
+/** How a line is marked in the text, if at all. */
+export function mark(segment: Segment): "disagrees" | "unsure" | "fixed" | null {
+  if (!segment.is_dialogue) return null;
+  if (segment.reviewed) return wasCorrected(segment) ? "fixed" : null;
+  if (opinion(segment) === "disagrees") return "disagrees";
+  if (opinion(segment) === null && (segment.confidence ?? 0) < UNSURE_BELOW) return "unsure";
+  return null;
+}
+
+/** Lines most likely wrong first: those Claude Opus disagreed with, then
+ * the least confident. The order depends only on what the models said, so
+ * checking a line never moves it. */
+export function fixOrder(book: Book): LineRef[] {
+  const lines: LineRef[] = [];
+  for (const c of book.chapters)
+    c.segments.forEach((segment, index) => {
+      if (segment.reviewed || needsLook(segment)) lines.push({ chapter: c.id, index, segment });
+    });
+  return lines.sort(
+    (a, b) =>
+      Number(claudeDisagreed(b.segment)) - Number(claudeDisagreed(a.segment)) ||
+      (a.segment.confidence ?? -1) - (b.segment.confidence ?? -1),
+  );
+}
