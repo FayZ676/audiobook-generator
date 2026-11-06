@@ -116,6 +116,13 @@ def name_key(name: str) -> str:
     return name.lower().removeprefix("the ").strip()
 
 
+def names_overlap(a: str, b: str) -> bool:
+    """One name's words contain the other's: "Josephine" and "Josephine March",
+    "Aunt Petunia" and "Petunia". Either tells the labeller who is meant."""
+    words_a, words_b = set(name_key(a).split()), set(name_key(b).split())
+    return words_a <= words_b or words_b <= words_a
+
+
 def all_books() -> list[str]:
     return sorted(p.name for p in BOOKS_DIR.iterdir() if (p / "characters.json").exists())
 
@@ -223,7 +230,7 @@ def score_characters(book: Book, before: Cast, after: Cast, number: int, expecte
     unlinked = [
         f"{key} lacks {name!r}"
         for key, name in links.items()
-        if not any(name_key(name) in map(name_key, m.names) for m in by_person.get(key, []))
+        if not any(names_overlap(name, n) for m in by_person.get(key, []) for n in m.names)
     ]
     return {
         "speakers": len(speaking),
