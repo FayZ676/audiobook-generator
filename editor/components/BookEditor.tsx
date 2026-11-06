@@ -338,18 +338,22 @@ export default function BookEditor({ initial }: { initial: Book }) {
               {book.name}
             </Link>
             {/* The chapter showing, as a book's running head; choosing another shows it. */}
-            <select
-              value={reading}
-              onChange={(e) => openChapter(e.target.value)}
-              className="ml-auto min-w-0 max-w-64 cursor-pointer appearance-none truncate bg-transparent py-1 text-right font-display text-[17px] text-muted outline-none hover:text-ink"
-              title="Go to chapter"
-            >
-              {book.chapters.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {splitTitle(c.title).name}
-                </option>
-              ))}
-            </select>
+            <label className="ml-auto flex min-w-0 cursor-pointer items-center gap-1.5" title="Go to chapter">
+              <select
+                value={reading}
+                onChange={(e) => openChapter(e.target.value)}
+                className="min-w-0 max-w-64 cursor-pointer appearance-none truncate bg-transparent py-1 text-right font-display text-[20px] outline-none"
+              >
+                {book.chapters.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {splitTitle(c.title).name}
+                  </option>
+                ))}
+              </select>
+              <span className="pointer-events-none text-[10px] text-muted" aria-hidden>
+                ▾
+              </span>
+            </label>
             </div>
             <SideToggle side="right" open={castOpen} onClick={toggleCast} title="Cast  ]" />
           </div>
