@@ -291,7 +291,10 @@ export default function BookEditor({ initial }: { initial: Book }) {
         onChange={saveMember}
       />
 
-      <div className={`${listOpen ? "xl:pl-80" : ""} ${castOpen ? "xl:pr-80" : ""}`}>
+      {/* Makes room for the side bars at their pace. */}
+      <div
+        className={`transition-[padding] duration-300 ease-out motion-reduce:transition-none ${listOpen ? "xl:pl-80" : ""} ${castOpen ? "xl:pr-80" : ""}`}
+      >
         <header className="sticky top-0 z-20 bg-bg/85 backdrop-blur-sm">
           {/* Each side bar's button at its own end; the book's name and chapter over the text. */}
           <div className="flex h-12 items-center px-2 text-[13px]">
@@ -339,7 +342,7 @@ export default function BookEditor({ initial }: { initial: Book }) {
       </div>
 
       {selected && (
-        <div className={`pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pb-6 ${listOpen ? "xl:left-80" : ""} ${castOpen ? "xl:right-80" : ""}`}>
+        <div className={`pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pb-6 transition-[left,right] duration-300 ease-out motion-reduce:transition-none ${listOpen ? "xl:left-80" : ""} ${castOpen ? "xl:right-80" : ""}`}>
           <div className="pointer-events-auto">
             <LinePanel
               book={book}

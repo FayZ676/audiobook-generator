@@ -16,10 +16,12 @@ export default function SidePanel({
   children: React.ReactNode;
 }) {
   return (
+    // Slides in from its edge; hidden once out, so it can't be tabbed into.
     <aside
-      className={`fixed bottom-0 top-12 z-30 w-80 xl:top-0 max-w-[85vw] flex-col border-line bg-bg shadow-2xl xl:shadow-none ${
+      aria-hidden={!open}
+      className={`fixed bottom-0 top-12 z-30 flex w-80 max-w-[85vw] flex-col border-line bg-bg shadow-2xl transition-[translate,visibility] duration-300 ease-out motion-reduce:transition-none xl:top-0 xl:shadow-none ${
         side === "left" ? "left-0 border-r" : "right-0 border-l"
-      } ${open ? "flex" : "hidden"}`}
+      } ${open ? "visible translate-x-0" : `invisible ${side === "left" ? "-translate-x-full" : "translate-x-full"}`}`}
     >
       <div className="flex h-12 shrink-0 items-center gap-2 px-5 text-xs text-muted">{head}</div>
       <div className="flex-1 overflow-y-auto pb-6">{children}</div>
