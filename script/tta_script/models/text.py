@@ -19,18 +19,21 @@ def current_model() -> str:
     return os.getenv("TTA_SCRIPT_MODEL", DEFAULT_MODEL)
 
 
-def generate_text(
+def generate_text(  # pylint: disable=too-many-arguments
     system_prompt: str,
     prompt: str,
     response_format: type[BaseModel],
     *,
     model_name: str | None = None,
     effort: str = REASONING_EFFORT,
+    cached_prefix: str = "",
 ) -> str:
     """Return the model's reply as a JSON string matching response_format.
 
     model_name ("<provider>:<model>") and effort override the defaults, for
-    the few calls that need a stronger model thinking harder."""
+    the few calls that need a stronger model thinking harder. cached_prefix
+    goes before prompt and is cached (Anthropic only), so calls sharing it
+    within a few minutes pay a fraction for it."""
     model_name = model_name or current_model()
     provider, model = model_name.split(":", 1)
     call = {"openai": _call_openai, "anthropic": _call_anthropic}.get(provider)
@@ -40,7 +43,7 @@ def generate_text(
     last_exception = None
     for _ in range(MAX_RETRIES):
         try:
-            return call(model, system_prompt, prompt, response_format, effort)
+            return call(model, system_prompt, prompt, response_format, effort, cached_prefix)
         except Exception as e:  # pylint: disable=broad-exception-caught
             logger.warning("Model call failed (%s): %s", model_name, e)
             last_exception = e
@@ -50,7 +53,10 @@ def generate_text(
     ) from last_exception
 
 
-def _call_openai(model, system_prompt, prompt, response_format, effort) -> str:
+def _call_openai(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    model, system_prompt, prompt, response_format, effort, cached_prefix
+) -> str:
+    prompt = cached_prefix + prompt  # OpenAI caches long prefixes by itself
     # GPT-5-family models reason before answering; older models reject the parameter.
     extra = {"reasoning_effort": effort} if model.startswith("gpt-5") else {}
     response = _openai_client().beta.chat.completions.parse(
@@ -68,12 +74,17 @@ def _call_openai(model, system_prompt, prompt, response_format, effort) -> str:
     return str(response.choices[0].message.content)
 
 
-def _call_anthropic(model, system_prompt, prompt, response_format, effort) -> str:
+def _call_anthropic(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    model, system_prompt, prompt, response_format, effort, cached_prefix
+) -> str:
+    content: list[dict] = [{"type": "text", "text": prompt}]
+    if cached_prefix:
+        content.insert(0, {"type": "text", "text": cached_prefix, "cache_control": {"type": "ephemeral"}})
     response = _anthropic_client().messages.parse(
         model=model,
         max_tokens=16000,
         output_config={"effort": effort},
-        messages=[{"role": "user", "content": prompt}],
+        messages=[{"role": "user", "content": content}],
         output_format=response_format,
         **({"system": system_prompt} if system_prompt else {}),
     )

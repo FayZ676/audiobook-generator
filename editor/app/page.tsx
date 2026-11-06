@@ -10,7 +10,7 @@ export default async function Home() {
       {books.length === 0 ? (
         <p className="mt-8 text-sm leading-6 text-muted">
           No books yet. Put a book&apos;s chapters in <code className="font-mono">books/&lt;name&gt;/chapters/</code>{" "}
-          and run <code className="font-mono">python -m tta_script ../books/&lt;name&gt;</code> from{" "}
+          and run <code className="font-mono">python -m tta_script build ../books/&lt;name&gt;</code> from{" "}
           <code className="font-mono">script/</code>.
         </p>
       ) : (

@@ -52,7 +52,7 @@ async function readCast(book: string): Promise<CastMember[]> {
   return (await readJson(bookPath(book, "cast.json"))).members;
 }
 
-function bookPath(book: string, ...parts: string[]) {
+export function bookPath(book: string, ...parts: string[]) {
   // Book and chapter names come from URLs; keep them inside BOOKS_DIR.
   const full = path.resolve(BOOKS_DIR, book, ...parts);
   if (!full.startsWith(BOOKS_DIR + path.sep)) throw new Error(`Bad path: ${book}/${parts.join("/")}`);

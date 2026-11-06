@@ -22,6 +22,7 @@ export type Segment = {
   reviewed: boolean;
   model_speaker_id?: string | null; // the model's speaker, kept once a person changes it
   reviewed_at?: string | null;
+  recheck_speaker_id?: string | null; // Claude Opus's answer, when a person asked for it
 };
 
 export type SegmentChange = Partial<Pick<Segment, "speaker_id" | "reviewed">>;
@@ -45,6 +46,18 @@ export function wasCorrected(segment: Segment): boolean {
   return segment.model_speaker_id != null && segment.model_speaker_id !== segment.speaker_id;
 }
 
+/** What Claude Opus said about a line, if it was asked. */
+export function opinion(segment: Segment): "agrees" | "disagrees" | null {
+  if (!segment.recheck_speaker_id) return null;
+  return segment.recheck_speaker_id === segment.speaker_id ? "agrees" : "disagrees";
+}
+
+/** Lines a person still needs to look at: not reviewed, and not already
+ * confirmed by Claude Opus agreeing with the first answer. */
+export function needsLook(segment: Segment): boolean {
+  return segment.is_dialogue && !segment.reviewed && opinion(segment) !== "agrees";
+}
+
 // Confirming this many lines in a row without a correction means the rest,
 // which the model is surer of, are very likely right.
 export const READY_AFTER = 20;
@@ -53,22 +66,46 @@ export type Readiness = {
   reviewed: number;
   corrected: number;
   confirmedInARow: number; // most recent reviews with no correction
+  disagreements: number; // lines Claude Opus disagreed on, still to look at
+  unchecked: number; // dialogue lines neither reviewed nor checked by Claude Opus
   ready: boolean;
 };
 
 export function readiness(book: Book): Readiness {
-  const reviewed = book.chapters
-    .flatMap((c) => c.segments)
-    .filter((s) => s.is_dialogue && s.reviewed)
+  const lines = book.chapters.flatMap((c) => c.segments).filter((s) => s.is_dialogue);
+  const reviewed = lines
+    .filter((s) => s.reviewed)
     .sort((a, b) => (b.reviewed_at ?? "").localeCompare(a.reviewed_at ?? ""));
   const firstFix = reviewed.findIndex(wasCorrected);
   const confirmedInARow = firstFix === -1 ? reviewed.length : firstFix;
+  const disagreements = lines.filter((s) => !s.reviewed && opinion(s) === "disagrees").length;
+  const unchecked = lines.filter((s) => !s.reviewed && opinion(s) === null).length;
   return {
     reviewed: reviewed.length,
     corrected: reviewed.filter(wasCorrected).length,
     confirmedInARow,
-    ready: confirmedInARow >= READY_AFTER,
+    disagreements,
+    unchecked,
+    // Every line checked by someone, or enough right in a row that the rest likely are.
+    ready: disagreements === 0 && (unchecked === 0 || confirmedInARow >= READY_AFTER),
   };
+}
+
+// Claude Opus 5.5 list prices per token, for estimates shown before asking.
+const OPUS_INPUT = 4 / 1e6;
+const OPUS_OUTPUT = 20 / 1e6;
+
+/** Roughly what asking Claude Opus about these chapters' unchecked lines
+ * costs: each chapter is read once, and each line answered briefly. Measured
+ * on the eval books: about 0.6 input tokens per character of chapter (with
+ * instructions), and 20 output tokens per line asked about. */
+export function recheckCost(chapters: Chapter[]): number {
+  return chapters.reduce((total, c) => {
+    const lines = c.segments.filter((s) => s.is_dialogue && !s.reviewed && !s.recheck_speaker_id).length;
+    if (!lines) return total;
+    const chars = c.segments.reduce((n, s) => n + s.text.length, 0);
+    return total + chars * 0.6 * OPUS_INPUT + (300 + lines * 20) * OPUS_OUTPUT;
+  }, 0);
 }
 
 export type Chapter = { id: string; title: string; segments: Segment[] };

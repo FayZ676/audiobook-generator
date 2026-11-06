@@ -28,7 +28,7 @@ To build a whole book, put its chapters in `books/<name>/chapters/` (one
 and run:
 
 ```sh
-.venv/bin/python -m tta_script ../books/<name>   # writes scripts/*.json and cast.json; about 3s a chapter
+.venv/bin/python -m tta_script build ../books/<name>   # writes scripts/*.json and cast.json; about 3s a chapter
 ```
 
 ## Editor
@@ -47,6 +47,10 @@ npm run dev     # http://localhost:3000
   (Enter) or pick the speaker (1-9, or / to search or add a character); Z
   undoes. Once 20 lines in a row need no fix, the rest are very likely right
   and the book shows as ready to narrate.
+- **Claude Opus** only runs when asked: on one line (A in Fix lines), or on
+  every line not yet checked (Overview, about 5 cents a chapter). Where it
+  disagrees with the first answer, the line comes first in Fix lines with its
+  answer one key away; where it agrees, the line needs no look.
 - **Cast**: names, age and gender for everyone, most lines first. Characters
   the voice library had no match for show "No voice".
 - **Read**: a chapter as a script; click any line to change its speaker.

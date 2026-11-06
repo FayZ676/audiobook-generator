@@ -50,6 +50,7 @@ labeller (default: the Decisions API, which also reports confidence).
     .venv/bin/python -m evals.dialogue_accuracy --runs 5
     .venv/bin/python -m evals.dialogue_accuracy --books alice --runs 1
     .venv/bin/python -m evals.dialogue_accuracy --label-model anthropic:claude-haiku-5-5
+    .venv/bin/python -m evals.dialogue_accuracy --runs 1 --recheck 1
 """
 
 import argparse
@@ -69,6 +70,7 @@ from tta_script.cast import NARRATOR_ID, Cast, CastMember, Voice
 from tta_script.script import Script, ScriptSegment
 from tta_script.dialogue.extract import DEFAULT_LABEL_MODEL, get_text_segments
 from tta_script.models.text import DEFAULT_MODEL
+from tta_script.dialogue.recheck import recheck_lines
 from tta_script.pipeline import build_script
 
 
@@ -334,7 +336,20 @@ def score_characters(book: Book, before: Cast, after: Cast, number: int, expecte
     }
 
 
-def run_once(books: list[Book]) -> dict:
+def recheck_least_confident(script: Script, cast: Cast, share: float) -> Script:
+    """Ask the stronger model about the least confident share of the dialogue,
+    as a person might from the editor, and record its answers."""
+    dialogue = sorted(
+        (i for i, s in enumerate(script.segments) if s.is_dialogue),
+        key=lambda i: script.segments[i].confidence or 0.0,
+    )
+    answers = recheck_lines(script, cast, dialogue[: round(len(dialogue) * share)])
+    return Script(
+        segments=[s.model_copy(update={"recheck_speaker_id": answers.get(i)}) for i, s in enumerate(script.segments)]
+    )
+
+
+def run_once(books: list[Book], recheck: float) -> dict:
     voices = fake_voices()
     per_chapter = {}
     for book in books:
@@ -345,6 +360,8 @@ def run_once(books: list[Book]) -> dict:
 
             before = cast
             script, cast = build_script(text, cast, voices)
+            if recheck:
+                script = recheck_least_confident(script, cast, recheck)
             segments = get_text_segments(text)
 
             per_chapter[f"{book.name} ch{chapter.number}"] = {
@@ -420,6 +437,13 @@ def main():
         '"anthropic:claude-haiku-5-5" to label with it',
     )
     parser.add_argument("--runs", type=int, default=5)
+    parser.add_argument(
+        "--recheck",
+        type=float,
+        default=0.0,
+        help="share of each chapter's least confident dialogue to ask the stronger model about, "
+        "e.g. 0.2 or 1 (default 0: off; it costs about 5 cents a chapter)",
+    )
     parser.add_argument("--books", nargs="+", choices=all_books(), default=all_books())
     parser.add_argument("--out", type=Path, default=SCRIPT_DIR / "evals" / "results")
     args = parser.parse_args()
@@ -439,7 +463,7 @@ def main():
             collector.calls.clear()
             started = time.monotonic()
             try:
-                result = run_once(books)
+                result = run_once(books, args.recheck)
             except Exception as e:  # pylint: disable=broad-exception-caught
                 result = {"error": f"{type(e).__name__}: {e}"}
             result["seconds"] = round(time.monotonic() - started, 1)

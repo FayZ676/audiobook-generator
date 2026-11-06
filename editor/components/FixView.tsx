@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Book, Segment, SegmentChange } from "@/lib/model";
-import { READY_AFTER, displayName, likelySpeakers, readiness, wasCorrected } from "@/lib/model";
-import type { Edits } from "./BookEditor";
+import { READY_AFTER, displayName, likelySpeakers, needsLook, opinion, readiness, wasCorrected } from "@/lib/model";
+import type { Claude, Edits } from "./BookEditor";
 import Prose, { SpeakerDot } from "./Prose";
 import SpeakerPicker from "./SpeakerPicker";
 
@@ -12,16 +12,19 @@ const BATCH = 25;
 type Item = { chapter: string; index: number; segment: Segment };
 type Undo = { chapter: string; segment: string; before: SegmentChange };
 
-/** The lines the model was least sure of, a batch at a time. After each
+/** The lines most likely wrong, a batch at a time: those Claude Opus
+ * disagreed with first, then those the model was least sure of. After each
  * batch, how many needed fixing says whether another is worth doing. */
 export default function FixView({
   book,
   edits,
+  claude,
   onDone,
   onOpenInChapter,
 }: {
   book: Book;
   edits: Edits;
+  claude: Claude;
   onDone: () => void;
   onOpenInChapter: (chapter: string, segment: string) => void;
 }) {
@@ -33,8 +36,12 @@ export default function FixView({
   }, [book]);
   const leastSure = () =>
     [...items.entries()]
-      .filter(([, i]) => !i.segment.reviewed)
-      .sort(([, a], [, b]) => (a.segment.confidence ?? -1) - (b.segment.confidence ?? -1))
+      .filter(([, i]) => needsLook(i.segment))
+      .sort(
+        ([, a], [, b]) =>
+          Number(opinion(b.segment) === "disagrees") - Number(opinion(a.segment) === "disagrees") ||
+          (a.segment.confidence ?? -1) - (b.segment.confidence ?? -1),
+      )
       .slice(0, BATCH)
       .map(([k]) => k);
 
@@ -50,7 +57,18 @@ export default function FixView({
   const firstOpen = lines.find((i) => !i.segment.reviewed);
   const focused = (focusKey && items.get(focusKey)) || firstOpen;
   const chapter = focused && book.chapters.find((c) => c.id === focused.chapter)!;
-  const likely = focused && chapter ? likelySpeakers(chapter, focused.index, book.cast) : [];
+  const suggested = focused?.segment.recheck_speaker_id ?? null;
+  const likely =
+    focused && chapter
+      ? [...new Set([...(suggested ? [suggested] : []), ...likelySpeakers(chapter, focused.index, book.cast)])]
+      : [];
+  const askingFocused = !!focused && claude.asking.has(key(focused.chapter, focused.segment.id));
+
+  /** A: take Claude's answer if it has one, else ask for it. */
+  const useClaude = (item: Item) => {
+    if (item.segment.recheck_speaker_id) decide(item, item.segment.recheck_speaker_id);
+    else if (!claude.asking.has(key(item.chapter, item.segment.id))) claude.askLines(item.chapter, [item.segment.id]);
+  };
   const ready = readiness(book);
 
   const decide = (item: Item, speaker: string) => {
@@ -94,6 +112,7 @@ export default function FixView({
     else if (e.key === "Enter") decide(focused, focused.segment.speaker_id);
     else if (/^[1-9]$/.test(e.key) && likely[Number(e.key) - 1]) decide(focused, likely[Number(e.key) - 1]);
     else if (e.key === "/") searchRef.current?.focus();
+    else if (e.key === "a") useClaude(focused);
     else if (e.key === "o") onOpenInChapter(focused.chapter, focused.segment.id);
     else return;
     e.preventDefault();
@@ -170,6 +189,12 @@ export default function FixView({
           {chapter.title}
         </button>
         <Prose segments={context} cast={book.cast} highlight={focused.segment.id} dim />
+        <ClaudeNote
+          item={focused}
+          book={book}
+          asking={askingFocused}
+          onUse={() => useClaude(focused)}
+        />
         <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-line pt-5">
           <span className="text-sm">Who says this?</span>
           <SpeakerPicker
@@ -185,6 +210,7 @@ export default function FixView({
           <Hint k="↵">it&apos;s right</Hint>
           <Hint k="1–9">pick</Hint>
           <Hint k="/">search</Hint>
+          <Hint k="A">{suggested ? "use Claude's answer" : "ask Claude"}</Hint>
           <Hint k="↑↓">move</Hint>
           <Hint k="Z">undo</Hint>
           <Hint k="O">open in chapter</Hint>
@@ -192,6 +218,47 @@ export default function FixView({
       </div>
       <Lines lines={lines} book={book} focused={focused} onFocus={setFocusKey} />
     </main>
+  );
+}
+
+/** What Claude Opus said about the line, or a way to ask it. */
+function ClaudeNote({ item, book, asking, onUse }: { item: Item; book: Book; asking: boolean; onUse: () => void }) {
+  const s = item.segment;
+  const view = opinion(s);
+  const box = "mt-5 flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm";
+  if (view === "disagrees")
+    return (
+      <div className={`${box} bg-accent/10`}>
+        <span className="text-accent">✦</span>
+        <span className="flex-1">
+          Claude Opus thinks <strong className="font-medium">{displayName(book.cast, s.recheck_speaker_id!)}</strong> says
+          this.
+        </span>
+        <button onClick={onUse} className="rounded-full bg-accent px-3 py-1 text-[13px] font-medium text-white hover:opacity-90">
+          Use that <kbd className="ml-1 font-mono text-[10px] opacity-70">A</kbd>
+        </button>
+      </div>
+    );
+  if (view === "agrees")
+    return (
+      <div className={`${box} bg-ink/[0.04] text-muted`}>
+        <span>✦</span> Claude Opus agrees.
+      </div>
+    );
+  return (
+    <div className={`${box} text-muted`}>
+      {asking ? (
+        <>
+          <span className="size-3 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+          Claude Opus is reading the chapter…
+        </>
+      ) : (
+        <button onClick={onUse} className="flex items-center gap-2 hover:text-ink">
+          <span className="text-accent">✦</span> Not sure? Ask Claude Opus
+          <kbd className="rounded border border-line px-1 font-mono text-[10px]">A</kbd>
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -275,7 +342,12 @@ function Lines({
               <SpeakerDot id={s.speaker_id} />
               <span className="truncate">{displayName(book.cast, s.speaker_id)}</span>
             </span>
-            <span className={`truncate font-serif ${s.reviewed ? "text-muted" : ""}`}>“{s.text}”</span>
+            <span className={`min-w-0 flex-1 truncate font-serif ${s.reviewed ? "text-muted" : ""}`}>“{s.text}”</span>
+            {!s.reviewed && opinion(s) === "disagrees" && (
+              <span className="shrink-0 rounded-full bg-accent/10 px-2 py-0.5 text-[11px] text-accent">
+                Claude: {displayName(book.cast, s.recheck_speaker_id!)}
+              </span>
+            )}
           </button>
         );
       })}

@@ -2,7 +2,7 @@ import json
 
 from tta_script.cast import NARRATOR_ID, Cast, CastMember
 from tta_script.dialogue import recheck
-from tta_script.dialogue.recheck import recheck_script
+from tta_script.dialogue.recheck import recheck_lines
 from tta_script.script import Script, ScriptSegment
 
 CAST = Cast(
@@ -43,39 +43,45 @@ def fake_model(monkeypatch, answers):
     return prompts
 
 
-def test_only_the_least_confident_lines_are_asked_in_one_request(monkeypatch):
+def test_lines_asked_about_are_answered_in_one_request(monkeypatch):
     prompts = fake_model(monkeypatch, {2: "c2", 5: "c1"})
 
-    result = recheck_script(SCRIPT, CAST, share=0.4)
+    answers = recheck_lines(SCRIPT, CAST, [5, 2])
 
     assert len(prompts) == 1
     prompt, kwargs = prompts[0]
     assert kwargs["model_name"] == recheck.RECHECK_MODEL
     asked = prompt.split("## Your task")[1]
     assert '2. "Hi"' in asked and '5. "Good"' in asked and "Hello" not in asked
-    assert [s.recheck_speaker_id for s in result.segments] == [None, None, "c2", None, None, "c1"]
-    assert [s.speaker_id for s in result.segments] == [s.speaker_id for s in SCRIPT.segments]
+    assert answers == {2: "c2", 5: "c1"}
 
 
 def test_the_first_labels_are_not_shown(monkeypatch):
     prompts = fake_model(monkeypatch, {})
 
-    recheck_script(SCRIPT, CAST, share=0.4)
+    recheck_lines(SCRIPT, CAST, [2])
 
     assert "->" not in prompts[0][0] and "Bob" in prompts[0][0]
 
 
 def test_answers_for_lines_not_asked_are_ignored(monkeypatch):
-    fake_model(monkeypatch, {1: "c2", 2: "c2"})
+    fake_model(monkeypatch, {1: "c2", 5: "c2"})
 
-    result = recheck_script(SCRIPT, CAST, share=0.2)
-
-    assert result.segments[1].recheck_speaker_id is None
+    assert recheck_lines(SCRIPT, CAST, [5]) == {5: "c2"}
 
 
-def test_nothing_to_recheck_makes_no_request(monkeypatch):
+def test_cached_requests_send_the_chapter_as_the_cached_prefix(monkeypatch):
     prompts = fake_model(monkeypatch, {})
 
-    recheck_script(Script(segments=[line(0, "Quiet.", NARRATOR_ID, dialogue=False)]), CAST)
+    recheck_lines(SCRIPT, CAST, [2], cache=True)
 
+    prompt, kwargs = prompts[0]
+    assert "Bob came in." in kwargs["cached_prefix"] and "Bob came in." not in prompt
+    assert '2. "Hi"' in prompt
+
+
+def test_nothing_asked_makes_no_request(monkeypatch):
+    prompts = fake_model(monkeypatch, {})
+
+    assert not recheck_lines(SCRIPT, CAST, [])
     assert not prompts

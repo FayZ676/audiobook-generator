@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { changeSegment, saveCharacter } from "@/app/actions";
+import { askClaude, changeSegment, saveCharacter } from "@/app/actions";
 import type { Book, CastMember, SegmentChange } from "@/lib/model";
 import { applyChange, nextId, readiness } from "@/lib/model";
 import CastView from "./CastView";
@@ -15,6 +15,16 @@ export type Edits = {
   saveCharacter(member: CastMember): void;
   /** Adds a character by name, with voice traits to fix in the cast later. */
   addCharacter(name: string): CastMember;
+};
+
+/** Asking Claude Opus about lines, which happens only when a person asks. */
+export type Claude = {
+  /** Lines being asked about now, as "chapter/segment". */
+  asking: Set<string>;
+  askLines(chapterId: string, segmentIds: string[]): void;
+  /** Every unreviewed line of the book, a chapter per request. */
+  checkBook(): void;
+  bookProgress: { done: number; total: number } | null;
 };
 
 const VIEWS = ["Overview", "Cast", "Fix", "Read"] as const;
@@ -66,6 +76,46 @@ export default function BookEditor({ initial, initialView }: { initial: Book; in
     },
   };
 
+  const [asking, setAsking] = useState<Set<string>>(new Set());
+  const [bookProgress, setBookProgress] = useState<Claude["bookProgress"]>(null);
+
+  const ask = async (chapterId: string, segmentIds: string[]) => {
+    const keys = segmentIds.map((id) => `${chapterId}/${id}`);
+    setAsking((a) => new Set([...a, ...keys]));
+    try {
+      const answers = await askClaude(book.name, chapterId, segmentIds);
+      setBook((b) => ({
+        ...b,
+        chapters: b.chapters.map((c) =>
+          c.id !== chapterId
+            ? c
+            : { ...c, segments: c.segments.map((s) => (answers[s.id] ? { ...s, recheck_speaker_id: answers[s.id] } : s)) },
+        ),
+      }));
+    } catch (e) {
+      setError(`Couldn't ask Claude: ${(e as Error).message}`);
+    } finally {
+      setAsking((a) => new Set([...a].filter((k) => !keys.includes(k))));
+    }
+  };
+
+  const claude: Claude = {
+    asking,
+    askLines: (chapterId, segmentIds) => void ask(chapterId, segmentIds),
+    async checkBook() {
+      const chapters = book.chapters.filter((c) =>
+        c.segments.some((s) => s.is_dialogue && !s.reviewed && !s.recheck_speaker_id),
+      );
+      setBookProgress({ done: 0, total: chapters.length });
+      for (const [i, c] of chapters.entries()) {
+        await ask(c.id, []); // none named: every unreviewed line of the chapter
+        setBookProgress({ done: i + 1, total: chapters.length });
+      }
+      setBookProgress(null);
+    },
+    bookProgress,
+  };
+
   const ready = useMemo(() => readiness(book), [book]);
 
   return (
@@ -108,11 +158,12 @@ export default function BookEditor({ initial, initialView }: { initial: Book; in
         </div>
       )}
 
-      {view === "Overview" && <Overview book={book} ready={ready} onOpen={setView} />}
+      {view === "Overview" && <Overview book={book} ready={ready} claude={claude} onOpen={setView} />}
       {view === "Fix" && (
         <FixView
           book={book}
           edits={edits}
+          claude={claude}
           onDone={() => setView("Overview")}
           onOpenInChapter={(chapter, segment) => {
             setReadAt({ chapter, segment });
