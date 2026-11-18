@@ -98,6 +98,8 @@ def test_puts_the_whole_mp3_at_the_upload_url(model, job, monkeypatch):
     url, kw = puts[0]
     assert url == "https://storage.example/ch1.mp3" and kw["headers"]["Content-Type"] == "audio/mpeg"
     assert duration_of(kw["data"]) == pytest.approx(chunks[-1]["duration"], abs=0.08)
+    # The lines' timings come back without their audio, which is in the upload.
+    assert [sorted(c) for c in chunks[:-1]] == [["end", "id", "pause", "start"]] * 2
     assert model.used
 
 

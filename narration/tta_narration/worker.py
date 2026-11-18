@@ -23,8 +23,11 @@ pause, and can keep lines to play again without asking for them twice.
 To play while it reads, POST /run and poll GET /stream/<job id>. Polling
 GET /status/<job id> instead gives every chunk at once when the job is done.
 
-With upload_url (a presigned upload URL from the caller's storage), the
-whole narration, pauses and all, is also PUT there at the end as one MP3.
+With upload_url (an upload URL from the caller's storage), the whole
+narration, pauses and all, is PUT there at the end as one MP3 instead, and
+each line's chunk carries its timing alone, no audio: start and end are then
+where its speech falls in that MP3. The job's results stay small however
+long the narration, so they can go to a webhook.
 
 A job whose input is wrong yields {"error": "..."} and nothing else.
 
@@ -105,10 +108,10 @@ def _narrate(job_input: dict) -> Iterator[dict]:
         duration = line.end
         if request.upload_url:
             whole += [np.zeros(int(sr * line.pause), dtype=np.float32), line.speech]
-        yield {
-            "id": line.id, "start": line.start, "end": line.end, "pause": line.pause,
-            "audio": _b64(_mp3(line.speech, sr)),
-        }
+        chunk: dict = {"id": line.id, "start": line.start, "end": line.end, "pause": line.pause}
+        if not request.upload_url:
+            chunk["audio"] = _b64(_mp3(line.speech, sr))
+        yield chunk
     if request.upload_url:
         requests.put(
             request.upload_url, data=_mp3(np.concatenate(whole), sr),
