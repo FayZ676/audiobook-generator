@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "tta_narration"
 version = "0.0.1"
-description = "Reads a checked audiobook script aloud with cloned voices."
+description = "Reads a checked audiobook script aloud in a speech model's preset voices."
 requires-python = ">=3.10"
 dependencies = [
   "lameenc==1.9.0",
@@ -17,8 +17,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-cuda = ["qwen-tts==0.1.1"]  # RunPod
-mlx = ["mlx-audio==0.6.4"]  # a Mac, for trying it locally
+# Both also need espeak-ng from the system: brew install espeak-ng (Mac), apt (the image).
+cuda = ["kokoro==0.9.4"]  # RunPod
+mlx = ["mlx-audio==0.6.4", "misaki[en]==0.9.4"]  # a Mac
 
 [project.urls]
 Homepage = "https://github.com/FayZ676/audiobook-generator"

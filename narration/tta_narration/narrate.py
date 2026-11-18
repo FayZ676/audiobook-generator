@@ -1,8 +1,8 @@
 """Read a checked script aloud, each line in its character's voice.
 
 The script and cast come from the script step. Every character with lines
-needs a voice (CastMember.voice), and every such voice a recorded clip with
-its exact transcript, which the speech model clones.
+needs a voice (CastMember.voice): the name of one of the speech model's own
+voices, such as "bm_lewis".
 """
 
 import re
@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from tta_narration.speech import SpeechModel, VoiceClip
+from tta_narration.speech import SpeechModel
 from tta_script.cast import Cast
 from tta_script.script import Script, ScriptSegment
 
@@ -37,21 +37,21 @@ class Line:
     speech: np.ndarray  # float32 mono at the model's sample rate
 
 
-def narrate(script: Script, cast: Cast, voices: dict[str, VoiceClip], model: SpeechModel) -> Iterator[Line]:
+def narrate(script: Script, cast: Cast, model: SpeechModel) -> Iterator[Line]:
     """The script read aloud a line at a time, in order. The first line comes
     as soon as it is read, so playback can start with it; the rest are read
     a batch at a time (SpeechModel.batch_size), which is much faster on a
     GPU, and come as each batch is done.
 
     Raises ValueError straight away, before reading anything, naming every
-    character who has lines but no voice and every voice with no clip."""
+    character who has lines but no voice and every voice the model lacks."""
     lines = [s for s in script.segments if s.text.strip()]
     line_voices = [_voice_name(cast, s.speaker_id) for s in lines]
-    _check_voices(cast, lines, line_voices, voices)
-    return _read(lines, [voices[v] for v in line_voices if v is not None], model)
+    _check_voices(cast, lines, line_voices, model.voices)
+    return _read(lines, [v for v in line_voices if v is not None], model)
 
 
-def _read(lines: list[ScriptSegment], voices: list[VoiceClip], model: SpeechModel) -> Iterator[Line]:
+def _read(lines: list[ScriptSegment], voices: list[str], model: SpeechModel) -> Iterator[Line]:
     sr = model.sample_rate
     pieces = [_split(line.text.translate(QUOTES)) for line in lines]
     position = 0  # samples so far
@@ -82,7 +82,7 @@ def _groups(piece_counts: list[int], batch_size: int) -> Iterator[list[int]]:
         yield group
 
 
-def _say(model: SpeechModel, pieces: list[list[str]], voices: list[VoiceClip]) -> list[np.ndarray]:
+def _say(model: SpeechModel, pieces: list[list[str]], voices: list[str]) -> list[np.ndarray]:
     """Each line's speech, its pieces read with one call per voice and
     joined with a short pause."""
     clips: dict[tuple[int, int], np.ndarray] = {}  # (line, piece) -> audio
@@ -111,15 +111,15 @@ def _voice_name(cast: Cast, speaker_id: str) -> str | None:
 
 
 def _check_voices(
-    cast: Cast, lines: list[ScriptSegment], line_voices: list[str | None], voices: dict[str, VoiceClip]
+    cast: Cast, lines: list[ScriptSegment], line_voices: list[str | None], known: frozenset[str]
 ) -> None:
     unvoiced = sorted({_name(cast, s.speaker_id) for s, v in zip(lines, line_voices) if v is None})
-    unrecorded = sorted({v for v in line_voices if v is not None and v not in voices})
+    unknown = sorted({v for v in line_voices if v is not None and v not in known})
     problems = []
     if unvoiced:
         problems.append(f"no voice for {', '.join(unvoiced)}")
-    if unrecorded:
-        problems.append(f"no clip for voices {', '.join(unrecorded)}")
+    if unknown:
+        problems.append(f"the speech model has no voice {', '.join(unknown)}")
     if problems:
         raise ValueError("; ".join(problems))
 

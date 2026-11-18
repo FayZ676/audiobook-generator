@@ -7,8 +7,8 @@ It is split into two steps with a person checking the script in between:
 
 1. **Script** (`script/`): find the characters in a chapter, then label who
    speaks every line. This is the hard part and where the work is focused.
-2. **Narration** (`narration/`): read a checked script aloud, cloning each
-   character's voice from a short recording, with Qwen3-TTS.
+2. **Narration** (`narration/`): read a checked script aloud, each character
+   in one of Kokoro's preset voices.
 
 Each step is a stateless RunPod serverless worker: a job's input carries
 everything it needs and the caller saves what comes back. A separate app
@@ -41,22 +41,24 @@ and run:
 
 ```sh
 cd narration
-make install    # on a Mac: runs Qwen3-TTS through MLX
+brew install espeak-ng   # Kokoro spells out unknown words with it
+make install    # on a Mac: runs Kokoro through MLX
 make lint types test
 ```
 
-`tta_narration.narrate.narrate(script, cast, voices, model)` reads a checked
-chapter aloud a line at a time, in order, yielding each line as soon as it is
-read so playback can start with the first. The worker streams them as one
-continuous MP3 (see `narration/tta_narration/worker.py` for the chunk format). Every character with lines needs a voice,
-and every voice a clip with its exact transcript. On a Mac M1 Pro it runs about
-as fast as the speech it makes; first run downloads the model (about 2 GB).
+`tta_narration.narrate.narrate(script, cast, model)` reads a checked script
+aloud a line at a time, in order, yielding each line as it is read so
+playback can start with the first. The worker sends each line as an MP3 of
+its own (see `narration/tta_narration/worker.py` for the chunk format). Every
+character with lines needs a voice: the name of one of the model's voices,
+such as `bm_lewis` (Kokoro's are listed in `tta_narration/models/kokoro.py`).
+On a Mac M1 Pro, Kokoro reads about 17 times faster than real time.
 
 Speech models are swappable. Each one subclasses `SpeechModel` in
-`narration/tta_narration/speech.py` (a `sample_rate` and
+`narration/tta_narration/speech.py` (a `sample_rate`, its `voices`, and
 `say(texts, voice) -> audio per text`), lives in `tta_narration/models/`, and is
 listed by name in `MODELS`. `TTA_SPEECH_MODEL` picks one; the default is
-`qwen3-tts` on a GPU and `qwen3-tts-mlx` on a Mac.
+`kokoro` (PyTorch) on a GPU and `kokoro-mlx` on a Mac.
 
 ## Deploying
 
@@ -92,7 +94,7 @@ secrets, and again whenever one changes.
 The images are public on GHCR, as the repository is, so RunPod pulls them
 without a registry login. `make plan` checks each one can be pulled.
 
-The narration image runs Qwen3-TTS through PyTorch, which has not yet been run
+The narration image runs Kokoro through PyTorch, which has not yet been run
 on a GPU; the Mac path (MLX) is the one tested.
 
 `make test-deploy` checks the deploy tool itself.

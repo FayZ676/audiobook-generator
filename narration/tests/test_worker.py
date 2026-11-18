@@ -20,27 +20,18 @@ SCRIPT = Script(
 
 
 class FakeModel(SpeechModel):
-    """A second of tone per text."""
+    """A second of tone per text; remembers the voices it read in."""
 
     sample_rate = SR
+    voices = frozenset({"deep"})
 
     def __init__(self):
-        self.voices = []
+        self.used = []
 
     def say(self, texts, voice):
-        with open(voice.path, "rb") as f:
-            assert f.read(4) == b"RIFF"  # the clip reaches the model as WAV
-        self.voices.append(voice)
+        self.used.append(voice)
         tone = 0.3 * np.sin(np.arange(SR) / 5).astype(np.float32)
         return [tone for _ in texts]
-
-
-@pytest.fixture(name="clip", scope="module")
-def clip_m4a(tmp_path_factory) -> str:
-    """A short clip in the format phones record."""
-    path = tmp_path_factory.mktemp("clip") / "clip.m4a"
-    subprocess.run(["ffmpeg", "-v", "error", "-f", "lavfi", "-i", "sine=duration=1", str(path)], check=True)
-    return base64.b64encode(path.read_bytes()).decode()
 
 
 @pytest.fixture(name="model")
@@ -51,13 +42,12 @@ def fake_model(monkeypatch):
 
 
 @pytest.fixture(name="job")
-def make_job(clip):
+def make_job():
     def job(**extra):
         return {
             "input": {
                 "script": SCRIPT.model_dump(),
                 "cast": CAST.model_dump(),
-                "voices": {"deep": {"audio": clip, "transcript": "Hello."}},
                 **extra,
             }
         }
@@ -81,7 +71,7 @@ def test_streams_each_line_then_the_end(model, job):
     assert (chunks[0]["start"], chunks[0]["end"], chunks[0]["pause"]) == (0.0, 1.0, 0.0)
     assert chunks[1]["pause"] > 0 and chunks[1]["start"] == pytest.approx(1.0 + chunks[1]["pause"])
     assert chunks[-1] == {"done": True, "duration": chunks[1]["end"]}
-    assert model.voices[0].transcript == "Hello."
+    assert model.used == ["deep", "deep"]
 
 
 def test_each_line_comes_as_its_own_playable_mp3(model, job):
@@ -91,7 +81,7 @@ def test_each_line_comes_as_its_own_playable_mp3(model, job):
         speech = chunk["end"] - chunk["start"]
         # MP3 adds a few milliseconds of padding to each file.
         assert duration_of(base64.b64decode(chunk["audio"])) == pytest.approx(speech, abs=0.08)
-    assert model.voices
+    assert model.used
 
 
 def test_puts_the_whole_mp3_at_the_upload_url(model, job, monkeypatch):
@@ -108,36 +98,26 @@ def test_puts_the_whole_mp3_at_the_upload_url(model, job, monkeypatch):
     url, kw = puts[0]
     assert url == "https://storage.example/ch1.mp3" and kw["headers"]["Content-Type"] == "audio/mpeg"
     assert duration_of(kw["data"]) == pytest.approx(chunks[-1]["duration"], abs=0.08)
-    assert model.voices
+    assert model.used
 
 
-def test_unreadable_audio_is_an_error(model, job):
+def test_a_voice_the_model_lacks_is_an_error(model, job):
     bad = job()
-    bad["input"]["voices"]["deep"]["audio"] = base64.b64encode(b"not audio").decode()
+    bad["input"]["cast"]["members"][0]["voice"] = "shallow"
 
     (chunk,) = worker.handler(bad)
 
-    assert "could not be read" in chunk["error"]
-    assert not model.voices
+    assert chunk == {"error": "the speech model has no voice shallow"}
+    assert not model.used
 
 
-@pytest.mark.usefixtures("model")
-def test_a_character_without_a_voice_is_an_error(job):
-    bad = job()
-    bad["input"]["voices"] = {}
-
-    (chunk,) = worker.handler(bad)
-
-    assert "no clip for voices deep" in chunk["error"]
-
-
-def test_a_benchmark_reads_the_texts_at_each_batch_size(model, clip):
+def test_a_benchmark_reads_the_texts_at_each_batch_size(model):
     calls = []
     say = model.say
     model.say = lambda texts, voice: calls.append(len(texts)) or say(texts, voice)
 
     (chunk,) = worker.handler(
-        {"input": {"benchmark": {"texts": ["One.", "Two.", "Three."], "batch_sizes": [1, 2]}, "voice": {"audio": clip, "transcript": "Hello."}}}
+        {"input": {"benchmark": {"texts": ["One.", "Two.", "Three."], "batch_sizes": [1, 2]}, "voice": "deep"}}
     )
 
     assert calls == [1, 1, 1, 1, 2, 1]  # a warm-up, then 1+1+1, then 2+1

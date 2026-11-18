@@ -3,8 +3,7 @@ batch size: the same sentences read one at a time, then several at once.
 
 Run as a narration job (see worker.py), so it measures the real GPU:
 
-    {"benchmark": {"texts": ["...", ...], "batch_sizes": [1, 4, 8, 16]},
-     "voice": {"audio": "<URL or base64>", "transcript": "..."}}
+    {"benchmark": {"texts": ["...", ...], "batch_sizes": [1, 4, 8, 16]}, "voice": "bm_lewis"}
 """
 
 import shutil
@@ -15,7 +14,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from tta_narration.speech import SpeechModel, VoiceClip
+from tta_narration.speech import SpeechModel
 
 
 @dataclass
@@ -67,13 +66,16 @@ class GpuSampler:
     def _read(self) -> None:
         assert self._process and self._process.stdout
         for row in self._process.stdout:
-            busy, used, total = (int(v) for v in row.split(","))
+            try:
+                busy, used, total = (int(v) for v in row.split(","))
+            except ValueError:  # a MIG slice reports "[N/A]" for what it can't measure
+                continue
             self.use.utilization.append(busy)
             self.use.memory_mb.append(used)
             self.use.total_mb = total
 
 
-def benchmark(model: SpeechModel, voice: VoiceClip, texts: list[str], batch_sizes: list[int]) -> dict:
+def benchmark(model: SpeechModel, voice: str, texts: list[str], batch_sizes: list[int]) -> dict:
     """For each batch size: seconds taken, seconds of audio made, how many
     times faster than real time, and GPU use. The audio is returned too,
     one array per batch size, to check that batching doesn't change what is

@@ -9,6 +9,7 @@ from tta_narration.speech import SpeechModel, load_speech_model
 
 class Silent(SpeechModel):
     sample_rate = 8000
+    voices = frozenset({"quiet"})
 
     def say(self, texts, voice):
         return []
@@ -48,6 +49,8 @@ def test_a_registered_class_must_subclass_the_contract():
 
 def test_a_model_missing_part_of_the_contract_cannot_be_made():
     class NoSampleRate(SpeechModel):  # pylint: disable=abstract-method
+        voices = frozenset({"quiet"})
+
         def say(self, texts, voice):
             return []
 

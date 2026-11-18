@@ -7,7 +7,8 @@
 # CI and RunPod reuse the rest.
 FROM pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime
 
-RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg sox && rm -rf /var/lib/apt/lists/*
+# espeak-ng spells out words Kokoro's dictionary lacks (see models/kokoro.py).
+RUN apt-get update && apt-get install -y --no-install-recommends espeak-ng && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY script/pyproject.toml script/pyproject.toml
@@ -20,8 +21,10 @@ ours = [d for d in narration['dependencies'] if not d.startswith('tta_script')];
 print('\n'.join(dict.fromkeys(script['dependencies'] + ours + narration['optional-dependencies']['cuda'])))" > requirements.txt \
  && pip install --no-cache-dir -r requirements.txt
 
-# The weights go in the image so a cold worker doesn't download 4 GB first.
-RUN python -c "from huggingface_hub import snapshot_download; snapshot_download('Qwen/Qwen3-TTS-12Hz-1.7B-Base')"
+# The weights (and the English dictionary's language model) go in the image,
+# so a cold worker downloads nothing.
+RUN python -c "from huggingface_hub import snapshot_download; snapshot_download('hexgrad/Kokoro-82M')" \
+ && python -m spacy download en_core_web_sm
 
 COPY script/tta_script tta_script
 COPY narration/tta_narration tta_narration

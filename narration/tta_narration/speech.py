@@ -1,29 +1,20 @@
 """The contract every speech model meets, and choosing one by name.
 
 To add a model: subclass SpeechModel in tta_narration/models/, implementing
-sample_rate and say, and add it to MODELS. Nothing else changes: narration
-only ever talks to a SpeechModel.
+sample_rate, voices and say, and add it to MODELS. Nothing else changes:
+narration only ever talks to a SpeechModel.
 """
 
 import importlib
 import os
 import sys
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 
 import numpy as np
 
 
-@dataclass(frozen=True)
-class VoiceClip:
-    """A voice to clone: a recording of it and exactly what is said in it."""
-
-    path: str  # a WAV file
-    transcript: str
-
-
 class SpeechModel(ABC):
-    """A text-to-speech model that reads text in a voice cloned from a clip.
+    """A text-to-speech model that reads text in one of its own preset voices.
 
     Loading happens in __init__, once per worker, so it may be slow; say is
     called many times after."""
@@ -38,24 +29,29 @@ class SpeechModel(ABC):
     def sample_rate(self) -> int:
         """The sample rate of the audio say returns."""
 
+    @property
     @abstractmethod
-    def say(self, texts: list[str], voice: VoiceClip) -> list[np.ndarray]:
-        """Each text read in voice: one float32 mono array per text, in the
-        same order, at sample_rate.
+    def voices(self) -> frozenset[str]:
+        """The names of the voices say can read in, as a cast member's voice
+        gives them (e.g. "bm_lewis")."""
+
+    @abstractmethod
+    def say(self, texts: list[str], voice: str) -> list[np.ndarray]:
+        """Each text read in voice, one of voices: one float32 mono array per
+        text, in the same order, at sample_rate.
 
         Texts are at most about 40 words, with straight quotes: the pieces of
         the next few lines of the script that share a voice, about batch_size
-        of them, in the order a listener hears them. Calls keep coming in a
-        few voices, so a model should prepare each voice once and reuse it."""
+        of them, in the order a listener hears them."""
 
 
 # name -> "module:class", imported only when chosen, since each model needs
 # libraries the others don't (PyTorch with CUDA, MLX on a Mac).
 MODELS = {
-    "qwen3-tts": "tta_narration.models.qwen:QwenTorch",
-    "qwen3-tts-mlx": "tta_narration.models.qwen:QwenMlx",
+    "kokoro": "tta_narration.models.kokoro:KokoroTorch",
+    "kokoro-mlx": "tta_narration.models.kokoro:KokoroMlx",
 }
-DEFAULT_MODEL = "qwen3-tts-mlx" if sys.platform == "darwin" else "qwen3-tts"
+DEFAULT_MODEL = "kokoro-mlx" if sys.platform == "darwin" else "kokoro"
 
 
 def load_speech_model(name: str | None = None) -> SpeechModel:

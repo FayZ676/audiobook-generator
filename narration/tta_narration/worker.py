@@ -1,11 +1,10 @@
 """Narration as a RunPod serverless worker that streams.
 
-It keeps nothing between jobs. A job brings a chapter's checked script, the
-cast, and a clip for each voice the cast uses (a URL or base64, in any
-format ffmpeg reads, with its exact transcript):
+It keeps nothing between jobs. A job brings a checked script and its cast,
+each cast member's voice the name of one of the speech model's own voices
+(see tta_narration/models/; e.g. "bm_lewis"):
 
     {"script": {"segments": [...]}, "cast": {"members": [...]},
-     "voices": {"Faizi Standard": {"audio": "https://...", "transcript": "..."}},
      "upload_url": "https://..."}
 
 It reads the script a line at a time, in order, and sends each line as soon
@@ -29,7 +28,7 @@ whole narration, pauses and all, is also PUT there at the end as one MP3.
 
 A job whose input is wrong yields {"error": "..."} and nothing else.
 
-A {"benchmark": ...} job measures speed and GPU use instead (see bench.py),
+A {"benchmark": ..., "voice": "bm_lewis"} job measures speed and GPU use instead (see bench.py),
 and yields one chunk: each run's numbers, and its audio as base64 MP3.
 
     .venv/bin/python -m tta_narration.worker --test_input '{"input": {...}}'
@@ -38,10 +37,7 @@ and yields one chunk: each run's numbers, and its audio as base64 MP3.
 import base64
 import logging
 import time
-import subprocess
-import tempfile
 from collections.abc import Iterator
-from pathlib import Path
 
 import lameenc  # type: ignore  # a compiled module without type stubs
 import numpy as np
@@ -50,7 +46,7 @@ from pydantic import BaseModel, ValidationError
 
 from tta_narration.bench import GpuSampler, benchmark
 from tta_narration.narrate import narrate
-from tta_narration.speech import SpeechModel, VoiceClip, load_speech_model
+from tta_narration.speech import SpeechModel, load_speech_model
 from tta_script.cast import Cast
 from tta_script.script import Script
 
@@ -58,15 +54,9 @@ MP3_KBPS = 64  # speech, mono
 TIMEOUT_S = 120
 
 
-class Clip(BaseModel):
-    audio: str  # http(s) URL, or base64
-    transcript: str
-
-
 class Job(BaseModel):
     script: Script
     cast: Cast
-    voices: dict[str, Clip]
     upload_url: str | None = None
 
 
@@ -77,7 +67,7 @@ class Benchmark(BaseModel):
 
 class BenchmarkJob(BaseModel):
     benchmark: Benchmark
-    voice: Clip
+    voice: str
 
 
 log = logging.getLogger("tta_narration")
@@ -97,52 +87,50 @@ def handler(job: dict) -> Iterator[dict]:
 def _narrate(job_input: dict) -> Iterator[dict]:
     global _model  # pylint: disable=global-statement
     started = time.monotonic()
-    with tempfile.TemporaryDirectory() as folder:
-        try:
-            request = Job.model_validate(job_input)
-            voices = {name: _fetch(clip, Path(folder) / f"{i}") for i, (name, clip) in enumerate(request.voices.items())}
-            if _model is None:  # only when run without __main__, as tests do
-                _model = load_speech_model()
-            lines = narrate(request.script, request.cast, voices, _model)
-        except (ValidationError, ValueError) as e:
-            yield {"error": str(e)}
-            return
+    try:
+        request = Job.model_validate(job_input)
+        if _model is None:  # only when run without __main__, as tests do
+            _model = load_speech_model()
+        lines = narrate(request.script, request.cast, _model)
+    except (ValidationError, ValueError) as e:
+        yield {"error": str(e)}
+        return
 
-        sr = _model.sample_rate
-        whole: list[np.ndarray] = []  # the narration, for upload_url
-        duration = 0.0
-        for line in lines:
-            if not duration:
-                log.info("first line after %.1fs", time.monotonic() - started)
-            duration = line.end
-            if request.upload_url:
-                whole += [np.zeros(int(sr * line.pause), dtype=np.float32), line.speech]
-            yield {
-                "id": line.id, "start": line.start, "end": line.end, "pause": line.pause,
-                "audio": _b64(_mp3(line.speech, sr)),
-            }
+    sr = _model.sample_rate
+    whole: list[np.ndarray] = []  # the narration, for upload_url
+    duration = 0.0
+    for line in lines:
+        if not duration:
+            log.info("first line after %.1fs", time.monotonic() - started)
+        duration = line.end
         if request.upload_url:
-            requests.put(
-                request.upload_url, data=_mp3(np.concatenate(whole), sr),
-                headers={"Content-Type": "audio/mpeg"}, timeout=TIMEOUT_S,
-            ).raise_for_status()
-        took = time.monotonic() - started
-        log.info("%.1fs of audio in %.1fs (%.2f of real time)", duration, took, took / max(duration, 0.001))
-        yield {"done": True, "duration": duration}
+            whole += [np.zeros(int(sr * line.pause), dtype=np.float32), line.speech]
+        yield {
+            "id": line.id, "start": line.start, "end": line.end, "pause": line.pause,
+            "audio": _b64(_mp3(line.speech, sr)),
+        }
+    if request.upload_url:
+        requests.put(
+            request.upload_url, data=_mp3(np.concatenate(whole), sr),
+            headers={"Content-Type": "audio/mpeg"}, timeout=TIMEOUT_S,
+        ).raise_for_status()
+    took = time.monotonic() - started
+    log.info("%.1fs of audio in %.1fs (%.2f of real time)", duration, took, took / max(duration, 0.001))
+    yield {"done": True, "duration": duration}
 
 
 def _benchmark(job_input: dict) -> Iterator[dict]:
     global _model  # pylint: disable=global-statement
-    with tempfile.TemporaryDirectory() as folder:
-        try:
-            request = BenchmarkJob.model_validate(job_input)
-            voice = _fetch(request.voice, Path(folder) / "voice")
-        except (ValidationError, ValueError) as e:
-            yield {"error": str(e)}
-            return
+    try:
+        request = BenchmarkJob.model_validate(job_input)
         if _model is None:
             _model = load_speech_model()
-        result = benchmark(_model, voice, request.benchmark.texts, request.benchmark.batch_sizes)
+        if request.voice not in _model.voices:
+            raise ValueError(f"the speech model has no voice {request.voice}")
+    except (ValidationError, ValueError) as e:
+        yield {"error": str(e)}
+        return
+    result = benchmark(_model, request.voice, request.benchmark.texts, request.benchmark.batch_sizes)
     for run in result["runs"]:
         log.info("benchmark %s", run)
     sample_rate = _model.sample_rate
@@ -164,26 +152,6 @@ def _mp3(audio: np.ndarray, sample_rate: int) -> bytes:
 
 def _b64(data: bytes) -> str:
     return base64.b64encode(data).decode()
-
-
-def _fetch(clip: Clip, path: Path) -> VoiceClip:
-    """The clip saved as a WAV file the speech model reads."""
-    if clip.audio.startswith(("http://", "https://")):
-        response = requests.get(clip.audio, timeout=TIMEOUT_S)
-        response.raise_for_status()
-        data = response.content
-    else:
-        try:
-            data = base64.b64decode(clip.audio.split(",", 1)[-1], validate=True)
-        except ValueError as e:
-            raise ValueError("a voice's audio is neither a URL nor base64") from e
-    path.write_bytes(data)
-    wav = path.with_suffix(".wav")
-    # Phones record M4A, which the model can't read; ffmpeg reads everything.
-    result = subprocess.run(["ffmpeg", "-v", "error", "-i", str(path), "-ac", "1", str(wav)], capture_output=True, check=False)
-    if result.returncode:
-        raise ValueError(f"a voice's audio could not be read: {result.stderr.decode().strip()}")
-    return VoiceClip(str(wav), clip.transcript)
 
 
 if __name__ == "__main__":
