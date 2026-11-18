@@ -3,7 +3,8 @@
 An experiment: turn a book's text into a multi-voice audiobook script, where
 every line of dialogue is read by its character's voice.
 
-It is split into two steps with a person checking the script in between:
+It is split into two steps with a person checking the script in between
+(in a mobile and web app, not built yet):
 
 1. **Script** (`script/`): find the characters in a chapter, then label who
    speaks every line. This is the hard part and where the work is focused.
@@ -30,30 +31,6 @@ and run:
 ```sh
 .venv/bin/python -m tta_script build ../books/<name>   # writes scripts/*.json and cast.json; about 3s a chapter
 ```
-
-## Editor
-
-Where a person checks the script (`editor/`, Next.js). It reads and writes
-`books/` directly.
-
-```sh
-cd editor
-npm install
-npm run dev     # http://localhost:3000
-```
-
-- **Overview**: what is left before the book is ready to narrate.
-- **Fix lines**: one list of the lines most likely wrong, in order. Confirm one
-  (Enter) or pick the speaker (1-9, or / to search or add a character); Z
-  undoes. Once 20 lines in a row need no fix, the rest are very likely right
-  and the book shows as ready to narrate.
-- **Claude Opus** only runs when asked: on one line (A in Fix lines), or on
-  every line not yet checked (Overview, about 5 cents a chapter). Where it
-  disagrees with the first answer, the line comes first in Fix lines with its
-  answer one key away; where it agrees, the line needs no look.
-- **Cast**: names, age and gender for everyone, most lines first. Characters
-  the voice library had no match for show "No voice".
-- **Read**: a chapter as a script; click any line to change its speaker.
 
 ## Narration
 
