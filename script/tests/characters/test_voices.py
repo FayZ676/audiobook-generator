@@ -3,7 +3,7 @@ from tta_script.character.voices import choose_voice
 
 
 def voice(name, age, gender):
-    return Voice(name=name, age=age, gender=gender, audio_path="", audio_transcript="")
+    return Voice(name=name, age=age, gender=gender)
 
 
 NARRATOR_VOICE = voice("narrator-voice", "middle-aged", "male")

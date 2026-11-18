@@ -8,7 +8,7 @@ from tta_script.character.extract import update_cast
 
 
 def voice(name, age="middle-aged", gender="male"):
-    return Voice(name=name, age=age, gender=gender, audio_path="", audio_transcript="")
+    return Voice(name=name, age=age, gender=gender)
 
 
 VOICES = [

@@ -15,13 +15,12 @@ Gender = Literal["male", "female"]
 
 
 class Voice(BaseModel):
-    """A recorded voice sample a cast member can be given."""
+    """A voice a cast member can be given, by what it sounds like. Its
+    recording is narration's concern; here only the fit to a character matters."""
 
     name: str
     age: Age
     gender: Gender
-    audio_path: str
-    audio_transcript: str
 
     model_config = ConfigDict(frozen=True)
 
