@@ -56,21 +56,43 @@ Speech models are swappable. Each one subclasses `SpeechModel` in
 listed by name in `MODELS`. `TTA_SPEECH_MODEL` picks one; the default is
 `qwen3-tts` on a GPU and `qwen3-tts-mlx` on a Mac.
 
-## Workers
+## Deploying
 
-Both run on [RunPod serverless](https://docs.runpod.io/serverless/overview),
-which queues jobs, runs them in the background and scales to zero. The job
-formats are in each worker's docstring: `script/tta_script/worker.py`
+Both steps run as [RunPod serverless](https://docs.runpod.io/serverless/overview)
+workers, which queue jobs, run them in the background and scale to zero. The
+job formats are in each worker's docstring: `script/tta_script/worker.py`
 (`build`, `recheck`) and `narration/tta_narration/worker.py`.
 
-| Worker | Hardware | Image | Endpoint settings |
-|---|---|---|---|
-| script | CPU | `cd script && make image` | `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` |
-| narration | NVIDIA GPU, 24 GB | `cd narration && make image` | none |
+Everything RunPod runs is in [`deploy/runpod.toml`](deploy/runpod.toml): each
+endpoint's image, CPU or GPU, workers, scaling, timeout and environment, and
+the secrets they read. Nothing is set up in the console.
 
-Push each image to a registry RunPod can pull from and create an endpoint from
-it. To try a job locally first: `make worker JOB=job.json` in either folder,
-with the job as `{"input": {...}}`.
+1. Push to main. GitHub Actions builds each image whose code changed and
+   pushes it to GHCR, tagged with the last commit that touched it
+   (`gh run watch` to follow it).
+2. `make plan` shows what differs between RunPod and `runpod.toml`.
+3. `make apply` makes RunPod match: creates or updates the secrets and
+   endpoints. A new image rolls out as workers finish their jobs.
+
+```sh
+make status                                         # jobs, workers, rollouts
+python3 -m deploy run tta-script job.json           # job.json: {"input": {...}}
+python3 -m deploy run tta-narration job.json --out out.json
+python3 -m deploy logs tta-narration --follow
+python3 -m deploy destroy tta-script                # asks first
+```
+
+`.env.local` at the repo root holds `RUNPOD_API_KEY` (an API key from
+RunPod's settings) and the secret values `runpod.toml` lists
+(`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`). `apply` copies them into RunPod
+secrets, and again whenever one changes.
+
+Once per image, after its first build, make its GHCR package public
+(github.com/FayZ676?tab=packages → the package → Package settings → Change
+visibility) so RunPod can pull it. The code is public, and the images hold
+nothing secret. `make plan` says when this is needed.
 
 The narration image runs Qwen3-TTS through PyTorch, which has not yet been run
 on a GPU; the Mac path (MLX) is the one tested.
+
+`make test-deploy` checks the deploy tool itself.

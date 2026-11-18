@@ -1,0 +1,44 @@
+# Everything deployed to RunPod. `make plan` shows what differs from this,
+# `make apply` makes RunPod match it.
+#
+# Each [endpoints.X] table is sent as RunPod's REST v2 endpoint body
+# (https://api.runpod.io/v2/openapi.json), plus three keys of ours:
+#   image: the repository; its tag is the last commit that touched `paths`,
+#          which is the tag CI pushes (.github/workflows/images.yml)
+#   paths: what the image is built from, relative to the repo root
+#   context, dockerfile: how CI builds it
+
+registry = "ghcr.io/fayz676"
+
+# RunPod secret name = the variable in .env.local holding its value.
+# Endpoints read them as "{{ RUNPOD_SECRET_<name> }}".
+[secrets]
+anthropic_api_key = "ANTHROPIC_API_KEY"
+openai_api_key = "OPENAI_API_KEY"
+
+[endpoints.tta-script]
+image = "tta-script"
+paths = ["script"]
+context = "script"
+dockerfile = "script/Dockerfile"
+cpu = [{ id = "cpu5c", vcpuCount = 2 }]
+workers = { min = 0, max = 3, idleTimeout = 5 }
+scaling = { type = "QUEUE_DELAY", queueDelay = 4 }
+timeout = 600000  # ms; a chapter takes seconds, a whole-chapter recheck up to a minute
+disk = 5
+
+[endpoints.tta-script.env]
+ANTHROPIC_API_KEY = "{{ RUNPOD_SECRET_anthropic_api_key }}"
+OPENAI_API_KEY = "{{ RUNPOD_SECRET_openai_api_key }}"
+
+[endpoints.tta-narration]
+image = "tta-narration"
+paths = ["narration", "script"]
+context = "."
+dockerfile = "narration/Dockerfile"
+gpu = { pools = ["ADA_24", "AMPERE_24"], count = 1 }
+workers = { min = 0, max = 2, idleTimeout = 60 }
+scaling = { type = "QUEUE_DELAY", queueDelay = 4 }
+flashboot = "FLASHBOOT"
+timeout = 1800000  # ms; a long chapter at real time
+disk = 30
