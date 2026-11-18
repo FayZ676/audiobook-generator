@@ -48,13 +48,15 @@ jobs:
             echo "built=true" >> "$GITHUB_OUTPUT"
             echo "${{ matrix.image.image }} is already built"
           fi
-      # The narration image (CUDA PyTorch plus the model) needs more disk
-      # than a runner has free.
+      # The narration image (CUDA PyTorch plus the model) needs more disk than
+      # / has free; the runner's /mnt has plenty and costs seconds to use,
+      # where deleting preinstalled tools to make room took two minutes.
       - if: steps.exists.outputs.built != 'true'
         run: |
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
-          docker system prune -af
-          df -h /
+          sudo systemctl stop docker
+          echo '{"data-root": "/mnt/docker"}' | sudo tee /etc/docker/daemon.json
+          sudo systemctl start docker
+          df -h /mnt
       - if: steps.exists.outputs.built != 'true'
         uses: actions/checkout@v4
       - if: steps.exists.outputs.built != 'true'
@@ -67,4 +69,8 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ${{ matrix.image.image }}
+          # Layers unchanged since the last build come from here instead of
+          # being rebuilt, so a code change ships only the code layers.
+          cache-from: type=registry,ref=${{ matrix.image.repository }}:buildcache
+          cache-to: type=registry,ref=${{ matrix.image.repository }}:buildcache,mode=max,image-manifest=true,oci-mediatypes=true
           labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}

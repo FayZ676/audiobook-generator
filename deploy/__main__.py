@@ -197,6 +197,7 @@ def _find(runpod: RunPod, endpoint: Endpoint) -> str:
 def _image(endpoint: Endpoint) -> dict:
     return {
         "name": endpoint.name,
+        "repository": endpoint.repository,
         "image": endpoint.image,
         "context": endpoint.context,
         "dockerfile": endpoint.dockerfile,
