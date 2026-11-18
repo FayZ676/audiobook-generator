@@ -120,8 +120,30 @@ def copies_for_this_machine() -> tuple[int, str]:
 
 
 def _cpus() -> int:
-    # The cores this process may use (a container's share), not the host's.
-    return len(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else os.cpu_count() or 1
+    """The CPUs this process may use. In a container (a RunPod worker) that is
+    its quota, e.g. 9 vCPUs on a 48-core host: the host lets it see every
+    core but slows it down past its share."""
+    seen = len(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else os.cpu_count() or 1
+    quota = _cgroup_cpus()
+    return max(1, min(seen, int(quota))) if quota else seen
+
+
+def _cgroup_cpus(root: str = "/sys/fs/cgroup") -> float | None:
+    """The container's CPU quota in CPUs, or None if it has none: cgroup v2
+    (cpu.max: "<quota> <period>") or v1 (cpu.cfs_quota_us, cpu.cfs_period_us)."""
+    try:
+        with open(f"{root}/cpu.max", encoding="ascii") as f:
+            quota, period = f.read().split()
+    except (OSError, ValueError):
+        try:
+            with open(f"{root}/cpu/cpu.cfs_quota_us", encoding="ascii") as q, \
+                 open(f"{root}/cpu/cpu.cfs_period_us", encoding="ascii") as p:
+                quota, period = q.read().strip(), p.read().strip()
+        except OSError:
+            return None
+    if quota in ("max", "-1"):
+        return None
+    return int(quota) / int(period)
 
 
 def _free_gpu_gb() -> float | None:
