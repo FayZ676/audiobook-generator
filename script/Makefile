@@ -13,3 +13,9 @@ types:
 
 test:
 	pytest --cov=tta_script --cov-report=term-missing --cov-fail-under=80 tests
+
+worker:  # runs one job locally: make worker JOB=job.json
+	.venv/bin/python -m tta_script.worker --test_input "$$(cat $(JOB))"
+
+image:
+	docker build --platform linux/amd64 -t tta-script .
