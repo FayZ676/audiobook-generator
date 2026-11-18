@@ -31,6 +31,7 @@ A job whose input is wrong yields {"error": "..."} and nothing else.
 
 import base64
 import logging
+import time
 import subprocess
 import tempfile
 from collections.abc import Iterator
@@ -62,16 +63,18 @@ class Job(BaseModel):
     upload_url: str | None = None
 
 
-_model: SpeechModel | None = None
+log = logging.getLogger("tta_narration")
+_model: SpeechModel | None = None  # loaded at boot, before the worker takes jobs
 
 
 def handler(job: dict) -> Iterator[dict]:
     global _model  # pylint: disable=global-statement
+    started = time.monotonic()
     with tempfile.TemporaryDirectory() as folder:
         try:
             request = Job.model_validate(job["input"])
             voices = {name: _fetch(clip, Path(folder) / f"{i}") for i, (name, clip) in enumerate(request.voices.items())}
-            if _model is None:  # loaded once per worker, on its first job
+            if _model is None:  # only when run without __main__, as tests do
                 _model = load_speech_model()
             lines = narrate(request.script, request.cast, voices, _model)
         except (ValidationError, ValueError) as e:
@@ -81,6 +84,8 @@ def handler(job: dict) -> Iterator[dict]:
         encoder = Mp3Stream(_model.sample_rate)
         duration = 0.0
         for line in lines:
+            if not duration:
+                log.info("first line after %.1fs", time.monotonic() - started)
             duration = line.end
             yield {"id": line.id, "start": line.start, "end": line.end, "audio": _b64(encoder.add(line.audio))}
         tail = encoder.finish()
@@ -88,6 +93,8 @@ def handler(job: dict) -> Iterator[dict]:
             requests.put(
                 request.upload_url, data=encoder.whole, headers={"Content-Type": "audio/mpeg"}, timeout=TIMEOUT_S
             ).raise_for_status()
+        took = time.monotonic() - started
+        log.info("%.1fs of audio in %.1fs (%.2f of real time)", duration, took, took / max(duration, 0.001))
         yield {"done": True, "duration": duration, "audio": _b64(tail)}
 
 
@@ -143,5 +150,10 @@ if __name__ == "__main__":
     import runpod  # type: ignore[import-untyped]
 
     logging.basicConfig(level=logging.INFO)
+    # Load before taking jobs, so no listener waits for it: a worker RunPod
+    # starts ahead of demand, or restores with FlashBoot, is ready at once.
+    loading = time.monotonic()
+    _model = load_speech_model()
+    log.info("model loaded in %.1fs", time.monotonic() - loading)
     # return_aggregate_stream: /status and /runsync give every chunk once done.
     runpod.serverless.start({"handler": handler, "return_aggregate_stream": True})
