@@ -4,9 +4,12 @@ On a Mac it runs through MLX (about 17x real time on an M1 Pro); on a GPU
 (RunPod) through PyTorch. Both read the same way and know the same voices."""
 
 import logging
+import multiprocessing
 import os
 import shutil
 import subprocess
+from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures.process import BrokenProcessPool
 
 import numpy as np
 
@@ -79,19 +82,30 @@ class KokoroTorch(SpeechModel):
     voices = VOICES
 
     def __init__(self) -> None:
-        import multiprocessing  # pylint: disable=import-outside-toplevel
+        self._copies, why = copies_for_this_machine()
+        log.info("Kokoro: %d copies (%s)", self._copies, why)
+        self.batch_size = self._copies * 4  # enough texts per call to keep every copy reading
+        self._threads = max(1, _cpus() // self._copies)  # each copy's share of the CPU, so they don't fight over it
+        self._pool = self._start()
 
-        copies, why = copies_for_this_machine()
-        log.info("Kokoro: %d copies (%s)", copies, why)
-        self.batch_size = copies * 4  # enough texts per call to keep every copy reading
-        threads = max(1, _cpus() // copies)  # each copy's share of the CPU, so they don't fight over it
+    def _start(self) -> ProcessPoolExecutor:
         # spawn, not fork: CUDA can't be shared with a forked child.
-        self._pool = multiprocessing.get_context("spawn").Pool(copies, initializer=_load_copy, initargs=(threads,))
-        self._pool.map(_ready, range(copies), chunksize=1)  # each copy loaded before the first job
+        pool = ProcessPoolExecutor(self._copies, mp_context=multiprocessing.get_context("spawn"),
+                                   initializer=_load_copy, initargs=(self._threads,))
+        list(pool.map(_ready, range(self._copies)))  # each copy loaded before the first job
+        return pool
 
     def say(self, texts: list[str], voice: str) -> list[np.ndarray]:
         _check(voice)
-        return self._pool.starmap(_read_one, [(text, voice) for text in texts], chunksize=1)
+        try:
+            return list(self._pool.map(_read_one, texts, [voice] * len(texts)))
+        except BrokenProcessPool as e:
+            # A copy died (out of threads or memory, say). The job fails now rather than waiting on
+            # it until RunPod's time limit; the copies start afresh for the next job.
+            log.error("a Kokoro copy died; starting the copies again")
+            self._pool.shutdown(wait=False, cancel_futures=True)
+            self._pool = self._start()
+            raise RuntimeError("the speech model stopped partway; try again") from e
 
 
 REPO = "hexgrad/Kokoro-82M"
@@ -162,11 +176,16 @@ def _free_gpu_gb() -> float | None:
 
 
 def _load_copy(threads: int) -> None:
+    # Set before PyTorch loads: its thread pools size themselves on loading, and a copy that started
+    # one thread per core of the host (dozens) ran a worker out of threads.
+    for name in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
+        os.environ[name] = str(threads)
     # Only on the GPU image, so not importable on a Mac without it.
     import torch  # type: ignore  # pylint: disable=import-outside-toplevel,import-error
     from kokoro import KModel, KPipeline  # type: ignore  # pylint: disable=import-outside-toplevel,import-error
 
     torch.set_num_threads(threads)
+    torch.set_num_interop_threads(1)
     _use_system_espeak()
     model = KModel(repo_id=REPO).to("cuda" if torch.cuda.is_available() else "cpu").eval()
     _pipelines.update({code: KPipeline(lang_code=code, repo_id=REPO, model=model) for code in "ab"})
