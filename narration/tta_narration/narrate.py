@@ -27,12 +27,14 @@ QUOTES = str.maketrans({"“": '"', "”": '"', "‘": "'", "’": "'"})
 
 @dataclass(frozen=True)
 class Line:
-    """One line of the script read aloud, with the pause before it."""
+    """One line of the script read aloud. Played in order, each after its
+    pause, the lines make the whole narration."""
 
     id: str  # ScriptSegment.id
-    start: float  # seconds into the narration where the line's speech begins
+    start: float  # seconds into the whole narration where the speech begins
     end: float
-    audio: np.ndarray  # float32 mono at the model's sample rate: the pause, then the speech
+    pause: float  # seconds of silence before the speech: longer between paragraphs
+    speech: np.ndarray  # float32 mono at the model's sample rate
 
 
 def narrate(script: Script, cast: Cast, voices: dict[str, VoiceClip], model: SpeechModel) -> Iterator[Line]:
@@ -51,17 +53,18 @@ def _read(lines: list[ScriptSegment], voices: list[VoiceClip], model: SpeechMode
     sr = model.sample_rate
     position = 0  # samples so far
     for i, (line, voice) in enumerate(zip(lines, voices, strict=True)):
-        parts = []
+        pause = 0.0
         if i:
-            parts.append(_pause(PARAGRAPH_GAP_S if line.paragraph != lines[i - 1].paragraph else PIECE_GAP_S, sr))
-        start = position + sum(len(p) for p in parts)
+            pause = PARAGRAPH_GAP_S if line.paragraph != lines[i - 1].paragraph else PIECE_GAP_S
+        parts = []
         for j, clip in enumerate(model.say(_split(line.text.translate(QUOTES)), voice)):
             if j:
                 parts.append(_pause(PIECE_GAP_S, sr))
             parts.append(clip)
-        audio = np.concatenate(parts)
-        position += len(audio)
-        yield Line(line.id, round(start / sr, 3), round(position / sr, 3), audio)
+        speech = np.concatenate(parts)
+        start = position + int(sr * pause)
+        position = start + len(speech)
+        yield Line(line.id, round(start / sr, 3), round(position / sr, 3), pause, speech)
 
 
 def _pause(seconds: float, sr: int) -> np.ndarray:

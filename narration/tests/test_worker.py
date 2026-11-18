@@ -78,17 +78,19 @@ def test_streams_each_line_then_the_end(model, job):
     chunks = list(worker.handler(job()))
 
     assert [c.get("id") for c in chunks] == ["seg-0", "seg-1", None]
-    assert (chunks[0]["start"], chunks[0]["end"]) == (0.0, 1.0)
-    assert chunks[-1]["done"] and chunks[-1]["duration"] == chunks[1]["end"]
+    assert (chunks[0]["start"], chunks[0]["end"], chunks[0]["pause"]) == (0.0, 1.0, 0.0)
+    assert chunks[1]["pause"] > 0 and chunks[1]["start"] == pytest.approx(1.0 + chunks[1]["pause"])
+    assert chunks[-1] == {"done": True, "duration": chunks[1]["end"]}
     assert model.voices[0].transcript == "Hello."
 
 
-def test_the_chunks_join_into_one_playable_mp3(model, job):
+def test_each_line_comes_as_its_own_playable_mp3(model, job):
     chunks = list(worker.handler(job()))
 
-    mp3 = b"".join(base64.b64decode(c["audio"]) for c in chunks)
-
-    assert duration_of(mp3) == pytest.approx(chunks[-1]["duration"], abs=0.1)
+    for chunk in chunks[:-1]:
+        speech = chunk["end"] - chunk["start"]
+        # MP3 adds a few milliseconds of padding to each file.
+        assert duration_of(base64.b64decode(chunk["audio"])) == pytest.approx(speech, abs=0.08)
     assert model.voices
 
 
@@ -105,7 +107,7 @@ def test_puts_the_whole_mp3_at_the_upload_url(model, job, monkeypatch):
 
     url, kw = puts[0]
     assert url == "https://storage.example/ch1.mp3" and kw["headers"]["Content-Type"] == "audio/mpeg"
-    assert kw["data"] == b"".join(base64.b64decode(c["audio"]) for c in chunks)
+    assert duration_of(kw["data"]) == pytest.approx(chunks[-1]["duration"], abs=0.08)
     assert model.voices
 
 

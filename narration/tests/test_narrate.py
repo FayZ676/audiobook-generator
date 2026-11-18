@@ -73,8 +73,9 @@ def test_lines_are_timed_with_a_longer_pause_between_paragraphs():
         ("seg-1", after_first, after_first + 1),
         ("seg-2", after_first + 1 + PIECE_GAP_S, after_first + 2 + PIECE_GAP_S),
     ]
-    # Each line's audio is its pause and speech, so the lines join end to end.
-    assert sum(len(t.audio) for t in lines) == pytest.approx(lines[-1].end * SR)
+    assert [t.pause for t in lines] == [0.0, PARAGRAPH_GAP_S, PIECE_GAP_S]
+    # Each line's pause then its speech, in order, make the whole narration.
+    assert sum(t.pause * SR + len(t.speech) for t in lines) == pytest.approx(lines[-1].end * SR)
 
 
 def test_long_lines_are_read_in_pieces_and_quotes_straightened():

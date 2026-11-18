@@ -9,20 +9,23 @@ format ffmpeg reads, with its exact transcript):
      "upload_url": "https://..."}
 
 It reads the script a line at a time, in order, and sends each line as soon
-as it is read: one continuous MP3 stream, cut into chunks.
+as it is read, as an MP3 of its own:
 
-    {"id": "seg-0000", "start": 0.0, "end": 2.9, "audio": "<base64 MP3 bytes>"}
+    {"id": "seg-0000", "start": 0.0, "end": 2.9, "pause": 0.0, "audio": "<base64 MP3>"}
+    {"id": "seg-0001", "start": 3.6, "end": 16.9, "pause": 0.7, "audio": "<base64 MP3>"}
     ...
-    {"done": true, "duration": 312.4, "audio": "<the stream's last bytes>"}
+    {"done": true, "duration": 312.4}
 
-To play while it reads, POST /run and poll GET /stream/<job id>, appending
-each chunk's audio bytes, in order, to one MP3 stream. The bytes in a chunk
-don't line up exactly with its line (the encoder holds back a few
-milliseconds), so seek with start and end, not by chunk. Polling
+Each line's audio is its speech alone; pause is the silence the narration
+puts before it (longer between paragraphs), and start and end are where the
+speech falls in the whole narration. A player plays each line after its
+pause, and can keep lines to play again without asking for them twice.
+
+To play while it reads, POST /run and poll GET /stream/<job id>. Polling
 GET /status/<job id> instead gives every chunk at once when the job is done.
 
 With upload_url (a presigned upload URL from the caller's storage), the
-whole MP3 is also PUT there at the end, for keeping.
+whole narration, pauses and all, is also PUT there at the end as one MP3.
 
 A job whose input is wrong yields {"error": "..."} and nothing else.
 
@@ -105,21 +108,27 @@ def _narrate(job_input: dict) -> Iterator[dict]:
             yield {"error": str(e)}
             return
 
-        encoder = Mp3Stream(_model.sample_rate)
+        sr = _model.sample_rate
+        whole: list[np.ndarray] = []  # the narration, for upload_url
         duration = 0.0
         for line in lines:
             if not duration:
                 log.info("first line after %.1fs", time.monotonic() - started)
             duration = line.end
-            yield {"id": line.id, "start": line.start, "end": line.end, "audio": _b64(encoder.add(line.audio))}
-        tail = encoder.finish()
+            if request.upload_url:
+                whole += [np.zeros(int(sr * line.pause), dtype=np.float32), line.speech]
+            yield {
+                "id": line.id, "start": line.start, "end": line.end, "pause": line.pause,
+                "audio": _b64(_mp3(line.speech, sr)),
+            }
         if request.upload_url:
             requests.put(
-                request.upload_url, data=encoder.whole, headers={"Content-Type": "audio/mpeg"}, timeout=TIMEOUT_S
+                request.upload_url, data=_mp3(np.concatenate(whole), sr),
+                headers={"Content-Type": "audio/mpeg"}, timeout=TIMEOUT_S,
             ).raise_for_status()
         took = time.monotonic() - started
         log.info("%.1fs of audio in %.1fs (%.2f of real time)", duration, took, took / max(duration, 0.001))
-        yield {"done": True, "duration": duration, "audio": _b64(tail)}
+        yield {"done": True, "duration": duration}
 
 
 def _benchmark(job_input: dict) -> Iterator[dict]:
@@ -144,34 +153,13 @@ def _benchmark(job_input: dict) -> Iterator[dict]:
 
 
 def _mp3(audio: np.ndarray, sample_rate: int) -> bytes:
-    encoder = Mp3Stream(sample_rate)
-    encoder.add(audio)
-    encoder.finish()
-    return encoder.whole
-
-
-class Mp3Stream:
-    """Audio in, MP3 bytes out as it comes, as one stream with no gaps
-    between the pieces added."""
-
-    def __init__(self, sample_rate: int) -> None:
-        self._encoder = lameenc.Encoder()
-        self._encoder.set_bit_rate(MP3_KBPS)
-        self._encoder.set_in_sample_rate(sample_rate)
-        self._encoder.set_channels(1)
-        self._encoder.set_quality(2)
-        self.whole = b""
-
-    def add(self, audio: np.ndarray) -> bytes:
-        pcm = (np.clip(audio, -1, 1) * 32767).astype("<i2").tobytes()
-        return self._keep(bytes(self._encoder.encode(pcm)))
-
-    def finish(self) -> bytes:
-        return self._keep(bytes(self._encoder.flush()))
-
-    def _keep(self, mp3: bytes) -> bytes:
-        self.whole += mp3
-        return mp3
+    encoder = lameenc.Encoder()
+    encoder.set_bit_rate(MP3_KBPS)
+    encoder.set_in_sample_rate(sample_rate)
+    encoder.set_channels(1)
+    encoder.set_quality(2)
+    pcm = (np.clip(audio, -1, 1) * 32767).astype("<i2").tobytes()
+    return bytes(encoder.encode(pcm)) + bytes(encoder.flush())
 
 
 def _b64(data: bytes) -> str:
