@@ -3,12 +3,16 @@
 On a Mac it runs through MLX (about 17x real time on an M1 Pro); on a GPU
 (RunPod) through PyTorch. Both read the same way and know the same voices."""
 
+import logging
 import os
+import shutil
+import subprocess
 
 import numpy as np
 
 from tta_narration.speech import SpeechModel
 
+log = logging.getLogger("tta_narration")
 SAMPLE_RATE = 24000
 # The English voices. The first letter is the accent (a: American,
 # b: British), which picks Kokoro's pronunciation; the second is f or m.
@@ -68,8 +72,8 @@ class KokoroMlx(SpeechModel):
 
 class KokoroTorch(SpeechModel):
     """Kokoro reads one text per pass and is far too small to keep a GPU busy
-    alone, so several copies read side by side, each in a process of its own
-    (TTA_KOKORO_COPIES, default 4; about 1 GB of GPU memory each)."""
+    alone, so several copies read side by side, each in a process of its own.
+    How many is worked out from the machine (see copies_for_this_machine)."""
 
     sample_rate = SAMPLE_RATE
     voices = VOICES
@@ -77,10 +81,12 @@ class KokoroTorch(SpeechModel):
     def __init__(self) -> None:
         import multiprocessing  # pylint: disable=import-outside-toplevel
 
-        copies = int(os.environ.get("TTA_KOKORO_COPIES", "4"))
+        copies, why = copies_for_this_machine()
+        log.info("Kokoro: %d copies (%s)", copies, why)
         self.batch_size = copies * 4  # enough texts per call to keep every copy reading
+        threads = max(1, _cpus() // copies)  # each copy's share of the CPU, so they don't fight over it
         # spawn, not fork: CUDA can't be shared with a forked child.
-        self._pool = multiprocessing.get_context("spawn").Pool(copies, initializer=_load_copy)
+        self._pool = multiprocessing.get_context("spawn").Pool(copies, initializer=_load_copy, initargs=(threads,))
         self._pool.map(_ready, range(copies), chunksize=1)  # each copy loaded before the first job
 
     def say(self, texts: list[str], voice: str) -> list[np.ndarray]:
@@ -89,14 +95,56 @@ class KokoroTorch(SpeechModel):
 
 
 REPO = "hexgrad/Kokoro-82M"
+# GPU memory one copy takes: the model, its working memory and CUDA's own share.
+GPU_GB_PER_COPY = 1.5
+GPU_HEADROOM_GB = 1.0  # left free, for the odd long text
+CPU_CORES_PER_COPY_WITHOUT_GPU = 4  # on a CPU each copy is itself multi-threaded
 _pipelines: dict = {}  # in each copy's process: accent -> pipeline, sharing one model
 
 
-def _load_copy() -> None:
+def copies_for_this_machine() -> tuple[int, str]:
+    """How many copies to run, and why. Each copy needs GPU memory, and a CPU
+    core to prepare its text and keep its GPU work flowing; the scarcer of
+    the two decides. TTA_KOKORO_COPIES overrides it."""
+    if os.environ.get("TTA_KOKORO_COPIES"):
+        return int(os.environ["TTA_KOKORO_COPIES"]), "TTA_KOKORO_COPIES"
+    cpus = _cpus()
+    free_gb = _free_gpu_gb()
+    if free_gb is None:
+        by_cpu = max(1, cpus // CPU_CORES_PER_COPY_WITHOUT_GPU)
+        return by_cpu, f"no GPU; {cpus} CPU cores"
+    by_gpu = max(1, int((free_gb - GPU_HEADROOM_GB) // GPU_GB_PER_COPY))
+    copies = min(by_gpu, cpus)
+    limit = "GPU memory" if by_gpu <= cpus else "CPU cores"
+    return copies, f"{free_gb:.1f} GB GPU memory free fits {by_gpu}, {cpus} CPU cores; {limit} decides"
+
+
+def _cpus() -> int:
+    # The cores this process may use (a container's share), not the host's.
+    return len(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else os.cpu_count() or 1
+
+
+def _free_gpu_gb() -> float | None:
+    """Free memory on the first GPU, from nvidia-smi so this process doesn't
+    take a share of the GPU itself. None without an NVIDIA GPU."""
+    if not shutil.which("nvidia-smi"):
+        return None
+    result = subprocess.run(
+        ["nvidia-smi", "--query-gpu=memory.free", "--format=csv,noheader,nounits", "-i", "0"],
+        capture_output=True, text=True, check=False,
+    )
+    try:
+        return int(result.stdout.strip()) / 1024
+    except ValueError:  # e.g. "[N/A]" on a MIG slice
+        return None
+
+
+def _load_copy(threads: int) -> None:
     # Only on the GPU image, so not importable on a Mac without it.
     import torch  # type: ignore  # pylint: disable=import-outside-toplevel,import-error
     from kokoro import KModel, KPipeline  # type: ignore  # pylint: disable=import-outside-toplevel,import-error
 
+    torch.set_num_threads(threads)
     _use_system_espeak()
     model = KModel(repo_id=REPO).to("cuda" if torch.cuda.is_available() else "cpu").eval()
     _pipelines.update({code: KPipeline(lang_code=code, repo_id=REPO, model=model) for code in "ab"})
