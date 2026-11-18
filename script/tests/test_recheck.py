@@ -1,8 +1,10 @@
 import json
 
+import pytest
+
 from tta_script.cast import NARRATOR_ID, Cast, CastMember
 from tta_script.dialogue import recheck
-from tta_script.dialogue.recheck import recheck_lines
+from tta_script.dialogue.recheck import recheck_lines, recheck_segments
 from tta_script.script import Script, ScriptSegment
 
 CAST = Cast(
@@ -85,3 +87,28 @@ def test_nothing_asked_makes_no_request(monkeypatch):
 
     assert not recheck_lines(SCRIPT, CAST, [])
     assert not prompts
+
+
+def test_segments_are_asked_about_by_id(monkeypatch):
+    fake_model(monkeypatch, {2: "c2"})
+
+    assert recheck_segments(SCRIPT, CAST, ["seg-2"]) == {"seg-2": "c2"}
+
+
+def test_no_ids_asks_about_every_unchecked_dialogue_line(monkeypatch):
+    prompts = fake_model(monkeypatch, {})
+    script = SCRIPT.model_copy(deep=True)
+    script.segments[1].reviewed = True
+
+    recheck_segments(script, CAST, [])
+
+    asked = prompts[0][0].split("## Your task")[1]
+    assert '2. "Hi"' in asked and '5. "Good"' in asked
+    assert "Hello" not in asked and "Bob came in." not in asked
+
+
+def test_unknown_ids_are_named(monkeypatch):
+    fake_model(monkeypatch, {})
+
+    with pytest.raises(ValueError, match="seg-9"):
+        recheck_segments(SCRIPT, CAST, ["seg-2", "seg-9"])

@@ -26,7 +26,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from tta_script.cast import Cast, Voice
-from tta_script.dialogue.recheck import recheck_lines
+from tta_script.dialogue.recheck import recheck_segments
 from tta_script.pipeline import build_script
 from tta_script.script import Script
 
@@ -73,18 +73,10 @@ def build_book(book: Path, voices_file: Path | None, parser: argparse.ArgumentPa
 def recheck_chapter(book: Path, chapter: str, segment_ids: list[str]) -> dict[str, str]:
     script = Script.model_validate_json((book / "scripts" / f"{chapter}.json").read_text(encoding="utf-8"))
     cast = Cast.model_validate_json((book / "cast.json").read_text(encoding="utf-8"))
-    index = {s.id: i for i, s in enumerate(script.segments)}
-    if segment_ids:
-        unknown = [s for s in segment_ids if s not in index]
-        if unknown:
-            raise SystemExit(f"No such segments in {chapter}: {', '.join(unknown)}")
-        asked = [index[s] for s in segment_ids]
-    else:
-        asked = [i for i, s in enumerate(script.segments) if s.is_dialogue and not s.reviewed]
-    # Lines asked about one or a few at a time come in quick succession, so
-    # keep the chapter cached for them.
-    answers = recheck_lines(script, cast, asked, cache=bool(segment_ids))
-    return {script.segments[i].id: speaker for i, speaker in answers.items()}
+    try:
+        return recheck_segments(script, cast, segment_ids)
+    except ValueError as e:
+        raise SystemExit(f"{chapter}: {e}") from e
 
 
 if __name__ == "__main__":
