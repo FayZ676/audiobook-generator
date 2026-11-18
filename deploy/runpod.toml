@@ -38,15 +38,16 @@ image = "tta-narration"
 paths = ["narration", "script"]
 context = "."
 dockerfile = "narration/Dockerfile"
-# Economical while testing: 24 GB is all the 1.7B model needs, the
-# $0.75/hr pool (RTX 3090, L4, A5000) comes before the $1.34/hr one
-# (RTX 4090), never a worker running unless there's a job (min 0: an
-# always-on worker is ruled out), one at a time, a worker stops 30s after
-# its last job, and a stuck job is cut off at 10 minutes. FlashBoot is
-# what makes restarts quick despite the short idle time.
-gpu = { pools = ["AMPERE_24", "ADA_24"], count = 1 }
-workers = { min = 0, max = 1, idleTimeout = 30 }
+# Economical: Kokoro 82M needs under 2 GB, so the $0.58/hr 16 GB pool
+# (RTX A4000, A4500, RTX 4000 Ada) comes before the $0.75/hr 24 GB one.
+# Never a worker running unless there's a job (min 0: an always-on worker
+# is ruled out); up to 4 at once, so a book's chapters are narrated side by
+# side; a worker stops 30s after its last job, and a stuck job is cut off
+# at 10 minutes. FlashBoot is what makes restarts quick despite the short
+# idle time.
+gpu = { pools = ["AMPERE_16", "AMPERE_24"], count = 1 }
+workers = { min = 0, max = 4, idleTimeout = 30 }
 scaling = { type = "QUEUE_DELAY", queueDelay = 4 }
 flashboot = "FLASHBOOT"
-timeout = 600000  # ms; about 25 minutes of audio at the GPU's 2.6x real time
+timeout = 600000  # ms; a job of whole chapters stays well under this
 disk = 30

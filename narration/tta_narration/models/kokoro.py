@@ -67,29 +67,48 @@ class KokoroMlx(SpeechModel):
 
 
 class KokoroTorch(SpeechModel):
-    REPO = "hexgrad/Kokoro-82M"
+    """Kokoro reads one text per pass and is far too small to keep a GPU busy
+    alone, so several copies read side by side, each in a process of its own
+    (TTA_KOKORO_COPIES, default 4; about 1 GB of GPU memory each)."""
+
     sample_rate = SAMPLE_RATE
     voices = VOICES
 
     def __init__(self) -> None:
-        # Only on the GPU image, so not importable on a Mac without it.
-        from kokoro import KModel, KPipeline  # type: ignore  # pylint: disable=import-outside-toplevel,import-error
+        import multiprocessing  # pylint: disable=import-outside-toplevel
 
-        _use_system_espeak()
-        model = KModel(repo_id=self.REPO).to(_device()).eval()
-        # One pipeline per accent, sharing the one model.
-        self._pipelines = {code: KPipeline(lang_code=code, repo_id=self.REPO, model=model) for code in "ab"}
+        copies = int(os.environ.get("TTA_KOKORO_COPIES", "4"))
+        self.batch_size = copies * 4  # enough texts per call to keep every copy reading
+        # spawn, not fork: CUDA can't be shared with a forked child.
+        self._pool = multiprocessing.get_context("spawn").Pool(copies, initializer=_load_copy)
+        self._pool.map(_ready, range(copies), chunksize=1)  # each copy loaded before the first job
 
     def say(self, texts: list[str], voice: str) -> list[np.ndarray]:
         _check(voice)
-        pipeline = self._pipelines[voice[0]]
-        return [
-            np.concatenate([r.audio.cpu().numpy().astype(np.float32).reshape(-1) for r in pipeline(text, voice=voice)])
-            for text in texts
-        ]
+        return self._pool.starmap(_read_one, [(text, voice) for text in texts], chunksize=1)
 
 
-def _device() -> str:
+REPO = "hexgrad/Kokoro-82M"
+_pipelines: dict = {}  # in each copy's process: accent -> pipeline, sharing one model
+
+
+def _load_copy() -> None:
+    # Only on the GPU image, so not importable on a Mac without it.
+    import torch  # type: ignore  # pylint: disable=import-outside-toplevel,import-error
+    from kokoro import KModel, KPipeline  # type: ignore  # pylint: disable=import-outside-toplevel,import-error
+
+    _use_system_espeak()
+    model = KModel(repo_id=REPO).to("cuda" if torch.cuda.is_available() else "cpu").eval()
+    _pipelines.update({code: KPipeline(lang_code=code, repo_id=REPO, model=model) for code in "ab"})
+
+
+def _ready(_: int) -> bool:
+    return bool(_pipelines)
+
+
+def _read_one(text: str, voice: str) -> np.ndarray:
     import torch  # type: ignore  # pylint: disable=import-outside-toplevel,import-error
 
-    return "cuda" if torch.cuda.is_available() else "cpu"
+    with torch.inference_mode():
+        results = _pipelines[voice[0]](text, voice=voice)
+        return np.concatenate([r.audio.cpu().numpy().astype(np.float32).reshape(-1) for r in results])
