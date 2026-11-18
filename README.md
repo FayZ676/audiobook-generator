@@ -87,10 +87,8 @@ RunPod's settings) and the secret values `runpod.toml` lists
 (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`). `apply` copies them into RunPod
 secrets, and again whenever one changes.
 
-Once per image, after its first build, make its GHCR package public
-(github.com/FayZ676?tab=packages → the package → Package settings → Change
-visibility) so RunPod can pull it. The code is public, and the images hold
-nothing secret. `make plan` says when this is needed.
+The images are public on GHCR, as the repository is, so RunPod pulls them
+without a registry login. `make plan` checks each one can be pulled.
 
 The narration image runs Qwen3-TTS through PyTorch, which has not yet been run
 on a GPU; the Mac path (MLX) is the one tested.
