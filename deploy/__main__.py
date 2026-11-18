@@ -6,6 +6,7 @@ what's there.
     python3 -m deploy apply                 # make RunPod match runpod.toml
     python3 -m deploy status                # workers, jobs and rollouts
     python3 -m deploy run tta-script job.json [--out result.json]
+    python3 -m deploy run tta-narration job.json --stream [--out chunks.jsonl]
     python3 -m deploy logs tta-narration [--follow]
     python3 -m deploy destroy tta-script    # asks first
     python3 -m deploy images                # what CI builds, as JSON
@@ -38,6 +39,7 @@ def main() -> None:
     run.add_argument("endpoint")
     run.add_argument("job", type=Path, help='JSON file with the job\'s input, as {"input": {...}} or just {...}')
     run.add_argument("--out", type=Path, help="write the output here instead of printing it")
+    run.add_argument("--stream", action="store_true", help="show each chunk a streaming worker sends as it comes")
     logs = commands.add_parser("logs", help="recent log lines of an endpoint's workers")
     logs.add_argument("endpoint")
     logs.add_argument("--follow", action="store_true", help="keep streaming new lines")
@@ -61,7 +63,11 @@ def main() -> None:
         elif args.command == "status":
             status(runpod, config)
         elif args.command == "run":
-            run_job(runpod, _find(runpod, config.endpoint(args.endpoint)), args.job, args.out)
+            endpoint_id = _find(runpod, config.endpoint(args.endpoint))
+            if args.stream:
+                stream_job(runpod, endpoint_id, args.job, args.out)
+            else:
+                run_job(runpod, endpoint_id, args.job, args.out)
         elif args.command == "logs":
             show_logs(runpod, _find(runpod, config.endpoint(args.endpoint)), args.tail, args.follow)
         elif args.command == "destroy":
@@ -113,10 +119,36 @@ def status(runpod: RunPod, config: Config) -> None:
             print(f"  rollout  {rollout.get('workersOnLatest')}/{rollout.get('workersTotal')} workers on the latest release")
 
 
-def run_job(runpod: RunPod, endpoint_id: str, job_file: Path, out: Path | None) -> None:
+def stream_job(runpod: RunPod, endpoint_id: str, job_file: Path, out: Path | None) -> None:
+    """Each chunk as it comes, with the seconds since the job was sent:
+    a summary on stderr, the chunk itself as a JSON line on stdout or in out."""
+    sent = time.monotonic()
+    job_id = runpod.job(endpoint_id, "run", _read_job(job_file))["id"]
+    print(f"job {job_id}", file=sys.stderr)
+    with out.open("w") if out else sys.stdout as sink:
+        status = "IN_QUEUE"
+        while status not in DONE:
+            reply = runpod.job(endpoint_id, f"stream/{job_id}")
+            status = reply.get("status", status)
+            if not reply.get("stream"):
+                time.sleep(0.5)
+            for item in reply.get("stream", []):
+                chunk = item.get("output", item)
+                summary = {k: v for k, v in chunk.items() if k != "audio"} if isinstance(chunk, dict) else chunk
+                print(f"{time.monotonic() - sent:6.1f}s  {summary}", file=sys.stderr)
+                sink.write(json.dumps(chunk) + "\n")
+                sink.flush()
+    if status != "COMPLETED":
+        sys.exit(f"job {job_id} {status}")
+
+
+def _read_job(job_file: Path) -> dict:
     job = json.loads(job_file.read_text())
-    job = job if "input" in job else {"input": job}
-    started = runpod.job(endpoint_id, "run", job)
+    return job if "input" in job else {"input": job}
+
+
+def run_job(runpod: RunPod, endpoint_id: str, job_file: Path, out: Path | None) -> None:
+    started = runpod.job(endpoint_id, "run", _read_job(job_file))
     print(f"job {started['id']}", file=sys.stderr)
     state = started
     while state.get("status") not in DONE:

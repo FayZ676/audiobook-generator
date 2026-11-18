@@ -6,6 +6,7 @@ its exact transcript, which the speech model clones.
 """
 
 import re
+from collections.abc import Iterator
 from dataclasses import dataclass
 
 import numpy as np
@@ -25,58 +26,46 @@ QUOTES = str.maketrans({"“": '"', "”": '"', "‘": "'", "’": "'"})
 
 
 @dataclass(frozen=True)
-class LineTiming:
+class Line:
+    """One line of the script read aloud, with the pause before it."""
+
     id: str  # ScriptSegment.id
-    start: float  # seconds into the narration
+    start: float  # seconds into the narration where the line's speech begins
     end: float
+    audio: np.ndarray  # float32 mono at the model's sample rate: the pause, then the speech
 
 
-@dataclass
-class Narration:
-    audio: np.ndarray  # float32 mono
-    sample_rate: int
-    lines: list[LineTiming]  # every line with text, in order
+def narrate(script: Script, cast: Cast, voices: dict[str, VoiceClip], model: SpeechModel) -> Iterator[Line]:
+    """The script read aloud a line at a time, in order, each line as soon as
+    it is read, so playback can start with the first.
 
-    @property
-    def duration(self) -> float:
-        return len(self.audio) / self.sample_rate
-
-
-def narrate(script: Script, cast: Cast, voices: dict[str, VoiceClip], model: SpeechModel) -> Narration:
-    """The whole script as one recording, with where each line starts and ends.
-
-    Raises ValueError, before reading anything, naming every character who
-    has lines but no voice, and every voice with no clip."""
+    Raises ValueError straight away, before reading anything, naming every
+    character who has lines but no voice and every voice with no clip."""
     lines = [s for s in script.segments if s.text.strip()]
     line_voices = [_voice_name(cast, s.speaker_id) for s in lines]
     _check_voices(cast, lines, line_voices, voices)
-
-    pieces = [_split(s.text.translate(QUOTES)) for s in lines]
-    return _join(lines, _read_by_voice(pieces, line_voices, voices, model), model.sample_rate)
+    return _read(lines, [voices[v] for v in line_voices if v is not None], model)
 
 
-def _join(lines: list[ScriptSegment], audio: list[list[np.ndarray]], sr: int) -> Narration:
-    """Each line's pieces in order, with pauses between, timing each line."""
-    out: list[np.ndarray] = []
-    timings: list[LineTiming] = []
-    position = 0
-
-    def pause(seconds: float) -> None:
-        nonlocal position
-        out.append(np.zeros(int(sr * seconds), dtype=np.float32))
-        position += len(out[-1])
-
-    for i, line in enumerate(lines):
+def _read(lines: list[ScriptSegment], voices: list[VoiceClip], model: SpeechModel) -> Iterator[Line]:
+    sr = model.sample_rate
+    position = 0  # samples so far
+    for i, (line, voice) in enumerate(zip(lines, voices, strict=True)):
+        parts = []
         if i:
-            pause(PARAGRAPH_GAP_S if line.paragraph != lines[i - 1].paragraph else PIECE_GAP_S)
-        start = position
-        for j, clip in enumerate(audio[i]):
+            parts.append(_pause(PARAGRAPH_GAP_S if line.paragraph != lines[i - 1].paragraph else PIECE_GAP_S, sr))
+        start = position + sum(len(p) for p in parts)
+        for j, clip in enumerate(model.say(_split(line.text.translate(QUOTES)), voice)):
             if j:
-                pause(PIECE_GAP_S)
-            out.append(clip)
-            position += len(clip)
-        timings.append(LineTiming(line.id, round(start / sr, 3), round(position / sr, 3)))
-    return Narration(np.concatenate(out) if out else np.zeros(0, dtype=np.float32), sr, timings)
+                parts.append(_pause(PIECE_GAP_S, sr))
+            parts.append(clip)
+        audio = np.concatenate(parts)
+        position += len(audio)
+        yield Line(line.id, round(start / sr, 3), round(position / sr, 3), audio)
+
+
+def _pause(seconds: float, sr: int) -> np.ndarray:
+    return np.zeros(int(sr * seconds), dtype=np.float32)
 
 
 def _voice_name(cast: Cast, speaker_id: str) -> str | None:
@@ -101,19 +90,6 @@ def _check_voices(
 def _name(cast: Cast, speaker_id: str) -> str:
     member = cast.get(speaker_id)
     return member.name if member else speaker_id
-
-
-def _read_by_voice(
-    pieces: list[list[str]], line_voices: list[str | None], voices: dict[str, VoiceClip], model: SpeechModel
-) -> list[list[np.ndarray]]:
-    """Audio for every piece of every line, asking the model for all of one
-    voice's pieces at once so it can batch them."""
-    audio: list[list[np.ndarray]] = [[] for _ in pieces]
-    for name in dict.fromkeys(v for v in line_voices if v is not None):
-        mine = [(i, text) for i, v in enumerate(line_voices) if v == name for text in pieces[i]]
-        for (i, _), clip in zip(mine, model.say([text for _, text in mine], voices[name]), strict=True):
-            audio[i].append(clip)
-    return audio
 
 
 def _split(text: str) -> list[str]:

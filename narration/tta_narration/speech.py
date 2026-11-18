@@ -38,9 +38,10 @@ class SpeechModel(ABC):
         """Each text read in voice: one float32 mono array per text, in the
         same order, at sample_rate.
 
-        Texts are at most about 40 words, with straight quotes. All of one
-        voice's texts in a chapter come in one call, so a model can batch
-        them and prepare the voice once."""
+        Texts are at most about 40 words, with straight quotes: the pieces of
+        one line of the script, which a model may read as a batch. Lines come
+        one call at a time, in order, as a listener hears them, so a model
+        should prepare each voice once and reuse it."""
 
 
 # name -> "module:class", imported only when chosen, since each model needs

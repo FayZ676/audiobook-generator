@@ -30,46 +30,51 @@ class FakeModel(SpeechModel):
         return [np.ones(SR, dtype=np.float32) for _ in texts]
 
 
-def line(i, text, model, paragraph):
-    return ScriptSegment(id=f"seg-{i}", text=text, speaker_id=model, paragraph=paragraph)
+def line(i, text, speaker, paragraph):
+    return ScriptSegment(id=f"seg-{i}", text=text, speaker_id=speaker, paragraph=paragraph)
 
 
-def test_each_voice_reads_its_lines_in_one_request():
-    script = Script(
-        segments=[
-            line(0, "Alice sat down.", NARRATOR_ID, 0),
-            line(1, "What a day,", "c1", 1),
-            line(2, "said Alice.", NARRATOR_ID, 1),
-        ]
-    )
+SCRIPT = Script(
+    segments=[
+        line(0, "Alice sat down.", NARRATOR_ID, 0),
+        line(1, "What a day,", "c1", 1),
+        line(2, "said Alice.", NARRATOR_ID, 1),
+    ]
+)
+
+
+def test_lines_are_read_in_order_one_request_each():
     model = FakeModel()
 
-    narrate(script, CAST, VOICES, model)
+    list(narrate(SCRIPT, CAST, VOICES, model))
 
     assert model.calls == [
-        (VOICES["deep"], ["Alice sat down.", "said Alice."]),
+        (VOICES["deep"], ["Alice sat down."]),
         (VOICES["bright"], ["What a day,"]),
+        (VOICES["deep"], ["said Alice."]),
     ]
 
 
-def test_lines_are_timed_with_a_longer_pause_between_paragraphs():
-    script = Script(
-        segments=[
-            line(0, "Alice sat down.", NARRATOR_ID, 0),
-            line(1, "What a day,", "c1", 1),
-            line(2, "said Alice.", NARRATOR_ID, 1),
-        ]
-    )
+def test_each_line_comes_as_soon_as_it_is_read():
+    model = FakeModel()
 
-    narration = narrate(script, CAST, VOICES, FakeModel())
+    lines = narrate(SCRIPT, CAST, VOICES, model)
+    first = next(lines)
+
+    assert first.id == "seg-0" and len(model.calls) == 1
+
+
+def test_lines_are_timed_with_a_longer_pause_between_paragraphs():
+    lines = list(narrate(SCRIPT, CAST, VOICES, FakeModel()))
 
     after_first = 1 + PARAGRAPH_GAP_S
-    assert [(t.id, t.start, t.end) for t in narration.lines] == [
+    assert [(t.id, t.start, t.end) for t in lines] == [
         ("seg-0", 0, 1),
         ("seg-1", after_first, after_first + 1),
         ("seg-2", after_first + 1 + PIECE_GAP_S, after_first + 2 + PIECE_GAP_S),
     ]
-    assert narration.duration == pytest.approx(narration.lines[-1].end)
+    # Each line's audio is its pause and speech, so the lines join end to end.
+    assert sum(len(t.audio) for t in lines) == pytest.approx(lines[-1].end * SR)
 
 
 def test_long_lines_are_read_in_pieces_and_quotes_straightened():
@@ -77,16 +82,16 @@ def test_long_lines_are_read_in_pieces_and_quotes_straightened():
     script = Script(segments=[line(0, f"{sentence} “{sentence}”", NARRATOR_ID, 0)])
     model = FakeModel()
 
-    narration = narrate(script, CAST, VOICES, model)
+    (read,) = narrate(script, CAST, VOICES, model)
 
     assert model.calls[0][1] == [sentence, f'"{sentence}"']
-    assert narration.lines[0].end == pytest.approx(2 + PIECE_GAP_S)
+    assert read.end == pytest.approx(2 + PIECE_GAP_S)
 
 
 def test_blank_lines_are_skipped():
     script = Script(segments=[line(0, "  ", NARRATOR_ID, 0), line(1, "Hi.", NARRATOR_ID, 0)])
 
-    assert [t.id for t in narrate(script, CAST, VOICES, FakeModel()).lines] == ["seg-1"]
+    assert [t.id for t in narrate(script, CAST, VOICES, FakeModel())] == ["seg-1"]
 
 
 def test_missing_voices_are_all_named_before_anything_is_read():

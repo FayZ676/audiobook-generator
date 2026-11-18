@@ -46,7 +46,9 @@ make lint types test
 ```
 
 `tta_narration.narrate.narrate(script, cast, voices, model)` reads a checked
-chapter aloud and times every line. Every character with lines needs a voice,
+chapter aloud a line at a time, in order, yielding each line as soon as it is
+read so playback can start with the first. The worker streams them as one
+continuous MP3 (see `narration/tta_narration/worker.py` for the chunk format). Every character with lines needs a voice,
 and every voice a clip with its exact transcript. On a Mac M1 Pro it runs about
 as fast as the speech it makes; first run downloads the model (about 2 GB).
 
@@ -77,7 +79,7 @@ the secrets they read. Nothing is set up in the console.
 ```sh
 make status                                         # jobs, workers, rollouts
 python3 -m deploy run tta-script job.json           # job.json: {"input": {...}}
-python3 -m deploy run tta-narration job.json --out out.json
+python3 -m deploy run tta-narration job.json --stream   # each chunk as it comes
 python3 -m deploy logs tta-narration --follow
 python3 -m deploy destroy tta-script                # asks first
 ```
