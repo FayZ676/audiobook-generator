@@ -3,21 +3,14 @@
 On an NVIDIA GPU (RunPod) it runs through PyTorch; on a Mac, through MLX, so
 narration can be tried locally without a GPU. Both read the same way."""
 
-import sys
-
 import numpy as np
 
-from tta_narration.narrate import Speaker, VoiceClip
+from tta_narration.speech import SpeechModel, VoiceClip
 
 LANGUAGE = "english"
 
 
-def load_speaker() -> Speaker:
-    """The model for this machine, loaded and ready."""
-    return QwenMlx() if sys.platform == "darwin" else QwenTorch()
-
-
-class QwenTorch:
+class QwenTorch(SpeechModel):
     MODEL = "Qwen/Qwen3-TTS-12Hz-1.7B-Base"
     BATCH = 8  # pieces read at once; not yet tuned on a real GPU
     sample_rate = 24000
@@ -46,14 +39,17 @@ class QwenTorch:
         return out
 
 
-class QwenMlx:
+class QwenMlx(SpeechModel):
     MODEL = "mlx-community/Qwen3-TTS-12Hz-1.7B-Base-8bit"
 
     def __init__(self) -> None:
         from mlx_audio.tts.utils import load_model  # type: ignore  # pylint: disable=import-outside-toplevel
 
         self._model = load_model(model_path=self.MODEL)
-        self.sample_rate: int = self._model.sample_rate
+
+    @property
+    def sample_rate(self) -> int:
+        return self._model.sample_rate
 
     def say(self, texts: list[str], voice: VoiceClip) -> list[np.ndarray]:
         import mlx.core as mx  # type: ignore  # pylint: disable=import-outside-toplevel

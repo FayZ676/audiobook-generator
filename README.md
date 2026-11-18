@@ -45,10 +45,16 @@ make install    # on a Mac: runs Qwen3-TTS through MLX
 make lint types test
 ```
 
-`tta_narration.narrate.narrate(script, cast, voices, speaker)` reads a checked
+`tta_narration.narrate.narrate(script, cast, voices, model)` reads a checked
 chapter aloud and times every line. Every character with lines needs a voice,
 and every voice a clip with its exact transcript. On a Mac M1 Pro it runs about
 as fast as the speech it makes; first run downloads the model (about 2 GB).
+
+Speech models are swappable. Each one subclasses `SpeechModel` in
+`narration/tta_narration/speech.py` (a `sample_rate` and
+`say(texts, voice) -> audio per text`), lives in `tta_narration/models/`, and is
+listed by name in `MODELS`. `TTA_SPEECH_MODEL` picks one; the default is
+`qwen3-tts` on a GPU and `qwen3-tts-mlx` on a Mac.
 
 ## Workers
 

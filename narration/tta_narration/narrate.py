@@ -7,10 +7,10 @@ its exact transcript, which the speech model clones.
 
 import re
 from dataclasses import dataclass
-from typing import Protocol
 
 import numpy as np
 
+from tta_narration.speech import SpeechModel, VoiceClip
 from tta_script.cast import Cast
 from tta_script.script import Script, ScriptSegment
 
@@ -22,21 +22,6 @@ PARAGRAPH_GAP_S = 0.7
 
 # Curly quotes made one model skip text; straight ones read the same.
 QUOTES = str.maketrans({"“": '"', "”": '"', "‘": "'", "’": "'"})
-
-
-@dataclass(frozen=True)
-class VoiceClip:
-    path: str  # a recording of the voice, any format the speech model reads
-    transcript: str  # exactly what is said in it
-
-
-class Speaker(Protocol):
-    """A speech model that clones a voice from a clip."""
-
-    sample_rate: int
-
-    def say(self, texts: list[str], voice: VoiceClip) -> list[np.ndarray]:
-        """Each text read in voice, as float32 mono audio at sample_rate."""
 
 
 @dataclass(frozen=True)
@@ -57,7 +42,7 @@ class Narration:
         return len(self.audio) / self.sample_rate
 
 
-def narrate(script: Script, cast: Cast, voices: dict[str, VoiceClip], speaker: Speaker) -> Narration:
+def narrate(script: Script, cast: Cast, voices: dict[str, VoiceClip], model: SpeechModel) -> Narration:
     """The whole script as one recording, with where each line starts and ends.
 
     Raises ValueError, before reading anything, naming every character who
@@ -67,7 +52,7 @@ def narrate(script: Script, cast: Cast, voices: dict[str, VoiceClip], speaker: S
     _check_voices(cast, lines, line_voices, voices)
 
     pieces = [_split(s.text.translate(QUOTES)) for s in lines]
-    return _join(lines, _read_by_voice(pieces, line_voices, voices, speaker), speaker.sample_rate)
+    return _join(lines, _read_by_voice(pieces, line_voices, voices, model), model.sample_rate)
 
 
 def _join(lines: list[ScriptSegment], audio: list[list[np.ndarray]], sr: int) -> Narration:
@@ -119,14 +104,14 @@ def _name(cast: Cast, speaker_id: str) -> str:
 
 
 def _read_by_voice(
-    pieces: list[list[str]], line_voices: list[str | None], voices: dict[str, VoiceClip], speaker: Speaker
+    pieces: list[list[str]], line_voices: list[str | None], voices: dict[str, VoiceClip], model: SpeechModel
 ) -> list[list[np.ndarray]]:
-    """Audio for every piece of every line, asking the speaker for all of one
+    """Audio for every piece of every line, asking the model for all of one
     voice's pieces at once so it can batch them."""
     audio: list[list[np.ndarray]] = [[] for _ in pieces]
     for name in dict.fromkeys(v for v in line_voices if v is not None):
         mine = [(i, text) for i, v in enumerate(line_voices) if v == name for text in pieces[i]]
-        for (i, _), clip in zip(mine, speaker.say([text for _, text in mine], voices[name]), strict=True):
+        for (i, _), clip in zip(mine, model.say([text for _, text in mine], voices[name]), strict=True):
             audio[i].append(clip)
     return audio
 

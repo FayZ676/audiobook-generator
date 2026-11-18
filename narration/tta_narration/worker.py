@@ -33,8 +33,8 @@ import numpy as np
 import requests
 from pydantic import BaseModel, ValidationError
 
-from tta_narration.narrate import Speaker, VoiceClip, narrate
-from tta_narration.speakers import load_speaker
+from tta_narration.narrate import narrate
+from tta_narration.speech import SpeechModel, VoiceClip, load_speech_model
 from tta_script.cast import Cast
 from tta_script.script import Script
 
@@ -54,18 +54,18 @@ class Job(BaseModel):
     upload_url: str | None = None
 
 
-_speaker: Speaker | None = None
+_model: SpeechModel | None = None
 
 
 def handler(job: dict) -> dict:
-    global _speaker  # pylint: disable=global-statement
+    global _model  # pylint: disable=global-statement
     try:
         request = Job.model_validate(job["input"])
         with tempfile.TemporaryDirectory() as folder:
             voices = {name: _fetch(clip, Path(folder) / f"{i}") for i, (name, clip) in enumerate(request.voices.items())}
-            if _speaker is None:  # loaded once per worker, on its first job
-                _speaker = load_speaker()
-            narration = narrate(request.script, request.cast, voices, _speaker)
+            if _model is None:  # loaded once per worker, on its first job
+                _model = load_speech_model()
+            narration = narrate(request.script, request.cast, voices, _model)
     except (ValidationError, ValueError) as e:
         return {"error": str(e)}
 

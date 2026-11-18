@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 from tta_narration import worker
+from tta_narration.speech import SpeechModel
 from tta_script.cast import NARRATOR_ID, Cast, CastMember
 from tta_script.script import Script, ScriptSegment
 
@@ -12,7 +13,7 @@ CAST = Cast(members=[CastMember(id=NARRATOR_ID, names=["Narrator"], age="old", g
 SCRIPT = Script(segments=[ScriptSegment(id="seg-0", text="Hello there.", speaker_id=NARRATOR_ID)])
 
 
-class FakeSpeaker:
+class FakeModel(SpeechModel):
     sample_rate = 24000
 
     def __init__(self):
@@ -30,11 +31,11 @@ def clip_mp3() -> str:
     return base64.b64encode(worker.encode_mp3(tone, 8000)).decode()
 
 
-@pytest.fixture(name="speaker")
-def fake_speaker(monkeypatch):
-    speaker = FakeSpeaker()
-    monkeypatch.setattr(worker, "_speaker", speaker)
-    return speaker
+@pytest.fixture(name="model")
+def fake_model(monkeypatch):
+    model = FakeModel()
+    monkeypatch.setattr(worker, "_model", model)
+    return model
 
 
 def job(**extra):
@@ -48,7 +49,7 @@ def job(**extra):
     }
 
 
-def test_returns_an_mp3_and_line_timings(speaker):
+def test_returns_an_mp3_and_line_timings(model):
     out = worker.handler(job())
 
     assert out["lines"] == [{"id": "seg-0", "start": 0.0, "end": 1.0}]
@@ -58,10 +59,10 @@ def test_returns_an_mp3_and_line_timings(speaker):
         input=base64.b64decode(out["audio"]), capture_output=True, check=True,
     )
     assert info.stdout.strip() == b"mp3"
-    assert speaker.voices[0].transcript == "Hello."
+    assert model.voices[0].transcript == "Hello."
 
 
-def test_puts_the_mp3_at_the_upload_url(speaker, monkeypatch):
+def test_puts_the_mp3_at_the_upload_url(model, monkeypatch):
     puts = []
 
     class Response:
@@ -75,18 +76,18 @@ def test_puts_the_mp3_at_the_upload_url(speaker, monkeypatch):
     assert "audio" not in out
     url, kw = puts[0]
     assert url == "https://storage.example/ch1.mp3" and kw["headers"]["Content-Type"] == "audio/mpeg"
-    assert speaker.voices
+    assert model.voices
 
 
-def test_unreadable_audio_is_an_error(speaker):
+def test_unreadable_audio_is_an_error(model):
     bad = job()
     bad["input"]["voices"]["deep"]["audio"] = base64.b64encode(b"not audio").decode()
 
     assert "could not be read" in worker.handler(bad)["error"]
-    assert not speaker.voices
+    assert not model.voices
 
 
-@pytest.mark.usefixtures("speaker")
+@pytest.mark.usefixtures("model")
 def test_a_character_without_a_voice_is_an_error():
     bad = job()
     bad["input"]["voices"] = {}
