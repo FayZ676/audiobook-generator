@@ -8,6 +8,7 @@ version = "0.0.1"
 description = "Reads a checked audiobook script aloud in a speech model's preset voices."
 requires-python = ">=3.10"
 dependencies = [
+  "av==19.0.2",  # AAC (.m4a), with its own ffmpeg
   "lameenc==1.9.0",
   "numpy",
   "pydantic>=2.0.0",

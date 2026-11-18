@@ -103,6 +103,30 @@ def test_puts_the_whole_mp3_at_the_upload_url(model, job, monkeypatch):
     assert model.used
 
 
+def test_uploads_aac_when_asked_for_m4a(model, job, monkeypatch, tmp_path):
+    puts = []
+
+    class Response:
+        def raise_for_status(self):
+            pass
+
+    monkeypatch.setattr(worker.requests, "put", lambda url, **kw: puts.append((url, kw)) or Response())
+
+    chunks = list(worker.handler(job(upload_url="https://storage.example/ch1.m4a", audio_format="m4a")))
+
+    _, kw = puts[0]
+    assert kw["headers"]["Content-Type"] == "audio/mp4"
+    m4a = tmp_path / "ch1.m4a"
+    m4a.write_bytes(kw["data"])
+    probe = subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "stream=codec_name:format=duration", "-of", "csv=p=0", str(m4a)],
+        capture_output=True, text=True, check=True,
+    ).stdout.split()
+    assert probe[0] == "aac"
+    # The edit list trims AAC's start-up delay, so the file is as long as the narration.
+    assert float(probe[1]) == pytest.approx(chunks[-1]["duration"], abs=0.05)
+
+
 def test_a_voice_the_model_lacks_is_an_error(model, job):
     bad = job()
     bad["input"]["cast"]["members"][0]["voice"] = "shallow"

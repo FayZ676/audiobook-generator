@@ -5,7 +5,7 @@ each cast member's voice the name of one of the speech model's own voices
 (see tta_narration/models/; e.g. "bm_lewis"):
 
     {"script": {"segments": [...]}, "cast": {"members": [...]},
-     "upload_url": "https://..."}
+     "upload_url": "https://...", "audio_format": "mp3"}
 
 It reads the script a line at a time, in order, and sends each line as soon
 as it is read, as an MP3 of its own:
@@ -29,6 +29,11 @@ each line's chunk carries its timing alone, no audio: start and end are then
 where its speech falls in that MP3. The job's results stay small however
 long the narration, so they can go to a webhook.
 
+audio_format is "mp3" (the default: 64 kbps) or "m4a" (AAC in an MPEG-4
+file, 32 kbps: half the size for one voice, and what .m4a and .m4b files
+hold, so a caller joining narrations into one of those needn't re-encode).
+It applies to each line's audio and to the upload alike.
+
 A job whose input is wrong yields {"error": "..."} and nothing else.
 
 A {"benchmark": ..., "voice": "bm_lewis"} job measures speed and GPU use instead (see bench.py),
@@ -42,6 +47,10 @@ import logging
 import time
 from collections.abc import Iterator
 
+import io
+from typing import Literal
+
+import av
 import lameenc  # type: ignore  # a compiled module without type stubs
 import numpy as np
 import requests
@@ -54,6 +63,7 @@ from tta_script.cast import Cast
 from tta_script.script import Script
 
 MP3_KBPS = 64  # speech, mono
+AAC_KBPS = 32  # AAC holds one voice as well at half the rate
 TIMEOUT_S = 120
 
 
@@ -61,6 +71,7 @@ class Job(BaseModel):
     script: Script
     cast: Cast
     upload_url: str | None = None
+    audio_format: Literal["mp3", "m4a"] = "mp3"
 
 
 class Benchmark(BaseModel):
@@ -110,12 +121,13 @@ def _narrate(job_input: dict) -> Iterator[dict]:
             whole += [np.zeros(int(sr * line.pause), dtype=np.float32), line.speech]
         chunk: dict = {"id": line.id, "start": line.start, "end": line.end, "pause": line.pause}
         if not request.upload_url:
-            chunk["audio"] = _b64(_mp3(line.speech, sr))
+            chunk["audio"] = _b64(_encode(line.speech, sr, request.audio_format))
         yield chunk
     if request.upload_url:
         requests.put(
-            request.upload_url, data=_mp3(np.concatenate(whole), sr),
-            headers={"Content-Type": "audio/mpeg"}, timeout=TIMEOUT_S,
+            request.upload_url, data=_encode(np.concatenate(whole), sr, request.audio_format),
+            headers={"Content-Type": "audio/mp4" if request.audio_format == "m4a" else "audio/mpeg"},
+            timeout=TIMEOUT_S,
         ).raise_for_status()
     took = time.monotonic() - started
     log.info("%.1fs of audio in %.1fs (%.2f of real time)", duration, took, took / max(duration, 0.001))
@@ -141,6 +153,28 @@ def _benchmark(job_input: dict) -> Iterator[dict]:
         "runs": result["runs"],
         "audio": {size: _b64(_mp3(clip, sample_rate)) for size, clip in result["audio"].items()},
     }
+
+
+def _encode(audio: np.ndarray, sample_rate: int, audio_format: str) -> bytes:
+    return _m4a(audio, sample_rate) if audio_format == "m4a" else _mp3(audio, sample_rate)
+
+
+def _m4a(audio: np.ndarray, sample_rate: int) -> bytes:
+    """AAC in an MPEG-4 file, mono. The file's edit list trims the encoder's start-up delay, so the
+    speech falls where the line timings say."""
+    out = io.BytesIO()
+    with av.open(out, "w", format="ipod") as container:
+        stream = container.add_stream("aac", rate=sample_rate, layout="mono")
+        stream.bit_rate = AAC_KBPS * 1000
+        pcm = np.clip(audio, -1, 1).astype(np.float32)
+        for i in range(0, len(pcm), sample_rate):  # a second at a time
+            frame = av.AudioFrame.from_ndarray(pcm[i:i + sample_rate].reshape(1, -1), format="flt", layout="mono")
+            frame.sample_rate = sample_rate
+            for packet in stream.encode(frame):
+                container.mux(packet)
+        for packet in stream.encode(None):
+            container.mux(packet)
+    return out.getvalue()
 
 
 def _mp3(audio: np.ndarray, sample_rate: int) -> bytes:
