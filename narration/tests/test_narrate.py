@@ -55,6 +55,40 @@ def test_lines_are_read_in_order_one_request_each():
     ]
 
 
+def test_after_the_first_line_a_model_that_batches_reads_lines_together_by_voice():
+    model = FakeModel()
+    model.batch_size = 2
+    script = Script(segments=[*SCRIPT.segments, line(3, "Then she slept.", NARRATOR_ID, 2)])
+
+    lines = list(narrate(script, CAST, VOICES, model))
+
+    assert model.calls == [
+        (VOICES["deep"], ["Alice sat down."]),
+        (VOICES["bright"], ["What a day,"]),  # with said Alice: two lines, two pieces
+        (VOICES["deep"], ["said Alice."]),
+        (VOICES["deep"], ["Then she slept."]),  # the rest
+    ]
+    assert [t.id for t in lines] == ["seg-0", "seg-1", "seg-2", "seg-3"]
+
+
+def test_batched_lines_keep_their_own_pieces_and_timing():
+    sentence = "The " + "very " * 25 + "long day ended."
+    script = Script(
+        segments=[line(0, "Hi.", NARRATOR_ID, 0), line(1, f"{sentence} {sentence}", NARRATOR_ID, 0), line(2, "Bye.", "c1", 1)]
+    )
+    model = FakeModel()
+    model.batch_size = 16
+
+    lines = list(narrate(script, CAST, VOICES, model))
+
+    assert model.calls[1] == (VOICES["deep"], [sentence, sentence])
+    assert [(t.id, t.start, t.end) for t in lines] == [
+        ("seg-0", 0, 1),
+        ("seg-1", 1 + PIECE_GAP_S, 3 + 2 * PIECE_GAP_S),
+        ("seg-2", 3 + 2 * PIECE_GAP_S + PARAGRAPH_GAP_S, 4 + 2 * PIECE_GAP_S + PARAGRAPH_GAP_S),
+    ]
+
+
 def test_each_line_comes_as_soon_as_it_is_read():
     model = FakeModel()
 

@@ -38,8 +38,10 @@ class Line:
 
 
 def narrate(script: Script, cast: Cast, voices: dict[str, VoiceClip], model: SpeechModel) -> Iterator[Line]:
-    """The script read aloud a line at a time, in order, each line as soon as
-    it is read, so playback can start with the first.
+    """The script read aloud a line at a time, in order. The first line comes
+    as soon as it is read, so playback can start with it; the rest are read
+    a batch at a time (SpeechModel.batch_size), which is much faster on a
+    GPU, and come as each batch is done.
 
     Raises ValueError straight away, before reading anything, naming every
     character who has lines but no voice and every voice with no clip."""
@@ -51,20 +53,52 @@ def narrate(script: Script, cast: Cast, voices: dict[str, VoiceClip], model: Spe
 
 def _read(lines: list[ScriptSegment], voices: list[VoiceClip], model: SpeechModel) -> Iterator[Line]:
     sr = model.sample_rate
+    pieces = [_split(line.text.translate(QUOTES)) for line in lines]
     position = 0  # samples so far
-    for i, (line, voice) in enumerate(zip(lines, voices, strict=True)):
-        pause = 0.0
-        if i:
-            pause = PARAGRAPH_GAP_S if line.paragraph != lines[i - 1].paragraph else PIECE_GAP_S
+    for group in _groups([len(p) for p in pieces], model.batch_size):
+        speeches = _say(model, [pieces[i] for i in group], [voices[i] for i in group])
+        for i, speech in zip(group, speeches, strict=True):
+            pause = 0.0
+            if i:
+                pause = PARAGRAPH_GAP_S if lines[i].paragraph != lines[i - 1].paragraph else PIECE_GAP_S
+            start = position + int(sr * pause)
+            position = start + len(speech)
+            yield Line(lines[i].id, round(start / sr, 3), round(position / sr, 3), pause, speech)
+
+
+def _groups(piece_counts: list[int], batch_size: int) -> Iterator[list[int]]:
+    """Indexes of the lines, in order, in groups read together: the first
+    line alone, so playback starts as soon as it can, then as many lines as
+    make up about batch_size pieces."""
+    group: list[int] = []
+    pieces = 0
+    for i, count in enumerate(piece_counts):
+        group.append(i)
+        pieces += count
+        if i == 0 or pieces >= batch_size:
+            yield group
+            group, pieces = [], 0
+    if group:
+        yield group
+
+
+def _say(model: SpeechModel, pieces: list[list[str]], voices: list[VoiceClip]) -> list[np.ndarray]:
+    """Each line's speech, its pieces read with one call per voice and
+    joined with a short pause."""
+    clips: dict[tuple[int, int], np.ndarray] = {}  # (line, piece) -> audio
+    for voice in dict.fromkeys(voices):
+        keys = [(i, j) for i, v in enumerate(voices) if v == voice for j in range(len(pieces[i]))]
+        clips.update(zip(keys, model.say([pieces[i][j] for i, j in keys], voice), strict=True))
+    gap = _pause(PIECE_GAP_S, model.sample_rate)
+    speeches = []
+    for i, line_pieces in enumerate(pieces):
         parts = []
-        for j, clip in enumerate(model.say(_split(line.text.translate(QUOTES)), voice)):
+        for j in range(len(line_pieces)):
             if j:
-                parts.append(_pause(PIECE_GAP_S, sr))
-            parts.append(clip)
-        speech = np.concatenate(parts)
-        start = position + int(sr * pause)
-        position = start + len(speech)
-        yield Line(line.id, round(start / sr, 3), round(position / sr, 3), pause, speech)
+                parts.append(gap)
+            parts.append(clips[i, j])
+        speeches.append(np.concatenate(parts))
+    return speeches
 
 
 def _pause(seconds: float, sr: int) -> np.ndarray:

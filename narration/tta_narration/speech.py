@@ -28,6 +28,11 @@ class SpeechModel(ABC):
     Loading happens in __init__, once per worker, so it may be slow; say is
     called many times after."""
 
+    # How many texts say reads at once at its best speed. Narration hands it
+    # about this many at a time, from as many lines as it takes; a model that
+    # reads one at a time keeps 1, so each line comes as soon as it is read.
+    batch_size: int = 1
+
     @property
     @abstractmethod
     def sample_rate(self) -> int:
@@ -39,9 +44,9 @@ class SpeechModel(ABC):
         same order, at sample_rate.
 
         Texts are at most about 40 words, with straight quotes: the pieces of
-        one line of the script, which a model may read as a batch. Lines come
-        one call at a time, in order, as a listener hears them, so a model
-        should prepare each voice once and reuse it."""
+        the next few lines of the script that share a voice, about batch_size
+        of them, in the order a listener hears them. Calls keep coming in a
+        few voices, so a model should prepare each voice once and reuse it."""
 
 
 # name -> "module:class", imported only when chosen, since each model needs

@@ -12,7 +12,7 @@ LANGUAGE = "english"
 
 class QwenTorch(SpeechModel):
     MODEL = "Qwen/Qwen3-TTS-12Hz-1.7B-Base"
-    BATCH = 16  # most pieces read at once; see bench.py for the speed of each size
+    batch_size = 16  # 5.6x real time on a 4090, against 0.7x one at a time (bench.py)
     sample_rate = 24000
 
     def __init__(self) -> None:
@@ -28,8 +28,8 @@ class QwenTorch(SpeechModel):
             self._prompts[voice] = self._model.create_voice_clone_prompt(ref_audio=voice.path, ref_text=voice.transcript)
         prompt = self._prompts[voice]
         out: list[np.ndarray] = []
-        for i in range(0, len(texts), self.BATCH):
-            batch = texts[i : i + self.BATCH]
+        for i in range(0, len(texts), self.batch_size):
+            batch = texts[i : i + self.batch_size]
             wavs, sample_rate = self._model.generate_voice_clone(
                 text=batch, language=[LANGUAGE] * len(batch), voice_clone_prompt=prompt * len(batch)
             )
