@@ -26,6 +26,9 @@ whole MP3 is also PUT there at the end, for keeping.
 
 A job whose input is wrong yields {"error": "..."} and nothing else.
 
+A {"benchmark": ...} job measures speed and GPU use instead (see bench.py),
+and yields one chunk: each run's numbers, and its audio as base64 MP3.
+
     .venv/bin/python -m tta_narration.worker --test_input '{"input": {...}}'
 """
 
@@ -42,6 +45,7 @@ import numpy as np
 import requests
 from pydantic import BaseModel, ValidationError
 
+from tta_narration.bench import GpuSampler, benchmark
 from tta_narration.narrate import narrate
 from tta_narration.speech import SpeechModel, VoiceClip, load_speech_model
 from tta_script.cast import Cast
@@ -63,16 +67,36 @@ class Job(BaseModel):
     upload_url: str | None = None
 
 
+class Benchmark(BaseModel):
+    texts: list[str]
+    batch_sizes: list[int] = [1, 4, 8, 16]
+
+
+class BenchmarkJob(BaseModel):
+    benchmark: Benchmark
+    voice: Clip
+
+
 log = logging.getLogger("tta_narration")
 _model: SpeechModel | None = None  # loaded at boot, before the worker takes jobs
 
 
 def handler(job: dict) -> Iterator[dict]:
+    if "benchmark" in job["input"]:
+        yield from _benchmark(job["input"])
+        return
+    with GpuSampler() as gpu:
+        yield from _narrate(job["input"])
+    if gpu.utilization:
+        log.info("GPU %s", gpu.summary())
+
+
+def _narrate(job_input: dict) -> Iterator[dict]:
     global _model  # pylint: disable=global-statement
     started = time.monotonic()
     with tempfile.TemporaryDirectory() as folder:
         try:
-            request = Job.model_validate(job["input"])
+            request = Job.model_validate(job_input)
             voices = {name: _fetch(clip, Path(folder) / f"{i}") for i, (name, clip) in enumerate(request.voices.items())}
             if _model is None:  # only when run without __main__, as tests do
                 _model = load_speech_model()
@@ -96,6 +120,34 @@ def handler(job: dict) -> Iterator[dict]:
         took = time.monotonic() - started
         log.info("%.1fs of audio in %.1fs (%.2f of real time)", duration, took, took / max(duration, 0.001))
         yield {"done": True, "duration": duration, "audio": _b64(tail)}
+
+
+def _benchmark(job_input: dict) -> Iterator[dict]:
+    global _model  # pylint: disable=global-statement
+    with tempfile.TemporaryDirectory() as folder:
+        try:
+            request = BenchmarkJob.model_validate(job_input)
+            voice = _fetch(request.voice, Path(folder) / "voice")
+        except (ValidationError, ValueError) as e:
+            yield {"error": str(e)}
+            return
+        if _model is None:
+            _model = load_speech_model()
+        result = benchmark(_model, voice, request.benchmark.texts, request.benchmark.batch_sizes)
+    for run in result["runs"]:
+        log.info("benchmark %s", run)
+    sample_rate = _model.sample_rate
+    yield {
+        "runs": result["runs"],
+        "audio": {size: _b64(_mp3(clip, sample_rate)) for size, clip in result["audio"].items()},
+    }
+
+
+def _mp3(audio: np.ndarray, sample_rate: int) -> bytes:
+    encoder = Mp3Stream(sample_rate)
+    encoder.add(audio)
+    encoder.finish()
+    return encoder.whole
 
 
 class Mp3Stream:

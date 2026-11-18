@@ -127,3 +127,17 @@ def test_a_character_without_a_voice_is_an_error(job):
     (chunk,) = worker.handler(bad)
 
     assert "no clip for voices deep" in chunk["error"]
+
+
+def test_a_benchmark_reads_the_texts_at_each_batch_size(model, clip):
+    calls = []
+    say = model.say
+    model.say = lambda texts, voice: calls.append(len(texts)) or say(texts, voice)
+
+    (chunk,) = worker.handler(
+        {"input": {"benchmark": {"texts": ["One.", "Two.", "Three."], "batch_sizes": [1, 2]}, "voice": {"audio": clip, "transcript": "Hello."}}}
+    )
+
+    assert calls == [1, 1, 1, 1, 2, 1]  # a warm-up, then 1+1+1, then 2+1
+    assert [(r["batch_size"], r["audio_seconds"]) for r in chunk["runs"]] == [(1, 3.0), (2, 3.0)]
+    assert duration_of(base64.b64decode(chunk["audio"][2])) == pytest.approx(3 * 1.4, abs=0.1)

@@ -12,7 +12,7 @@ LANGUAGE = "english"
 
 class QwenTorch(SpeechModel):
     MODEL = "Qwen/Qwen3-TTS-12Hz-1.7B-Base"
-    BATCH = 8  # pieces read at once; not yet tuned on a real GPU
+    BATCH = 16  # most pieces read at once; see bench.py for the speed of each size
     sample_rate = 24000
 
     def __init__(self) -> None:
