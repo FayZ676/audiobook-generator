@@ -3,12 +3,17 @@
 An experiment: turn a book's text into a multi-voice audiobook script, where
 every line of dialogue is read by its character's voice.
 
-It is split into two steps with a person checking the script in between
-(in a mobile and web app, not built yet):
+It is split into two steps with a person checking the script in between:
 
 1. **Script** (`script/`): find the characters in a chapter, then label who
    speaks every line. This is the hard part and where the work is focused.
-2. **Narration** (`f5/`): read a checked script aloud with F5-TTS voices.
+2. **Narration** (`narration/`): read a checked script aloud, cloning each
+   character's voice from a short recording, with Qwen3-TTS.
+
+Each step is a stateless RunPod serverless worker: a job's input carries
+everything it needs and the caller saves what comes back. A separate app
+(mobile or web) holds the books, scripts, voices and audio, and is where a
+person checks the script.
 
 ## Script
 
@@ -35,6 +40,31 @@ and run:
 ## Narration
 
 ```sh
-cd f5
-make install    # downloads the F5-TTS checkpoint and vocoder
+cd narration
+make install    # on a Mac: runs Qwen3-TTS through MLX
+make lint types test
 ```
+
+`tta_narration.narrate.narrate(script, cast, voices, speaker)` reads a checked
+chapter aloud and times every line. Every character with lines needs a voice,
+and every voice a clip with its exact transcript. On a Mac M1 Pro it runs about
+as fast as the speech it makes; first run downloads the model (about 2 GB).
+
+## Workers
+
+Both run on [RunPod serverless](https://docs.runpod.io/serverless/overview),
+which queues jobs, runs them in the background and scales to zero. The job
+formats are in each worker's docstring: `script/tta_script/worker.py`
+(`build`, `recheck`) and `narration/tta_narration/worker.py`.
+
+| Worker | Hardware | Image | Endpoint settings |
+|---|---|---|---|
+| script | CPU | `cd script && make image` | `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` |
+| narration | NVIDIA GPU, 24 GB | `cd narration && make image` | none |
+
+Push each image to a registry RunPod can pull from and create an endpoint from
+it. To try a job locally first: `make worker JOB=job.json` in either folder,
+with the job as `{"input": {...}}`.
+
+The narration image runs Qwen3-TTS through PyTorch, which has not yet been run
+on a GPU; the Mac path (MLX) is the one tested.
